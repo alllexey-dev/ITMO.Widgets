@@ -5,8 +5,8 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The connection page at the design lab's axes, as Android's `ConnectionScreen` references: connected with the
-/// audiences, not connected, Backend failing the audiences with BARS signed out, the end of the page, and the consent
-/// sheet. `ConnectionDataContent` is rendered from `ConnectionSamples` under the pushed header, in a window.
+/// audiences, not connected, Backend failing the audiences, and the consent and stored data sheets.
+/// `ConnectionDataContent` is rendered from `ConnectionSamples` under the pushed header, in a window.
 @MainActor
 final class ConnectionSnapshotTests: XCTestCase {
     private let samples = ConnectionSamples.shared
@@ -19,18 +19,10 @@ final class ConnectionSnapshotTests: XCTestCase {
         assertPushed(ConnectionDataContent(state: samples.state(state: "off")), named: "off")
     }
 
-    func testAudiencesFailedAndBarsExpired() {
+    func testAudiencesFailed() {
         assertPushed(
-            ConnectionDataContent(state: samples.state(state: "failed")).defaultScrollAnchor(.bottom),
-            named: "failed-end",
-            appearances: [.light, .dark]
-        )
-    }
-
-    func testTheEndOfThePage() {
-        assertPushed(
-            ConnectionDataContent(state: samples.state(state: "on")).defaultScrollAnchor(.bottom),
-            named: "on-end",
+            ConnectionDataContent(state: samples.state(state: "failed")),
+            named: "failed",
             appearances: [.light, .dark]
         )
     }
@@ -42,6 +34,15 @@ final class ConnectionSnapshotTests: XCTestCase {
         }
         .sheet(isPresented: .constant(true)) { ServicesConsentSheet(connect: {}) }
         assertScreenAppearances(of: screen, named: "consent", appearances: [.light, .dark], settle: 1.5)
+    }
+
+    func testStoredData() {
+        let screen = NavigationStack {
+            ConnectionDataContent(state: samples.state(state: "on"))
+                .itmoDetailHeader(title: AppStrings.string("connection_title"), subtitle: nil)
+        }
+        .sheet(isPresented: .constant(true)) { StoredDataSheet(connected: true) {} }
+        assertScreenAppearances(of: screen, named: "stored", appearances: [.light, .dark], settle: 1.5)
     }
 
     private func assertPushed<Content: View>(

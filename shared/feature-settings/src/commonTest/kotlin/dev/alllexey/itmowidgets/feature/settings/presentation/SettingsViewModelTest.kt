@@ -20,7 +20,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 /**
- * Cross-page state of [SettingsViewModel]: loading, page arguments and row dispatch. «Подключение и данные» and
+ * Cross-page state of [SettingsViewModel]: loading, page arguments and row dispatch. «Сервер ITMO.Widgets» and
  * «Уведомления» have view models of their own (`ConnectionViewModelTest`, `NotificationSettingsViewModelTest`).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -37,7 +37,7 @@ class SettingsViewModelTest {
     @Test
     fun localReadinessWaitsForPersistedValues() =
         runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.SCHEDULE, localInitiallyAvailable = false)
+            val fixture = createFixture(page = SettingsPage.SECTIONS, localInitiallyAvailable = false)
             runCurrent()
             assertFalse(fixture.viewModel.uiState.value.loaded)
             fixture.repository.publishLocalSettings()
@@ -74,7 +74,10 @@ class SettingsViewModelTest {
         // The mark checks moved to «Уведомления»; an old link to the recordbook page opens it.
         assertEquals(SettingsPage.NOTIFICATIONS, SettingsPage.fromArgument("RECORDBOOK"))
         assertEquals(SettingsPage.SERVICES, SettingsPage.fromArgument("SERVICES"))
-        assertEquals(SettingsPage.PRIVACY, SettingsPage.fromArgument("PRIVACY"))
+        // The pages merged away keep opening where their settings went.
+        assertEquals(SettingsPage.SERVICES, SettingsPage.fromArgument("PRIVACY"))
+        listOf("HOME", "SCHEDULE", "SPORT").forEach { assertEquals(SettingsPage.SECTIONS, SettingsPage.fromArgument(it)) }
+        assertEquals(SettingsPage.ABOUT, SettingsPage.fromArgument("MAINTENANCE"))
     }
 
     @Test
@@ -151,7 +154,10 @@ class SettingsViewModelTest {
                     SettingRowId.WIDGETS_FOLLOW_THEME,
                     SettingRowId.LICENSE_PLANS,
                     SettingRowId.LICENSE_MAPLIBRE,
-                    SettingRowId.LICENSE_NOTO
+                    SettingRowId.LICENSE_NOTO,
+                    SettingRowId.BARS,
+                    SettingRowId.PAIR_DEVICE,
+                    SettingRowId.CONNECTED_DEVICES
                 ),
                 items.map(SettingItem::id).toSet()
             )
@@ -184,6 +190,6 @@ class SettingsViewModelTest {
 
     private companion object {
         /** The pages a [SettingsViewModel] builds; the others are screens of their own. */
-        val BuiltPages = SettingsPage.entries - setOf(SettingsPage.SERVICES, SettingsPage.PRIVACY, SettingsPage.NOTIFICATIONS)
+        val BuiltPages = SettingsPage.entries - setOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS)
     }
 }

@@ -6,18 +6,23 @@ listed here is not a setting. Screens are built declaratively; see the
 
 ## Navigation and density
 
-The settings root is a compact catalogue, not a scrolling list of every switch:
+The settings root is a compact catalogue, not a scrolling list of every switch.
+Every setting has exactly one home:
 
-- `Доступ`: `Подключение и данные` (with its state) and `Уведомления` (saying
-  when the system denies them); both are screens of their own, below.
-- `Виджеты`: one row to the widgets gallery (`Виджеты`, `AppRoutes.Settings("WIDGETS")`).
-- `Приложение`: `Оформление`, home screen, schedule, sport, and maintenance.
+- `Аккаунты`: `Сервер ITMO.Widgets` (`Подключено` / `Не подключено`), the
+  connection page below, and `БАРС` (`Подключён`, `Войти` after the session
+  ended, `Не подключён`): the last two open the BARS sign-in, connected BARS
+  only says so.
+- `Приложение`: `Уведомления` (`включено N из M`, or `запрещены в системе`),
+  `Виджеты` (the gallery, `AppRoutes.Settings("WIDGETS")`; `2 на главном
+  экране` once widgets are placed), `Оформление` (the accent's name) and
+  `Разделы` (the settings of Сегодня, Расписание and Спорт).
+- An untitled group with `О приложении`.
 
 Each category opens a separate back-stack entry with its own title and scroll
-position. Notification permissions open Android settings directly. Rows show a
-secondary value only for a genuine single state, such as services or notification
-permission; multi-option categories do not summarize one arbitrarily chosen toggle.
-Explanations shared by several controls appear once below their group.
+position. A row's value says what its page holds in a word; `Разделы` and `О
+приложении`, made of independent options, show none. Explanations shared by
+several controls appear once below their group.
 
 The root and offline categories enter with persisted local values already rendered;
 they never display a loading indicator. Settings open as a full-screen surface
@@ -35,20 +40,28 @@ the tab that was open before.
 
 Navigation rows have a minimum 48 dp touch target and expand for large text.
 Settings use quiet surface-container cards without a stroke or elevation. The
-profile uses the same compact surfaces, with a settings entry and a separate,
-confirmed sign-out action. Privacy lives on «Подключение и данные».
-A category appears only when its functionality is delivered.
+profile uses the same compact surfaces: friends (or their gate), `Виджеты` and
+`Настройки`, the links and a separate, confirmed sign-out action; it holds no
+setting of its own ([profile](features/me.md)). Privacy lives on «Сервер
+ITMO.Widgets». A category appears only when its functionality is delivered.
+
+The keys of the pages that were merged away stay routes, since shortcuts, gates
+and old links name them (`SettingsPage.fromArgument`): `PRIVACY` opens
+`SERVICES`, `HOME`, `SCHEDULE` and `SPORT` open `SECTIONS`, `MAINTENANCE` opens
+`ABOUT`, `RECORDBOOK` opens `NOTIFICATIONS`, and the old widget pages open
+`WIDGETS`.
 
 ### iOS
 
 The iOS app renders the same pages from the same page model
 (`SettingsViewModel`, one page per `AppRoutes.Settings` key) as SwiftUI forms
-pushed on the Me tab's stack; the Me tab's settings row opens the root, its
-privacy row «Подключение и данные» ([iOS app](ios.md#settings-and-diagnostics)).
+pushed on the Me tab's stack; the Me tab's settings row opens the root
+([iOS app](ios.md#settings-and-diagnostics)).
 Nothing renders until the page is loaded, so stored values never animate in.
 Rows a platform does not offer are hidden through `PlatformCapabilities`: on
 iOS the quick settings tile, the spoiler animation and the custom spoiler
-image. The notifications row says `Запрещены в iOS` while iOS denies them. On
+image. The root's notifications row says `запрещены в системе` while iOS
+denies them (or has not asked yet); the BARS row opens `BarsLoginSheet`. On
 «Уведомления» the background work row is `Обновление контента` (Background
 App Refresh): it shows while a background check is on and Background App
 Refresh is off or restricted for the app, and opens the app's page in Settings. The error journal shares
@@ -138,20 +151,30 @@ writes the palette into the widgets' App Group files and reloads them
 full colour; the tinted and clear home screens and the Lock Screen keep the
 system's rendering.
 
-## Home screen
+## Sections
 
-`Приложение` -> `Главный экран` contains `Показывать кнопку пропуска`, on by default
-(`home_qr_pass_visible`, boolean, kept on sign-out). Turning it off hides only the
-`Пропуск` button on Сегодня on Android and the bottom accessory on iOS; the pass
-remains available through its widgets, shortcuts and other entry routes. Both
-shells observe changes immediately. The setting works offline and without custom services.
+`Разделы` (`AppRoutes.Settings` `SECTIONS`; the old `HOME`, `SCHEDULE` and
+`SPORT` keys open it) holds the settings of the tabs in three groups:
+`Сегодня` (the pass button), `Расписание` (the calendar and auto sign,
+[below](#schedule)) and `Спорт` (the filters, [below](#sport)). It is an
+offline page: every row works without the connection.
+
+### Home screen
+
+`Сегодня` -> `Показывать кнопку пропуска` is on by default
+(`home_qr_pass_visible`, boolean, kept on sign-out); the footer says
+`Виджет и быстрые команды пропуска останутся доступны.` Turning it off hides
+only the `Пропуск` button on Сегодня on Android and the bottom accessory on
+iOS; the pass remains available through its widgets, shortcuts and other entry
+routes. Both shells observe changes immediately. The setting works offline and
+without custom services.
 
 ## Account and services
 
-`Подключение и данные` (`AppRoutes.Settings` `SERVICES`; the old `PRIVACY` key
+«Сервер ITMO.Widgets» (`AppRoutes.Settings` `SERVICES`; the old `PRIVACY` key
 opens it too) is the one home of the connection to ITMO.Widgets (DECISIONS.md,
 Screens): `ConnectionViewModel` (`:shared:feature-settings`,
-`presentation/connection`) under a Compose and a SwiftUI screen.
+`presentation/connection`) under a Compose and a SwiftUI screen. It is short:
 
 - The status card with the `Подключение` switch. It is off by default; turning it
   on always goes through the consent sheet (`ServicesConsentSheet`: what the
@@ -160,31 +183,29 @@ Screens): `ConnectionViewModel` (`:shared:feature-settings`,
   it subject links stay private on the device; turning it on uploads them as
   private links on the next refresh of a subject (see [resources](features/resources.md)).
   Every change redraws the widgets. In the demo the switch is disabled.
-- `Что даёт подключение`: friends (with the friends and new requests counted
-  while connected), the sport queue and subject links; while connected the rows
-  open Друзья, the Спорт tab and the Зачётка tab.
-- `Работает и без подключения`: what talks to My ITMO and BARS directly.
-- `Что хранит сервер` (`Что будет хранить сервер` before connecting):
-  `ServicesStoredData`, which mirrors the Backend tables, and `Код сервера на
-  GitHub`; the token note under it.
-- `Кто видит`: the audiences below while connected, `Только вы` otherwise.
-- `БАРС`: connected (BARS has answered for this account, `bars_marks_enabled`
-  set), the session ended (`BarsLoginPrompt` is not `NONE`) with `Войти`, or not
-  connected with `Подключить`; both open the BARS sign-in.
-- `Устройства`: `Подключить устройство` ([web sign-in](features/web-login.md)) and
-  `Подключённые устройства`; both need the connection and say so without it.
+- Connected: `Кто видит`, the audiences [below](#privacy-and-social-access);
+  then `Устройства` (`Сайт и агенты с доступом к аккаунту`), which opens a
+  settings page of its own (`SettingsPage.DEVICES`) with `Подключить устройство`
+  ([web sign-in](features/web-login.md)) and `Подключённые устройства`.
+- Not connected: `Что даёт подключение`, three plain rows (friends, the sport
+  queue, subject links).
+- `Что хранит сервер` (`Что будет хранить сервер` before connecting) opens a
+  sheet: `ServicesStoredData`, which mirrors the Backend tables, `Код сервера на
+  GitHub` and the token note under it.
 - `Удалить аккаунт ITMO.Widgets` (`Всё с сервера, без возврата`) is shown with
   the switch off too, since an account may remain from an earlier connection,
   and opens `<WIDGETS_BASE_URL>/delete-account` in the browser. Deletion itself is
   a request handled by hand (Backend `docs/ops/account-deletion.md`); the app has
   no deletion screen.
+- BARS is not part of the connection: its state and sign-in are the root's
+  `БАРС` row.
 - `Выйти` remains an account action in the profile and requires confirmation.
 - ITMO.ID login and refresh-token entry exist only on the signed-out screen.
   Tokens are not editable settings.
 
 ## Privacy and social access
 
-The audiences are `Кто видит` on «Подключение и данные», each a menu of the three
+The audiences are `Кто видит` on «Сервер ITMO.Widgets», each a menu of the three
 choices. Connecting reloads them from Backend; the loading and explicit retries
 (`Сервер не ответил`, `Повторить`) remain visible for at least 300 ms to avoid a
 flash on fast connections. Requests start immediately; slower requests do not
@@ -307,11 +328,13 @@ spoiler image is v2.4.
 
 ## Schedule
 
-- The first row, `Уведомления об изменениях`, opens «Уведомления», where the
-  schedule change check has its switch ([notifications](#notifications)).
+- The `Расписание` group of «Разделы». The switch of the schedule change check
+  lives on «Уведомления» ([notifications](#notifications)); this page does not
+  link there.
 - `Автозапись на спорт` displays pending sport auto-sign entries in the user's own
-  schedule in the application and schedule widgets. It is disabled by default
-  and does not represent a confirmed booking.
+  schedule in the application and schedule widgets. It is enabled by default
+  (an absent value reads as on; an explicit off stays off) and does not
+  represent a confirmed booking.
 - This is a local display preference, stored as `schedule_sport_auto_sign_enabled`.
   It can be changed while user services are disabled and never enables them or
   grants consent implicitly. Displaying the entries still requires user services.
@@ -338,19 +361,17 @@ spoiler image is v2.4.
   deletes that calendar with its events.
 - `Выгрузить в .ics` (`ic_download`, `Файл с парами за выбранный период`)
   opens the export sheet ([`.ics` export](features/calendar.md#ics-export)).
-- The page is an offline settings category with three untitled groups: the
-  link to «Уведомления», the auto-sign switch with a
-  footer that explains the user-services requirement and that pending entries
-  are not confirmed bookings, then the calendar group without a footer:
-  `Синхронизация с календарём` (`Пары на 4 недели вперёд в системном календаре
-  телефона.` — the phone's own calendar app; Google and Yandex Calendar do not
-  show device calendars) and `Выгрузить в .ics`. An untitled group after another
-  one keeps the group gap
-  (`design_spacing_group`) above its card.
+- The group lists `Синхронизация с календарём` (`Пары на 4 недели вперёд в
+  системном календаре телефона.` — the phone's own calendar app; Google and
+  Yandex Calendar do not show device calendars), `Выгрузить в .ics` and the
+  auto-sign switch; its footer is `Для автозаписи нужно подключение к
+  ITMO.Widgets.`, since pending entries need the user services and are not
+  confirmed bookings. Without calendar export (`PlatformCapabilities`) only the
+  auto-sign switch is left.
 
 ### iOS
 
-The iOS schedule page has the same rows. `Синхронизация с календарём` asks
+The iOS `Разделы` page has the same rows. `Синхронизация с календарём` asks
 for full calendar access (EventKit) once; after a refusal for good it shows
 `Доступ к календарю` with `Открыть настройки`, which opens the app's page in
 Settings ([calendar](features/calendar.md#ios)). `Выгрузить в .ics` shares the
@@ -414,7 +435,7 @@ pushes while connected) or `запрещены в системе`.
   ([notifications](features/notifications.md#settings-page)). A sport push still books
   while its type is off. Turning a push on without the permission asks for it;
   no background work hint. Without the connection one row
-  `Нужно подключение к ITMO.Widgets` opens «Подключение и данные» and the push
+  `Нужно подключение к ITMO.Widgets` opens «Сервер ITMO.Widgets» and the push
   switches are disabled.
 - `Работа в фоне` ([background work](#background-work)) appears while a check is
   on and the system restricts the app.
@@ -480,6 +501,8 @@ user services suppresses FCM actions and attempts to unregister this device.
 
 ## Sport
 
+The `Спорт` group of «Разделы»:
+
 - `Показывать фильтр по преподавателю` shows the teacher in the more-filters
   sheet of `Запись`.
 - `Показывать фильтр по времени` shows the part of the day there.
@@ -511,7 +534,9 @@ user services suppresses FCM actions and attempts to unregister this device.
 There is no map-provider setting. Every building action launches a generic
 system `geo:` intent and lets Android resolve the installed mapping application.
 
-## Maintenance and diagnostics
+## About and diagnostics
+
+«О приложении» (`AppRoutes.Settings` `ABOUT`; the old `MAINTENANCE` key opens it):
 
 - `Обновить все виджеты` refreshes QR and schedule widgets.
 - `Последнее обновление` displays the last successful widget refresh.
@@ -552,7 +577,7 @@ model (`SettingItem`, `SettingSection`, `SettingsPage`, `SettingRowId`,
 `SettingsEvent`) is platform-neutral: `UiText` and `AppIcon`, never Android,
 `R`, Compose or a resource id (`SettingsRulesTest`). iOS renders the same
 pages and the journal as SwiftUI forms over the shared view models.
-«Подключение и данные» (`ConnectionViewModel`, `ConnectionScreen`) and
+«Сервер ITMO.Widgets» (`ConnectionViewModel`, `ConnectionScreen`) and
 «Уведомления» (`NotificationSettingsViewModel`, `NotificationSettingsScreen`)
 are screens of their own in the same module, drawn on the kit; iOS has
 `ConnectionDataScreen` and `NotificationSettingsScreen`. The hosts route their

@@ -154,10 +154,10 @@ class SettingsScreenTest {
         val navigation = SettingItem.Navigation(SettingRowId.PAGE_SERVICES, text("Открыть"), page = SettingsPage.SERVICES)
         show(page(SettingSection(null, listOf(navigation))))
         val row = nodeId(SettingRowId.PAGE_SERVICES)
-        update(page(SettingSection(null, listOf(navigation.copy(page = SettingsPage.PRIVACY)))))
+        update(page(SettingSection(null, listOf(navigation.copy(page = SettingsPage.DEVICES)))))
         assertEquals(row, nodeId(SettingRowId.PAGE_SERVICES))
         compose.onNodeWithTag(SettingRowId.PAGE_SERVICES.key).performClick()
-        assertEquals(listOf(SettingsPage.PRIVACY), pages)
+        assertEquals(listOf(SettingsPage.DEVICES), pages)
 
         update(
             page(
@@ -259,7 +259,7 @@ class SettingsScreenTest {
     @Test
     @Config(qualifiers = "w320dp-h891dp")
     fun `the version row shows the build and fits a narrow screen in light and dark`() {
-        show(SettingsPreviewData.Maintenance, fontScale = LARGE_FONT)
+        show(SettingsPreviewData.About, fontScale = LARGE_FONT)
         for (scheme in listOf(false, true)) {
             dark = scheme
             colors = ColorSource.Seed(GREEN_SEED)
@@ -276,8 +276,8 @@ class SettingsScreenTest {
         val schemes = listOf(false to ColorSource.Platform, true to ColorSource.Platform, false to ColorSource.Seed(GREEN_SEED))
         val details = listOf(
             SettingsPreviewData.Root,
-            SettingsPreviewData.Home,
-            SettingsPreviewData.Schedule,
+            SettingsPreviewData.Sections,
+            SettingsPreviewData.Devices,
         )
         for ((night, source) in schemes) for (detail in details) {
             dark = night
@@ -291,8 +291,8 @@ class SettingsScreenTest {
 
     @Test
     @Config(qualifiers = "w320dp-h891dp")
-    fun `the schedule page fits a narrow screen with custom services off`() {
-        show(SettingsPreviewData.Schedule, fontScale = LARGE_FONT)
+    fun `the sections page fits a narrow screen with custom services off`() {
+        show(SettingsPreviewData.Sections, fontScale = LARGE_FONT)
 
         compose.onNodeWithTag(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN.key).assertIsEnabled().assertHasClickAction()
         compose.assertNoTextOverflow()
@@ -307,7 +307,7 @@ class SettingsScreenTest {
             onOpenAppSettings = { calls += "app-settings" },
         )
         val dialogs = SettingsDialogState()
-        state = SettingsPreviewData.Schedule
+        state = SettingsPreviewData.Sections
         compose.setContent { Themed { SettingsScreen(state, hostActions, dialogs = dialogs) } }
 
         for ((dialog, button) in listOf(
@@ -420,7 +420,7 @@ class SettingsScreenTest {
     }
 
     private fun page(vararg sections: SettingSection) =
-        SettingsUiState(SettingsPage.HOME, sections.toList(), loaded = true)
+        SettingsUiState(SettingsPage.SECTIONS, sections.toList(), loaded = true)
 
     private fun toggle(checked: Boolean = false) =
         SettingItem.Toggle(SettingRowId.HOME_PASS_VISIBLE, text("Расписание"), checked = checked)

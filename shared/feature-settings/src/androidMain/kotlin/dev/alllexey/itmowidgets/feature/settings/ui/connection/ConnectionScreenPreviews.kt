@@ -10,22 +10,22 @@ import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.ui.preview.ConnectionSamples
 
-// «Подключение и данные» at the design lab's axes, the whole page in one frame, and the consent sheet.
+// «Сервер ITMO.Widgets» at the design lab's axes, the whole page in one frame, and its two sheets.
 
 internal class ConnectionScreenOnPreview {
-    @Preview(name = "on", heightDp = 2300)
+    @Preview(name = "on", heightDp = 1100)
     @Composable
     fun ConnectionScreen() = ItmoPreview { ConnectionScreen(ConnectionSamples.state("on"), ConnectionActions()) }
 }
 
 internal class ConnectionScreenOffPreview {
-    @Preview(name = "off", heightDp = 2200)
+    @Preview(name = "off", heightDp = 1100)
     @Composable
     fun ConnectionScreen() = ItmoPreview { ConnectionScreen(ConnectionSamples.state("off"), ConnectionActions()) }
 }
 
 internal class ConnectionScreenFailedPreview {
-    @Preview(name = "failed", heightDp = 2200)
+    @Preview(name = "failed", heightDp = 1000)
     @Composable
     fun ConnectionScreen() = ItmoPreview { ConnectionScreen(ConnectionSamples.state("failed"), ConnectionActions()) }
 }
@@ -35,5 +35,13 @@ internal class ConnectionConsentPreview {
     @Composable
     fun ConnectionConsent() = ItmoPreview {
         Box(Modifier.background(ItmoTheme.colorScheme.surfaceContainerLow)) { ServicesConsentContent(onConnect = {}, onDismiss = {}) }
+    }
+}
+
+internal class ConnectionStoredPreview {
+    @Preview(name = "stored", heightDp = 900)
+    @Composable
+    fun ConnectionStored() = ItmoPreview {
+        Box(Modifier.background(ItmoTheme.colorScheme.surfaceContainerLow)) { StoredDataContent(connected = true, onSource = {}, onDismiss = {}) }
     }
 }

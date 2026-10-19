@@ -13,7 +13,7 @@ data class LocalSettings(
     val scheduleWidget: ScheduleWidgetSettings = ScheduleWidgetSettings(),
     val qrWidget: QrWidgetSettings = QrWidgetSettings(),
     val sport: SportDisplaySettings = SportDisplaySettings(),
-    val showSportAutoSign: Boolean = false,
+    val showSportAutoSign: Boolean = true,
     val scheduleChangesEnabled: Boolean = true,
     val myItmoMarksEnabled: Boolean = true,
     /** Null until the account's first BARS answer: the switch is hidden then. */

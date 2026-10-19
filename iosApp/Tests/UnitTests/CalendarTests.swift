@@ -61,9 +61,9 @@ final class CalendarTests: XCTestCase {
 
     // MARK: Settings and the .ics sheet
 
-    func testTheSchedulePageListsTheCalendarSwitchAndTheIcsRow() async {
+    func testTheSectionsPageListsTheCalendarSwitchAndTheIcsRow() async {
         let model = ObservableViewModel<SettingsViewModel, SettingsUiState>(state: \.uiState) { store in
-            let parameters: [Any?] = settingsPageParameters(page: "SCHEDULE")
+            let parameters: [Any?] = settingsPageParameters(page: "SECTIONS")
             return store.resolve(type: SettingsViewModel.self, parameters: parameters) as! SettingsViewModel
         }
 

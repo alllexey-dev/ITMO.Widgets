@@ -13,15 +13,15 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.AboutPageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.DevicesPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.LicensesPageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.SchedulePageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.SectionsPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsViewModel
-import dev.alllexey.itmowidgets.feature.settings.presentation.SportPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetsPageProvider
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
@@ -52,11 +52,11 @@ val settingsDataModule = module {
  * a constructor reference would make ambiguous.
  */
 val settingsModule = module {
-    factory { RootPageProvider(get(), get()) }
+    factory { RootPageProvider(get(), get(), get()) }
     factory { WidgetsPageProvider(get(), get(), get()) }
-    factory { SchedulePageProvider(get(), get(), get()) }
-    factoryOf(::SportPageProvider)
-    factoryOf(::MaintenancePageProvider)
+    factory { SectionsPageProvider(get(), get(), get()) }
+    factoryOf(::AboutPageProvider)
+    factoryOf(::DevicesPageProvider)
     factoryOf(::LicensesPageProvider)
     factoryOf(::SettingsPages)
     viewModelOf(::SettingsViewModel)

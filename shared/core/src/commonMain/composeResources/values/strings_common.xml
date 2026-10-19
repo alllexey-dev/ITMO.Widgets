@@ -153,7 +153,7 @@
     <string name="services_consent_title">Подключить ITMO.Widgets?</string>
     <string name="services_consent_text">Сервер один раз проверит ваш токен ITMO.ID, чтобы убедиться, что это вы. Сам токен не сохраняется.</string>
     <string name="services_consent_stored">Сервер будет хранить</string>
-    <string name="services_consent_privacy">Расписание и спорт сначала видят только друзья. Выключить и удалить всё можно на странице «Подключение и данные».</string>
+    <string name="services_consent_privacy">Расписание и спорт сначала видят только друзья. Выключить и удалить всё можно в настройках, «Сервер ITMO.Widgets».</string>
     <string name="services_consent_connect">Подключить</string>
     <string name="services_consent_later">Не сейчас</string>
     <string name="services_stored_identity">ИСУ, имя и фото из ITMO.ID</string>

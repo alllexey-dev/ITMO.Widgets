@@ -45,15 +45,11 @@ import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_github
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_telegram
-import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
-import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
-import dev.alllexey.itmowidgets.shared.designsystem.ic_computer
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_language
-import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import dev.alllexey.itmowidgets.shared.designsystem.ic_logout
-import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
+import dev.alllexey.itmowidgets.shared.designsystem.ic_map
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
 import dev.alllexey.itmowidgets.shared.designsystem.ic_share
@@ -66,17 +62,16 @@ enum class MeProjectLink { GITHUB, TELEGRAM }
 
 /**
  * What the Профиль tab asks its host to do. Navigation, sharing and links are platform work; [onOpenProjectLink]
- * answers whether any app opened the page, and the route says so when none did. The connection, notification and
- * widget rows name no route themselves: the host maps them (the settings pages own them).
+ * answers whether any app opened the page, and the route says so when none did. The connection and widget rows name
+ * no route themselves: the host maps them (the settings pages own them).
  */
 data class MeActions(
     val onOpenFriends: () -> Unit = {},
-    val onOpenPrivacy: () -> Unit = {},
-    /** `Подключение и данные`, also the gate's `Подключить` and the web sign-in row without the connection. */
+    /** «Сервер ITMO.Widgets», the gate's `Подключить`. */
     val onOpenConnection: () -> Unit = {},
-    val onOpenNotifications: () -> Unit = {},
     val onOpenWidgets: () -> Unit = {},
-    val onOpenWebLogin: () -> Unit = {},
+    /** The campus map, without a lesson to show. */
+    val onOpenMap: () -> Unit = {},
     /** The official site in the app's web view. */
     val onOpenMyItmo: () -> Unit = {},
     val onOpenSettings: () -> Unit = {},
@@ -95,12 +90,9 @@ object MeTestTags {
     const val PROFILE_META = "profile_meta"
     const val SHARE = "profile_share_button"
     const val FRIENDS_ROW = "friends_row"
-    const val PRIVACY_ROW = "privacy_row"
     const val GATE = "people_gate"
-    const val CONNECTION_ROW = "connection_row"
-    const val NOTIFICATIONS_ROW = "notifications_row"
     const val WIDGETS_ROW = "widgets_row"
-    const val WEB_LOGIN_ROW = "web_login_row"
+    const val MAP_ROW = "map_row"
     const val MY_ITMO_ROW = "my_itmo_row"
     const val SETTINGS_ROW = "settings_row"
     const val DEBUG_TOOLS_ROW = "debug_tools_row"
@@ -111,8 +103,8 @@ object MeTestTags {
 
 /**
  * The Профиль tab (DECISIONS.md, Профиль): the one-line root header with `Поделиться`, the identity card, then
- * groups of rows. Friends and requests are a counter here (their home is Друзья), the connection a status, the
- * notifications and widgets links; without the connection a gate stands in place of the people rows. The sign-out
+ * groups of rows. Friends and requests are a counter here (their home is Друзья); without the connection a gate
+ * stands in their place. Then the widgets and the settings, which hold everything else, and the links. The sign-out
  * asks first. [showDebugTools] adds the developer tools row (Android debug builds). Stateless; [MeRoute] feeds it.
  */
 @Composable
@@ -153,10 +145,10 @@ fun MeScreen(
                 item(key = "header") { Header(state, name) }
                 item(key = "people:title") { SectionHeader(text(AccountStrings.me_group_people)) }
                 item(key = "people") { People(state, actions) }
-                item(key = "widgets:title") { SectionHeader(text(AccountStrings.me_group_widgets)) }
-                item(key = "widgets") { Service(state, actions) }
                 item(key = "app:title") { SectionHeader(text(CoreStrings.me_group_app)) }
                 item(key = "app") { App(showDebugTools, actions) }
+                item(key = "links:title") { SectionHeader(text(AccountStrings.me_group_links)) }
+                item(key = "links") { Links(actions) }
                 item(key = "sign-out") {
                     ListGroup(Modifier.padding(top = ItmoTheme.spacing.content)) {
                         item {
@@ -215,7 +207,7 @@ private fun Quiet(value: String, tag: String) {
     Text(value, Modifier.testTag(tag), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
 }
 
-/** Friends with the requests as a badge, and privacy; without the connection the gate in their place. */
+/** Friends with the requests as a badge; without the connection the gate in their place. */
 @Composable
 private fun People(state: MeUiState, actions: MeActions) {
     if (state.friends == MeFriendsSummary.Disabled) {
@@ -244,45 +236,13 @@ private fun People(state: MeUiState, actions: MeActions) {
                 onClick = actions.onOpenFriends,
             )
         }
-        item {
-            ListRow(
-                text(AccountStrings.me_privacy_title),
-                Modifier.testTag(MeTestTags.PRIVACY_ROW),
-                subtitle = text(AccountStrings.me_privacy_description),
-                icon = painterResource(Res.drawable.ic_lock),
-                iconTone = Tone.Tertiary,
-                chevron = true,
-                onClick = actions.onOpenPrivacy,
-            )
-        }
     }
 }
 
-/** The connection as a status, the notification and widget pages as links, the web sign-in. */
+/** The widgets gallery, the settings and, in debug builds, the developer tools. */
 @Composable
-private fun Service(state: MeUiState, actions: MeActions) {
+private fun App(showDebugTools: Boolean, actions: MeActions) {
     ListGroup {
-        item {
-            ListRow(
-                text(AccountStrings.me_connection_title),
-                Modifier.testTag(MeTestTags.CONNECTION_ROW),
-                subtitle = state.connectionStatus.asString(),
-                icon = painterResource(if (state.connected) Res.drawable.ic_check_circle else Res.drawable.ic_cloud_off),
-                iconTone = if (state.connected) Tone.Success else Tone.Neutral,
-                chevron = true,
-                onClick = actions.onOpenConnection,
-            )
-        }
-        item {
-            ListRow(
-                text(AccountStrings.me_notifications_title),
-                Modifier.testTag(MeTestTags.NOTIFICATIONS_ROW),
-                icon = painterResource(Res.drawable.ic_notification),
-                iconTone = Tone.Warning,
-                chevron = true,
-                onClick = actions.onOpenNotifications,
-            )
-        }
         item {
             ListRow(
                 text(AccountStrings.me_widgets_title),
@@ -291,32 +251,6 @@ private fun Service(state: MeUiState, actions: MeActions) {
                 iconTone = Tone.Primary,
                 chevron = true,
                 onClick = actions.onOpenWidgets,
-            )
-        }
-        item {
-            ListRow(
-                text(AccountStrings.me_web_login_title),
-                Modifier.testTag(MeTestTags.WEB_LOGIN_ROW),
-                subtitle = state.webLoginSubtitle.asString(),
-                icon = painterResource(Res.drawable.ic_computer),
-                iconTone = Tone.Neutral,
-                chevron = true,
-                onClick = if (state.connected) actions.onOpenWebLogin else actions.onOpenConnection,
-            )
-        }
-    }
-}
-
-@Composable
-private fun App(showDebugTools: Boolean, actions: MeActions) {
-    ListGroup {
-        item {
-            ExternalRow(
-                text(AccountStrings.me_my_itmo),
-                text(AccountStrings.me_my_itmo_subtitle),
-                painterResource(Res.drawable.ic_language),
-                MeTestTags.MY_ITMO_ROW,
-                actions.onOpenMyItmo,
             )
         }
         item {
@@ -340,6 +274,33 @@ private fun App(showDebugTools: Boolean, actions: MeActions) {
                     onClick = actions.onOpenDebugTools,
                 )
             }
+        }
+    }
+}
+
+/** The campus map, the university's site and the project's pages. */
+@Composable
+private fun Links(actions: MeActions) {
+    ListGroup {
+        item {
+            ListRow(
+                text(AccountStrings.me_map),
+                Modifier.testTag(MeTestTags.MAP_ROW),
+                subtitle = text(AccountStrings.me_map_subtitle),
+                icon = painterResource(Res.drawable.ic_map),
+                iconTone = Tone.Neutral,
+                chevron = true,
+                onClick = actions.onOpenMap,
+            )
+        }
+        item {
+            ExternalRow(
+                text(AccountStrings.me_my_itmo),
+                text(AccountStrings.me_my_itmo_subtitle),
+                painterResource(Res.drawable.ic_language),
+                MeTestTags.MY_ITMO_ROW,
+                actions.onOpenMyItmo,
+            )
         }
         item {
             ExternalRow(

@@ -7,25 +7,18 @@
 
     <!-- Профиль hub -->
     <string name="me_group_people">Люди</string>
-    <string name="me_group_widgets">ITMO.Widgets</string>
+    <string name="me_group_links">Ссылки</string>
     <string name="me_friends_title">Друзья</string>
     <string name="me_friends_none">Пока никого</string>
     <string name="me_friends_loading">Загружаем…</string>
     <string name="me_friends_error">Не загрузились</string>
     <string name="me_requests_badge_accessibility">Входящих заявок: %1$d</string>
-    <string name="me_privacy_title">Приватность</string>
-    <string name="me_privacy_description">Кто видит расписание, спорт и друзей</string>
     <string name="me_gate_title">Друзья недоступны</string>
     <string name="me_gate_reason">Друзья, приватность и вход на сайт работают через сервер ITMO.Widgets. Расписание, зачётка и спорт работают и без него.</string>
     <string name="me_gate_fix">Подключить</string>
-    <string name="me_connection_title">Подключение и данные</string>
-    <string name="me_connection_on">Подключено</string>
-    <string name="me_connection_off">Не подключено</string>
-    <string name="me_notifications_title">Уведомления</string>
     <string name="me_widgets_title">Виджеты</string>
-    <string name="me_web_login_title">Подключить устройство</string>
-    <string name="me_web_login_subtitle">Вход на сайт по QR или коду</string>
-    <string name="me_needs_connection">Нужно подключение</string>
+    <string name="me_map">Карта</string>
+    <string name="me_map_subtitle">Корпуса и аудитории</string>
     <string name="me_my_itmo">My ITMO</string>
     <string name="me_my_itmo_subtitle">Сайт университета</string>
     <string name="me_telegram">Telegram</string>

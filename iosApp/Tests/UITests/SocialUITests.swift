@@ -21,7 +21,7 @@ final class SocialUITests: XCTestCase {
 
         XCTAssertTrue(element(app, "profile_name").waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(app.staticTexts[Self.meName].exists, "the demo's own name")
-        for row in ["profile_share_button", "friends_row", "privacy_row", "connection_row", "notifications_row", "widgets_row"] {
+        for row in ["profile_share_button", "friends_row", "widgets_row", "settings_row"] {
             XCTAssertTrue(element(app, row).exists, "\(row) is on the profile")
         }
         XCTAssertFalse(element(app, "debug_tools_row").exists, "the developer tools stay Android-only")

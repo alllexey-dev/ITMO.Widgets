@@ -5,14 +5,14 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 class SettingsPages(
     root: RootPageProvider,
     val widgets: WidgetsPageProvider,
-    val schedule: SchedulePageProvider,
-    sport: SportPageProvider,
-    maintenance: MaintenancePageProvider,
+    val sections: SectionsPageProvider,
+    about: AboutPageProvider,
+    devices: DevicesPageProvider = DevicesPageProvider(),
     licenses: LicensesPageProvider = LicensesPageProvider(),
 ) {
 
     val providers: List<SettingsPageProvider> =
-        listOf(root, widgets, schedule, sport, maintenance, licenses)
+        listOf(root, widgets, sections, about, devices, licenses)
 
     private val byPage = providers.flatMap { provider -> provider.pages.map { it to provider } }.toMap()
     private val byRow = providers.flatMap { provider -> provider.rows.map { it to provider } }.toMap()

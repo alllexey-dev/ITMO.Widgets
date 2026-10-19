@@ -30,10 +30,9 @@ object MeSamples {
             requests == "yes" -> MeFriendsSummary.Content(friends = 3, incomingRequests = 1)
             else -> MeFriendsSummary.Content(friends = 3, incomingRequests = 0)
         },
-        connected = connection != "off",
     )
 
-    val loading: MeUiState = MeUiState(header = header(NAME), friends = MeFriendsSummary.Loading, connected = true)
+    val loading: MeUiState = MeUiState(header = header(NAME), friends = MeFriendsSummary.Loading)
 
     val longName: MeUiState = state(requests = "no").copy(header = header(LONG_NAME).copy(initials = "КА"))
 }

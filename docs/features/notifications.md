@@ -77,7 +77,7 @@ the SwiftUI screens; details are in [settings](../settings.md#notifications).
   `PushCategoryPreferences` (`sport_notifications_enabled`,
   `friends_notifications_enabled`, `connections_notifications_enabled`, absent
   means on, kept on sign-out). Without the connection one row
-  `Нужно подключение к ITMO.Widgets` opens «Подключение и данные» and the push
+  `Нужно подключение к ITMO.Widgets` opens «Сервер ITMO.Widgets» and the push
   switches are disabled.
 - iOS lists no push switch and no connection row
   (`PlatformCapabilities.pushSwitches`): the notification service can hide a

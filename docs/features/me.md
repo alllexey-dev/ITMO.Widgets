@@ -16,22 +16,20 @@ builds every text of the screen (`MeUiState`), so the Compose and SwiftUI views 
   the ID-token user, else Backend's own profile, else `Профиль не загрузился`; the study group line
   (`M3205, 2 курс, ФИТиП`) only from Backend's primary group; `ИСУ N`.
 - `Люди`: `Друзья` with `friendsSubtitle` (`3 друга, 1 заявка`, `Пока никого`, loading or error) and the incoming
-  requests as a badge; `Приватность` opens `AppRoutes.Settings` with `page` = `PRIVACY`. Without the connection
-  (`MeFriendsSummary.Disabled`) a gate `Друзья недоступны` with `Подключить` stands in their place.
-- `ITMO.Widgets`: `Подключение и данные` with the status `Подключено` / `Не подключено`; `Уведомления` and `Виджеты`
-  as links; `Подключить устройство` ([web sign-in and pairing](web-login.md)), which says `Нужно подключение` and
-  opens the connection while the opt-in is off. Nothing is hidden without the connection.
-- `Приложение`: `My ITMO` ([My ITMO in the app](my-itmo-web.md); the demo refuses it), the settings, developer tools
-  only in Android debug builds ([Debug tools](debug.md)), the Telegram channel and GitHub; then `Выйти`.
-- The rows name no route themselves: `MeActions` reaches the host, which maps them. The connection and privacy open
-  «Подключение и данные» (`AppRoutes.Settings(SERVICES)`, `PRIVACY`), notifications «Уведомления»
-  (`AppRoutes.Settings(NOTIFICATIONS)`) and widgets the widgets gallery (`AppRoutes.Settings(WIDGETS)`).
+  requests as a badge. Without the connection (`MeFriendsSummary.Disabled`) a gate `Друзья недоступны` with
+  `Подключить` stands in its place and opens «Сервер ITMO.Widgets».
+- `Приложение`: `Виджеты` (the widgets gallery), `Настройки`, which hold every setting, the connection, privacy,
+  notifications and devices included ([settings](../settings.md#navigation-and-density)), and developer tools only
+  in Android debug builds ([Debug tools](debug.md)).
+- `Ссылки`: `Карта` (the campus map without a lesson, `AppRoutes.CampusMap()`, [campus map](map.md)), `My ITMO` ([My ITMO in the app](my-itmo-web.md); the demo refuses it), the Telegram channel and GitHub;
+  then `Выйти`.
+- The rows name no route themselves: `MeActions` reaches the host, which maps them: the gate to
+  `AppRoutes.Settings(SERVICES)`, widgets to the gallery (`AppRoutes.Settings(WIDGETS)`), settings to the root.
 - The first frame shows the cached state; a recreated tab is never blank. `StoreScreenshotCapture` sets
   `MeHost.releaseLook`, so a debug build shows the release screen without the developer tools row.
 
-Not done yet, needing data or pages the app does not have: the notifications value (`5 из 6`), the widgets on
-screen (`На экране: Пара, Пропуск`), the connection's last sync time (`обновлено в 12:20`) and a requests badge on
-the Профиль tab.
+Not done yet: the connection's last sync time (`обновлено в 12:20`) and a requests badge on the Профиль tab. The
+notifications and widgets counts live on the settings root.
 
 ## Sign-out
 

@@ -1,24 +1,14 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation.connection
 
-import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.result.LoadState
-import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
-import dev.alllexey.itmowidgets.core.testing.PreferenceStores
-import dev.alllexey.itmowidgets.core.testing.profile
-import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.feature.settings.data.BarsStatusRepositoryImpl
-import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.presentation.FakeSettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.presentation.FakeWidgetRefreshRequester
-import dev.alllexey.itmowidgets.shared.feature.settings.SettingsPlurals
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -33,7 +23,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
-/** «Подключение и данные»: the consent-gated switch, the audiences with their minimum loading time, BARS, friends. */
+/** «Сервер ITMO.Widgets»: the consent-gated switch and the audiences with their minimum loading time. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConnectionViewModelTest {
 
@@ -46,12 +36,10 @@ class ConnectionViewModelTest {
     fun tearDown() = main.reset()
 
     private class Fixture(connected: Boolean, sharing: SharingSettingsState) {
-        val stores = PreferenceStores()
         val services = FakeCustomServicesRepository(enabled = connected)
         val settings = FakeSettingsRepository(LocalSettings(customServicesEnabled = connected), sharing, true, MutableStateFlow(true))
-        val social = FakeSocialRepository()
         val refresher = FakeWidgetRefreshRequester()
-        val viewModel = ConnectionViewModel(services, settings, social, BarsStatusRepositoryImpl(stores.markSources), refresher)
+        val viewModel = ConnectionViewModel(services, settings, refresher)
     }
 
     private fun fixture(connected: Boolean = true, sharing: SharingSettingsState = Audiences) = Fixture(connected, sharing)
@@ -65,7 +53,6 @@ class ConnectionViewModelTest {
         assertTrue(state.loaded)
         assertEquals(false, state.connected)
         assertEquals(ConnectionPrivacy.OnlyYou, state.privacy)
-        assertEquals(null, state.friends)
         assertEquals(0, fixture.settings.refreshSharingCount)
         assertEquals(1, fixture.settings.disableSharingCount)
     }
@@ -148,43 +135,6 @@ class ConnectionViewModelTest {
         advanceUntilIdle()
         assertTrue(fixture.viewModel.uiState.value.privacy is ConnectionPrivacy.Audiences)
         assertEquals(2, fixture.settings.refreshSharingCount)
-    }
-
-    @Test
-    fun barsFollowsItsFirstAnswerAndTheEndedSession() = runTest(main.dispatcher) {
-        val fixture = fixture()
-        advanceUntilIdle()
-        assertEquals(BarsConnection.NOT_CONNECTED, fixture.viewModel.uiState.value.bars)
-
-        fixture.stores.markSources.setBarsMarksEnabled(true)
-        advanceUntilIdle()
-        assertEquals(BarsConnection.CONNECTED, fixture.viewModel.uiState.value.bars)
-
-        fixture.stores.markSources.setBarsLoginPrompt(BarsLoginPrompt.PENDING)
-        advanceUntilIdle()
-        assertEquals(BarsConnection.EXPIRED, fixture.viewModel.uiState.value.bars)
-    }
-
-    @Test
-    fun theFriendsRowCountsFriendsAndNewRequestsWhileConnected() = runTest(main.dispatcher) {
-        val fixture = fixture()
-        fixture.social.friends.value = LoadState.Content(listOf(profile(1), profile(2), profile(3)))
-        fixture.social.requests.value = LoadState.Content(FriendRequests(incoming = listOf(profile(4)), outgoing = emptyList()))
-        advanceUntilIdle()
-
-        val state = fixture.viewModel.uiState.value
-        assertEquals(
-            UiText.Joined(
-                listOf(
-                    UiText.Plural(SettingsPlurals.connection_friends_count, 3, listOf(3)),
-                    UiText.Plural(SettingsPlurals.connection_friend_requests_count, 1, listOf(1)),
-                ),
-                ", ",
-            ),
-            state.friends,
-        )
-        assertEquals(1, state.friendRequests)
-        assertTrue(fixture.social.refreshes > 0)
     }
 
     @Test

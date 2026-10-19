@@ -13,26 +13,31 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(state, named: "root", height: 1060, ax1Height: 1500)
     }
 
-    func testHome() {
-        let state = SettingsFixtures.page(.home, SettingsFixtures.pageState(notificationsGranted: false))
-        assertPage(state, named: "home", height: 320, ax1Height: 440)
+    func testSections() {
+        let state = SettingsFixtures.page(.sections, SettingsFixtures.pageState(notificationsGranted: true))
+        assertPage(state, named: "sections", height: 1180, ax1Height: 1900)
     }
 
-    func testSchedule() {
-        let state = SettingsFixtures.page(.schedule, SettingsFixtures.pageState(notificationsGranted: true))
-        assertPage(state, named: "schedule", height: 920, ax1Height: 1400)
-    }
-
-    /// The calendar group under the schedule rows, with the reason the sync turned itself off.
-    func testScheduleWithTheCalendarDeleted() {
+    /// The calendar rows of Расписание, with the reason the sync turned itself off.
+    func testSectionsWithTheCalendarDeleted() {
         let state = SettingsFixtures.page(
-            .schedule,
+            .sections,
             SettingsFixtures.pageState(
                 notificationsGranted: true,
                 calendar: CalendarSyncState(enabled: false, problem: .calendarMissing)
             )
         )
-        assertPage(state, named: "schedule-calendar", height: 760, ax1Height: 1150)
+        assertPage(state, named: "sections-calendar", height: 1180, ax1Height: 1900)
+    }
+
+    func testDevices() {
+        let state = SettingsFixtures.page(.devices, SettingsFixtures.pageState(notificationsGranted: true))
+        assertPage(state, named: "devices", height: 360, ax1Height: 640)
+    }
+
+    func testAbout() {
+        let state = SettingsFixtures.page(.about, SettingsFixtures.pageState(notificationsGranted: true))
+        assertPage(state, named: "about", height: 760, ax1Height: 1500)
     }
 
     func testEveryRowTypeWithLongValues() {
@@ -107,6 +112,7 @@ enum SettingsFixtures {
             imageBusy: false,
             calendar: calendar,
             diagnosticsCount: 0,
+            bars: .notConnected,
             placedWidgets: placedWidgets
         )
     }
@@ -209,7 +215,7 @@ enum SettingsFixtures {
             ),
         ]
         return SettingsUiState(
-            page: .maintenance,
+            page: .about,
             sections: [SettingSection(title: text(long), items: items, footer: text(person))],
             loaded: true,
            

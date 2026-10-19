@@ -82,14 +82,13 @@ class PlatformCapabilitiesPagesTest {
     }
 
     @Test
-    fun schedulePageHasNoCalendarRowsWithoutCalendarExport() = runTest(main.dispatcher) {
+    fun sectionsHaveNoCalendarRowsWithoutCalendarExport() = runTest(main.dispatcher) {
         val calendar = FakeCalendarSync(CalendarSyncState(enabled = true, problem = CalendarSyncProblem.NO_PERMISSION))
-        val fixture = createFixture(page = SettingsPage.SCHEDULE, calendarSync = calendar, capabilities = none)
+        val fixture = createFixture(page = SettingsPage.SECTIONS, calendarSync = calendar, capabilities = none)
         advanceUntilIdle()
 
-        val ids = fixture.viewModel.allItems().map { it.id }
-        assertEquals(listOf(SettingRowId.PAGE_NOTIFICATIONS, SettingRowId.SCHEDULE_SPORT_AUTO_SIGN), ids)
-        assertEquals(2, fixture.viewModel.uiState.value.sections.size)
+        val schedule = fixture.viewModel.uiState.value.sections[1]
+        assertEquals(listOf(SettingRowId.SCHEDULE_SPORT_AUTO_SIGN), schedule.items.map { it.id })
         assertTrue(fixture.viewModel.uiState.value.loaded)
     }
 }

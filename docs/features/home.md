@@ -95,7 +95,7 @@ The bell opens its sheet over it. The spec is the design lab's
 ## QR pass
 
 The `Пропуск` button of Сегодня opens the pass sheet above it; see [QR pass](qr.md).
-`Настройки` -> `Главный экран` -> `Показывать кнопку пропуска` hides this entry
+`Настройки` -> `Разделы` -> `Показывать кнопку пропуска` hides this entry
 (the iOS tab-bar accessory too), not the widgets, shortcuts or the pass route.
 The default is visible; the device preference survives sign-out.
 

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
  */
 enum class BarsConnection { NOT_CONNECTED, CONNECTED, EXPIRED }
 
-/** The state of BARS that «Подключение и данные» shows. */
-interface BarsStatusRepository {
+/** The state of BARS that the settings root shows. */
+fun interface BarsStatusRepository {
     fun observe(): Flow<BarsConnection>
 }

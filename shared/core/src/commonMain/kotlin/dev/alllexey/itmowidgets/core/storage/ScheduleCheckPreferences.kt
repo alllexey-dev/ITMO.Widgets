@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.Flow
 /** The background check of the own schedule and the sport auto-sign shown in the schedule. */
 class ScheduleCheckPreferences(dataStore: DataStore<Preferences>) : DataStorePreferences(dataStore) {
 
-    suspend fun getScheduleSportAutoSignEnabled(): Boolean = read()[SCHEDULE_SPORT_AUTO_SIGN_ENABLED] ?: false
+    suspend fun getScheduleSportAutoSignEnabled(): Boolean = read()[SCHEDULE_SPORT_AUTO_SIGN_ENABLED] ?: true
 
     fun observeScheduleSportAutoSignEnabled(): Flow<Boolean> =
-        observe { it[SCHEDULE_SPORT_AUTO_SIGN_ENABLED] ?: false }
+        observe { it[SCHEDULE_SPORT_AUTO_SIGN_ENABLED] ?: true }
 
     suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) {
         write(SCHEDULE_SPORT_AUTO_SIGN_ENABLED, enabled)

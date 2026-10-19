@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
@@ -38,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.app.shell.ActivityRoutes
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
@@ -101,7 +103,7 @@ import org.koin.core.parameter.parametersOf
 internal fun EntryRegistry.Builder.settingsEntries() {
     entry<AppRoutes.Settings>(args = { bundleOf(SettingsScreenArgs.PAGE to it.page) }) { key, navigator ->
         when (SettingsPage.fromArgument(key.page)) {
-            SettingsPage.SERVICES, SettingsPage.PRIVACY -> ConnectionEntry(key, navigator)
+            SettingsPage.SERVICES -> ConnectionEntry(key, navigator)
             SettingsPage.NOTIFICATIONS -> NotificationSettingsEntry(key, navigator)
             else -> SettingsEntry(key, navigator)
         }
@@ -121,6 +123,7 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
     val view = LocalView.current
     val platform = LocalPlatformActions.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val appName = stringResource(R.string.app_name)
     val viewModel: SettingsViewModel = entryViewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val page = remember(viewModel) { viewModel.uiState.value.page }
@@ -151,7 +154,8 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
     LifecycleResumeEffect(viewModel) {
         // Back from a system page, the rows follow what Android allows now.
         viewModel.onNotificationPermissionChanged(NotificationManagerCompat.from(context).areNotificationsEnabled())
-        if (page == SettingsPage.WIDGETS) countPlacedWidgets(context, viewModel)
+        // The root's widgets row says how many are placed, as the gallery's subtitle does.
+        if (page == SettingsPage.ROOT || page == SettingsPage.WIDGETS) countPlacedWidgets(context, viewModel)
         onPauseOrDispose { }
     }
     LaunchedEffect(viewModel, lifecycleOwner) {
@@ -173,9 +177,11 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
                         null -> Unit
                     }
                     SettingsEvent.OpenIcsExport -> navigator.open(AppRoutes.IcsExport)
+                    SettingsEvent.OpenBarsLogin -> context.startActivity(ActivityRoutes.barsLogin(context))
+                    is SettingsEvent.OpenRoute -> navigator.open(event.route)
                     // Android 13 and later confirm a copy themselves.
                     is SettingsEvent.CopyText ->
-                        context.copyToClipboard(context.getString(R.string.app_name), event.text) {
+                        context.copyToClipboard(appName, event.text) {
                             Snackbar.make(view, event.confirmation.resolve(context), Snackbar.LENGTH_SHORT).show()
                         }
                     else -> showSettingsMessage(event, context, view, platform)

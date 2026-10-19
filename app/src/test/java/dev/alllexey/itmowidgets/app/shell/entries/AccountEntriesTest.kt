@@ -232,13 +232,9 @@ class AccountEntriesTest {
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.TabRoot(AppTab.ME))).assertDoesNotExist()
 
         assertOpens(MeTestTags.FRIENDS_ROW, overlays = listOf(AppRoutes.Friends))
-        assertOpens(MeTestTags.PRIVACY_ROW, overlays = listOf(AppRoutes.Settings("PRIVACY")))
-        assertOpens(MeTestTags.CONNECTION_ROW, overlays = listOf(AppRoutes.Settings("SERVICES")))
-        assertOpens(MeTestTags.NOTIFICATIONS_ROW, overlays = listOf(AppRoutes.Settings("NOTIFICATIONS")))
         assertOpens(MeTestTags.WIDGETS_ROW, overlays = listOf(AppRoutes.Settings("WIDGETS")))
         assertOpens(MeTestTags.SETTINGS_ROW, overlays = listOf(AppRoutes.Settings()))
         assertOpens(MeTestTags.DEBUG_TOOLS_ROW, overlays = listOf(AppRoutes.DebugTools))
-        assertOpens(MeTestTags.WEB_LOGIN_ROW, floating = listOf(AppRoutes.WebLogin()))
     }
 
     @Test
@@ -315,7 +311,7 @@ class AccountEntriesTest {
         show()
 
         ShadowToast.reset()
-        tap(MeTestTags.WEB_LOGIN_ROW)
+        act { open(AppRoutes.WebLogin()) }
         assertEquals(ShellBackStack(AppTab.ME), navigator.state)
         assertEquals(compose.activity.getString(R.string.error_demo_unavailable), ShadowToast.getTextOfLatestToast())
 

@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
@@ -57,12 +58,12 @@ internal fun createFixture(
     }
     val refresher = FakeWidgetRefreshRequester()
     val onboarding = FakeOnboardingRepository(completed = true)
+    val bars = MutableStateFlow(BarsConnection.NOT_CONNECTED)
     val pages = SettingsPages(
-        root = RootPageProvider(repository, capabilities),
+        root = RootPageProvider(repository, { bars }, capabilities),
         widgets = WidgetsPageProvider(repository, tileAccess, capabilities),
-        schedule = SchedulePageProvider(repository, calendarSync, capabilities),
-        sport = SportPageProvider(repository),
-        maintenance = MaintenancePageProvider(refresher, onboarding, TEST_BUILD, RecordingDiagnostics())
+        sections = SectionsPageProvider(repository, calendarSync, capabilities),
+        about = AboutPageProvider(refresher, onboarding, TEST_BUILD, RecordingDiagnostics())
     )
     val viewModel = SettingsViewModel(
         pages = pages,
@@ -72,7 +73,7 @@ internal fun createFixture(
     )
     return Fixture(
         viewModel, pages, repository, customServicesRepository, refresher, onboarding, tracking, markTracking, backgroundWork,
-        tileAccess, calendarSync
+        tileAccess, calendarSync, bars
     )
 }
 
@@ -112,7 +113,9 @@ internal data class Fixture(
     val markTracking: FakeMarkTracking,
     val backgroundWork: FakeBackgroundWorkAccess,
     val tileAccess: FakeQuickSettingsTileAccess,
-    val calendarSync: FakeCalendarSync
+    val calendarSync: FakeCalendarSync,
+    /** What BARS reports to the root's row. */
+    val bars: MutableStateFlow<BarsConnection>
 )
 
 

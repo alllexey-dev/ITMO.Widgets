@@ -2,8 +2,8 @@ import Shared
 import SwiftUI
 
 /// The profile tab's root (docs/features/me.md) over the shared `MeViewModel`: the static root header with
-/// share, the identity card, then the groups of rows. Friends are a counter here (their home is Friends), the
-/// connection a status; without the connection a gate stands in place of the people rows. Every row opens its key
+/// share, the identity card, then the groups of rows. Friends are a counter here (their home is Friends); without the
+/// connection a gate stands in their place. The widgets and the settings hold everything else. Every row opens its key
 /// through the router, a key the demo refuses says so; the sign-out asks first. No developer tools row on iOS. Named
 /// apart from the exported Kotlin `MeScreen`.
 struct MeTabScreen: View {
@@ -57,7 +57,7 @@ struct MeContentActions {
     var signOut: () -> Void = {}
 }
 
-/// The tab without the ViewModel: the identity card, the people, ITMO.Widgets and app groups and the sign-out.
+/// The tab without the ViewModel: the identity card, the people, app and link groups and the sign-out.
 struct MeContent: View {
     let state: MeUiState
     var actions = MeContentActions()
@@ -67,10 +67,10 @@ struct MeContent: View {
             MeIdentityCard(header: state.header)
             ItmoSectionHeader(title: AppStrings.string("me_group_people"))
             people
-            ItmoSectionHeader(title: AppStrings.string("me_group_widgets"))
-            service
             ItmoSectionHeader(title: AppStrings.string("me_group_app"))
             app
+            ItmoSectionHeader(title: AppStrings.string("me_group_links"))
+            links
             ItmoListGroup {
                 ItmoRow(title: AppStrings.string("me_sign_out"), symbol: .logout, tone: .bad, danger: true, action: actions.signOut)
                     .accessibilityIdentifier("sign_out_row")
@@ -80,13 +80,13 @@ struct MeContent: View {
         .accessibilityIdentifier("main")
     }
 
-    /// Friends with the requests as a badge, and privacy; without the connection the gate in their place.
+    /// Friends with the requests as a badge; without the connection the gate in their place.
     @ViewBuilder private var people: some View {
         if state.friends is MeFriendsSummaryDisabled {
             ItmoGateCard(
                 title: AppStrings.string("me_gate_title"),
                 reason: AppStrings.string("me_gate_reason"),
-                fix: (AppStrings.string("me_gate_fix"), { actions.open(AppRoutes.Settings(page: "SERVICES")) }),
+                fix: (AppStrings.string("me_gate_fix"), { actions.open(AppRoutes.Settings(page: SettingsPage.services.name)) }),
                 symbol: .group
             )
             .accessibilityElement(children: .contain)
@@ -107,73 +107,47 @@ struct MeContent: View {
                     Text(verbatim: requests > 0 ? AppStrings.string("me_requests_badge_accessibility", [requests]) : "")
                 )
                 .accessibilityIdentifier("friends_row")
-                ItmoRow(
-                    title: AppStrings.string("me_privacy_title"),
-                    subtitle: AppStrings.string("me_privacy_description"),
-                    symbol: .lock,
-                    tone: .tertiary,
-                    chevron: true,
-                    action: { actions.open(AppRoutes.Settings(page: "PRIVACY")) }
-                )
-                .accessibilityIdentifier("privacy_row")
             }
         }
     }
 
-    /// The connection as a status, the notification and widget pages as links, the web sign-in.
-    private var service: some View {
-        let connection = AppRoutes.Settings(page: "SERVICES")
-        return ItmoListGroup {
-            ItmoRow(
-                title: AppStrings.string("me_connection_title"),
-                subtitle: state.connectionStatus.resolved,
-                symbol: state.connected ? .checkCircle : .cloudOff,
-                tone: state.connected ? .ok : .neutral,
-                chevron: true,
-                action: { actions.open(connection) }
-            )
-            .accessibilityIdentifier("connection_row")
-            ItmoRow(
-                title: AppStrings.string("me_notifications_title"),
-                symbol: .notification,
-                tone: .warn,
-                chevron: true,
-                action: { actions.open(AppRoutes.Settings(page: "NOTIFICATIONS")) }
-            )
-            .accessibilityIdentifier("notifications_row")
+    /// The widgets gallery and the settings.
+    private var app: some View {
+        ItmoListGroup {
             ItmoRow(
                 title: AppStrings.string("me_widgets_title"),
                 symbol: .widgets,
                 tone: .primary,
                 chevron: true,
-                action: { actions.open(AppRoutes.Settings(page: "WIDGETS")) }
+                action: { actions.open(AppRoutes.Settings(page: SettingsPage.widgets.name)) }
             )
             .accessibilityIdentifier("widgets_row")
-            ItmoRow(
-                title: AppStrings.string("me_web_login_title"),
-                subtitle: state.webLoginSubtitle.resolved,
-                symbol: .computer,
-                tone: .neutral,
-                chevron: true,
-                action: { actions.open(state.connected ? AppRoutes.WebLogin(code: nil) : connection) }
-            )
-            .accessibilityIdentifier("web_login_row")
-        }
-    }
-
-    private var app: some View {
-        ItmoListGroup {
-            external("me_my_itmo", "me_my_itmo_subtitle", .language, id: "my_itmo_row") {
-                actions.open(AppRoutes.MyItmoWeb.shared)
-            }
             ItmoRow(
                 title: AppStrings.string("settings_title"),
                 symbol: .settings,
                 tone: .neutral,
                 chevron: true,
-                action: { actions.open(AppRoutes.Settings(page: "ROOT")) }
+                action: { actions.open(AppRoutes.Settings(page: SettingsPage.root.name)) }
             )
             .accessibilityIdentifier("settings_row")
+        }
+    }
+
+    /// The campus map, the university's site and the project's pages.
+    private var links: some View {
+        ItmoListGroup {
+            ItmoRow(
+                title: AppStrings.string("me_map"),
+                subtitle: AppStrings.string("me_map_subtitle"),
+                symbol: .map,
+                tone: .neutral,
+                chevron: true,
+                action: { actions.open(AppRoutes.CampusMap(args: CampusMapArgs(lesson: nil, route: false))) }
+            )
+            .accessibilityIdentifier("map_row")
+            external("me_my_itmo", "me_my_itmo_subtitle", .language, id: "my_itmo_row") {
+                actions.open(AppRoutes.MyItmoWeb.shared)
+            }
             external("me_telegram", "me_telegram_subtitle", .brandTelegram, id: "telegram_row") {
                 actions.openProjectLink(ProjectLinks.shared.TELEGRAM_URL)
             }

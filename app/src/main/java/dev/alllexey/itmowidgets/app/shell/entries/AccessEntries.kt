@@ -24,10 +24,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
-import dev.alllexey.itmowidgets.app.shell.ActivityRoutes
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
-import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ProjectLinks
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
@@ -51,12 +49,11 @@ import dev.alllexey.itmowidgets.feature.settings.ui.openBackgroundWorkSettings
 import org.koin.core.parameter.parametersOf
 
 /**
- * «Подключение и данные» under its settings keys (`SERVICES`, and `PRIVACY`, whose audiences live here now): the
- * rows open their sections, BARS its sign-in activity, the devices their screens; the site pages open in the browser.
+ * «Сервер ITMO.Widgets» under its settings key (`SERVICES`; the old `PRIVACY` maps to it): the devices row opens
+ * their settings page, the code and the site pages open in the browser.
  */
 @Composable
 internal fun ConnectionEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) {
-    val context = LocalContext.current
     val view = LocalView.current
     val platform = LocalPlatformActions.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -72,19 +69,14 @@ internal fun ConnectionEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigato
             }
         }
     }
-    val actions = remember(viewModel, navigator, key, platform, view, context) {
+    val actions = remember(viewModel, navigator, key, platform, view) {
         ConnectionActions(
             onBack = { navigator.close(key) },
             onConnectedChange = viewModel::setConnected,
             onAudience = viewModel::setAudience,
             onRetryPrivacy = viewModel::retryPrivacy,
-            onFriends = { navigator.open(AppRoutes.Friends) },
-            onQueue = { navigator.select(AppTab.SPORT) },
-            onLinks = { navigator.select(AppTab.RECORDBOOK) },
             onSource = { openLink(platform, view, ProjectLinks.SERVICES_SOURCE_URL) },
-            onBars = { context.startActivity(ActivityRoutes.barsLogin(context)) },
-            onPairDevice = { navigator.open(AppRoutes.WebLogin()) },
-            onDevices = { navigator.open(AppRoutes.Connections) },
+            onDevices = { navigator.open(AppRoutes.Settings(SettingsPage.DEVICES.name)) },
             onDeleteAccount = viewModel::deleteAccount,
         )
     }

@@ -139,22 +139,6 @@ class MeViewModelTest {
         }
 
     @Test
-    fun theConnectionRowsFollowTheOptIn() = runTest(main.dispatcher) {
-        val services = FakeCustomServicesRepository(false)
-        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), FakeSocialRepository(), services)
-        advanceUntilIdle()
-        assertEquals(false, viewModel.uiState.value.connected)
-        assertEquals(UiText.Res(AccountStrings.me_connection_off), viewModel.uiState.value.connectionStatus)
-        assertEquals(UiText.Res(AccountStrings.me_needs_connection), viewModel.uiState.value.webLoginSubtitle)
-
-        services.enabled.value = true
-        advanceUntilIdle()
-
-        assertEquals(true, viewModel.uiState.value.connected)
-        assertEquals(UiText.Res(AccountStrings.me_web_login_subtitle), viewModel.uiState.value.webLoginSubtitle)
-    }
-
-    @Test
     fun delegatesSignOutOnce() = runTest(main.dispatcher) {
         val repository = FakeSessionRepository(SessionState.SignedIn(null))
         val viewModel = MeViewModel(repository, FakeSocialRepository(), FakeCustomServicesRepository(true))

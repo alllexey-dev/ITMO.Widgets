@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -30,6 +31,10 @@ sealed interface SettingsEvent {
     data object RequestCalendarAccess : SettingsEvent
     /** The «Выгрузить в .ics» sheet. */
     data object OpenIcsExport : SettingsEvent
+    /** The BARS sign-in: an activity on Android, a sheet on iOS. */
+    data object OpenBarsLogin : SettingsEvent
+    /** A screen outside the settings, such as the web sign-in or the connected devices. */
+    data class OpenRoute(val route: AppRoute) : SettingsEvent
     /** A page of the ITMO.Widgets site, [path] relative to its base address. */
     data class OpenWebPage(val path: String) : SettingsEvent
     /** [text] goes to the clipboard; [confirmation] where the platform does not confirm a copy itself. */

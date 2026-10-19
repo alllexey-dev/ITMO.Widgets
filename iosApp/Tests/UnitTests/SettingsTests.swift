@@ -9,7 +9,7 @@ import XCTest
 @MainActor
 final class SettingsTests: XCTestCase {
     func testSettingsAndDiagnosticsAreSwiftUIScreensAndTheDebugToolsStayOnAndroid() {
-        XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Settings(page: "SCHEDULE")))
+        XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Settings(page: "SECTIONS")))
         XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Diagnostics.shared))
         guard case .notOnIOS = Routes.target(for: AppRoutes.DebugTools.shared) else {
             return XCTFail("the debug tools have no iOS screen")
@@ -48,20 +48,17 @@ final class SettingsTests: XCTestCase {
         XCTAssertEqual(model.state.page, .root)
     }
 
-    func testTheNotificationRowSaysIosWhereTheSharedValueNamesAndroid() async {
+    func testTheRootNotificationRowSaysWhenTheSystemDeniesThem() async {
         let model = settingsModel(page: "ROOT")
         model.viewModel.onNotificationPermissionChanged(granted: false)
-        let copy = SettingsIosCopy(system: SettingsSystemState(backgroundRefresh: .available))
 
         for await state in model.viewModel.uiState where state.loaded {
             let row = state.sections.flatMap(\.items).compactMap { $0 as? SettingItemNavigation }
                 .first { $0.page == SettingsPage.notifications }
-            guard let value = row?.value, (value as? UiTextRes)?.key == "settings_notifications_blocked" else {
+            guard let value = row?.value, (value as? UiTextRes)?.key == "notifications_subtitle_denied" else {
                 continue
             }
-            XCTAssertEqual(copy.text(value), AppStrings.string("ios_settings_notifications_blocked"))
-            XCTAssertNotEqual(copy.text(value), value.resolved)
-            XCTAssertEqual(copy.text(state.page.title), state.page.title.resolved, "other texts stay as built")
+            XCTAssertEqual(value.resolved, AppStrings.string("notifications_subtitle_denied"))
             break
         }
     }
@@ -80,7 +77,7 @@ final class SettingsTests: XCTestCase {
     }
 
     /// The pages with view models of their own; `SettingsViewModel` builds none of them.
-    private static let ownScreens: Set<SettingsPage> = [.services, .privacy, .notifications]
+    private static let ownScreens: Set<SettingsPage> = [.services, .notifications]
 
     private static func isSwiftUIScreen(_ route: any AppRoute) -> Bool {
         if case .swiftUI = Routes.target(for: route) { return true }

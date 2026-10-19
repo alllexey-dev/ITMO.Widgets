@@ -45,7 +45,7 @@ class PreferenceKeyParityTest {
         val stores = PreferenceStores()
 
         assertFalse(stores.servicesOptIn.getCustomServicesEnabled())
-        assertFalse(stores.scheduleChecks.getScheduleSportAutoSignEnabled())
+        assertTrue(stores.scheduleChecks.getScheduleSportAutoSignEnabled())
         assertTrue(stores.scheduleChecks.getScheduleChangesEnabled())
         assertEquals(
             ScheduleWidgetSettings(

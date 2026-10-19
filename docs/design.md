@@ -435,7 +435,7 @@ one switch; heroes read `ItmoTheme.heroMotionScheme`. Where each is used:
 | `ItmoButtonGroup` | A single choice of two to four short options with a selection required; under expressive the kit's `SegmentedChoice` | `UISegmentedControl` with the selection haptic |
 | `ItmoWavyProgress` | Determinate progress of a hero only, linear or circular | A plain `UIProgressView` |
 | `ItmoMarkTile` | The app mark's tile on the sign-in screen, the twelve-sided cookie | A large rounded square |
-| `ServicesConsentSheet`, `StoredDataGroup` | The consent before connecting to ITMO.Widgets and the list of what the server keeps (`ServicesStoredData`), shared by «Подключение и данные» and the first-run flow | SwiftUI `ServicesConsentSheet` |
+| `ServicesConsentSheet`, `StoredDataGroup` | The consent before connecting to ITMO.Widgets and the list of what the server keeps (`ServicesStoredData`), shared by «Сервер ITMO.Widgets» and the first-run flow | SwiftUI `ServicesConsentSheet` |
 | `ItmoSplitButton` | A primary action with a menu of its variants | A capsule with a chevron half that opens `ItmoMenu` |
 | `ItmoFabMenu` | A FAB that opens a menu of actions above it | A round filled toggle that opens `ItmoMenu` |
 | `ItmoFloatingToolbar` | More than two icon actions floating over the content, never docked with the navigation bar | An opaque capsule of tinted icons |
@@ -866,8 +866,8 @@ in [Shared components](#shared-components).
   `Принять` and outlined `Отклонить`), `Ничего нового` with `ic_check_circle`
   in `success` when nothing is new, and the `Настройки уведомлений` row last,
   which opens «Уведомления».
-- Settings pages of their own: «Подключение и данные» (`ui/connection/ConnectionScreen.kt` of
-  `:shared:feature-settings`: the status hero with its switch, `ListGroup`s, pills in a card, the danger row) and
+- Settings pages of their own: «Сервер ITMO.Widgets» (`ui/connection/ConnectionScreen.kt` of
+  `:shared:feature-settings`: the status hero with its switch, `ListGroup`s, the stored data sheet, the danger row) and
   «Уведомления» (`ui/notifications/NotificationSettingsScreen.kt`: switch rows with a notification miniature under
   each, the gate while denied); the sign-in (`AuthScreen`) and the first-run flow (`OnboardingScreen`) of
   `:shared:feature-account`.

@@ -9,8 +9,9 @@ import WidgetKit
 ///
 /// The screen feeds the ViewModel what only iOS knows, on appear and on every return to the app: the notification
 /// permission and Background App Refresh. It answers the page's events with system pages, the router and a short
-/// message at the bottom; the calendar switch asks for calendar access (`CalendarAccess`) and the `.ics` row opens
-/// `IcsExportSheet`. The events of rows iOS does not list (the tile, the custom spoiler) never come. The widgets page
+/// message at the bottom; the calendar switch asks for calendar access (`CalendarAccess`), the `.ics` row opens
+/// `IcsExportSheet` and the root's BARS row `BarsLoginSheet`. The events of rows iOS does not list (the tile, the
+/// custom spoiler) never come. The widgets page
 /// is the gallery (`WidgetGalleryForm`): the screen loads its live previews whenever their settings change and tells
 /// the ViewModel how many widgets of each format WidgetKit has placed.
 struct SettingsScreen: View {
@@ -20,6 +21,7 @@ struct SettingsScreen: View {
     @State private var message: SettingsMessage?
     @State private var showsCalendarRationale = false
     @State private var showsIcsExport = false
+    @State private var showsBarsLogin = false
     @State private var widgetPreviews = WidgetGalleryPreviews()
     private let calendarAccess: CalendarAccess
     @Environment(AppRouter.self) private var router
@@ -83,6 +85,9 @@ struct SettingsScreen: View {
         .sheet(isPresented: $showsIcsExport) {
             IcsExportSheet()
         }
+        .sheet(isPresented: $showsBarsLogin) {
+            BarsLoginSheet { showsBarsLogin = false }
+        }
         .accessibilityIdentifier("settings.page.\(model.state.page.name.lowercased())")
     }
 
@@ -138,6 +143,10 @@ struct SettingsScreen: View {
             Task { await turnCalendarSyncOn() }
         case .openIcsExport:
             showsIcsExport = true
+        case .openBarsLogin:
+            showsBarsLogin = true
+        case let .openRoute(opened):
+            if router.open(opened.route) == .refusedInDemo { show(AppStrings.string("error_demo_unavailable")) }
         case .chooseCustomSpoiler, .resetCustomSpoiler, .requestQrTile:
             // Rows `PlatformCapabilities` hides on iOS.
             break

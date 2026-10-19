@@ -21,7 +21,6 @@ import dev.alllexey.itmowidgets.core.testing.FakeCustomSpoilerRepository
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
-import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.PreferenceStores
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
@@ -35,15 +34,14 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
+import dev.alllexey.itmowidgets.feature.settings.presentation.AboutPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
-import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.SchedulePageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.SectionsPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
-import dev.alllexey.itmowidgets.feature.settings.presentation.SportPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetsPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsViewModel
@@ -65,19 +63,16 @@ internal fun settingsTestModule(spoilers: CustomSpoilerRepository = FakeCustomSp
         override fun refreshAll() = Unit
     }
     val pages = SettingsPages(
-        root = RootPageProvider(repository),
+        root = RootPageProvider(repository, BarsStatusRepositoryImpl(PreferenceStores().markSources)),
         widgets = WidgetsPageProvider(repository, NoQuickSettingsTile),
-        schedule = SchedulePageProvider(repository, FakeCalendarSync()),
-        sport = SportPageProvider(repository),
-        maintenance = MaintenancePageProvider(
+        sections = SectionsPageProvider(repository, FakeCalendarSync()),
+        about = AboutPageProvider(
             refresher, FakeOnboardingRepository(completed = true), AppBuild("test", "1", "github"), RecordingDiagnostics(),
         ),
     )
     viewModel { SettingsViewModel(pages, repository, refresher, get<SavedStateHandle>()) }
     viewModel {
-        ConnectionViewModel(
-            FakeCustomServicesRepository(), repository, FakeSocialRepository(), BarsStatusRepositoryImpl(PreferenceStores().markSources), refresher,
-        )
+        ConnectionViewModel(FakeCustomServicesRepository(), repository, refresher)
     }
     viewModel {
         NotificationSettingsViewModel(

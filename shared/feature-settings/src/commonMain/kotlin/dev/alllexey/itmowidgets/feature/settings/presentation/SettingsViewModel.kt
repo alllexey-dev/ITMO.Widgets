@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 /**
  * One settings page. The page's [SettingsPageProvider] builds its rows and handles them; this ViewModel keeps what
  * outlives a page's rows (the notification permission the root shows, the custom spoiler state, the event queue)
- * and hands it over as the [SettingsPageScope]. «Подключение и данные» and «Уведомления» have view models of their
+ * and hands it over as the [SettingsPageScope]. «Сервер ITMO.Widgets» and «Уведомления» have view models of their
  * own (`ConnectionViewModel`, `NotificationSettingsViewModel`).
  */
 class SettingsViewModel(
@@ -109,7 +109,7 @@ class SettingsViewModel(
 
     /** The calendar permission is there: synchronization turns on into the app's own calendar. */
     fun onCalendarAccessGranted() {
-        pages.schedule.onCalendarAccessGranted(scope)
+        pages.sections.onCalendarAccessGranted(scope)
     }
 
     /** The system's answer to the add request: the row leaves once the tile is known to be in the quick settings. */
