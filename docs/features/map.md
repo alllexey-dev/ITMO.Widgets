@@ -13,8 +13,11 @@ the data decision [ADR 0033](../decisions/0033-campus-map-mirror.md).
   lesson's building on the floor of its room, the room selected and the route shown at once.
 - The chrome follows itmo-map-web at phone width and stays opaque with a shadow over the plan: the back button and
   the search on top, under them the building pill (a menu of the buildings) and the place chips with the plan's own
-  icons, the floors on the right edge, and one compact card at the bottom (the room, the route or the results).
-- Room card: the kind's icon, the number, `4 этаж, Кронверкский пр., 49`, `Сюда` and `Отсюда`. A near match says
+  icons, the floors on the right edge, and one compact card at the bottom (the room, the route or the results). No
+  compass: the plan turns with the building's bearing. Opening a result or picking a route end puts the keyboard
+  away. On iOS the map has the system bar with an inline title and hides the tab bar.
+- Room card: the kind's icon, the number, `Аудитория · 4 этаж` (what the room is, as itmo-map-web names the plan's
+  subclass, then the floor; search results add the name and, in other buildings, the building), `Сюда` and `Отсюда`. A near match says
   `1224в нет на плане, показана 1224`; a room not on the plan says `Аудитории 9999 нет на плане` and the plan opens
   on the entrance floor.
 - Route card: `А` and `Б` in one line with the swap, then the step: its icon, `Шаг 2 из 4 · Подъём`, the instruction,

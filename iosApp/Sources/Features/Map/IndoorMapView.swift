@@ -20,6 +20,8 @@ struct IndoorMapView: UIViewRepresentable {
         // The plan's source is in the licences, not on the map (docs/features/map.md).
         view.logoView.isHidden = true
         view.attributionButton.isHidden = true
+        // The plan turns with the building's bearing; a compass would sit under the search, and itmo-map-web has none.
+        view.compassView.compassVisibility = .hidden
         let gesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapped(_:)))
         view.gestureRecognizers?.compactMap { $0 as? UITapGestureRecognizer }.forEach { gesture.require(toFail: $0) }
         view.addGestureRecognizer(gesture)
@@ -39,6 +41,8 @@ struct IndoorMapView: UIViewRepresentable {
         private var scene: MapScene?
         private var focused: MapPoint?
         private var framed: [KotlinDouble]?
+        /// Another building's style is loading: its camera is set again once it has loaded.
+        private var fitPending = false
 
         func apply(_ scene: MapScene, dark: Bool, to view: MLNMapView) {
             self.scene = scene
@@ -52,9 +56,17 @@ struct IndoorMapView: UIViewRepresentable {
                 try? CampusMapStyle.shared.json(scene: scene, dark: dark).write(to: url, atomically: true, encoding: .utf8)
                 view.styleURL = url
                 // A theme switch keeps the camera; only another building is framed anew.
-                if building { fit(scene, in: view) }
+                if building {
+                    fitPending = true
+                    fit(scene, in: view)
+                }
             }
             if let style { update(style) }
+            moveCamera(scene, in: view)
+        }
+
+        /// The route step's frame, else the focused room; each once, so a pan is not undone by the next update.
+        private func moveCamera(_ scene: MapScene, in view: MLNMapView) {
             if let frame = scene.frame, frame != framed, frame.count == 4 {
                 framed = frame
                 let edges = frame.map { $0.doubleValue }
@@ -64,14 +76,20 @@ struct IndoorMapView: UIViewRepresentable {
                 )
                 let camera = view.cameraThatFitsCoordinateBounds(box, edgePadding: UIEdgeInsets(top: 160, left: 64, bottom: 260, right: 64))
                 camera.heading = scene.bearing
+                // A short step (a stair) would zoom into one room with nothing around it: no closer than zoom 20,
+                // as on Android.
+                let closest = MLNAltitudeForZoomLevel(20, camera.pitch, camera.centerCoordinate.latitude, view.bounds.size)
+                camera.altitude = max(camera.altitude, closest)
                 view.setCamera(camera, withDuration: 0.4, animationTimingFunction: nil)
             } else if scene.frame == nil, let focus = scene.focus, focus != focused {
                 focused = focus
                 let camera = view.camera
                 camera.centerCoordinate = CLLocationCoordinate2D(latitude: focus.latitude, longitude: focus.longitude)
                 camera.heading = scene.bearing
+                // One animation for the centre and the zoom: a second one (setZoomLevel) cancelled the move.
+                let near = MLNAltitudeForZoomLevel(19.5, camera.pitch, focus.latitude, view.bounds.size)
+                camera.altitude = min(camera.altitude, near)
                 view.setCamera(camera, withDuration: 0.4, animationTimingFunction: nil)
-                if view.zoomLevel < 19.5 { view.setZoomLevel(19.5, animated: true) }
             }
         }
 
@@ -80,6 +98,14 @@ struct IndoorMapView: UIViewRepresentable {
                 self.style = style
                 addSprites(to: style)
                 update(style)
+                // Loading another building's style may reset the camera: frame it and its room or step again.
+                if fitPending, let scene {
+                    fitPending = false
+                    fit(scene, in: mapView)
+                    focused = nil
+                    framed = nil
+                    moveCamera(scene, in: mapView)
+                }
             }
         }
 

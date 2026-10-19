@@ -92,6 +92,8 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
             // The plan's source is in the licences, not on the map (docs/features/map.md).
             loaded.uiSettings.isLogoEnabled = false
             loaded.uiSettings.isAttributionEnabled = false
+            // The plan turns with the building's bearing; a compass would sit under the search, and itmo-map-web has none.
+            loaded.uiSettings.isCompassEnabled = false
             loaded.addOnMapClickListener { point ->
                 val screen = loaded.projection.toScreenLocation(point)
                 val feature = loaded.queryRenderedFeatures(screen, *CampusMapStyle.TAP_LAYERS.toTypedArray()).firstOrNull()
@@ -105,16 +107,18 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
         val loaded = map ?: return@LaunchedEffect
         val icons = sprites ?: return@LaunchedEffect
         style = null
+        // A theme switch keeps the camera; only another building is framed anew, before the style is built off the
+        // main thread, so the room or step the focus and frame effects below move to is not framed over.
+        if (framed != scene.tilesPath) {
+            framed = scene.tilesPath
+            val (west, south, east, north) = scene.bounds
+            val bounds = LatLngBounds.from(north, east, south, west)
+            loaded.setLatLngBoundsForCameraTarget(bounds)
+            loaded.getCameraForLatLngBounds(bounds, IntArray(4) { PADDING }, scene.bearing, 0.0)?.let { loaded.cameraPosition = it }
+        }
         val json = withContext(Dispatchers.Default) { CampusMapStyle.json(scene, dark) }
         val builder = icons.entries.fold(Style.Builder().fromJson(json)) { b, (name, icon) -> b.withImage(name, icon) }
         loaded.setStyle(builder) { style = it }
-        // A theme switch keeps the camera; only another building is framed anew.
-        if (framed == scene.tilesPath) return@LaunchedEffect
-        framed = scene.tilesPath
-        val (west, south, east, north) = scene.bounds
-        val bounds = LatLngBounds.from(north, east, south, west)
-        loaded.setLatLngBoundsForCameraTarget(bounds)
-        loaded.getCameraForLatLngBounds(bounds, IntArray(4) { PADDING }, scene.bearing, 0.0)?.let { loaded.cameraPosition = it }
     }
     LaunchedEffect(style, scene.level, scene.route, scene.selection) {
         val current = style ?: return@LaunchedEffect

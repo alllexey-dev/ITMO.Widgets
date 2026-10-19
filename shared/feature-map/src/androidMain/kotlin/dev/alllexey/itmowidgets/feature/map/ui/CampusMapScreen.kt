@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -189,8 +190,14 @@ private fun PlanContent(state: CampusMapUiState.Plan, actions: CampusMapActions,
     val trip = state.trip
     val picking = trip?.picking
     val searchFocus = remember { FocusRequester() }
-    // Picking a route end starts in the search, as itmo-map-web's «Откуда»/«Куда».
-    LaunchedEffect(picking) { if (picking != null) searchFocus.requestFocus() }
+    val focus = LocalFocusManager.current
+    // Picking a route end starts in the search, as itmo-map-web's «Откуда»/«Куда»; a picked end or an opened result
+    // ends the search and puts the keyboard away.
+    LaunchedEffect(picking) { if (picking != null) searchFocus.requestFocus() else focus.clearFocus() }
+    val onResult: (SearchResult) -> Unit = { result ->
+        focus.clearFocus()
+        actions.onResult(result)
+    }
     Box(Modifier.fillMaxSize()) {
         map(state.map, Modifier.fillMaxSize().testTag(CampusMapTestTags.MAP))
         Column(
@@ -232,8 +239,8 @@ private fun PlanContent(state: CampusMapUiState.Plan, actions: CampusMapActions,
             verticalArrangement = Arrangement.spacedBy(spacing.compact),
         ) {
             when {
-                trip != null -> Trip(trip, state.search, actions)
-                state.search.active -> Sheet { Results(state.search, actions.onResult) }
+                trip != null -> Trip(trip, state.search, actions.copy(onResult = onResult))
+                state.search.active -> Sheet { Results(state.search, onResult) }
                 state.room != null -> Room(state.room, actions)
                 state.notice != null -> ItmoCard { Text(state.notice.asString(), style = ItmoTheme.typography.bodyLarge) }
             }

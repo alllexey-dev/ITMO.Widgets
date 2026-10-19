@@ -4,7 +4,6 @@
     <string name="map_floor">%1$d этаж</string>
     <string name="map_floor_short">%1$d</string>
     <string name="map_floors">Этажи</string>
-    <string name="map_room_on_floor">%1$s, %2$s</string>
     <string name="map_room_fallback">Помещение</string>
     <string name="map_room_missing">Аудитории %1$s нет на плане</string>
     <string name="map_room_approximate">%1$s нет на плане, показана %2$s</string>
@@ -15,6 +14,27 @@
     <string name="map_close">Закрыть</string>
     <string name="map_buildings">Корпус</string>
     <string name="map_loading">Загружаем план…</string>
+
+    <!-- What a room is, as itmo-map-web names the plan's subclass -->
+    <string name="map_kind_education">Аудитория</string>
+    <string name="map_kind_office">Офис</string>
+    <string name="map_kind_meetingroom">Переговорная</string>
+    <string name="map_kind_conferenceroom">Конференц-зал</string>
+    <string name="map_kind_coworking">Коворкинг</string>
+    <string name="map_kind_library">Библиотека</string>
+    <string name="map_kind_canteen">Столовая</string>
+    <string name="map_kind_food">Еда</string>
+    <string name="map_kind_cloakroom">Гардероб</string>
+    <string name="map_kind_healthcare">Медкабинет</string>
+    <string name="map_kind_studentservices">Студофис</string>
+    <string name="map_kind_museum">Музей</string>
+    <string name="map_kind_fitnessroom">Фитнес-зал</string>
+    <string name="map_kind_lockerroom">Раздевалка</string>
+    <string name="map_kind_entrance">Вход</string>
+    <string name="map_kind_restroom">Туалет</string>
+    <string name="map_kind_atm">Банкомат</string>
+    <string name="map_kind_water">Питьевая вода</string>
+    <string name="map_kind_bike">Велопарковка</string>
 
     <!-- Search and places -->
     <string name="map_search_hint">Аудитория или место</string>

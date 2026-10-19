@@ -5,8 +5,9 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The campus map under the native bar on the shared `CampusMapSamples`, the GL view replaced by `MapPlaceholder`
-/// (MapLibre draws nothing in a snapshot): the room, a near match, the route on a floor and the city step, search
-/// across buildings, a room missing from the plan, a building without a plan and the error.
+/// (MapLibre draws nothing in a snapshot): the room, a near match, the route on a floor and the city step, picking
+/// where a route goes, another building loading, search across buildings, a room missing from the plan, a building
+/// without a plan and the error.
 @MainActor
 final class CampusMapSnapshotTests: XCTestCase {
     private let samples = CampusMapSamples.shared
@@ -18,6 +19,10 @@ final class CampusMapSnapshotTests: XCTestCase {
     func testRoute() { assertMap(samples.Route, named: "route") }
 
     func testCity() { assertMap(samples.City, named: "city", appearances: [.light, .dark]) }
+
+    func testPick() { assertMap(samples.Pick, named: "pick", appearances: [.light, .dark]) }
+
+    func testSwitching() { assertMap(samples.Switching, named: "switching") }
 
     func testSearch() { assertMap(samples.Search, named: "search", appearances: [.light, .dark]) }
 
@@ -35,7 +40,7 @@ final class CampusMapSnapshotTests: XCTestCase {
     ) {
         let screen = NavigationStack {
             CampusMapContent(state: state) { _ in MapPlaceholder() }
-                .itmoDetailHeader(title: AppStrings.string("map_title"), subtitle: "")
+                .campusMapChrome()
         }
         assertScreenAppearances(of: screen, named: name, appearances: appearances, settle: 1, testName: testName)
     }

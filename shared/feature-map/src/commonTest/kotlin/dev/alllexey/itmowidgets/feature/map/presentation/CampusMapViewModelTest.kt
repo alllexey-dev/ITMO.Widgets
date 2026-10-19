@@ -113,6 +113,9 @@ class CampusMapViewModelTest {
         assertTrue(TripStepKind.CITY in trip.steps.map { it.kind })
         assertEquals(13, plan(vm).map.buildingId)
         assertFalse(plan(vm).loading)
+        // The field hands back the empty text the route left in it: the route stays.
+        vm.search("")
+        assertNotNull(plan(vm).trip)
     }
 
     @Test
@@ -153,7 +156,7 @@ class CampusMapViewModelTest {
 
         val trip = assertNotNull(plan(vm).trip)
         assertNull(trip.picking)
-        assertEquals(UiText.Res(MapStrings.map_place_restrooms), trip.from)
+        assertEquals(UiText.Res(MapStrings.map_kind_restroom), trip.from)
         assertEquals(UiText.Dynamic("2403"), trip.to)
     }
 

@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The campus map (`AppRoutes.CampusMap`, docs/features/map.md) over the shared `CampusMapViewModel`: the native plan
 /// under everything, the search, the building pill and the place chips on top, the floors on the edge, a compact room
-/// card, route or results at the bottom. "Open in Maps" (no plan, «По городу») opens Apple Maps through `PlatformActions`.
+/// card, route or results at the bottom. "Open in Maps" (no plan, the city step) opens Apple Maps through `PlatformActions`.
 struct CampusMapScreen: View {
     @State private var model: ObservableViewModel<CampusMapViewModel, CampusMapUiState>
 
@@ -43,9 +43,19 @@ struct CampusMapScreen: View {
         ) { scene in
             IndoorMapView(scene: scene) { viewModel.selectRoom(roomId: $0) }
         }
-        .itmoDetailHeader(title: AppStrings.string("map_title"), subtitle: "")
+        .campusMapChrome()
         .observing(model)
         .accessibilityIdentifier("map")
+    }
+}
+
+extension View {
+    /// The map's chrome: the system bar with the back button and an inline title, no tab bar or pass accessory, so the
+    /// plan takes the screen (docs/features/map.md, a full screen pushed over the tabs).
+    func campusMapChrome() -> some View {
+        navigationTitle(Text(verbatim: AppStrings.string("map_title")))
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .tabBar)
     }
 }
 
@@ -112,7 +122,7 @@ private struct PlanView<Map: View>: View {
                 if plan.loading { loading }
             }
             .safeAreaInset(edge: .bottom) { bottom }
-            // Picking a route end starts in the search, as itmo-map-web's «Откуда»/«Куда».
+            // Picking a route end starts in the search, as itmo-map-web's from/to search.
             .onChange(of: plan.trip?.picking) { _, picking in searchFocused = picking != nil }
     }
 
@@ -126,6 +136,7 @@ private struct PlanView<Map: View>: View {
                 clearLabel: AppStrings.string("map_close")
             )
             .focused($searchFocused)
+            .accessibilityIdentifier("map.search")
             .background(ItmoColor.surface, in: .capsule)
             .mapChrome()
             .padding(.horizontal, ItmoSpacing.screenMargin)
@@ -168,6 +179,7 @@ private struct PlanView<Map: View>: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityAddTraits(chip.selected ? .isSelected : [])
+                        .accessibilityIdentifier("map.place")
                     }
                 }
             }
@@ -198,6 +210,7 @@ private struct PlanView<Map: View>: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text(verbatim: "\(AppStrings.string("map_buildings")): \(current.label)"))
+            .accessibilityIdentifier("map.building")
         }
     }
 
@@ -268,9 +281,10 @@ private struct PlanView<Map: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(ItmoColor.surface, in: RoundedRectangle(cornerRadius: 28))
             .mapChrome()
+            .accessibilityElement(children: .contain)
     }
 
-    /// The room: its icon, number and floor, «Сюда» and «Отсюда» (itmo-map-web's unit card).
+    /// The room: its icon, number and floor, route here and route from here (itmo-map-web's unit card).
     private func roomCard(_ room: RoomCard) -> some View {
         sheet {
             HStack(alignment: .center, spacing: ItmoSpacing.content) {
@@ -287,14 +301,21 @@ private struct PlanView<Map: View>: View {
             }
             .padding(.horizontal, ItmoSpacing.group)
             HStack(spacing: ItmoSpacing.compact) {
-                ItmoProminentButton(title: AppStrings.string("map_route_here"), symbol: .directions, action: actions.route)
-                    .frame(maxWidth: .infinity)
-                    .accessibilityIdentifier("map.route")
+                // ItmoProminentButton's look (onPrimary on the glass prominent primary), stretched to half the card.
+                Button(action: actions.route) {
+                    Label { Text(verbatim: AppStrings.string("map_route_here")) } icon: { AppSymbol.directions.image }
+                        .foregroundStyle(ItmoColor.onPrimary)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glassProminent)
+                .itmoTint()
+                .accessibilityIdentifier("map.route")
                 Button { actions.routeFrom() } label: {
                     Text(verbatim: AppStrings.string("map_route_from_here")).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glass)
                 .itmoTint()
+                .accessibilityIdentifier("map.routeFrom")
             }
             .padding(.horizontal, ItmoSpacing.group)
             .padding(.top, ItmoSpacing.compact)
@@ -302,7 +323,7 @@ private struct PlanView<Map: View>: View {
         .accessibilityIdentifier("map.room")
     }
 
-    /// The route: А and Б in one line with the swap (either end opens the search to pick it again), then the shown
+    /// The route: its start and end in one line with the swap (either end opens the search to pick it again), then the shown
     /// step with its icon, the progress and the arrows; while picking an end, the search's results instead.
     private func tripCard(_ trip: TripView) -> some View {
         sheet {
@@ -357,6 +378,7 @@ private struct PlanView<Map: View>: View {
         }
         .buttonStyle(.plain)
         .accessibilityHint(Text(verbatim: placeholder))
+        .accessibilityIdentifier(end == .from ? "map.end.from" : "map.end.to")
     }
 
     private func stepView(_ step: TripStep, trip: TripView) -> some View {
@@ -386,6 +408,7 @@ private struct PlanView<Map: View>: View {
                     .disabled(trip.current == 0)
                 iconButton(.chevronRight, label: "map_route_next") { actions.step(trip.current + 1) }
                     .disabled(Int(trip.current) >= trip.steps.count - 1)
+                    .accessibilityIdentifier("map.next")
             }
             .padding(.leading, ItmoSpacing.group)
             .padding(.trailing, ItmoSpacing.related)
@@ -424,7 +447,11 @@ private struct PlanView<Map: View>: View {
     }
 
     private func resultRow(_ result: SearchResult) -> some View {
-        Button { actions.result(result) } label: {
+        Button {
+            // An opened result ends the search: the keyboard goes away.
+            searchFocused = false
+            actions.result(result)
+        } label: {
             HStack(spacing: ItmoSpacing.content) {
                 MapSprite(name: result.icon, size: 32)
                 VStack(alignment: .leading, spacing: 2) {
@@ -438,6 +465,7 @@ private struct PlanView<Map: View>: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("map.result")
     }
 
     private func iconButton(_ symbol: AppSymbol, label: String, action: @escaping () -> Void) -> some View {
@@ -451,6 +479,7 @@ private struct PlanView<Map: View>: View {
         Button(action: action) { AppSymbol.close.image.frame(width: 44, height: 44) }
             .buttonStyle(.plain)
             .accessibilityLabel(AppStrings.string("map_close"))
+            .accessibilityIdentifier("map.close")
     }
 }
 

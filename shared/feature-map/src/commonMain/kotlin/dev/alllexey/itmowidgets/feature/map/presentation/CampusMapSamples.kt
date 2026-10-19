@@ -35,7 +35,7 @@ object CampusMapSamples {
         room = RoomCard(
             roomId = 71,
             title = UiText.Dynamic("2403"),
-            subtitle = UiText.Res(MapStrings.map_room_on_floor, listOf(UiText.Res(MapStrings.map_floor, listOf(4)), "Кронверкский пр., 49")),
+            subtitle = UiText.Joined(listOf(UiText.Res(MapStrings.map_kind_education), UiText.Res(MapStrings.map_floor, listOf(4))), " · "),
             note = null,
             icon = "auditory",
         ),
@@ -80,7 +80,7 @@ object CampusMapSamples {
         trip = TripView(from = UiText.Dynamic("2403"), to = null, steps = emptyList(), current = 0, picking = RouteEnd.TO),
         search = idle.copy(
             picking = RouteEnd.TO,
-            results = listOf(SearchResult(13, 469, UiText.Res(MapStrings.map_place_entrances), UiText.Res(MapStrings.map_floor, listOf(1)), "entrance")),
+            results = listOf(SearchResult(13, 469, UiText.Res(MapStrings.map_kind_entrance), UiText.Res(MapStrings.map_floor, listOf(1)), "entrance")),
         ),
     )
 
@@ -93,11 +93,14 @@ object CampusMapSamples {
             query = "14",
             places = places,
             results = listOf(
-                SearchResult(13, 18, UiText.Dynamic("1404"), UiText.Res(MapStrings.map_floor, listOf(4)), "auditory"),
-                SearchResult(13, 262, UiText.Dynamic("1419"), UiText.Joined(listOf(UiText.Res(MapStrings.map_floor, listOf(4)), UiText.Dynamic("Lemon Classroom")), ", "), "coworking"),
-            ),
+                SearchResult(13, 18, UiText.Dynamic("1404"), subtitle(UiText.Res(MapStrings.map_kind_education), UiText.Res(MapStrings.map_floor, listOf(4))), "auditory"),
+                SearchResult(13, 262, UiText.Dynamic("1419"), subtitle(UiText.Res(MapStrings.map_kind_coworking), UiText.Dynamic("Lemon Classroom"), UiText.Res(MapStrings.map_floor, listOf(4))), "coworking"),
+            ) + (1405..1410).map { number ->
+                // More rows than the sheet holds: it stops at its height and scrolls.
+                SearchResult(13, number.toLong(), UiText.Dynamic("$number"), subtitle(UiText.Res(MapStrings.map_kind_education), UiText.Res(MapStrings.map_floor, listOf(4))), "auditory")
+            },
             elsewhere = listOf(
-                SearchResult(273, 1, UiText.Dynamic("1410"), UiText.Joined(listOf(UiText.Res(MapStrings.map_floor, listOf(1)), UiText.Dynamic("ул. Ломоносова, 9")), ", "), "auditory"),
+                SearchResult(273, 1, UiText.Dynamic("1410"), subtitle(UiText.Res(MapStrings.map_kind_education), UiText.Res(MapStrings.map_floor, listOf(1)), UiText.Dynamic("ул. Ломоносова, 9")), "auditory"),
             ),
         ),
     )
@@ -107,6 +110,8 @@ object CampusMapSamples {
     val NoPlan = CampusMapUiState.NoPlan("Вяземский пер., 5-7", MapDestination("Вяземский пер., 5-7", "Вяземский переулок, 5-7", 59.97, 30.30))
 
     val Failed = CampusMapUiState.Failed(AppError.Network)
+
+    private fun subtitle(vararg parts: UiText) = UiText.Joined(parts.toList(), " · ")
 
     private fun step(kind: TripStepKind, title: UiText, text: UiText, index: Int) =
         TripStep(kind, title, text, UiText.Res(MapStrings.map_route_step, listOf(index, 4)), null)

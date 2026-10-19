@@ -91,6 +91,9 @@ class CampusMapViewModel(
     }
 
     fun search(query: String) {
+        // A text field may hand back the text it already shows (iOS commits it when the field loses focus): that
+        // is no edit and must not close the route it just opened.
+        if (query == model.value.query) return
         model.update { it.copy(query = query, place = null, trip = it.trip.takeIf { _ -> it.picking != null }) }
         if (query.isNotBlank() && model.value.allRooms == null) {
             viewModelScope.launch {
@@ -370,7 +373,7 @@ class CampusMapViewModel(
     private fun roomCard(room: MapRoom, state: Model) = RoomCard(
         roomId = room.id,
         title = RoomTexts.title(room),
-        subtitle = UiText.Res(MapStrings.map_room_on_floor, listOf(RoomTexts.floor(room.level), label(room.buildingId))),
+        subtitle = RoomTexts.subtitle(room),
         note = state.approximate?.takeIf { it.room.id == room.id }?.let {
             UiText.Res(MapStrings.map_room_approximate, listOf(state.target?.text.orEmpty(), RoomTexts.title(room)))
         },
