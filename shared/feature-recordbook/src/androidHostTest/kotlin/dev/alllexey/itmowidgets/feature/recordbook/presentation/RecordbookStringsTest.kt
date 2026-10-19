@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
 import android.app.Application
-import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_reason_sport
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_reason_sport
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.getPluralString
 import org.junit.Assert.assertEquals
@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** `strings_recordbook.xml` resolves from the module's `Res` with the Russian plural forms. */
+/** `strings_recordbook.xml` resolves from `:shared:compose-strings`' `Res` with the Russian plural forms. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class, qualifiers = "ru")
 class RecordbookStringsTest {

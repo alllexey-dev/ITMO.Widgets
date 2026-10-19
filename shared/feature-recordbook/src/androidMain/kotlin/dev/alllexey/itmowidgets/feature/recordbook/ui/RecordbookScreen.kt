@@ -69,8 +69,24 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookTarget
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookTone
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookValue
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_bars_connect
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_bars_expired
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_bars_failed
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_bars_hide
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_bars_loading
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_bars_offer
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_bars_sign_in
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_empty_description
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_empty_title
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_period_label
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_refresh_error
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_score_pending
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_session_title
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_sources_action
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_subject_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_down
 import dev.alllexey.itmowidgets.shared.designsystem.ic_assignment
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
@@ -78,22 +94,6 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_history
-import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_connect
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_expired
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_failed
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_hide
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_loading
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_offer
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_sign_in
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_empty_description
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_empty_title
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_period_label
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_refresh_error
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_score_pending
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_session_title
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_sources_action
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_subject_new
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.ButtonDefaults
@@ -107,7 +107,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [RecordbookScreen]. */
@@ -216,10 +215,10 @@ private fun Body(body: RecordbookBody, actions: RecordbookActions, listState: La
         is RecordbookBody.Failed -> AppRefreshBox(body.retrying, actions.onRetry, Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 ContentState(
-                    title = stringResource(CoreRes.string.common_load_error_title),
+                    title = stringResource(Res.string.common_load_error_title),
                     modifier = Modifier.testTag(RecordbookTestTags.ERROR),
                     description = body.error.toUiText().asString(),
-                    action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
+                    action = ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
                 )
             }
         }
@@ -289,7 +288,7 @@ internal fun BarsNotice(notice: RecordbookBarsNotice, onSignIn: () -> Unit, onRe
                 subtitle = (notice as? RecordbookBarsNotice.Failed)?.error?.toUiText()?.asString(),
                 icon = painterResource(if (expired) KitRes.drawable.ic_history else KitRes.drawable.ic_error),
                 iconTone = Tone.Warning,
-                action = stringResource(if (expired) Res.string.recordbook_bars_sign_in else CoreRes.string.common_retry),
+                action = stringResource(if (expired) Res.string.recordbook_bars_sign_in else Res.string.common_retry),
                 onAction = if (expired) onSignIn else onRetry,
             )
         }

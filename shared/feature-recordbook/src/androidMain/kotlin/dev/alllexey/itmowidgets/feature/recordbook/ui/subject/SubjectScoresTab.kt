@@ -57,27 +57,26 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetOpti
 import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsNotice
 import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsOfferRow
 import dev.alllexey.itmowidgets.feature.recordbook.ui.kit
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_details_empty_description
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_score_pending
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_actions
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_change_total
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_choose_link
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_disconnect
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_open
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_control_absent
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_score_out_of
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_sheet_offer_note
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_sport_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_more_vert
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
 import dev.alllexey.itmowidgets.shared.designsystem.ic_table
-import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_details_empty_description
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_score_pending
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_actions
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_change_total
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_choose_link
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_disconnect
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_hint
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_open
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_control_absent
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_score_out_of
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_sheet_offer_note
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_sport_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** `Баллы`: the hero, the sport points of physical education, the checkpoints by group, or the offers without them. */
@@ -109,9 +108,9 @@ internal fun LazyListScope.scoresTab(scores: SubjectScores, actions: RecordbookS
             ListGroup {
                 item {
                     ListRow(
-                        title = stringResource(CoreRes.string.common_load_error_title),
+                        title = stringResource(Res.string.common_load_error_title),
                         subtitle = error.toUiText().asString(),
-                        accessory = { TextButton(onClick = actions.onRefresh) { Text(stringResource(CoreRes.string.common_retry)) } },
+                        accessory = { TextButton(onClick = actions.onRefresh) { Text(stringResource(Res.string.common_retry)) } },
                     )
                 }
             }

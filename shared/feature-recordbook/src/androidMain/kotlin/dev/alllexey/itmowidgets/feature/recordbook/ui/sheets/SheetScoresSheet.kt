@@ -60,27 +60,26 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetText
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.title
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_empty_cell
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_no_values
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_offline
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_other_cell
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_pick_row
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_pick_tab
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_pick_total
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_reset_auto
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_search_clear
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_search_empty
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_search_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_search
-import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_empty_cell
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_no_values
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_offline
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_other_cell
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_pick_row
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_pick_tab
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_pick_total
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_reset_auto
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_search_clear
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_search_empty
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_search_hint
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_title
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What the scores sheet (`sheet_scores_title`) asks its host to do; every effect is the host's (the view model's actions). */
@@ -150,7 +149,7 @@ private fun Failure(status: SheetStatus, onRetry: () -> Unit) {
         icon = painterResource(KitRes.drawable.ic_error),
         action = if (status == SheetStatus.NETWORK) {
             ContentStateAction(
-                stringResource(CoreRes.string.common_retry),
+                stringResource(Res.string.common_retry),
                 onRetry,
                 modifier = Modifier.testTag(SheetScoresSheetTestTags.RETRY),
             )
