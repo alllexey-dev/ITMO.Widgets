@@ -61,26 +61,25 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEditorViewModel
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkFieldError
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.links_connection_required
+import dev.alllexey.itmowidgets.shared.compose.strings.links_editor_edit
+import dev.alllexey.itmowidgets.shared.compose.strings.links_editor_new
+import dev.alllexey.itmowidgets.shared.compose.strings.links_invalid_url
+import dev.alllexey.itmowidgets.shared.compose.strings.links_name_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.links_save
+import dev.alllexey.itmowidgets.shared.compose.strings.links_title_too_long
+import dev.alllexey.itmowidgets.shared.compose.strings.links_url_clear
+import dev.alllexey.itmowidgets.shared.compose.strings.links_url_hint
 import dev.alllexey.itmowidgets.shared.compose.strings.links_visibility_all
+import dev.alllexey.itmowidgets.shared.compose.strings.links_visibility_all_review
+import dev.alllexey.itmowidgets.shared.compose.strings.links_visibility_flow_review
 import dev.alllexey.itmowidgets.shared.compose.strings.links_visibility_private
+import dev.alllexey.itmowidgets.shared.compose.strings.links_who_sees
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
-import dev.alllexey.itmowidgets.shared.feature.resources.Res
-import dev.alllexey.itmowidgets.shared.feature.resources.links_connection_required
-import dev.alllexey.itmowidgets.shared.feature.resources.links_editor_edit
-import dev.alllexey.itmowidgets.shared.feature.resources.links_editor_new
-import dev.alllexey.itmowidgets.shared.feature.resources.links_invalid_url
-import dev.alllexey.itmowidgets.shared.feature.resources.links_name_hint
-import dev.alllexey.itmowidgets.shared.feature.resources.links_save
-import dev.alllexey.itmowidgets.shared.feature.resources.links_title_too_long
-import dev.alllexey.itmowidgets.shared.feature.resources.links_url_clear
-import dev.alllexey.itmowidgets.shared.feature.resources.links_url_hint
-import dev.alllexey.itmowidgets.shared.feature.resources.links_visibility_all_review
-import dev.alllexey.itmowidgets.shared.feature.resources.links_visibility_flow_review
-import dev.alllexey.itmowidgets.shared.feature.resources.links_who_sees
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What the link editor asks of its view model; closing, the clipboard and the snackbar stay with the host. */
@@ -383,11 +382,11 @@ private fun AudienceRows(state: LinkEditorUiState, onSelect: (LinkAudienceOption
 /** A flow is its schedule name over the kind of classes; a flow and `Все` note the review when there is one. */
 @Composable
 private fun audienceTexts(option: LinkAudienceOption, premoderation: Boolean): Pair<String, String?> = when (option) {
-    LinkAudienceOption.Private -> stringResource(CoreRes.string.links_visibility_private) to null
+    LinkAudienceOption.Private -> stringResource(Res.string.links_visibility_private) to null
     is LinkAudienceOption.Flow -> option.audience.label to lessonTypeName(option.audience.typeId).asString().let {
         if (premoderation) stringResource(Res.string.links_visibility_flow_review, it) else it
     }
-    LinkAudienceOption.All -> stringResource(CoreRes.string.links_visibility_all) to
+    LinkAudienceOption.All -> stringResource(Res.string.links_visibility_all) to
         if (premoderation) stringResource(Res.string.links_visibility_all_review) else null
 }
 

@@ -47,10 +47,13 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.compose.strings.links_actions
 import dev.alllexey.itmowidgets.shared.compose.strings.links_add
+import dev.alllexey.itmowidgets.shared.compose.strings.links_empty
+import dev.alllexey.itmowidgets.shared.compose.strings.links_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.links_mine
 import dev.alllexey.itmowidgets.shared.compose.strings.links_score
 import dev.alllexey.itmowidgets.shared.compose.strings.links_title
@@ -59,12 +62,8 @@ import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_up
 import dev.alllexey.itmowidgets.shared.designsystem.ic_add
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_link
-import dev.alllexey.itmowidgets.shared.feature.resources.Res
-import dev.alllexey.itmowidgets.shared.feature.resources.links_empty
-import dev.alllexey.itmowidgets.shared.feature.resources.links_error_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What the links sheet asks its host to do; every effect (opening a link, navigation, closing) is the host's. */
@@ -138,13 +137,13 @@ fun SubjectLinksSheetContent(
     modifier: Modifier = Modifier,
 ) {
     SheetScaffold(
-        title = stringResource(CoreRes.string.links_title),
+        title = stringResource(Res.string.links_title),
         modifier = modifier,
         subtitle = subject,
-        close = SheetClose(stringResource(CoreRes.string.common_close), actions.onClose),
+        close = SheetClose(stringResource(Res.string.common_close), actions.onClose),
         footer = {
             ProgressButton(
-                stringResource(CoreRes.string.links_add),
+                stringResource(Res.string.links_add),
                 actions.onAdd,
                 Modifier
                     .padding(horizontal = ItmoTheme.spacing.screenMargin)
@@ -172,7 +171,7 @@ fun SubjectLinksSheetContent(
                 icon = painterResource(KitRes.drawable.ic_error),
                 description = error?.toUiText()?.asString(),
                 action = ContentStateAction(
-                    stringResource(CoreRes.string.common_retry),
+                    stringResource(Res.string.common_retry),
                     actions.onRetry,
                     modifier = Modifier.testTag(SubjectLinksSheetTestTags.RETRY),
                 ),
@@ -228,18 +227,18 @@ private fun LinkItem(row: LinkListRow.Item, actions: SubjectLinksActions) {
         // The sheet itself is surfaceContainerLow, so its groups take a stronger surface than a page's.
         modifier = Modifier.connectedGroupItem(row.position, GroupSurface.Sheet),
         caption = linkMeta(link, row.pinned, row.previous).asString(),
-        ownBadge = if (link.isMine) stringResource(CoreRes.string.links_mine) else null,
+        ownBadge = if (link.isMine) stringResource(Res.string.links_mine) else null,
         onLongClick = { actions.onLinkActions(link) },
-        longClickLabel = stringResource(CoreRes.string.links_actions),
+        longClickLabel = stringResource(Res.string.links_actions),
         votes = if (link.isMine) null else {
             {
                 VotePill(                    score = link.score,
                     myVote = voteOf(link.myVote),
-                    scoreDescription = stringResource(CoreRes.string.links_score, link.score),
+                    scoreDescription = stringResource(Res.string.links_score, link.score),
                     onVote = if (row.canVote) { vote -> actions.onVote(link, vote == Vote.Up) } else null,
                     labels = VoteLabels(
-                        up = stringResource(CoreRes.string.links_vote_up),
-                        down = stringResource(CoreRes.string.links_vote_down),
+                        up = stringResource(Res.string.links_vote_up),
+                        down = stringResource(Res.string.links_vote_down),
                     ),
                 )
             }

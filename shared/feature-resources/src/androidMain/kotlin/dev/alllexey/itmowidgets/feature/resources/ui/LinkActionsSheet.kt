@@ -34,10 +34,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
-import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
-import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
 import dev.alllexey.itmowidgets.core.resources.displayTitle
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.asString
@@ -51,10 +48,22 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.links_author
+import dev.alllexey.itmowidgets.shared.compose.strings.links_copy
+import dev.alllexey.itmowidgets.shared.compose.strings.links_delete
+import dev.alllexey.itmowidgets.shared.compose.strings.links_delete_confirm
+import dev.alllexey.itmowidgets.shared.compose.strings.links_edit
+import dev.alllexey.itmowidgets.shared.compose.strings.links_open
+import dev.alllexey.itmowidgets.shared.compose.strings.links_pin
+import dev.alllexey.itmowidgets.shared.compose.strings.links_rejected_reason
+import dev.alllexey.itmowidgets.shared.compose.strings.links_report
 import dev.alllexey.itmowidgets.shared.compose.strings.links_score
+import dev.alllexey.itmowidgets.shared.compose.strings.links_unpin
 import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_down
 import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_up
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_action
 import dev.alllexey.itmowidgets.shared.designsystem.ic_content_copy
 import dev.alllexey.itmowidgets.shared.designsystem.ic_delete
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit
@@ -64,75 +73,10 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_keep_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
 import dev.alllexey.itmowidgets.shared.designsystem.ic_table
-import dev.alllexey.itmowidgets.shared.feature.resources.Res
-import dev.alllexey.itmowidgets.shared.feature.resources.links_author
-import dev.alllexey.itmowidgets.shared.feature.resources.links_copy
-import dev.alllexey.itmowidgets.shared.feature.resources.links_delete
-import dev.alllexey.itmowidgets.shared.feature.resources.links_delete_confirm
-import dev.alllexey.itmowidgets.shared.feature.resources.links_edit
-import dev.alllexey.itmowidgets.shared.feature.resources.links_open
-import dev.alllexey.itmowidgets.shared.feature.resources.links_pin
-import dev.alllexey.itmowidgets.shared.feature.resources.links_rejected_reason
-import dev.alllexey.itmowidgets.shared.feature.resources.links_report
-import dev.alllexey.itmowidgets.shared.feature.resources.links_unpin
-import dev.alllexey.itmowidgets.shared.feature.resources.sheet_scores_action
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
-
-/** The rows of the link actions sheet, in display order. */
-enum class LinkAction { OPEN, AUTHOR, COPY, SCORES, PIN, EDIT, DELETE, REPORT }
-
-/**
- * What the link actions sheet shows for one link of [SubjectLinksUiState]: the vote pill ([showsScore], with thumbs
- * while [canVote]), the moderator's [reviewNote] of an own rejected or hidden link, the profile [author] of another
- * student's link and the [rows] in display order.
- */
-@Immutable
-data class LinkActionsModel(
-    val link: SubjectLink,
-    val pinned: Boolean,
-    val previous: Boolean,
-    val showsScore: Boolean,
-    val canVote: Boolean,
-    val reviewNote: String?,
-    val author: String?,
-    val rows: List<LinkAction>,
-)
-
-/**
- * The sheet's rules for [linkId], or null while the links load or once the link is gone. Others' links vote; an own
- * shared link shows its score without thumbs, an own private one none. Pinning needs the connection unless the link is
- * one's own; reporting needs it, no `REPORT` restriction and no earlier report. A deleted account's shared links move
- * to a placeholder author with a negative ISU and no profile, so only a positive ISU is named.
- */
-fun SubjectLinksUiState.linkActions(linkId: String): LinkActionsModel? {
-    val snapshot = content ?: return null
-    val link = (snapshot.mine + snapshot.shared + snapshot.previous).firstOrNull { it.id == linkId } ?: return null
-    val reviewed = link.status == SubjectLinkStatus.REJECTED || link.status == SubjectLinkStatus.HIDDEN
-    val author = link.author?.takeIf { !link.isMine && it.isu > 0 }
-    return LinkActionsModel(
-        link = link,
-        pinned = snapshot.pinnedId == link.id,
-        previous = snapshot.previous.any { it.id == link.id },
-        showsScore = !link.isMine || link.visibility != LinkVisibility.PRIVATE,
-        canVote = !link.isMine && canVote,
-        reviewNote = link.reviewNote.takeIf { link.isMine && reviewed },
-        author = author?.name,
-        rows = listOfNotNull(
-            LinkAction.OPEN,
-            LinkAction.AUTHOR.takeIf { author != null },
-            LinkAction.COPY,
-            LinkAction.SCORES.takeIf { GoogleSheetUrl.parse(link.url) != null },
-            LinkAction.PIN.takeIf { link.isMine || snapshot.servicesEnabled },
-            LinkAction.EDIT.takeIf { link.isMine },
-            LinkAction.DELETE.takeIf { link.isMine },
-            LinkAction.REPORT.takeIf { !link.isMine && canReport && !link.reportedByMe },
-        ),
-    )
-}
 
 /** What the actions sheet asks of its host; every effect (navigation, the clipboard, closing) is the host's. */
 @Immutable
@@ -212,7 +156,7 @@ fun LinkActionsSheetRoute(
         ConfirmDialog(
             title = stringResource(Res.string.links_delete_confirm),
             confirmLabel = stringResource(Res.string.links_delete),
-            dismissLabel = stringResource(CoreRes.string.common_cancel),
+            dismissLabel = stringResource(Res.string.common_cancel),
             onConfirm = {
                 confirmingDelete = false
                 viewModel.delete(linkId)
@@ -294,11 +238,11 @@ private fun Heading(model: LinkActionsModel, actions: LinkActionsActions) {
         if (model.showsScore) {
             VotePill(                score = link.score,
                 myVote = voteOf(link.myVote),
-                scoreDescription = stringResource(CoreRes.string.links_score, link.score),
+                scoreDescription = stringResource(Res.string.links_score, link.score),
                 onVote = if (model.canVote) { vote -> actions.onVote(link, vote == Vote.Up) } else null,
                 labels = VoteLabels(
-                    up = stringResource(CoreRes.string.links_vote_up),
-                    down = stringResource(CoreRes.string.links_vote_down),
+                    up = stringResource(Res.string.links_vote_up),
+                    down = stringResource(Res.string.links_vote_down),
                 ),
             )
         }
