@@ -215,8 +215,10 @@ sheet otherwise. On iOS there is no shell route to the sport tab's sheet yet, so
   connection (the tab shows its gate then).
 - The sheet opens often, so this source reads caches and may be stale: the record book list is the repository's
   memory cache (filled by Зачётка, the subject page or the first sheet that needs it, with the same My ITMO requests),
-  and the links are the ones stored on the device as of the subject page's last refresh. The sheet never refreshes
-  either and never calls Backend; the demo session gets the demo record book and links.
+  and the links are the ones stored on the device as of the last refresh. Only a subject whose links the device has
+  never loaded (a fresh install, a subject never opened) gets one links request (`SubjectLinksRepository.refresh`,
+  behind the opt-in) when its sheet opens; after that the sheet reads the stored links and never refreshes them. The
+  demo session gets the demo record book and links.
 - The newest found [change](schedule-changes.md) of the occurrence: `было` struck through `→ стало` per field, or the
   summary of an added or cancelled lesson, with `Изменено вчера в 20:14`.
 - The note and the meeting's password; the teacher with the tone of the reviews in words (`в основном хвалят`, from

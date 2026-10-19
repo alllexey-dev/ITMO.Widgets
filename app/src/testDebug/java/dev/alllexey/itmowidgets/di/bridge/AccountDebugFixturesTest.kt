@@ -8,12 +8,9 @@ import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.core.testing.FakeDayLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
-import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
-import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
@@ -95,10 +92,7 @@ class AccountDebugFixturesTest {
             FakeOnboardingRepository(),
             FakeCustomServicesRepository(false),
             FakeSessionRepository(SessionState.SignedOut),
-            FakeDayLessonsGateway(),
-            FakeSportScoreRepository(),
             FakeCalendarSync(),
-            FixedAcademicTime(),
             AndroidPlatformCapabilities,
             SavedStateHandle(),
         )

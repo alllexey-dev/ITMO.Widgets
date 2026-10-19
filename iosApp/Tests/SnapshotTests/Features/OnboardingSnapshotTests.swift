@@ -4,21 +4,12 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// The first-run flow at the design lab's axes, as Android's `OnboardingScreen` references: the first step with the
-/// user's lesson and sport and without them, the permissions asked and granted, the connection before and after, and
-/// the consent sheet. `OnboardingContent` is rendered directly from `OnboardingSamples`, in a window so the glass
+/// The first-run flow's two steps, as Android's `OnboardingScreen` references: the permissions under the person
+/// asked and granted, the connection before and after, and the consent sheet. `OnboardingContent` is rendered directly from `OnboardingSamples`, in a window so the glass
 /// buttons draw as on screen.
 @MainActor
 final class OnboardingSnapshotTests: XCTestCase {
     private let samples = OnboardingSamples.shared
-
-    func testValue() {
-        assertScreenAppearances(of: content("value"), named: "value")
-    }
-
-    func testValueWithoutData() {
-        assertScreenAppearances(of: content("value-empty"), named: "value-empty", appearances: [.light, .dark])
-    }
 
     func testPermissions() {
         assertScreenAppearances(of: content("permissions"), named: "permissions")

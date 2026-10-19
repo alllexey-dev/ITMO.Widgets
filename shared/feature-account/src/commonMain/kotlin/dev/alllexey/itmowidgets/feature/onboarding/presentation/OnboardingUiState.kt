@@ -1,29 +1,23 @@
 package dev.alllexey.itmowidgets.feature.onboarding.presentation
 
-import dev.alllexey.itmowidgets.core.lesson.LessonUi
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.text.UiText
 
 /**
- * The three steps of the first run (DECISIONS.md, Первый запуск), in order: what the app does with your own data, the
- * permissions one by one, the connection to ITMO.Widgets.
+ * The two steps of the first run (owner, 2026-10-19), in order: who signed in with the permissions one by one, the
+ * connection to ITMO.Widgets.
  */
-enum class OnboardingStep { VALUE, PERMISSIONS, CONNECTION }
+enum class OnboardingStep { PERMISSIONS, CONNECTION }
 
-/** The signed-in person on the first step: the name ITMO.ID gives and its initials for the avatar. */
-data class OnboardingMe(val name: String, val initials: String, val pictureUrl: String?)
-
-/** The lesson the first step shows: [title] `Сейчас`, `Далее` or `Завтра`, over the lesson card. */
-data class OnboardingLesson(val title: UiText, val lesson: LessonUi)
+/**
+ * The signed-in person on the first step, from the ID token: the full name (family, given and middle), its initials
+ * for the avatar, the ISU. The group is Backend's, which is off on a first run, so the card has none.
+ */
+data class OnboardingMe(val name: String, val initials: String, val pictureUrl: String?, val isu: Int?)
 
 data class OnboardingUiState(
-    val step: OnboardingStep = OnboardingStep.VALUE,
+    val step: OnboardingStep = OnboardingStep.PERMISSIONS,
     /** Null until the session answers, or without a name in the token. */
     val me: OnboardingMe? = null,
-    /** Today's lesson now or next, else tomorrow's first; null while the schedule has none or has not loaded. */
-    val lesson: OnboardingLesson? = null,
-    /** `30 из 100` of the current sport period; null until My ITMO answers. */
-    val sport: UiText? = null,
     val notificationsGranted: Boolean = false,
     val notificationsAsked: Boolean = false,
     /** Null where the platform has no calendar sync. */

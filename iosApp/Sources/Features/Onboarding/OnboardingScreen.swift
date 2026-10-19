@@ -3,11 +3,10 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// The first-run flow over the shared `OnboardingViewModel` (DECISIONS.md, first run), as Android's
-/// `OnboardingScreen`: what the app does with the user's own data, the permissions one by one (notifications through
-/// `requestAuthorization`, the calendar through `CalendarAccess`), the connection through `ServicesConsentSheet` or
-/// `onboarding_connection_not_now`. Every choice is stored as it is made; `finished` runs once the flow ends, after the stored flag is
-/// written.
+/// The first-run flow over the shared `OnboardingViewModel` (owner, 2026-10-19: two steps), as Android's
+/// `OnboardingScreen`: who signed in with the permissions one by one (notifications through `requestAuthorization`, the
+/// calendar through `CalendarAccess`), the connection through `ServicesConsentSheet` or `onboarding_connection_not_now`.
+/// Every choice is stored as it is made; `finished` runs once the flow ends, after the stored flag is written.
 struct OnboardingScreen: View {
     let finished: () -> Void
     var calendarAccess = CalendarAccess()
@@ -120,7 +119,8 @@ struct OnboardingActions {
 }
 
 /// The flow for one `OnboardingUiState`, without the ViewModel (snapshot tests render it directly): the step dots
-/// with `onboarding_step_progress` and the back button, the step's title and line over its body, and its actions pinned at the bottom.
+/// with `onboarding_step_progress` and the back button, the step's title (and line) over its body, and its actions
+/// pinned at the bottom.
 struct OnboardingContent: View {
     let state: OnboardingUiState
     let actions: OnboardingActions
@@ -132,15 +132,18 @@ struct OnboardingContent: View {
             header
             ScrollView {
                 VStack(alignment: .leading, spacing: ItmoKit.gap) {
+                    if state.step == .permissions, let me = state.me { OnboardingMeCard(me: me) }
                     Text(verbatim: AppStrings.string(title))
                         .font(.largeTitle.bold())
                         .padding(.horizontal, 4)
                         .padding(.top, ItmoSpacing.compact)
                         .accessibilityAddTraits(.isHeader)
-                    Text(verbatim: AppStrings.string(line))
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 4)
-                        .padding(.bottom, 12)
+                    if let line {
+                        Text(verbatim: AppStrings.string(line))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 4)
+                            .padding(.bottom, 12)
+                    }
                     step
                 }
                 .padding(.horizontal, ItmoKit.margin)
@@ -162,18 +165,13 @@ struct OnboardingContent: View {
 
     private var title: String {
         switch state.step {
-        case .value: "onboarding_value_title"
         case .permissions: "onboarding_permissions_title"
         case .connection: "onboarding_connection_title"
         }
     }
 
-    private var line: String {
-        switch state.step {
-        case .value: "onboarding_value_text"
-        case .permissions: "onboarding_permissions_text"
-        case .connection: "onboarding_connection_text"
-        }
+    private var line: String? {
+        state.step == .connection ? "onboarding_connection_text" : nil
     }
 
     private var header: some View {
@@ -202,13 +200,12 @@ struct OnboardingContent: View {
     @ViewBuilder
     private var step: some View {
         switch state.step {
-        case .value: OnboardingValueStep(state: state)
         case .permissions: OnboardingPermissionsStep(state: state, actions: actions)
         case .connection: OnboardingConnectionStep(state: state, actions: actions)
         }
     }
 
-    /// `onboarding_next` on the first two steps; `onboarding_connection_connect` and `onboarding_connection_not_now` on
+    /// `onboarding_next` on the first step; `onboarding_connection_connect` and `onboarding_connection_not_now` on
     /// the last, `onboarding_done` once connected.
     private var footer: some View {
         let last = state.step == .connection
@@ -261,43 +258,21 @@ struct OnboardingStepDots: View {
     }
 }
 
-/// Step 1: the person, the lesson that matters now and what else is there, from their own data as it loads.
-struct OnboardingValueStep: View {
-    let state: OnboardingUiState
+/// Who signed in, from the ID token: the full name and the ISU.
+struct OnboardingMeCard: View {
+    let me: OnboardingMe
 
     var body: some View {
-        if let me = state.me {
-            HStack(spacing: ItmoSpacing.compact) {
-                ItmoAvatar(initials: me.initials, pictureUrl: me.pictureUrl, size: 28)
-                Text(verbatim: me.name).font(.itmo(.labelLarge, emphasized: true))
+        ItmoListGroup(inset: 68) {
+            ItmoRow(title: me.name, subtitle: me.isu.map { isuText("onboarding_me_isu", $0.int32Value) }) {
+                ItmoAvatar(initials: me.initials, pictureUrl: me.pictureUrl)
             }
-            .padding(4)
-            .padding(.trailing, 10)
-            .background(Color(.secondarySystemGroupedBackground), in: .capsule)
-            .accessibilityElement(children: .combine)
-            .accessibilityIdentifier("onboarding.me")
         }
-        if let lesson = state.lesson {
-            ItmoSectionHeader(title: lesson.title.resolved)
-            ItmoLessonCard(lesson: lesson.lesson.kitLesson(id: "onboarding"))
-                .accessibilityIdentifier("onboarding.lesson")
-        }
-        ItmoSectionHeader(title: AppStrings.string("onboarding_value_more"))
-        ItmoListGroup {
-            ItmoRow(title: AppStrings.string("onboarding_value_pass"), subtitle: AppStrings.string("onboarding_value_pass_text"), symbol: .qrCode, tone: .tertiary)
-            ItmoRow(title: AppStrings.string("onboarding_value_scores"), subtitle: AppStrings.string("onboarding_value_scores_text"), symbol: .book2, tone: .primary)
-            ItmoRow(
-                title: AppStrings.string("onboarding_value_sport"),
-                subtitle: state.sport?.resolved ?? AppStrings.string("onboarding_value_sport_text"),
-                symbol: .sprint,
-                tone: .ok
-            )
-            ItmoRow(title: AppStrings.string("onboarding_value_widgets"), subtitle: AppStrings.string("ios_onboarding_value_widgets_text"), symbol: .widgets, tone: .neutral)
-        }
+        .accessibilityIdentifier("onboarding.me")
     }
 }
 
-/// Step 2: each permission with its own button, or `onboarding_permission_granted` once granted.
+/// Step 1, under the person: each permission with its own button, or `onboarding_permission_granted` once granted.
 struct OnboardingPermissionsStep: View {
     let state: OnboardingUiState
     let actions: OnboardingActions
@@ -325,7 +300,6 @@ struct OnboardingPermissionsStep: View {
                 )
             }
         }
-        ItmoGroupNote(text: AppStrings.string("onboarding_permissions_widgets"))
     }
 }
 
@@ -364,17 +338,12 @@ struct OnboardingPermissionRow: View {
     }
 }
 
-/// Step 3: what the connection gives, a way to read what the server keeps, and where to turn it on later.
+/// Step 2: a row to read what the server keeps; once connected (a replay), the pill says so.
 struct OnboardingConnectionStep: View {
     let state: OnboardingUiState
     let actions: OnboardingActions
 
     var body: some View {
-        ItmoListGroup {
-            ItmoRow(title: AppStrings.string("onboarding_connection_friends"), subtitle: AppStrings.string("onboarding_connection_friends_text"), symbol: .group, tone: .primary)
-            ItmoRow(title: AppStrings.string("onboarding_connection_queue"), subtitle: AppStrings.string("onboarding_connection_queue_text"), symbol: .sprint, tone: .primary)
-            ItmoRow(title: AppStrings.string("onboarding_connection_links"), subtitle: AppStrings.string("onboarding_connection_links_text"), symbol: .link, tone: .primary)
-        }
         ItmoListGroup {
             ItmoRow(title: AppStrings.string("onboarding_connection_details"), symbol: .info, chevron: true, action: actions.details)
         }
@@ -382,8 +351,6 @@ struct OnboardingConnectionStep: View {
         if state.servicesEnabled {
             ItmoStatusPill(pill: ItmoPill(text: AppStrings.string("onboarding_connection_connected"), tone: .ok, symbol: .check))
                 .padding(.leading, ItmoSpacing.compact)
-        } else {
-            ItmoGroupNote(text: AppStrings.string("onboarding_connection_later_note"))
         }
     }
 }
