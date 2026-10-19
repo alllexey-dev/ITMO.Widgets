@@ -136,7 +136,7 @@ object DayWidgetRenderer {
             views.addView(R.id.day_canvas, pill)
         }
         if (now != null) {
-            // The line runs under the lessons; the current one draws its own part of it under its text.
+            // The line runs under the lessons; the current one draws its part only up to its text (lesson_now).
             val line = RemoteViews(context.packageName, R.layout.widget_day_now)
             colors.tint(line, R.id.now_line, R.color.widget_primary)
             place(line, R.id.now_root, layout.y(now) - NOW_HEIGHT_DP / 2, null)
@@ -160,8 +160,6 @@ object DayWidgetRenderer {
                 val lineTop = (lineY - NOW_LINE_DP / 2).coerceIn(0f, (rowHeight - NOW_LINE_DP).coerceAtLeast(0f))
                 row.setViewLayoutMargin(R.id.lesson_now, RemoteViews.MARGIN_TOP, lineTop, TypedValue.COMPLEX_UNIT_DIP)
                 colors.tint(row, R.id.lesson_now, R.color.widget_primary)
-                // Softer than the line outside, so across a one-line block it does not read as a strikethrough.
-                row.setInt(R.id.lesson_now, "setImageAlpha", NOW_IN_LESSON_ALPHA)
             }
             views.addView(R.id.day_canvas, row)
         }
@@ -263,8 +261,7 @@ object DayWidgetRenderer {
     private const val NOW_HEIGHT_DP = 18f
     private const val NOW_LINE_DP = 2f
     private const val DONE_ALPHA = 0.5f
-    private const val ELAPSED_ALPHA = 40
-    private const val NOW_IN_LESSON_ALPHA = 150
+    private const val ELAPSED_ALPHA = 64
     private const val TITLE_SP = 16f
     private const val SUBTITLE_SP = 12f
     private const val SUBJECT_SP = 13f

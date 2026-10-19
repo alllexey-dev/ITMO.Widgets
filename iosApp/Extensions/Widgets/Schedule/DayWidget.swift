@@ -122,7 +122,7 @@ private struct DayTimeline: View {
                             .offset(x: Layout.axisWidth, y: (top + bottom) / 2 - Layout.gapPill * unit * scale / 2)
                     }
                 }
-                // The line runs under the blocks; the current block draws its own part of it.
+                // The line runs under the blocks; the current block draws its part up to its text.
                 if let now = day.now {
                     Rectangle()
                         .fill(WidgetColors.nowLine)
@@ -234,19 +234,35 @@ private struct DayBlock: View {
             ZStack(alignment: .top) {
                 current ? colors.hero : colors.block
                 if current, let now {
-                    let elapsed = min(max(axis.y(now) - axis.y(lesson.startMinute), 0), height)
-                    VStack(spacing: 0) {
-                        colors.accent.opacity(0.14).frame(height: elapsed)
-                        WidgetColors.nowLine.frame(height: 1.5)
-                        Spacer(minLength: 0)
-                    }
+                    // The elapsed part, inset inside the block, down to the now line.
+                    UnevenRoundedRectangle(topLeadingRadius: 6, topTrailingRadius: 6, style: .continuous)
+                        .fill(colors.accent.opacity(0.25))
+                        .frame(height: max(elapsed(now) - Self.inset, 0))
+                        .padding([.top, .horizontal], Self.inset)
                 }
+            }
+        }
+        .overlay(alignment: .topLeading) {
+            // The now line inside the block runs across the colour bar up to the text, never through it.
+            if current, let now {
+                WidgetColors.nowLine
+                    .frame(width: Self.gutter, height: 1.5)
+                    .offset(y: min(max(elapsed(now) - 0.75, 0), height - 1.5))
             }
         }
         .clipShape(.rect(cornerRadius: 9, style: .continuous))
         .opacity(lesson.state == .done || lesson.cancelled ? 0.5 : 1)
         .accessibilityElement(children: .combine)
     }
+
+    /// The points of the block above the now line.
+    private func elapsed(_ now: Int) -> CGFloat {
+        min(max(axis.y(now) - axis.y(lesson.startMinute), 0), height)
+    }
+
+    /// The elapsed shade's inset; the gutter before the text (padding 4, bar 3, spacing 7) less 2 points.
+    private static let inset: CGFloat = 3
+    private static let gutter: CGFloat = 12
 
     private var subject: some View {
         Text(verbatim: ScheduleWidgetText.subject(of: lesson))

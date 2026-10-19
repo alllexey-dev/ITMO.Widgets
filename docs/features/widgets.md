@@ -44,8 +44,9 @@ Shared in `shared/feature-schedule` (`domain/widget`, `data/widget`); RemoteView
   the gaps, the lessons and the `сейчас` line placed at their minutes on `day_canvas` with `setViewLayoutMargin`
   and `setViewLayoutHeight`. `DayTimelineLayout` maps minutes to dp: a lesson keeps at least two lines' height and
   the rest of the day shares what is left in proportion, an hour at most 32 dp (times the text size), so a day of
-  one to three lessons stays compact at the top. The `сейчас` line runs under the lessons; the current lesson draws
-  its own part of it under its text, with the elapsed part shaded inside the block. Below API 31 the lessons stack in
+  one to three lessons stays compact at the top. The `сейчас` line runs under the lessons; inside the current lesson
+  it crosses only the colour bar up to the text, never the text, and the elapsed part's shade, inset in the block, ends
+  at it (iOS draws the same). Below API 31 the lessons stack in
   `day_list`.
 - The classic list (`DayScheduleWidgetProvider`, `widget_lesson_list_info`, `Список пар`) is 2.2's list widget on
   the same snapshot: `ScheduleListRows` turns `day` into the header (`Сегодня · 7 сентября`), a row per lesson (time,

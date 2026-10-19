@@ -22,7 +22,7 @@ new iOS app.
 
 ### Widget polish (2026-10-19)
 
-- `Виджеты` shows every widget whole and in proportion (drawn at its launcher size, shrunk to the card), one card per row with the name and the buttons under it; `Расписание на день` keeps a short day compact at the top (an hour at most 32 dp, 36 pt on iOS), and on Android the `сейчас` line now crosses the current lesson, whose elapsed shade sits inside the block.
+- `Виджеты` shows every widget whole and in proportion (drawn at its launcher size, shrunk to the card), one card per row with the name and the buttons under it; `Расписание на день` keeps a short day compact at the top (an hour at most 32 dp, 36 pt on iOS), and the `сейчас` line reaches into the current lesson up to its text (never through it), where the elapsed shade, inset inside the block, ends at it, on both platforms.
 
 ### Widgets (2026-10-18)
 

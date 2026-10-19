@@ -28,16 +28,6 @@
         android:src="@drawable/widget_shape_block_top"
         android:visibility="gone" />
 
-    <!-- The now line's part across the current lesson: over its background, under its text. -->
-    <android.widget.ImageView
-        android:id="@+id/lesson_now"
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:contentDescription="@null"
-        android:scaleType="fitXY"
-        android:src="@drawable/widget_shape_bar"
-        android:visibility="gone" />
-
     <LinearLayout
         android:id="@+id/lesson_content"
         android:layout_width="match_parent"
@@ -147,4 +137,15 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
+
+    <!-- The now line inside the current lesson: across the colour bar up to the text, never through it; the elapsed
+         shade's bottom edge carries it on. -->
+    <android.widget.ImageView
+        android:id="@+id/lesson_now"
+        android:layout_width="16dp"
+        android:layout_height="2dp"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_shape_bar"
+        android:visibility="gone" />
 </FrameLayout>
