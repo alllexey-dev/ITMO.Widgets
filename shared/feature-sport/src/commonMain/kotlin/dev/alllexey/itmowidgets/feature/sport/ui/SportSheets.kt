@@ -75,6 +75,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_event_busy
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
+import dev.alllexey.itmowidgets.shared.designsystem.ic_how_to_reg
 import dev.alllexey.itmowidgets.shared.designsystem.ic_keep
 import dev.alllexey.itmowidgets.shared.designsystem.ic_location_on
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
@@ -104,6 +105,7 @@ data class SportFiltersActions(
     val onBuilding: (String?) -> Unit = {},
     val onTeacher: (String?) -> Unit = {},
     val onDayPart: (SportDayPart) -> Unit = {},
+    val onOnlyAvailable: (Boolean) -> Unit = {},
     val onOnlyFree: (Boolean) -> Unit = {},
     val onOnlyPinned: (Boolean) -> Unit = {},
     val onOnlyFriends: (Boolean) -> Unit = {},
@@ -178,6 +180,7 @@ fun SportFiltersSheetContent(filters: SportFiltersUi, actions: SportFiltersActio
                 FilterChips(teachers.map { ChipSpec(it.label.asString(), it.selected) }, { actions.onTeacher(teachers[it].value) }, wrap = true)
             }
             ListGroup(Modifier.padding(top = ItmoTheme.spacing.compact)) {
+                item { SwitchListRow(text(SportStrings.sport_filter_only_available), filters.onlyAvailable, actions.onOnlyAvailable, icon = painterResource(Res.drawable.ic_how_to_reg)) }
                 item { SwitchListRow(text(SportStrings.sport_filter_only_free), filters.onlyFree, actions.onOnlyFree, icon = painterResource(Res.drawable.ic_check)) }
                 filters.onlyPinned?.let { pinned ->
                     item { SwitchListRow(text(SportStrings.sport_filter_only_pinned), pinned, actions.onOnlyPinned, icon = painterResource(Res.drawable.ic_keep)) }

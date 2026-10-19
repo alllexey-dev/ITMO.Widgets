@@ -30,11 +30,16 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Velocity
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.charts.ScoreRing
@@ -100,7 +105,6 @@ object SportTestTags {
 
     fun section(id: Long) = "sport:section:$id"
     fun sectionDate(id: Long, index: Int) = "sport:section:$id:date:$index"
-    fun bookingSection(lessonId: Long) = "sport:booking_section:$lessonId"
     const val SEARCH = "sport:search"
     const val STRIP = "sport:strip"
     const val LOADING = "sport:loading"
@@ -119,8 +123,6 @@ data class SportMyActions(
     val onRetry: () -> Unit = {},
     val onOpenPoints: () -> Unit = {},
     val onOpenBooking: (Long) -> Unit = {},
-    /** `Сделать секцией` of a booked lesson, on or off. */
-    val onToggleSection: (Long) -> Unit = {},
     /** The off switch of a section. */
     val onStopSection: (Long) -> Unit = {},
     /** One date of a section on or off. */
@@ -148,8 +150,9 @@ data class SportSignActions(
 )
 
 /**
- * The Спорт tab (docs/features/sport.md): the static root header [title], `Моё` / `Запись` as a [SegmentedChoice] and
- * the chosen part. Stateless: [SportRoute] feeds it; the more-filters and queue sheets open from the state.
+ * The Спорт tab (docs/features/sport.md): the static root header [title], `Моё` / `Запись` as a [SegmentedChoice] over
+ * a pager of the two parts, so a horizontal swipe switches them too. Stateless: [SportRoute] feeds it; the
+ * more-filters and queue sheets open from the state.
  */
 @Composable
 fun SportScreen(
@@ -165,20 +168,23 @@ fun SportScreen(
 ) {
     ItmoRootScreen(title = title, modifier = modifier) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
-            val tabs: LazyListScope.() -> Unit = {
-                item(key = "tabs") {
-                    SegmentedChoice(
-                        options = listOf(text(SportStrings.sport_tab_my), text(SportStrings.sport_tab_sign)),
-                        selectedIndex = tab.ordinal,
-                        onSelect = { onTab(SportTab.entries[it]) },
-                        modifier = Modifier.testTag(SportTestTags.TABS),
-                        testTags = SportTab.entries.map(SportTestTags::tab),
-                    )
+            Column(Modifier.fillMaxSize()) {
+                SegmentedChoice(
+                    options = listOf(text(SportStrings.sport_tab_my), text(SportStrings.sport_tab_sign)),
+                    selectedIndex = tab.ordinal,
+                    onSelect = { onTab(SportTab.entries[it]) },
+                    modifier = Modifier
+                        .padding(horizontal = ItmoTheme.spacing.screenMargin)
+                        .padding(top = ItmoTheme.spacing.related)
+                        .testTag(SportTestTags.TABS),
+                    testTags = SportTab.entries.map(SportTestTags::tab),
+                )
+                TabPager(tab, onTab) { page ->
+                    when (page) {
+                        SportTab.MY -> MyPart(my, myActions)
+                        SportTab.SIGN -> SignPart(sign, signActions)
+                    }
                 }
-            }
-            when (tab) {
-                SportTab.MY -> MyPart(my, myActions, tabs)
-                SportTab.SIGN -> SignPart(sign, signActions, tabs)
             }
             SnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
         }
@@ -190,6 +196,23 @@ fun SportScreen(
     if (tab == SportTab.MY) my.cancel?.let { SportCancelDialog(it, myActions.onConfirmCancel, myActions.onDismissCancel) }
 }
 
+/** The parts side by side: a tap on the choice scrolls the pager, a swipe that settles on a part selects it. */
+@Composable
+private fun TabPager(tab: SportTab, onTab: (SportTab) -> Unit, page: @Composable (SportTab) -> Unit) {
+    val pager = rememberPagerState(initialPage = tab.ordinal) { SportTab.entries.size }
+    LaunchedEffect(tab) {
+        if (pager.targetPage != tab.ordinal) pager.animateScrollToPage(tab.ordinal)
+    }
+    val selected by rememberUpdatedState(tab)
+    val select by rememberUpdatedState(onTab)
+    LaunchedEffect(pager) {
+        snapshotFlow { pager.settledPage }.collect { if (it != selected.ordinal) select(SportTab.entries[it]) }
+    }
+    HorizontalPager(pager, Modifier.fillMaxSize(), key = { SportTab.entries[it].name }) {
+        page(SportTab.entries[it])
+    }
+}
+
 @Composable
 private fun SportList(tag: String, content: LazyListScope.() -> Unit) {
     LazyColumn(
@@ -197,7 +220,7 @@ private fun SportList(tag: String, content: LazyListScope.() -> Unit) {
         contentPadding = PaddingValues(
             start = ItmoTheme.spacing.screenMargin,
             end = ItmoTheme.spacing.screenMargin,
-            top = ItmoTheme.spacing.related,
+            top = ItmoTheme.spacing.content,
             bottom = ItmoTheme.spacing.section,
         ),
         verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
@@ -206,11 +229,10 @@ private fun SportList(tag: String, content: LazyListScope.() -> Unit) {
 }
 
 @Composable
-private fun MyPart(state: SportMyUiState, actions: SportMyActions, tabs: LazyListScope.() -> Unit) {
+private fun MyPart(state: SportMyUiState, actions: SportMyActions) {
     val body = state.body
     AppRefreshBox((body as? SportMyBody.Content)?.refreshing == true, actions.onRefresh, Modifier.fillMaxSize()) {
         SportList(SportTestTags.MY_LIST) {
-            tabs()
             state.score?.let { score -> item(key = "score") { ScoreCard(score, actions.onOpenPoints) } }
             when (body) {
                 SportMyBody.Loading -> item(key = "loading") { ContentStateLoading(Modifier.testTag(SportTestTags.LOADING), ContentStateSize.Compact) }
@@ -240,11 +262,8 @@ private fun MyPart(state: SportMyUiState, actions: SportMyActions, tabs: LazyLis
                     body.days.forEach { day ->
                         item(key = "day-${day.title}") { DayLabel(day.title.asString()) }
                         items(day.bookings, key = { "booking-${it.lessonId}" }) { booking ->
-                            Column(verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
-                                Box(Modifier.testTag(SportTestTags.booking(booking.lessonId))) {
-                                    LessonCard(booking.lesson.toLessonView(), onClick = { actions.onOpenBooking(booking.lessonId) })
-                                }
-                                booking.section?.let { BookingSection(it, actions.onToggleSection) }
+                            Box(Modifier.testTag(SportTestTags.booking(booking.lessonId))) {
+                                LessonCard(booking.lesson.toLessonView(), onClick = { actions.onOpenBooking(booking.lessonId) })
                             }
                         }
                     }
@@ -315,11 +334,10 @@ internal fun DayLabel(label: String) {
 }
 
 @Composable
-private fun SignPart(state: SportSignUiState, actions: SportSignActions, tabs: LazyListScope.() -> Unit) {
+private fun SignPart(state: SportSignUiState, actions: SportSignActions) {
     val body = state.body
     AppRefreshBox((body as? SportSignBody.Day)?.refreshing == true, actions.onRefresh, Modifier.fillMaxSize()) {
         SportList(SportTestTags.SIGN_LIST) {
-            tabs()
             item(key = "search") {
                 SearchField(
                     query = state.query,
@@ -384,7 +402,10 @@ private fun LazyListScope.day(body: SportSignBody.Day, actions: SportSignActions
     }
 }
 
-/** The strip pages by weeks; a swipe that settles on another week selects a day in it. */
+/**
+ * The strip pages by weeks; a swipe that settles on another week selects a day in it. Its swipes stay with the weeks:
+ * at the first or the last week they do not reach the tab's pager.
+ */
 @Composable
 private fun WeekPager(state: SportSignUiState, actions: SportSignActions) {
     val weeks = state.weeks
@@ -398,7 +419,7 @@ private fun WeekPager(state: SportSignUiState, actions: SportSignActions) {
     LaunchedEffect(pager) {
         snapshotFlow { pager.settledPage }.collect { page -> if (page != selectedWeek) onWeek(page) }
     }
-    HorizontalPager(pager, Modifier.fillMaxWidth().testTag(SportTestTags.STRIP)) { page ->
+    HorizontalPager(pager, Modifier.fillMaxWidth().nestedScroll(KeepHorizontalSwipes).testTag(SportTestTags.STRIP)) { page ->
         val week = weeks[page]
         WeekStrip(
             days = week.map { WeekStripDay(it.weekday, it.number, it.lessons, changed = false, today = it.today, past = it.past) },
@@ -477,6 +498,13 @@ internal fun RowAction(action: SportRowAction, lessonId: Long, onAction: (Long) 
             )
         }
     }
+}
+
+/** Consumes the horizontal rest of a nested swipe or fling, so it never scrolls a pager around it. */
+private val KeepHorizontalSwipes = object : NestedScrollConnection {
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset = available.copy(y = 0f)
+
+    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = available.copy(y = 0f)
 }
 
 /** The part of the day as the sheet's choice. */
