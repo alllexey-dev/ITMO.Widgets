@@ -127,6 +127,10 @@ struct SettingsScreen: View {
         case let .showMessage(shown):
             pendingToggles = [:]
             show(shown.text.resolved)
+        case let .copyText(copied):
+            // iOS confirms no copy itself.
+            UIPasteboard.general.string = copied.text
+            show(copied.confirmation.resolved)
         case let .showError(failure):
             pendingToggles = [:]
             show(AppErrorTextsKt.toUiText(failure.error).resolved)

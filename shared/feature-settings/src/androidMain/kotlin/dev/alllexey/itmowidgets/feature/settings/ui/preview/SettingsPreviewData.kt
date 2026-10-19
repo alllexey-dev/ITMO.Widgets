@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.ui.preview
 
+import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
@@ -20,6 +21,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
+import dev.alllexey.itmowidgets.feature.settings.presentation.versionSummary
 import dev.alllexey.itmowidgets.shared.compose.strings.app_unofficial_notice
 import dev.alllexey.itmowidgets.shared.compose.strings.me_group_app
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_extra_large
@@ -95,13 +97,13 @@ import org.jetbrains.compose.resources.StringResource
 /**
  * The settings pages of the previews, as the page providers build them over the presentation tests'
  * fixture: custom services on, notifications allowed, no quick-settings tile, no custom
- * spoiler image, no diagnostics records, version `2.1-test`. `SettingsPreviewDataTest` checks every page against
+ * spoiler image, no diagnostics records, a fork's build of version `2.1-test`. `SettingsPreviewDataTest` checks every page against
  * the real providers, so a provider change that these previews miss fails a test instead of drifting.
  */
 internal object SettingsPreviewData {
 
-    /** The version the presentation tests' fixture reports. */
-    const val VERSION = "2.1-test"
+    /** The build the presentation tests' fixture reports. */
+    private val BUILD = AppBuild("2.1-test", "20100", AppBuild.CUSTOM, "AlexPer777/ITMO.Widgets", "a1b2c3d4e5f6")
 
     val Root = state(
         SettingsPage.ROOT,
@@ -296,7 +298,11 @@ internal object SettingsPreviewData {
                     trailingIcon = AppIcon.OPEN_IN_NEW
                 ),
                 navigation(SettingsPage.LICENSES),
-                SettingItem.Info(SettingRowId.VERSION, res(Res.string.settings_version_title), UiText.Dynamic(VERSION))
+                SettingItem.Action(
+                    id = SettingRowId.VERSION,
+                    title = res(Res.string.settings_version_title),
+                    value = versionSummary(BUILD)
+                )
             ),
             footer = res(Res.string.app_unofficial_notice)
         )

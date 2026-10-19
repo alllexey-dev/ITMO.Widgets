@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
+import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
@@ -30,7 +31,6 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
-import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import kotlin.test.Test
 import org.koin.core.annotation.KoinExperimentalAPI
 import org.koin.dsl.module
@@ -53,7 +53,7 @@ class SettingsModuleTest {
     fun theSettingsModulesResolveWithThePlatformTypes() {
         module { includes(settingsDataModule, settingsModule) }.verify(
             extraTypes = dataPlatformTypes + listOf(
-                AppVersion::class,
+                AppBuild::class,
                 BackgroundWorkAccess::class,
                 QuickSettingsTileAccess::class,
                 CustomSpoilerRepository::class,

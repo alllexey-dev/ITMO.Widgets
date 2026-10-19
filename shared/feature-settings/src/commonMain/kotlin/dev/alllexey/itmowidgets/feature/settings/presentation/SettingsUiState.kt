@@ -32,6 +32,8 @@ sealed interface SettingsEvent {
     data object OpenIcsExport : SettingsEvent
     /** A page of the ITMO.Widgets site, [path] relative to its base address. */
     data class OpenWebPage(val path: String) : SettingsEvent
+    /** [text] goes to the clipboard; [confirmation] where the platform does not confirm a copy itself. */
+    data class CopyText(val text: String, val confirmation: UiText) : SettingsEvent
     data class ShowMessage(val text: UiText) : SettingsEvent
     data class ShowError(val error: AppError) : SettingsEvent
 }

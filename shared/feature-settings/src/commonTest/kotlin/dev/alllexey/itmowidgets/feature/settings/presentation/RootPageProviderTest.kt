@@ -102,9 +102,9 @@ class RootPageProviderTest {
             val maintenance = createFixture(page = SettingsPage.MAINTENANCE)
             advanceUntilIdle()
             val version = maintenance.viewModel.allItems()
-                .filterIsInstance<SettingItem.Info>()
+                .filterIsInstance<SettingItem.Action>()
                 .single { it.id == SettingRowId.VERSION }
-            assertEquals(UiText.Dynamic("2.1-test"), version.value)
+            assertEquals(versionSummary(TEST_BUILD), version.value)
         }
 
     @Test

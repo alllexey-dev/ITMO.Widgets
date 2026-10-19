@@ -1,5 +1,6 @@
 # Keeps one open issue per scheduled workflow while its nightly fails: a failed run opens the issue or comments on
 # it, the next passing run closes it. The caller job needs `issues: write` and runs only for `schedule` events.
+# Each failure assigns the repository owner and mentions them: a bot comment on an issue nobody follows notifies no one.
 name: nightly-issue
 description: Open, update or close the issue that tracks a failing nightly workflow.
 
@@ -18,15 +19,17 @@ runs:
         FAILED: ${{ inputs.failed }}
         TITLE: "Nightly ${{ github.workflow }} is failing"
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        OWNER: ${{ github.repository_owner }}
       run: |
         number=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number,title \
           --jq "map(select(.title == env.TITLE)) | .[0].number // empty")
         if [ "$FAILED" = true ]; then
-          body="$RUN_URL failed on \`${GITHUB_SHA:0:7}\`."
+          body="@$OWNER $RUN_URL failed on \`${GITHUB_SHA:0:7}\`."
           if [ -n "$number" ]; then
+            gh issue edit "$number" --add-assignee "$OWNER"
             gh issue comment "$number" --body "$body"
           else
-            gh issue create --title "$TITLE" --body "$body"
+            gh issue create --title "$TITLE" --body "$body" --assignee "$OWNER"
           fi
         elif [ -n "$number" ]; then
           gh issue close "$number" --comment "$RUN_URL passed on \`${GITHUB_SHA:0:7}\`."

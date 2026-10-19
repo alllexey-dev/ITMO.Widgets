@@ -258,13 +258,14 @@ class SettingsScreenTest {
 
     @Test
     @Config(qualifiers = "w320dp-h891dp")
-    fun `the version row shows the app version and fits a narrow screen in light and dark`() {
+    fun `the version row shows the build and fits a narrow screen in light and dark`() {
         show(SettingsPreviewData.Maintenance, fontScale = LARGE_FONT)
         for (scheme in listOf(false, true)) {
             dark = scheme
             colors = ColorSource.Seed(GREEN_SEED)
             compose.waitForIdle()
-            compose.onNodeWithTag(SettingRowId.VERSION.key).assert(hasText(SettingsPreviewData.VERSION))
+            compose.onNodeWithTag(SettingRowId.VERSION.key)
+                .assert(hasText("2.1-test (20100) · a1b2c3d · AlexPer777/ITMO.Widgets"))
             compose.assertNoTextOverflow()
         }
     }

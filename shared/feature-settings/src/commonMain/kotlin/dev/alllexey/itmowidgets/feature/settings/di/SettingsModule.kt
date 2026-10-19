@@ -46,7 +46,7 @@ val settingsDataModule = module {
 /**
  * The settings screens Koin constructs. The page providers and [SettingsPages] are factories: every [SettingsViewModel]
  * gets its own set, so stacked settings levels never share page state. The repositories come from [settingsDataModule];
- * `AppVersion` and the platform accesses from `androidSettingsModule` (`settingsIosModule` on iOS), the core contracts,
+ * `AppBuild` and the platform accesses from `androidSettingsModule` (`settingsIosModule` on iOS), the core contracts,
  * `PlatformCapabilities` included, from the platform's core bindings (`iosCoreModule` on iOS). The providers that hide
  * a row by capability are built explicitly: their capabilities parameter has a default for hand-built providers, which
  * a constructor reference would make ambiguous.

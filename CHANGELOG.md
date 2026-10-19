@@ -14,6 +14,10 @@ new iOS app.
 
 - The lesson sheet's `Друзья на паре` header keeps the usual gap above the list, the BARS row is top-aligned with its button under the title, the person card says `Было у вас осенью 2025` for a subject of an earlier term instead of `Ведёт у вас`, the campus map opens in the theme's background instead of a white frame, snackbars and banners last 2 s (5 s with an action), and a section change reloads the queue entries at once.
 
+### Build in the version row (2026-10-19)
+
+- Settings `Версия` shows the build number, the short commit and, for a custom build, its source (`AlexPer777/ITMO.Widgets` or `своя сборка`); a tap copies the full build details.
+
 ### iOS push switches hidden (2026-10-19)
 
 - On iOS «Уведомления» hides `Спорт`, `Друзья` and `Новые устройства` until the app holds Apple's notification filtering entitlement; every push shows, the stored switches stay.

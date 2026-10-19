@@ -2,7 +2,8 @@
 # test.sh [--ci] [--record]                           checks, xcodegen, build and test of the scheme without UITests
 # test.sh [--ci] [--record] --only <Target>/<Class>   the same, one test class (xcodebuild -only-testing)
 # test.sh [--ci] ui [<Class>...]                      the XCUITest target UITests, or only the listed classes
-# test.sh [--ci] kn <module>...                       iosSimulatorArm64Test of shared modules (`core` or `:shared:core`)
+# test.sh [--ci] kn [<module>...]                     iosSimulatorArm64Test of shared modules (`core` or `:shared:core`),
+#                                                     or of every module with an iOS target
 # test.sh sim                                         print this worktree's simulator UDID, creating it if needed
 # test.sh --cleanup                                   delete this worktree's simulator
 #
@@ -20,7 +21,7 @@
 # - Snapshots (swift-snapshot-testing): the test process gets SNAPSHOT_TESTING_RECORD (all with --record, never
 #   with --ci, else unset: the library records a missing reference and fails the test) and SNAPSHOT_ARTIFACTS =
 #   iosApp/build/snapshot-artifacts (failure images, emptied before each run) through xcodebuild's TEST_RUNNER_ prefix.
-# - kn: Gradle on the same simulator.
+# - kn: Gradle on the same simulator, with --continue: a failing module does not hide the rest.
 # - sim: the simulator scripts/ios/screenshots.sh drives between runs; prints only the UDID on stdout.
 # - --ci: CI=true; deletes the simulator at the end.
 # - The last line of a finished run is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha7>[+dirty]`.
@@ -39,7 +40,7 @@ root=$(cd "$script_dir/../.." && pwd -P) || refuse "cannot resolve the repositor
 cd "$root" || refuse "cannot enter $root"
 
 usage() {
-  sed -n '2,7p' "$self" | sed 's/^# //' >&2
+  sed -n '2,8p' "$self" | sed 's/^# //' >&2
   exit 2
 }
 
@@ -73,7 +74,6 @@ while [ $# -gt 0 ]; do
     kn)
       mode=kn
       shift
-      [ $# -gt 0 ] || refuse "kn needs at least one shared module"
       while [ $# -gt 0 ]; do
         case "$1" in --*) break ;; esac
         name=${1#:shared:}
@@ -240,8 +240,12 @@ run_xcode() { # label
 
 run_kn() {
   local init
-  local -a tasks=()
-  for name in "${modules[@]}"; do tasks+=(":shared:$name:iosSimulatorArm64Test"); done
+  # Without modules, the unqualified task name: Gradle runs it in every project that has an iOS target.
+  local -a tasks=(iosSimulatorArm64Test)
+  if [ ${#modules[@]} -gt 0 ]; then
+    tasks=()
+    for name in "${modules[@]}"; do tasks+=(":shared:$name:iosSimulatorArm64Test"); done
+  fi
   ensure_sim
   # Points every K/N simulator test task at this worktree's simulator instead of KGP's shared default device.
   mkdir -p iosApp/build
@@ -253,7 +257,7 @@ allprojects {
 }
 EOF
   note "./gradlew ${tasks[*]}"
-  ./gradlew --init-script "$init" "${tasks[@]}"
+  ./gradlew --continue --init-script "$init" "${tasks[@]}"
 }
 
 case "$mode" in

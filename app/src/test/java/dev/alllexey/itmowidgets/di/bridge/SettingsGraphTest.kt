@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
 import dev.alllexey.itmowidgets.feature.settings.data.AndroidBackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.data.AndroidQuickSettingsTileAccess
 import org.junit.Assert.assertTrue
+import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.settings.WidgetAppearanceRepository
@@ -20,7 +21,6 @@ import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.core.settings.WidgetPaletteSource
-import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Rule
@@ -46,7 +46,7 @@ class SettingsGraphTest {
         val koin = GlobalContext.get()
 
         assertSame(koin.get<WidgetRefreshRequester>(), koin.get<WidgetRefreshRequester>())
-        assertEquals(AppVersion(application.getString(R.string.app_version)), koin.get<AppVersion>())
+        assertEquals(application.getString(R.string.app_version), koin.get<AppBuild>().version)
         assertTrue(koin.get<BackgroundWorkAccess>() is AndroidBackgroundWorkAccess)
         assertTrue(koin.get<QuickSettingsTileAccess>() is AndroidQuickSettingsTileAccess)
         assertTrue(koin.get<WidgetPaletteSource>() is AndroidWidgetPaletteSource)

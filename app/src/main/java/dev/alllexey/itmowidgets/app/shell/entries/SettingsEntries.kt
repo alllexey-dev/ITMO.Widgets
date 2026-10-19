@@ -46,6 +46,7 @@ import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
+import dev.alllexey.itmowidgets.core.ui.copyToClipboard
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPinRequester
@@ -172,6 +173,11 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
                         null -> Unit
                     }
                     SettingsEvent.OpenIcsExport -> navigator.open(AppRoutes.IcsExport)
+                    // Android 13 and later confirm a copy themselves.
+                    is SettingsEvent.CopyText ->
+                        context.copyToClipboard(context.getString(R.string.app_name), event.text) {
+                            Snackbar.make(view, event.confirmation.resolve(context), Snackbar.LENGTH_SHORT).show()
+                        }
                     else -> showSettingsMessage(event, context, view, platform)
                 }
             }

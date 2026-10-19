@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
@@ -66,6 +67,39 @@ class MaintenancePageProviderTest {
 
             fixture.viewModel.onAction(SettingRowId.PRIVACY_POLICY)
             assertEquals(SettingsEvent.OpenWebPage("/privacy.html"), fixture.viewModel.events.first())
+        }
+
+    @Test
+    fun theVersionShowsTheCommitAndWhereACustomBuildComesFromAndATapCopiesTheDetails() =
+        runTest(main.dispatcher) {
+            val official = AppBuild("2.3.0", "20292", "play", "alllexey-dev/ITMO.Widgets", "a1b2c3d4e5f6")
+            val local = AppBuild("2.3.0", "20292", AppBuild.CUSTOM, AppBuild.LOCAL)
+            val numbers = UiText.Dynamic("2.3.0 (20292)")
+
+            assertEquals(UiText.Joined(listOf(numbers, UiText.Dynamic("a1b2c3d")), " · "), versionSummary(official))
+            assertEquals(
+                UiText.Joined(listOf(numbers, UiText.Res(SettingsStrings.settings_version_own_build)), " · "),
+                versionSummary(local)
+            )
+            assertEquals(
+                UiText.Joined(
+                    listOf(
+                        UiText.Dynamic("2.1-test (20100)"),
+                        UiText.Dynamic("a1b2c3d"),
+                        UiText.Dynamic("AlexPer777/ITMO.Widgets")
+                    ),
+                    " · "
+                ),
+                versionSummary(TEST_BUILD)
+            )
+
+            val fixture = createFixture(page = SettingsPage.MAINTENANCE)
+            advanceUntilIdle()
+            fixture.viewModel.onAction(SettingRowId.VERSION)
+            assertEquals(
+                SettingsEvent.CopyText(TEST_BUILD.details(), UiText.Res(SettingsStrings.settings_version_copied)),
+                fixture.viewModel.events.first()
+            )
         }
 
     @Test

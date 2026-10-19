@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.network.asBackendTokenSource
+import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import io.ktor.client.engine.HttpClientEngine
@@ -94,5 +95,14 @@ internal fun buildIdentity(
     commit = commit.ifEmpty { null },
 )
 
+/** This build for the settings version row: the version and the identity `X-Client` sends. */
+internal fun appBuild(identity: BuildIdentity = buildIdentity()): AppBuild = AppBuild(
+    version = BuildConfig.VERSION_NAME,
+    build = BuildConfig.VERSION_CODE.toString(),
+    channel = identity.channel,
+    source = identity.source,
+    commit = identity.commit,
+)
+
 private const val OFFICIAL_BUILD = "official"
-private const val CUSTOM_CHANNEL = "custom"
+private const val CUSTOM_CHANNEL = AppBuild.CUSTOM
