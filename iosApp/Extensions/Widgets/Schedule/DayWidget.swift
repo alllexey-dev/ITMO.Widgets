@@ -187,8 +187,9 @@ private struct DayBlock: View {
     var body: some View {
         let current = lesson.state == .now && !lesson.cancelled
         HStack(spacing: 7) {
+            // Off the block's top and bottom edges, as on Android (3 dp padding and 3 dp margin).
             WidgetTypeBar(typeId: lesson.typeId)
-                .padding(.vertical, 4)
+                .padding(.vertical, 6)
             if height >= 30 * unit * scale {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 4) {
