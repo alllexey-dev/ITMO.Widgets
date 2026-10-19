@@ -28,21 +28,20 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateUiState
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.app_update_action
+import dev.alllexey.itmowidgets.shared.compose.strings.app_update_description
+import dev.alllexey.itmowidgets.shared.compose.strings.app_update_later
+import dev.alllexey.itmowidgets.shared.compose.strings.app_update_skip
+import dev.alllexey.itmowidgets.shared.compose.strings.app_update_title
+import dev.alllexey.itmowidgets.shared.compose.strings.app_update_unsupported_description
+import dev.alllexey.itmowidgets.shared.compose.strings.app_update_unsupported_title
+import dev.alllexey.itmowidgets.shared.compose.strings.app_update_versions
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_download
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.app_update_action
-import dev.alllexey.itmowidgets.shared.feature.account.app_update_description
-import dev.alllexey.itmowidgets.shared.feature.account.app_update_later
-import dev.alllexey.itmowidgets.shared.feature.account.app_update_skip
-import dev.alllexey.itmowidgets.shared.feature.account.app_update_title
-import dev.alllexey.itmowidgets.shared.feature.account.app_update_unsupported_description
-import dev.alllexey.itmowidgets.shared.feature.account.app_update_unsupported_title
-import dev.alllexey.itmowidgets.shared.feature.account.app_update_versions
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Tags a test or a host looks the update offer up by; named after the view ids of the XML screen. */
@@ -76,7 +75,7 @@ fun AppUpdateScreen(
             // The XML button had a fixed 48 dp box; the kit action keeps 48 dp as a minimum at any font scale.
             AppTopBarAction(
                 icon = painterResource(KitRes.drawable.ic_close),
-                label = stringResource(CoreRes.string.common_close),
+                label = stringResource(Res.string.common_close),
                 onClick = onClose,
                 modifier = Modifier.padding(start = ItmoTheme.spacing.compact, top = ItmoTheme.spacing.related)
                     .testTag(AppUpdateTestTags.CLOSE),

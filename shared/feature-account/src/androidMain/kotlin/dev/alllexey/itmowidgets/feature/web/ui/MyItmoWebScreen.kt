@@ -31,21 +31,20 @@ import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.my_itmo_web_error_description
+import dev.alllexey.itmowidgets.shared.compose.strings.my_itmo_web_error_title
+import dev.alllexey.itmowidgets.shared.compose.strings.my_itmo_web_external
+import dev.alllexey.itmowidgets.shared.compose.strings.my_itmo_web_more
+import dev.alllexey.itmowidgets.shared.compose.strings.my_itmo_web_reload
 import dev.alllexey.itmowidgets.shared.compose.strings.my_itmo_web_title
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_more_vert
 import dev.alllexey.itmowidgets.shared.designsystem.ic_refresh
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.my_itmo_web_error_description
-import dev.alllexey.itmowidgets.shared.feature.account.my_itmo_web_error_title
-import dev.alllexey.itmowidgets.shared.feature.account.my_itmo_web_external
-import dev.alllexey.itmowidgets.shared.feature.account.my_itmo_web_more
-import dev.alllexey.itmowidgets.shared.feature.account.my_itmo_web_reload
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -87,12 +86,12 @@ fun MyItmoWebScreen(
     ) {
         Column(Modifier.fillMaxSize()) {
             AppTopBar(
-                title = stringResource(CoreRes.string.my_itmo_web_title),
+                title = stringResource(Res.string.my_itmo_web_title),
                 subtitle = host,
                 navigation = {
                     AppTopBarAction(
                         painterResource(KitRes.drawable.ic_close),
-                        stringResource(CoreRes.string.common_close),
+                        stringResource(Res.string.common_close),
                         onClose,
                         Modifier.testTag(MyItmoWebTestTags.CLOSE),
                     )
@@ -125,7 +124,7 @@ fun MyItmoWebScreen(
                         icon = painterResource(KitRes.drawable.ic_error),
                         description = stringResource(Res.string.my_itmo_web_error_description),
                         action = ContentStateAction(
-                            stringResource(CoreRes.string.common_retry),
+                            stringResource(Res.string.common_retry),
                             onRetry,
                             modifier = Modifier.testTag(MyItmoWebTestTags.STATE_ACTION),
                         ),
