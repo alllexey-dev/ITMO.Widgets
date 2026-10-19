@@ -14,6 +14,10 @@ new iOS app.
 
 - Settings `Версия` shows the build number, the short commit and, for a custom build, its source (`AlexPer777/ITMO.Widgets` or `своя сборка`); a tap copies the full build details.
 
+### iOS push switches hidden (2026-10-19)
+
+- On iOS «Уведомления» hides `Спорт`, `Друзья` and `Новые устройства` until the app holds Apple's notification filtering entitlement; every push shows, the stored switches stay.
+
 ### iOS framework without Compose (2026-10-19)
 
 - On iOS, Kotlin text (notifications, widget files, shares, the widgets gallery) comes from the app's string tables through Swift, and the app no longer carries the Compose resources (ADR 0035, proposed).

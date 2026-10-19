@@ -20,4 +20,5 @@ internal val EveryPlatformCapability = PlatformCapabilities(
     wallpaperColors = true,
     pinWidgets = true,
     lockScreenWidgets = true,
+    pushSwitches = true,
 )

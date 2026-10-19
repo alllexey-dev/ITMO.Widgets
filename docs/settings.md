@@ -409,8 +409,9 @@ pushes while connected) or `запрещены в системе`.
   (`sport_notifications_enabled`, `friends_notifications_enabled`,
   `connections_notifications_enabled`; absent means on; a device setting that
   survives sign-out). Backend has no per-type preference, so the device drops
-  them: `FcmPayloadDispatcher` on Android, the notification service on iOS
-  ([notifications](features/notifications.md#flow)). A sport push still books
+  them (`FcmPayloadDispatcher`, [notifications](features/notifications.md#flow));
+  iOS lists none of them until it has the filtering entitlement
+  ([notifications](features/notifications.md#settings-page)). A sport push still books
   while its type is off. Turning a push on without the permission asks for it;
   no background work hint. Without the connection one row
   `Нужно подключение к ITMO.Widgets` opens «Подключение и данные» and the push

@@ -151,8 +151,8 @@ records and shares the journal.
 
 The `SERVICES` and `PRIVACY` keys open `ConnectionDataScreen` (`Features/Connection/`, over `ConnectionViewModel`,
 with `ServicesConsentSheet`, which the first-run flow shares) and `NOTIFICATIONS` opens `NotificationSettingsScreen`
-(over `NotificationSettingsViewModel`; the push switches reach the notification service as `disabledPushes` of
-session-v1.json). Both report the system state as `SettingsScreen` does. The connected devices (`ConnectionsScreen`) and the
+(over `NotificationSettingsViewModel`; without the filtering entitlement it lists no push switch, see
+[Degradations](#degradations)). Both report the system state as `SettingsScreen` does. The connected devices (`ConnectionsScreen`) and the
 pairing sheet (`WebLoginSheet`) are drawn on the kit; their logic is the shared one.
 
 ## Strings and icons
@@ -295,8 +295,9 @@ calendar sync), keeps Android's periods in
   the notification settings into session-v1.json.
 - Taps. `NotificationTaps` reads the route from `userInfo` (`NotificationTapRoutes`) and hands it to the router, so a
   cold-start tap waits for the shell.
-- Notification service (Swift micro-client). `PushHandler` drops pushes for another ISU, signed out, the demo or a
-  type switched off in the app (a sport push still books first); shows friendship pushes as Backend sent them; books sport pushes through `SportPushBooker` on MyITMO and reports
+- Notification service (Swift micro-client). `PushHandler` drops pushes for another ISU, signed out or the demo;
+  it ignores the types switched off in the app (`disabledPushes`) until `honorsDisabledPushes` comes with the
+  filtering entitlement (a sport push would still book first); shows friendship pushes as Backend sent them; books sport pushes through `SportPushBooker` on MyITMO and reports
   the outcome to Backend with the app's `X-App-Version` and `X-Client` (the install id from session-v1.json).
   `MyItmoAccess` refreshes the token under the `myitmo-refresh` lock. Tests replay the Kotlin
   golden fixtures (`NotificationServiceTests`), since `simctl push` never runs an extension.
@@ -318,6 +319,7 @@ calendar sync), keeps Android's periods in
 | BARS in the background | only through the Keychain cookie copy | a background run has about 30 s and no window |
 | Notification channels | one switch | iOS has no channels |
 | Push, Universal Links, dropped-push filtering | not available in unsigned builds | they need the Apple developer account |
+| Push switches (`Спорт`, `Друзья`, `Новые устройства`) | hidden, every push shows | dropping a push needs `com.apple.developer.usernotifications.filtering`, not granted yet |
 | Update offer | App Store page only, nothing while `APP_STORE_ID` is empty | no other channel on iOS |
 | Debug tools | launch arguments instead | the debug tools are Android-only (ADR 0016) |
 
