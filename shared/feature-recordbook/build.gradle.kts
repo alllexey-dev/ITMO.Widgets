@@ -1,7 +1,7 @@
-// A feature module: Compose UI, Res strings, host and screenshot tests.
+// A feature module: shared domain, data and ViewModels; Android-only Compose UI in androidMain (ADR 0035).
 // Features read core, designsystem and compose-strings, never another feature.
 plugins {
-    id("itmowidgets.cmp.ui")
+    id("itmowidgets.cmp.android")
     id("itmowidgets.testing")
 }
 
@@ -9,21 +9,18 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":shared:core"))
-            implementation(project(":shared:designsystem"))
-            implementation(project(":shared:compose-strings"))
-            // The recordbook ViewModels are KMP ViewModels that :app obtains through Koin.
+            // The recordbook ViewModels are KMP ViewModels that :app obtains through Koin and SwiftUI through the bridge.
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
-            // The screens' routes: koinViewModel() and lifecycle-aware collection; the iOS shell hosts
-            // the same routes.
-            implementation(libs.koin.compose.viewmodel)
-            implementation(libs.jetbrains.lifecycle.runtime.compose)
             // SheetHtmlGrid parses the HTML view of a public sheet.
             implementation(libs.ksoup)
         }
-        // The public sheets' engine; MyITMO's and BARS's come from the app.
         androidMain.dependencies {
+            // The screens' routes: koinViewModel() and lifecycle-aware collection.
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
+            // The public sheets' engine; MyITMO's and BARS's come from the app.
             implementation(libs.ktor.client.okhttp)
         }
         commonTest.dependencies {
