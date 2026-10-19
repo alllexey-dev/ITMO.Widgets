@@ -225,7 +225,7 @@ incur an additional delay. Disconnecting forgets them at once.
 `COMPACT_SCHEDULE_WIDGET`, `FULL_SCHEDULE_WIDGET`, `QR_WIDGET` and
 `SCHEDULE_WIDGETS` open it too). The subtitle counts the placed widgets
 (`2 на главном экране`, iOS `на экране «Домой»`) once there are any. A card per
-format shows the real widget on the sample Monday at 12:22
+format, across the screen, shows the real widget on the sample Monday at 12:22
 (`SchedulePreviewScenario`, `SportWidgetSamples`; never the user's data) on a
 wallpaper, its name and what it shows, `Добавить` (Android pins it through the
 launcher, `WidgetPinRequester`) or `на экране`, and the settings button. iOS

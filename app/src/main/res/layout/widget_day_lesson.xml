@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- A lesson of the day widget: type bar, subject and room on top, time, pill and building under them. The current one
-     sits on the primary container with its elapsed part shaded (day_lesson_elapsed). -->
+     sits on the primary container with its elapsed part shaded (lesson_elapsed) down to the now line (lesson_now). -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/lesson_root"
@@ -20,9 +20,22 @@
         android:id="@+id/lesson_elapsed"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="3dp"
         android:contentDescription="@null"
         android:scaleType="fitXY"
         android:src="@drawable/widget_shape_block_top"
+        android:visibility="gone" />
+
+    <!-- The now line's part across the current lesson: over its background, under its text. -->
+    <android.widget.ImageView
+        android:id="@+id/lesson_now"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_shape_bar"
         android:visibility="gone" />
 
     <LinearLayout

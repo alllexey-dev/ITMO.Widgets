@@ -101,7 +101,10 @@ private struct DayTimeline: View {
     var body: some View {
         GeometryReader { geometry in
             let minimum = Layout.minimumBlock * unit * scale
-            let axis = DayAxis(day: day, height: geometry.size.height, minimumBlock: minimum)
+            let axis = DayAxis(
+                day: day, height: geometry.size.height, minimumBlock: minimum,
+                maximumDensity: Layout.maximumHour / 60 * unit * scale
+            )
             let lessonsWidth = geometry.size.width - Layout.axisWidth
             ZStack(alignment: .topLeading) {
                 ForEach(hours(axis), id: \.self) { hour in
@@ -162,6 +165,8 @@ private struct DayTimeline: View {
     enum Layout {
         static let axisWidth: CGFloat = 28
         static let minimumBlock: CGFloat = 26
+        /// The most an hour takes: a day of one or two lessons stays compact at the top.
+        static let maximumHour: CGFloat = 36
         static let blockGap: CGFloat = 3
         static let gapPill: CGFloat = 18
     }
@@ -276,11 +281,12 @@ private struct DayBlock: View {
 }
 
 /// The day widget's vertical scale: minutes of the day to points from the top. Time runs linearly, except that every
-/// lesson gets at least `minimumBlock` points, so a short one stays readable; the rest of the day shares the room left.
+/// lesson gets at least `minimumBlock` points, so a short one stays readable; the rest of the day shares the room left,
+/// at most `maximumDensity` points a minute, so a short day keeps compact blocks at the top instead of stretching.
 struct DayAxis {
     private let breakpoints: [(minute: Int, y: CGFloat)]
 
-    init(day: DayContent, height: CGFloat, minimumBlock: CGFloat) {
+    init(day: DayContent, height: CGFloat, minimumBlock: CGFloat, maximumDensity: CGFloat = .infinity) {
         let start = day.axisStart, end = max(day.axisEnd, day.axisStart + 1)
         let lessons = day.lessons
             .map { (start: min(max($0.startMinute, start), end), end: min(max($0.endMinute, start), end)) }
@@ -296,7 +302,7 @@ struct DayAxis {
         func total(_ base: CGFloat) -> CGFloat {
             zip(lengths, needs).reduce(0) { $0 + $1.0 * max(base, $1.1) }
         }
-        var low: CGFloat = 0, high = height / CGFloat(end - start)
+        var low: CGFloat = 0, high = min(height / CGFloat(end - start), maximumDensity)
         let densities: [CGFloat]
         if total(0) >= height {
             // Too many lessons for their minimum: everything shrinks alike.
