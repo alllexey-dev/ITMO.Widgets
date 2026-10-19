@@ -122,7 +122,7 @@ private fun IosLinkRowLayout(
             .combinedClickable(onLongClickLabel = longClickLabel, onLongClick = onLongClick, onClick = onClick)
             .padding(
                 start = IosMetrics.rowHorizontalPadding,
-                // The pill's own inset keeps its arrows clear of the edge, as in the Material row.
+                // The pill's own inset keeps its thumbs clear of the edge, as in the Material row.
                 end = if (trailing) ItmoTheme.spacing.related else IosMetrics.rowHorizontalPadding,
             ),
         verticalAlignment = Alignment.CenterVertically,

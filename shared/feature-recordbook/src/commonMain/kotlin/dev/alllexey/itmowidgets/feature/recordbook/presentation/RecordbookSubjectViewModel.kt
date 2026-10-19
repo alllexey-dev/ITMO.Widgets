@@ -198,7 +198,7 @@ class RecordbookSubjectViewModel(
         }
     }
 
-    /** Tapping the arrow of the current vote takes it back; one vote at a time, a failure is reported once. */
+    /** Tapping the thumb of the current vote takes it back; one vote at a time, a failure is reported once. */
     fun voteLink(id: String, up: Boolean) {
         val scope = scope() ?: return
         val snapshot = (links as? SubjectLinksState.Content)?.snapshot ?: return

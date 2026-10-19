@@ -33,8 +33,6 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
-import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_down
-import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_up
 import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_down
 import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_down_filled
 import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_up
@@ -47,8 +45,12 @@ enum class Vote {
     Down,
 }
 
-/** Links use thumbs; teacher reviews keep their existing arrows. */
-enum class VoteIcons { Arrows, Thumbs }
+/** Backend's -1, 0 or 1 as the pill's vote. */
+fun voteOf(value: Int): Vote? = when {
+    value > 0 -> Vote.Up
+    value < 0 -> Vote.Down
+    else -> null
+}
 
 /** What the buttons of a [VotePill] say to TalkBack and offer as its custom actions. */
 class VoteLabels(
@@ -59,17 +61,17 @@ class VoteLabels(
 )
 
 /**
- * The compact vote pill of others' links and reviews: a 32 dp pill inside the 48 dp row of button targets.
- * [icons] selects arrows for reviews or thumbs for links, filled for the selected vote. The score turns `primary`
- * once the viewer voted ([myVote]) and `error` below zero; the own vote is `primary`.
+ * The one vote pill of links and reviews: like and dislike thumbs around the score, a 32 dp pill inside the 48 dp
+ * row of button targets. The selected vote's thumb is filled and `primary`. The score turns `primary` once the viewer
+ * voted ([myVote]) and `error` below zero.
  *
- * Without [onVote] the pill shows the score alone. Tapping the arrow of the current vote takes it back upstream, so
- * [onVote] only reports which arrow was tapped. A disabled pill (a vote in flight) keeps its look and ignores taps.
+ * Without [onVote] the pill shows the score alone. Tapping the thumb of the current vote takes it back upstream, so
+ * [onVote] only reports which thumb was tapped. A disabled pill (a vote in flight) keeps its look and ignores taps.
  * The score reads [scoreDescription] and carries both votes as TalkBack custom actions, so a row that merges the pill
  * offers them too.
  *
- * Under the iOS style the arrows are 44 pt targets that dim while pressed instead of a ripple and the pill takes
- * `tertiarySystemFill`; the pill stays 32 high with the same room around the score and the arrows.
+ * Under the iOS style the thumbs are 44 pt targets that dim while pressed instead of a ripple and the pill takes
+ * `tertiarySystemFill`; the pill stays 32 high with the same room around the score and the thumbs.
  */
 @Composable
 fun VotePill(
@@ -80,11 +82,10 @@ fun VotePill(
     labels: VoteLabels,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    icons: VoteIcons = VoteIcons.Arrows,
 ) {
     val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
     val container = if (ios) ItmoTheme.iosColors.tertiarySystemFill else ItmoTheme.colorScheme.surfaceContainerHighest
-    // The pill keeps its 32 dp inside the arrows' targets of either style: 16 x 8 dp in Material's 48, 12 x 6 in 44.
+    // The pill keeps its 32 dp inside the thumbs' targets of either style: 16 x 8 dp in Material's 48, 12 x 6 in 44.
     val insetHorizontal = if (ios) ItmoTheme.spacing.touchTarget - PillHeight else PillInsetHorizontal
     val insetVertical = if (ios) (ItmoTheme.spacing.touchTarget - PillHeight) / 2 else PillInsetVertical
     Row(
@@ -101,7 +102,7 @@ fun VotePill(
             },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (onVote != null) VoteArrow(Vote.Up, myVote, labels.up, enabled, icons, onVote)
+        if (onVote != null) VoteThumb(Vote.Up, myVote, labels.up, enabled, onVote)
         Score(
             score,
             myVote,
@@ -110,7 +111,7 @@ fun VotePill(
             margin = if (onVote != null) 0.dp else insetHorizontal + ItmoTheme.spacing.content,
             actions = onVote.takeIf { enabled },
         )
-        if (onVote != null) VoteArrow(Vote.Down, myVote, labels.down, enabled, icons, onVote)
+        if (onVote != null) VoteThumb(Vote.Down, myVote, labels.down, enabled, onVote)
     }
 }
 
@@ -128,7 +129,7 @@ private fun Score(
         score < 0 -> ItmoTheme.colorScheme.error
         else -> ItmoTheme.colorScheme.onSurface
     }
-    // Alone, the number keeps the pill's inset plus 12 dp; the arrows pad their icons towards it instead.
+    // Alone, the number keeps the pill's inset plus 12 dp; the thumbs pad their icons towards it instead.
     Text(
         formatScore(score),
         Modifier
@@ -151,11 +152,9 @@ private fun Score(
 }
 
 @Composable
-private fun VoteArrow(vote: Vote, myVote: Vote?, label: String, enabled: Boolean, icons: VoteIcons, onVote: (Vote) -> Unit) {
+private fun VoteThumb(vote: Vote, myVote: Vote?, label: String, enabled: Boolean, onVote: (Vote) -> Unit) {
     val selected = myVote == vote
     val icon = painterResource(when {
-        icons == VoteIcons.Arrows && vote == Vote.Up -> Res.drawable.ic_arrow_drop_up
-        icons == VoteIcons.Arrows -> Res.drawable.ic_arrow_drop_down
         vote == Vote.Up && selected -> Res.drawable.ic_thumb_up_filled
         vote == Vote.Up -> Res.drawable.ic_thumb_up
         selected -> Res.drawable.ic_thumb_down_filled
@@ -180,7 +179,7 @@ private fun VoteArrow(vote: Vote, myVote: Vote?, label: String, enabled: Boolean
             enabled = enabled,
             role = Role.Button,
             interactionSource = null,
-            indication = ripple(bounded = false, radius = ArrowRippleRadius),
+            indication = ripple(bounded = false, radius = ThumbRippleRadius),
             onClick = { onVote(vote) },
         )
     }
@@ -196,10 +195,10 @@ private fun VoteArrow(vote: Vote, myVote: Vote?, label: String, enabled: Boolean
             modifier = Modifier
                 .align(if (vote == Vote.Up) Alignment.CenterEnd else Alignment.CenterStart)
                 .padding(
-                    start = if (vote == Vote.Up) 0.dp else ArrowInnerPadding,
-                    end = if (vote == Vote.Up) ArrowInnerPadding else 0.dp,
+                    start = if (vote == Vote.Up) 0.dp else ThumbInnerPadding,
+                    end = if (vote == Vote.Up) ThumbInnerPadding else 0.dp,
                 )
-                .size(ArrowIconSize),
+                .size(ThumbIconSize),
             tint = if (selected) ItmoTheme.colorScheme.primary else ItmoTheme.colorScheme.onSurfaceVariant,
         )
     }
@@ -210,27 +209,27 @@ internal fun formatScore(score: Int): String = if (score < 0) "$MINUS_SIGN${-sco
 
 private const val MINUS_SIGN = '\u2212'
 
-/** `bg_link_vote_pill`: the pill is inset 16 dp from the arrows' outer edges and 8 dp from the 48 dp row. */
+/** `bg_link_vote_pill`: the pill is inset 16 dp from the thumbs' outer edges and 8 dp from the 48 dp row. */
 private val PillInsetHorizontal = 16.dp
 private val PillInsetVertical = 8.dp
 
 /** `bg_link_vote_pill`'s height: 48 dp less twice [PillInsetVertical]. */
 private val PillHeight = 32.dp
 
-/** How much a pressed arrow dims under the iOS style, as UIKit's plain buttons fade instead of a ripple. */
+/** How much a pressed thumb dims under the iOS style, as UIKit's plain buttons fade instead of a ripple. */
 private const val IOS_PRESSED_ALPHA = 0.5f
 
 /** `bg_link_vote_pill`'s 16 dp corners: a fully round 32 dp pill. */
 private val PillRadius = 16.dp
 
-/** The arrows' 4 dp padding towards the score in `view_link_vote_pill.xml`. */
-private val ArrowInnerPadding = 4.dp
+/** The thumbs' 4 dp padding towards the score, as in `view_link_vote_pill.xml`. */
+private val ThumbInnerPadding = 4.dp
 
-/** The 24 dp `ic_arrow_drop_up` and `ic_arrow_drop_down` inside 48 dp targets. */
-private val ArrowIconSize = 24.dp
+/** The 24 dp thumbs inside 48 dp targets. */
+private val ThumbIconSize = 24.dp
 
 /** `selectableItemBackgroundBorderless` over a 48 dp target. */
-private val ArrowRippleRadius = 24.dp
+private val ThumbRippleRadius = 24.dp
 
 /** The score's `android:minWidth`. */
 private val ScoreMinWidth = 12.dp

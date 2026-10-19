@@ -44,8 +44,8 @@ import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.designsystem.components.rows.Vote
 import dev.alllexey.itmowidgets.designsystem.components.rows.VoteLabels
-import dev.alllexey.itmowidgets.designsystem.components.rows.VoteIcons
 import dev.alllexey.itmowidgets.designsystem.components.rows.VotePill
+import dev.alllexey.itmowidgets.designsystem.components.rows.voteOf
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetHandle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
@@ -86,7 +86,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 enum class LinkAction { OPEN, AUTHOR, COPY, SCORES, PIN, EDIT, DELETE, REPORT }
 
 /**
- * What the link actions sheet shows for one link of [SubjectLinksUiState]: the vote pill ([showsScore], with arrows
+ * What the link actions sheet shows for one link of [SubjectLinksUiState]: the vote pill ([showsScore], with thumbs
  * while [canVote]), the moderator's [reviewNote] of an own rejected or hidden link, the profile [author] of another
  * student's link and the [rows] in display order.
  */
@@ -104,7 +104,7 @@ data class LinkActionsModel(
 
 /**
  * The sheet's rules for [linkId], or null while the links load or once the link is gone. Others' links vote; an own
- * shared link shows its score without arrows, an own private one none. Pinning needs the connection unless the link is
+ * shared link shows its score without thumbs, an own private one none. Pinning needs the connection unless the link is
  * one's own; reporting needs it, no `REPORT` restriction and no earlier report. A deleted account's shared links move
  * to a placeholder author with a negative ISU and no profile, so only a positive ISU is named.
  */
@@ -137,7 +137,7 @@ fun SubjectLinksUiState.linkActions(linkId: String): LinkActionsModel? {
 /** What the actions sheet asks of its host; every effect (navigation, the clipboard, closing) is the host's. */
 @Immutable
 class LinkActionsActions(
-    /** `up` is the up arrow; tapping the arrow of the current vote takes it back. A vote keeps the sheet open. */
+    /** `up` is the like thumb; tapping the thumb of the current vote takes it back. A vote keeps the sheet open. */
     val onVote: (link: SubjectLink, up: Boolean) -> Unit = { _, _ -> },
     val onOpen: (SubjectLink) -> Unit = {},
     /** `Автор: <name>`: the author's profile by ISU. */
@@ -292,10 +292,8 @@ private fun Heading(model: LinkActionsModel, actions: LinkActionsActions) {
             )
         }
         if (model.showsScore) {
-            VotePill(
-                icons = VoteIcons.Thumbs,
-                score = link.score,
-                myVote = link.myVote.toVote(),
+            VotePill(                score = link.score,
+                myVote = voteOf(link.myVote),
                 scoreDescription = stringResource(CoreRes.string.links_score, link.score),
                 onVote = if (model.canVote) { vote -> actions.onVote(link, vote == Vote.Up) } else null,
                 labels = VoteLabels(

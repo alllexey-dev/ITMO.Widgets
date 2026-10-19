@@ -39,6 +39,12 @@ class RoomMatcherTest {
     }
 
     @Test
+    fun aCompositeRoomIsNotTheRoomOfItsNumber() {
+        assertEquals(1472L, RoomMatcher.match("201 (составное)", ROOMS)?.room?.id)
+        assertEquals(700L, RoomMatcher.match("201", ROOMS)?.room?.id)
+    }
+
+    @Test
     fun corridorsAndUnknownRoomsDoNotMatch() {
         assertNull(RoomMatcher.match("1 этаж", ROOMS))
         assertNull(RoomMatcher.match("9999", ROOMS))
@@ -61,6 +67,8 @@ class RoomMatcherTest {
             room(42, "1224"),
             room(43, "1003а"),
             room(44, "1003"),
+            room(700, "201"),
+            room(1472, "201 (составное)"),
             room(123, null, "1 этаж", category = "corridor"),
         )
     }
