@@ -135,54 +135,95 @@ struct RecordbookSubjectContentActions {
     var disconnectSheet: () -> Void = {}
 }
 
-/// The subject page without the ViewModel: loading, the error with retry, or the tabs and the chosen one's content.
+/// The subject page without the ViewModel: loading, the error with retry, or the tabs over a pager of their pages.
 struct RecordbookSubjectContent: View {
     let state: RecordbookSubjectUiState
     var actions = RecordbookSubjectContentActions()
 
     var body: some View {
-        ItmoScreenStack {
-            switch onEnum(of: state) {
-            case .loading:
-                ItmoLoadingView()
-                    .padding(.top, ItmoSpacing.section)
-                    .accessibilityIdentifier("subject.loading")
-            case let .failed(failed):
-                ItmoErrorView(
-                    title: AppStrings.string("common_load_error_title"),
-                    description: AppErrorTextsKt.toUiText(failed.error).resolved,
-                    retry: actions.retry
-                )
-                .accessibilityIdentifier("subject.error")
-            case let .content(content):
-                tabs(content)
+        Group {
+            if let content = state as? RecordbookSubjectUiStateContent {
+                SubjectPager(content: content, actions: actions)
+            } else {
+                ItmoScreenStack {
+                    if let failed = state as? RecordbookSubjectUiStateFailed {
+                        ItmoErrorView(
+                            title: AppStrings.string("common_load_error_title"),
+                            description: AppErrorTextsKt.toUiText(failed.error).resolved,
+                            retry: actions.retry
+                        )
+                        .accessibilityIdentifier("subject.error")
+                    } else {
+                        ItmoLoadingView()
+                            .padding(.top, ItmoSpacing.section)
+                            .accessibilityIdentifier("subject.loading")
+                    }
+                }
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("subject.list")
     }
+}
 
-    @ViewBuilder
-    private func tabs(_ content: RecordbookSubjectUiStateContent) -> some View {
-        ItmoSegmentedChoice(
-            label: AppStrings.string("subject_tabs_label"),
-            options: [SubjectTab.scores, SubjectTab.lessons, SubjectTab.materials],
-            selection: Binding(get: { content.tab }, set: { actions.selectTab($0) })
-        ) { tab in
-            switch tab {
-            case .scores: AppStrings.string("subject_scores_title")
-            case .lessons: AppStrings.string("subject_tab_lessons")
-            case .materials: AppStrings.string("subject_tab_materials")
+/// The tabs pinned over a page of each: a tap on a tab slides to its page, a horizontal swipe selects the next tab,
+/// and each page keeps its own scroll position.
+private struct SubjectPager: View {
+    let content: RecordbookSubjectUiStateContent
+    let actions: RecordbookSubjectContentActions
+    @State private var page: SubjectTab
+
+    private static let tabs = [SubjectTab.scores, SubjectTab.lessons, SubjectTab.materials]
+
+    init(content: RecordbookSubjectUiStateContent, actions: RecordbookSubjectContentActions) {
+        self.content = content
+        self.actions = actions
+        _page = State(initialValue: content.tab)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ItmoSegmentedChoice(
+                label: AppStrings.string("subject_tabs_label"),
+                options: Self.tabs,
+                selection: Binding(get: { page }, set: { tab in withAnimation(.snappy) { page = tab } })
+            ) { tab in
+                switch tab {
+                case .scores: AppStrings.string("subject_scores_title")
+                case .lessons: AppStrings.string("subject_tab_lessons")
+                case .materials: AppStrings.string("subject_tab_materials")
+                }
             }
+            .accessibilityIdentifier("subject.tabs")
+            .padding(.horizontal, ItmoKit.margin)
+            TabView(selection: $page) {
+                ForEach(Self.tabs, id: \.self) { tab in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: ItmoKit.gap) {
+                            if let error = content.refreshError {
+                                ItmoGroupNote(text: AppStrings.string("recordbook_refresh_error", [AppErrorTextsKt.toUiText(error).resolved]))
+                            }
+                            switch tab {
+                            case .scores: SubjectScoresTab(scores: content.scores, actions: actions)
+                            case .lessons: SubjectLessonsTab(lessons: content.lessons, actions: actions)
+                            case .materials: SubjectMaterialsTab(materials: content.materials, actions: actions)
+                            }
+                        }
+                        .padding(.horizontal, ItmoKit.margin)
+                        .padding(.top, ItmoKit.gap)
+                        .padding(.bottom, ItmoSpacing.section)
+                    }
+                    .tag(tab)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
         }
-        .accessibilityIdentifier("subject.tabs")
-        if let error = content.refreshError {
-            ItmoGroupNote(text: AppStrings.string("recordbook_refresh_error", [AppErrorTextsKt.toUiText(error).resolved]))
+        .background(Color(.systemGroupedBackground))
+        .onChange(of: page) { _, tab in
+            if tab != content.tab { actions.selectTab(tab) }
         }
-        switch content.tab {
-        case .scores: SubjectScoresTab(scores: content.scores, actions: actions)
-        case .lessons: SubjectLessonsTab(lessons: content.lessons, actions: actions)
-        case .materials: SubjectMaterialsTab(materials: content.materials, actions: actions)
+        .onChange(of: content.tab) { _, tab in
+            if tab != page { withAnimation(.snappy) { page = tab } }
         }
     }
 }

@@ -1,10 +1,14 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookBody
@@ -30,6 +34,12 @@ internal class RecordbookScreenWithoutBarsPreview {
     @Preview(name = "bars-off")
     @Composable
     fun RecordbookScreen() = RecordbookPreview(RecordbookSamples.list("mid", "off"))
+}
+
+internal class RecordbookScreenBarsLoadingPreview {
+    @Preview(name = "bars-loading")
+    @Composable
+    fun RecordbookScreen() = RecordbookPreview(RecordbookSamples.list("mid", "loading"))
 }
 
 internal class RecordbookScreenBarsExpiredPreview {
@@ -79,4 +89,19 @@ internal class RecordbookSourcesSheetBarsPreview {
     @Preview(name = "bars")
     @Composable
     fun RecordbookSourcesSheetContent() = SourcesPreview("bars")
+}
+
+/** The BARS offer as the list and the subject page show it, with and without the cross. */
+internal class BarsOfferRowPreview {
+    @Preview(name = "offer")
+    @Composable
+    fun BarsOfferRow() = ItmoPreview {
+        Column(
+            Modifier.background(ItmoTheme.colorScheme.background).padding(ItmoTheme.spacing.screenMargin),
+            verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+        ) {
+            ListGroup { item { BarsOfferRow(onConnect = {}, onHide = {}) } }
+            ListGroup { item { BarsOfferRow(onConnect = {}) } }
+        }
+    }
 }

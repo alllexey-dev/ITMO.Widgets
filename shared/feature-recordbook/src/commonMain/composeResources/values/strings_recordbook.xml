@@ -132,6 +132,7 @@
     <string name="recordbook_bars_expired">БАРС: сессия истекла</string>
     <string name="recordbook_bars_sign_in">Войти</string>
     <string name="recordbook_bars_failed">БАРС: не удалось загрузить</string>
+    <string name="recordbook_bars_loading">Баллы из БАРС загружаются</string>
     <string name="recordbook_sources_title">Откуда баллы</string>
     <string name="recordbook_sources_action">Откуда баллы: %1$s</string>
     <string name="recordbook_sources_bars">БАРС</string>

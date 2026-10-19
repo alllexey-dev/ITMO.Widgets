@@ -10,6 +10,13 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Recordbook polish (2026-10-19)
+
+- The BARS offer and notices keep the title at full width with the button under it, no more words broken into a
+  narrow column; Зачётка's numbers pulse until the first BARS answer comes; the subject page's tabs turn with a
+  horizontal swipe, on Android and iOS. A subject row puts its number under the name when a word would not fit beside
+  it.
+
 ### Lesson sheet people and avatars (2026-10-19)
 
 - Lesson sheet: the action tiles no longer jump in after it opens (`Друзья` keeps its place, disabled while the

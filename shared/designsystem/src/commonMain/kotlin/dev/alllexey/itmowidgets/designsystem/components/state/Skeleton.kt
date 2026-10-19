@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
@@ -88,6 +89,17 @@ fun Skeleton(
             top += height + RowGap.toPx()
         }
     }
+}
+
+/**
+ * Content on screen whose fresher value is still loading (My ITMO's points while BARS answers): it pulses like a
+ * [Skeleton] while [active] and stands still otherwise or under reduced motion. Takes the same room either way, so
+ * nothing moves when the answer comes.
+ */
+@Composable
+fun LoadingPulse(active: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val alpha = if (active) rememberPulseAlpha() else null
+    Box(modifier.graphicsLayer { this.alpha = alpha?.value ?: 1f }) { content() }
 }
 
 private class RowArea(val left: Float, val top: Float, val width: Float, val height: Float)
