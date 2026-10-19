@@ -78,7 +78,7 @@ internal fun clientHeader(installIds: InstallIdPreferences): ClientHeader = Clie
     installId = installIds::installId
 )
 
-// Build identity: plug in the BuildConfig fields of ci/simple-builds here (BUILD_CHANNEL `official|custom`,
-// BUILD_SOURCE, BUILD_COMMIT, the upstream base version): channel = "custom" when BUILD_CHANNEL says so, else the
-// flavor; source, commit and base as they are (empty means unknown).
+// Build identity: once ci/simple-builds is on master, channel = "custom" when BuildConfig.BUILD_CHANNEL is "custom",
+// else the flavor; source = BuildConfig.BUILD_SOURCE; commit = BuildConfig.BUILD_COMMIT (empty in debug: left out).
+// No base: VERSION_NAME already is the upstream version.
 internal fun buildIdentity(): BuildIdentity = BuildIdentity(channel = BuildConfig.FLAVOR)

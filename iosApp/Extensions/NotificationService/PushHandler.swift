@@ -113,13 +113,15 @@ extension PushHandler {
     /// it `install` is left out.
     static func clientHeader(_ bundle: Bundle, installId: String?) -> String {
         func info(_ key: String) -> String? { bundle.object(forInfoDictionaryKey: key) as? String }
-        // Build identity: plug in the Info.plist keys of ci/simple-builds here, as in IosClientVersion (channel
-        // `custom` for an unofficial build, else the distribution; source, commit and the upstream base version).
+        // `IosClientVersion.buildIdentity`: `BuildChannel` custom or the distribution, `BuildSource` and `BuildCommit`
+        // as they are; absent keys read as official and unknown.
         return formatClientHeader([
             ("kind", "ios"),
             ("version", info("CFBundleShortVersionString")),
             ("build", info("CFBundleVersion")),
-            ("channel", distribution(bundle)),
+            ("channel", info("BuildChannel") == "custom" ? "custom" : distribution(bundle)),
+            ("source", info("BuildSource")),
+            ("commit", info("BuildCommit")),
             ("os", String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion)),
             ("install", installId),
         ])

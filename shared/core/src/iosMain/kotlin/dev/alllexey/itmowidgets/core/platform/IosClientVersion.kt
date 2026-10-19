@@ -35,13 +35,27 @@ object IosClientVersion {
             kind = "ios",
             version = AppBundleVersion.from(bundle.objectForInfoDictionaryKey(SHORT_VERSION_KEY)),
             build = AppBundleVersion.from(bundle.objectForInfoDictionaryKey(BUNDLE_VERSION_KEY)),
-            // Build identity: plug in the Info.plist keys of ci/simple-builds here (channel `custom` for an
-            // unofficial build, else the distribution; source, commit and the upstream base version).
-            identity = BuildIdentity(channel = mainBundleDistribution()),
+            identity = buildIdentity(
+                distribution = mainBundleDistribution(),
+                channel = bundle.objectForInfoDictionaryKey(BUILD_CHANNEL_KEY),
+                source = bundle.objectForInfoDictionaryKey(BUILD_SOURCE_KEY),
+                commit = bundle.objectForInfoDictionaryKey(BUILD_COMMIT_KEY)
+            ),
             os = osMajorVersion(),
             installId = installId
         )
     }
+
+    /**
+     * The build identity of the Info.plist (`BuildChannel` `official|custom`, `BuildSource`, `BuildCommit`): the
+     * channel is [distribution] for an official build and `custom` otherwise; an absent key reads as official and
+     * unknown. `base` stays out: the version already is the upstream one.
+     */
+    fun buildIdentity(distribution: String, channel: Any?, source: Any?, commit: Any?): BuildIdentity = BuildIdentity(
+        channel = if (channel == CUSTOM) CUSTOM else distribution,
+        source = (source as? String)?.takeIf(String::isNotBlank),
+        commit = (commit as? String)?.takeIf(String::isNotBlank)
+    )
 
     @OptIn(ExperimentalForeignApi::class)
     private fun osMajorVersion(): String =
@@ -82,4 +96,8 @@ object IosClientVersion {
 
     private const val SHORT_VERSION_KEY = "CFBundleShortVersionString"
     private const val BUNDLE_VERSION_KEY = "CFBundleVersion"
+    private const val BUILD_CHANNEL_KEY = "BuildChannel"
+    private const val BUILD_SOURCE_KEY = "BuildSource"
+    private const val BUILD_COMMIT_KEY = "BuildCommit"
+    private const val CUSTOM = "custom"
 }

@@ -138,8 +138,9 @@ device exactly on `POST /api/device/register-device`, so both apps register agai
 `X-Client` names the client for Backend's client statistics (ADR 0034): `key=value` pairs joined by `; ` in the
 order above, each value reduced to `[A-Za-z0-9._/+-]` and 64 characters, a pair with an empty value left out, the
 whole header at most 512 characters. `kind` is `android` or `ios`; `version` and `build` as in `X-App-Version`; `channel` the distribution
-(`custom` for an unofficial build); `source`, `commit` and `base` the build identity (`BuildIdentity`, absent until the
-build scripts provide it); `os` the Android API level or the iOS major version; `install` a random UUID per install
+(`custom` for an unofficial build); `source` and `commit` the build identity (`BuildIdentity`: iOS reads the
+Info.plist keys `BuildChannel`, `BuildSource`, `BuildCommit`, Android the matching `BuildConfig` fields once the build
+scripts add them; an empty value is left out); `base` is not sent, as `version` already is the upstream version; `os` the Android API level or the iOS major version; `install` a random UUID per install
 (`InstallIdPreferences` of `:shared:core`, asked per request, new after every session change). Android builds it in
 `NetworkModule.clientHeader`, iOS in `IosClientVersion.headerFromMainBundle`, the iOS notification service in
 `PushHandler.clientHeader` with the install id of session-v1.json. Both headers are sent during the transition.
