@@ -7,30 +7,15 @@ enum RouteTarget {
     case tab(ShellTab)
     /// A surface of the session gate (sign-in, first run): the session chooses it, no route opens it.
     case gate
-    /// A Compose screen from its `screens/<Feature>Screens.kt` factory, pushed on the selected tab's stack; it draws
-    /// its own top bar (`ShellChrome.compose`).
-    case compose(@MainActor () -> AnyView)
-    /// A SwiftUI screen pushed on the selected tab's stack, under the stack's navigation bar (`ShellChrome.native`).
+    /// A SwiftUI screen pushed on the selected tab's stack, under the stack's navigation bar.
     case swiftUI(@MainActor () -> AnyView)
     /// A sheet above the shell.
     case sheet(ShellSheet)
-    /// A Compose sheet's content from its `screens/<Feature>Screens.kt` factory in a SwiftUI sheet above the shell
-    /// (`ShellSheet.route`); the content draws its own title and close button, the SwiftUI view sets the detents.
-    case composeSheet(@MainActor () -> AnyView)
     /// A SwiftUI sheet above the shell (`ShellSheet.route`), usually an `ItmoSheet` with its own detents.
     case swiftUISheet(@MainActor () -> AnyView)
     /// No iOS screen: a key iOS does not map, such as the debug tools. Such a route has
     /// no entry point on iOS (App Review 2.1) and opening it does nothing.
     case notOnIOS
-
-    /// The chrome of a pushed screen; `nil` for anything else.
-    var chrome: ShellChrome? {
-        switch self {
-        case .compose: .compose
-        case .swiftUI: .native
-        case .tab, .gate, .sheet, .composeSheet, .swiftUISheet, .notOnIOS: nil
-        }
-    }
 }
 
 /// The map from shared keys to iOS screens. The one exhaustive switch over `RouteFeature` delegates each key to its
@@ -62,8 +47,8 @@ enum Routes {
     @ViewBuilder
     static func view(for destination: ShellDestination) -> some View {
         switch target(for: destination.route) {
-        case let .compose(make), let .swiftUI(make): make()
-        case .tab, .gate, .sheet, .composeSheet, .swiftUISheet, .notOnIOS: EmptyView()
+        case let .swiftUI(make): make()
+        case .tab, .gate, .sheet, .swiftUISheet, .notOnIOS: EmptyView()
         }
     }
 
@@ -72,8 +57,8 @@ enum Routes {
     @ViewBuilder
     static func sheetView(for destination: ShellDestination) -> some View {
         switch target(for: destination.route) {
-        case let .composeSheet(make), let .swiftUISheet(make): make()
-        case .tab, .gate, .compose, .swiftUI, .sheet, .notOnIOS: EmptyView()
+        case let .swiftUISheet(make): make()
+        case .tab, .gate, .swiftUI, .sheet, .notOnIOS: EmptyView()
         }
     }
 

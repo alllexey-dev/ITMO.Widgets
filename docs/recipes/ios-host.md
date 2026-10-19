@@ -80,8 +80,7 @@ struct SettingsScreen: View {
 
 In `Routes+<Feature>.swift` return `.swiftUI { AnyView(XScreen(...)) }` for the key; the screen keeps the native
 navigation bar. Open other routes with `AppRouter.open(_:)` from the environment, answer an opener with
-`deliver(_:from:)`. When the route was hosted through Compose before, delete in the same change its factory in
-`shared/ios/src/iosMain/.../ios/screens/<Feature>Screens.kt`, its Swift wrapper and the `.compose` target.
+`deliver(_:from:)`.
 
 ## 5. Tests
 

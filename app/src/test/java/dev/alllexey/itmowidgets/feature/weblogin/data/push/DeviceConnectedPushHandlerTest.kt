@@ -28,10 +28,10 @@ class DeviceConnectedPushHandlerTest {
         override suspend fun isEnabled() = enabled
         override suspend fun setEnabled(enabled: Boolean) { this@DeviceConnectedPushHandlerTest.enabled = enabled }
     }
-    private val handler = DeviceConnectedPushHandler(notifier, services, diagnostics)
+    private val handler = DeviceConnectedPushHandler(services, diagnostics)
 
     @Test fun `Backend's agent fixture names the agent and opens the connections`() = runTest {
-        handler.handle(vendoredPayload())
+        handler.handle(vendoredPayload(), notifier)
 
         val title = UiText.Res(CoreStrings.notification_device_connected_title)
         assertEquals(
@@ -48,9 +48,9 @@ class DeviceConnectedPushHandlerTest {
     }
 
     @Test fun `a browser, a nameless agent and an unknown kind get their own texts`() = runTest {
-        handler.handle(payload("WEB_SESSION", name = null))
-        handler.handle(payload("AGENT_SESSION", name = "  "))
-        handler.handle(payload("TV", name = "tv"))
+        handler.handle(payload("WEB_SESSION", name = null), notifier)
+        handler.handle(payload("AGENT_SESSION", name = "  "), notifier)
+        handler.handle(payload("TV", name = "tv"), notifier)
 
         assertEquals(
             listOf(
@@ -64,11 +64,11 @@ class DeviceConnectedPushHandlerTest {
 
     @Test fun `nothing shows without the opt-in and a malformed push is only recorded`() = runTest {
         enabled = false
-        handler.handle(vendoredPayload())
+        handler.handle(vendoredPayload(), notifier)
         assertTrue(notifier.shown.isEmpty())
 
         enabled = true
-        handler.handle(Json.parseToJsonElement("""{"kind":"AGENT"}"""))
+        handler.handle(Json.parseToJsonElement("""{"kind":"AGENT"}"""), notifier)
         assertTrue(notifier.shown.isEmpty())
         assertEquals(listOf("WARNING:DeviceConnectedPush:Invalid device connection push"), diagnostics.messages)
     }

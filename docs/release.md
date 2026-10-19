@@ -143,7 +143,8 @@ published; Core 1.x stays at 1.7.0.
    ```
 
    The certificate is `939e9bd5…f071`, the package `dev.alllexey.itmowidgets`
-   with the planned version code and name.
+   with the planned version code and name. Only this key makes the build
+   `official` (`BuildConfig.BUILD_CHANNEL`, [build identity](building.md#build-identity)).
 4. Manual pass on a phone over the previous release (release-signed 2.2 ->
    signed candidate), against production: sign-in kept, widgets, sport, the
    ITMO.Widgets connection, a subject page with links, a teacher profile with
@@ -162,7 +163,9 @@ curl -sIL https://github.com/alllexey-dev/ITMO.Widgets/releases/latest | grep -i
 ```
 
 A beta gets `--prerelease`, so `releases/latest` and the update offer of
-every `github` install stay on the last release.
+every `github` install stay on the last release. Publishing starts `dist.yml`,
+which attaches the unsigned `ITMOWidgets-<version>-<build>-unsigned.ipa` to the
+release within about 30 minutes; check that it is there.
 
 ## 7. Advertised version
 
@@ -181,8 +184,12 @@ closed-test condition in [releases](product/releases.md#distribution).
 ## 9. iOS
 
 Upload the CI-built archive to TestFlight, internal first, then external
-testing or App Store review. The marketing version follows the app; build
-numbers come from CI.
+testing or App Store review. The marketing version follows the app; the build
+number is the `versionCode` of step 5, which `archive.sh` stamps. Every upload
+consumes it, as a Play upload does: a second upload needs the next
+`versionCode`. The owner's
+`Signing.local.xcconfig` sets `ITMO_BUILD_CHANNEL = official`
+([build identity](building.md#build-identity)).
 
 ## 10. After the release
 

@@ -77,7 +77,9 @@ class NotificationSettingsViewModelTest {
         )
         assertTrue(state.scheduleChanges)
         assertEquals(PushKind.entries, state.pushes.map { it.kind })
-        assertTrue(state.pushes.all { it.connected && it.systemEnabled == null })
+        assertTrue(state.connected)
+        assertTrue(state.pushes.all { it.enabled })
+        assertFalse(state.systemChannelsOff)
         assertFalse(state.backgroundWorkRestricted)
     }
 
@@ -168,26 +170,60 @@ class NotificationSettingsViewModelTest {
     }
 
     @Test
-    fun aPushRowLeadsToItsChannelTheConnectionOrTheAppsPage() = runTest(main.dispatcher) {
-        val connected = fixture()
-        val offline = fixture(LocalSettings(customServicesEnabled = false))
-        val connectedEvents = events(connected)
-        val offlineEvents = events(offline)
+    fun aPushSwitchIsStoredAndAsksForThePermissionWithoutTheBackgroundHint() = runTest(main.dispatcher) {
+        val fixture = fixture(unrestricted = false)
+        val events = events(fixture)
+        fixture.viewModel.onPermissionChanged(granted = false)
+        fixture.viewModel.onBackgroundWorkChanged()
         advanceUntilIdle()
 
-        connected.viewModel.openPush(PushKind.SPORT)
-        connected.viewModel.onChannelsChanged(mapOf("sport" to false, "friends" to true, "connections" to true))
+        fixture.viewModel.setPush(PushKind.FRIENDS, false)
         advanceUntilIdle()
-        assertEquals(false, connected.viewModel.uiState.value.pushes.first { it.kind == PushKind.SPORT }.systemEnabled)
-        connected.viewModel.openPush(PushKind.SPORT)
-        offline.viewModel.openPush(PushKind.FRIENDS)
-        advanceUntilIdle()
-
+        assertEquals(setOf("friends"), fixture.settings.local.value.disabledPushes)
         assertEquals(
-            listOf(NotificationSettingsEvent.OpenSystemSettings, NotificationSettingsEvent.OpenChannelSettings("sport")),
-            connectedEvents,
+            listOf(PushNotifications(PushKind.SPORT, true), PushNotifications(PushKind.FRIENDS, false), PushNotifications(PushKind.DEVICES, true)),
+            fixture.viewModel.uiState.value.pushes,
         )
-        assertEquals(listOf(NotificationSettingsEvent.OpenConnection), offlineEvents)
+        assertEquals(emptyList(), events)
+
+        fixture.viewModel.setPush(PushKind.FRIENDS, true)
+        advanceUntilIdle()
+        assertEquals(emptySet(), fixture.settings.local.value.disabledPushes)
+        assertEquals(listOf(NotificationSettingsEvent.RequestPermission), events)
+        assertEquals(0, fixture.settings.hintShownCalls)
+    }
+
+    @Test
+    fun aChannelOffInTheSystemCountsOnlyForATypeThatIsOnAndWhileAllowed() = runTest(main.dispatcher) {
+        val fixture = fixture(LocalSettings(customServicesEnabled = true, disabledPushes = setOf("sport")))
+        fixture.viewModel.onPermissionChanged(granted = true)
+        val on = mapOf("sport" to true, "friends" to true, "connections" to true, "marks" to true, "schedule_changes" to true)
+
+        fixture.viewModel.onChannelsChanged(on + ("sport" to false))
+        advanceUntilIdle()
+        assertFalse(fixture.viewModel.uiState.value.systemChannelsOff, "sport is off in the app anyway")
+
+        fixture.viewModel.onChannelsChanged(on + ("schedule_changes" to false))
+        advanceUntilIdle()
+        assertTrue(fixture.viewModel.uiState.value.systemChannelsOff)
+
+        fixture.viewModel.onPermissionChanged(granted = false)
+        advanceUntilIdle()
+        assertFalse(fixture.viewModel.uiState.value.systemChannelsOff, "the permission gate stands alone")
+    }
+
+    @Test
+    fun pushesWaitForTheConnection() = runTest(main.dispatcher) {
+        val fixture = fixture(LocalSettings(customServicesEnabled = false))
+        val events = events(fixture)
+        fixture.viewModel.onChannelsChanged(mapOf("friends" to false))
+        advanceUntilIdle()
+        assertFalse(fixture.viewModel.uiState.value.connected)
+        assertFalse(fixture.viewModel.uiState.value.systemChannelsOff, "nothing arrives without the connection")
+
+        fixture.viewModel.openConnection()
+        advanceUntilIdle()
+        assertEquals(listOf(NotificationSettingsEvent.OpenConnection), events)
     }
 
     @Test
@@ -200,6 +236,17 @@ class NotificationSettingsViewModelTest {
                 listOf(1, 2),
             ),
             fixture.viewModel.uiState.value.subtitle,
+        )
+        val connected = fixture(
+            LocalSettings(customServicesEnabled = true, myItmoMarksEnabled = false, sheetMarksEnabled = false, disabledPushes = setOf("friends")),
+        )
+        advanceUntilIdle()
+        assertEquals(
+            dev.alllexey.itmowidgets.core.text.UiText.Res(
+                dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings.notifications_subtitle_count,
+                listOf(3, 5),
+            ),
+            connected.viewModel.uiState.value.subtitle,
         )
 
         fixture.viewModel.onPermissionChanged(granted = false)

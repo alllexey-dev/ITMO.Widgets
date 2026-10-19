@@ -2,8 +2,8 @@ import Shared
 import SwiftUI
 
 extension Routes {
-    /// The sport root (`SportTabScreen`), Where the points come from pushed on its stack, and another user's
-    /// sport, the Compose route. The lesson sheet is the screens' own sheet, not a route.
+    /// The sport root (`SportTabScreen`), and Where the points come from and another user's sport pushed on a stack.
+    /// The lesson sheet is the screens' own sheet, not a route.
     static func sport(_ route: any AppRoute) -> RouteTarget {
         switch route {
         case is AppRoutes.SportPoints:
@@ -12,7 +12,7 @@ extension Routes {
             let isu = sport.isu
             let name = sport.name
             let givenName = sport.givenName
-            return .compose { AnyView(UserSportScreen(isu: isu, name: name, givenName: givenName)) }
+            return .swiftUI { AnyView(UserSportScreen(isu: isu, name: name, givenName: givenName)) }
         default:
             return tab(of: route).map(RouteTarget.tab) ?? .notOnIOS
         }

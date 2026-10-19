@@ -30,8 +30,13 @@ type only and ignored; payloads above 4 KB (`FcmPayloadDispatcher.MAX_PAYLOAD_BY
    same account never drops a queued message (Backend decision
    [0007](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0007-push-guard.md)).
    Sign-out cancels queued work and clears shown notifications.
-3. `FcmPayloadDispatcher` parses the envelope and calls the handler.
-4. Handlers return `AppNotification` (channel, stable id, `UiText` title and
+3. `FcmPayloadDispatcher` parses the envelope and calls the handler with the
+   notifier. Each handler names its channel; while the user's switch of that
+   channel is off (`PushCategoryPreferences`) the handler still runs (a sport
+   push still books, a friendship push still refreshes) but gets a notifier
+   that shows nothing. Backend has no per-type preference: the gate is on the
+   device.
+4. Handlers post `AppNotification` (channel, stable id, `UiText` title and
    text, destination, `silent`, `publicTitle`); `AndroidAppNotifier` renders
    it with the channel as tag and an immutable PendingIntent into
    `MainActivity`. Every notification is `VISIBILITY_PRIVATE`; `publicTitle`
@@ -51,8 +56,9 @@ before clearing credentials.
 ## Channels
 
 `sport`, `friends`, `schedule_changes`, `marks`, `connections`, all default importance,
-created on start (`AppNotificationChannels`). Android owns permission, sound
-and per-channel visibility; the app has no duplicate switches for them. Friend
+created on start (`AppNotificationChannels`). The app switches each type on or
+off on «Уведомления»; Android owns the permission, sound and per-channel
+visibility. Friend
 notifications use the actor's ISU as id (a repeated request replaces the old
 one) and are grouped under a summary.
 
@@ -64,16 +70,19 @@ settings root and the schedule settings link to it. `NotificationSettingsViewMod
 (`:shared:feature-settings`, `presentation/notifications`) serves the Compose and
 the SwiftUI screens; details are in [settings](../settings.md#notifications).
 
-- The local checks have their switches here: `Баллы` (the mark check, with its
-  sources My ITMO, БАРС once BARS has answered, and the teachers' sheets) and
-  `Изменения расписания`. Each type shows how it arrives
-  (`NotificationPreviews`: the notifiers' own titles with sample values).
-- The pushes (`Спорт и очереди`, `Заявки в друзья`, `Новые устройства`) have no
-  switch of the app: without the connection the row says it is needed and opens
-  «Подключение и данные»; on Android the row shows the channel's state and opens
-  the channel's system page; on iOS it opens the app's notification settings.
-- While the system denies notifications a gate with `Разрешить` stands first and
-  the settings below stay, dimmed.
+- Every type has its switch here. The local checks: `Баллы` (the mark check,
+  with its sources My ITMO, БАРС once BARS has answered, and the teachers'
+  sheets) and `Изменения расписания` switch the check itself.
+- The pushes (`Спорт`, `Друзья`, `Новые устройства`) switch their channel in
+  `PushCategoryPreferences` (`sport_notifications_enabled`,
+  `friends_notifications_enabled`, `connections_notifications_enabled`, absent
+  means on, kept on sign-out). Without the connection one row
+  `Нужно подключение к ITMO.Widgets` opens «Подключение и данные» and the push
+  switches are disabled.
+- One card stands first while the system keeps something back: the permission
+  (`Разрешить`; the settings below stay, dimmed), else on Android a system
+  channel of a type that is on here (`Открыть настройки`, the app's
+  notification page).
 
 ## Sport handler
 
@@ -133,5 +142,7 @@ See [iOS app](../ios.md#notifications) and
   `EntryRouteParser`.
 - Backend pushes arrive as `mutable-content` alerts; the notification service
   runs a Swift port of the [sport handler](#sport-handler) before showing. Another
-  account, the demo and a missing opt-in drop the push (not hidden until the
-  filtering entitlement exists).
+  account, the demo, a missing opt-in and a type switched off in the app
+  (`disabledPushes` of session-v1.json, written by `SessionSnapshotSync`) drop
+  the push; a switched-off sport push still books and leaves its result for the
+  bell. Dropped pushes are not hidden until the filtering entitlement exists.

@@ -18,6 +18,8 @@ jobs:
   # Advisory: the dependency-analysis report of every module. The plugin loads only with
   # -Pitmo.buildHealth=true, so a failure here never reaches android-ci.yml.
   build-health:
+    # Scheduled runs only upstream: a fork that enables its schedules builds nothing.
+    if: github.event_name != 'schedule' || github.repository == 'alllexey-dev/ITMO.Widgets'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -64,6 +66,7 @@ jobs:
   # The platform instrumentation list under Android Test Orchestrator on a Gradle Managed Device
   # (ciDevice, AOSP API 36; ATD has no quick settings tiles), which only CI creates.
   platform-tests:
+    if: github.event_name != 'schedule' || github.repository == 'alllexey-dev/ITMO.Widgets'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -108,6 +111,7 @@ jobs:
   # android-ui emulator, without the app's profile and with it; the profile run fails when the APK ships none. An
   # emulator on a shared runner is no phone: read the numbers as a trend between nights, not as absolute values.
   benchmarks:
+    if: github.event_name != 'schedule' || github.repository == 'alllexey-dev/ITMO.Widgets'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -168,7 +172,7 @@ jobs:
   # A failed nightly opens or updates an issue; the next passing one closes it.
   nightly-issue:
     needs: [platform-tests, benchmarks]
-    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    if: ${{ !cancelled() && github.event_name == 'schedule' && github.repository == 'alllexey-dev/ITMO.Widgets' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

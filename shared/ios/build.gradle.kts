@@ -38,8 +38,10 @@ kotlin {
             export(project(":shared:feature-sport"))
             // Профиль, Друзья, the person card and another user's friends: their ViewModels and SocialSamples.
             export(project(":shared:feature-social"))
-            // The report of a review's ReportReviewViewModel.
+            // The review editor's and the report's ViewModels.
             export(project(":shared:feature-reviews"))
+            // The links sheets' SubjectLinksViewModel and LinkEditorViewModel.
+            export(project(":shared:feature-resources"))
             // The campus map's ViewModel, its style and samples.
             export(project(":shared:feature-map"))
         }
@@ -59,10 +61,10 @@ kotlin {
             api(project(":shared:feature-recordbook"))
             api(project(":shared:feature-social"))
             api(project(":shared:feature-settings"))
-            implementation(project(":shared:feature-resources"))
+            api(project(":shared:feature-resources"))
             api(project(":shared:feature-reviews"))
             api(project(":shared:feature-account"))
-            // The composition probe of IosStrings and the screen hosts (screens/).
+            // The composition probe of IosStrings.
             implementation(libs.compose.runtime)
             implementation(libs.compose.ui)
             // The Swift bridge: the ViewModelStore each SwiftUI screen owns (bridge/ScreenViewModelStore.kt).

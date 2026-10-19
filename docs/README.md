@@ -15,6 +15,8 @@ limits. Start there; the documents below are the developer reference.
 
 - [Getting started](getting-started.md) - prerequisites, first build and run
   on Android and iOS, everyday commands, local secret files.
+- [Building your own copy](building.md) - an installable APK and `.ipa`
+  without the owner's keys, the `dist` workflow, forks, build identity.
 - [Architecture](architecture.md) - modules, layers, DI, navigation, time,
   demo mode, the opt-in gate, storage, widgets, background work, push.
 - [One feature end to end](feature-flow.md) - the schedule from the remote

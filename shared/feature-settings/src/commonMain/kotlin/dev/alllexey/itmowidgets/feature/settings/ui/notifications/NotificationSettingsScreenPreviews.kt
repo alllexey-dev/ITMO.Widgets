@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.feature.settings.ui.preview.NotificationSettings
 // «Уведомления» at the design lab's axes, the whole page in one frame.
 
 internal class NotificationSettingsScreenOnPreview {
-    @Preview(name = "on", heightDp = 1800)
+    @Preview(name = "on", heightDp = 1100)
     @Composable
     fun NotificationSettingsScreen() = ItmoPreview {
         NotificationSettingsScreen(NotificationSettingsSamples.state("on"), NotificationSettingsActions())
@@ -16,15 +16,23 @@ internal class NotificationSettingsScreenOnPreview {
 }
 
 internal class NotificationSettingsScreenOffPreview {
-    @Preview(name = "off", heightDp = 1900)
+    @Preview(name = "off", heightDp = 1200)
     @Composable
     fun NotificationSettingsScreen() = ItmoPreview {
         NotificationSettingsScreen(NotificationSettingsSamples.state("off"), NotificationSettingsActions())
     }
 }
 
+internal class NotificationSettingsScreenChannelsPreview {
+    @Preview(name = "channels", heightDp = 1200)
+    @Composable
+    fun NotificationSettingsScreen() = ItmoPreview {
+        NotificationSettingsScreen(NotificationSettingsSamples.state("channels"), NotificationSettingsActions())
+    }
+}
+
 internal class NotificationSettingsScreenOfflinePreview {
-    @Preview(name = "offline", heightDp = 1600)
+    @Preview(name = "offline", heightDp = 1200)
     @Composable
     fun NotificationSettingsScreen() = ItmoPreview {
         NotificationSettingsScreen(NotificationSettingsSamples.state("offline"), NotificationSettingsActions())
