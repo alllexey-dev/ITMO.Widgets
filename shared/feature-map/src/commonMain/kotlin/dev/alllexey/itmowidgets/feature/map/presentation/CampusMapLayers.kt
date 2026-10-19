@@ -45,17 +45,25 @@ object CampusMapStyle {
         "area_name_auditory", "area_name_public", "poi",
     )
 
-    /** The style of [scene]'s building on its level with its selected room. */
-    fun json(scene: MapScene): String {
+    /** The style of [scene]'s building on its level with its selected room; [dark] follows the app's dark theme. */
+    fun json(scene: MapScene, dark: Boolean = false): String {
         val template = Json.parseToJsonElement(ITMO_STYLE).jsonObject
         val filters = filters(scene.level, scene.selectedRoomId)
+        val layers = JsonArray(layers().map { layer -> layer.styled(filters[layer.id]) })
         return JsonObject(
             template + mapOf(
                 "glyphs" to JsonPrimitive(scene.glyphsUrl),
                 "sources" to sources(scene),
-                "layers" to JsonArray(layers().map { layer -> layer.styled(filters[layer.id]) }),
+                "layers" to if (dark) layers.darkened() as JsonArray else layers,
             ),
         ).toString()
+    }
+
+    /** [this] with every colour of the light template swapped for its [DARK_COLORS] twin. */
+    private fun JsonElement.darkened(): JsonElement = when (this) {
+        is JsonArray -> JsonArray(map { it.darkened() })
+        is JsonObject -> JsonObject(mapValues { (_, value) -> value.darkened() })
+        is JsonPrimitive -> if (isString) DARK_COLORS[content]?.let(::JsonPrimitive) ?: this else this
     }
 
     /** Layer id to its filter on [level] with [selectedRoomId], as MapLibre expression JSON. */
@@ -63,12 +71,53 @@ object CampusMapStyle {
         filter.bind(level.toString(), selectedRoomId?.toString() ?: NO_ROOM).toString()
     }
 
-    /** The template's layers with the selection highlight under the walls. */
+    /**
+     * The template's layers with the selection highlight under the walls, food apart from the study places (the
+     * template fills both orange) and the route wider over a casing, so it reads on every floor in both themes.
+     */
     private fun layers(): List<JsonObject> {
         val layers = Json.parseToJsonElement(ITMO_STYLE).jsonObject.getValue("layers").jsonArray.map { it.jsonObject }
+            .map { layer ->
+                when (layer.id) {
+                    STUDY_PLACES_LAYER -> layer.withPaint("fill-color", studyPlacesColor(layer))
+                    in ROUTE_LINES -> layer.withPaint("line-width", JsonPrimitive(ROUTE_WIDTH))
+                    else -> layer
+                }
+            }
         val walls = layers.indexOfFirst { it.id == WALLS_LAYER }
-        return layers.take(walls) + selectionLayers() + layers.drop(walls)
+        val route = layers.indexOfFirst { it.id in ROUTE_LINES }
+        return layers.take(walls) + selectionLayers() + layers.subList(walls, route) + routeCasing() + layers.drop(route)
     }
+
+    private fun JsonObject.withPaint(key: String, value: JsonElement) =
+        JsonObject(this + ("paint" to JsonObject(getValue("paint").jsonObject + (key to value))))
+
+    /** Canteens and food keep the template's orange; coworkings, the library and the student office turn teal. */
+    private fun studyPlacesColor(layer: JsonObject): JsonElement = buildJsonArray {
+        add("match")
+        add(buildJsonArray { add("get"); add("subclass") })
+        add(buildJsonArray { add("canteen"); add("food") })
+        add(layer.getValue("paint").jsonObject.getValue("fill-color"))
+        add(STUDY_PLACES_COLOR)
+    }
+
+    /** A light (dark in the dark theme) outline under the shown floor's route lines. */
+    private fun routeCasing(): List<JsonObject> = listOf(
+        buildJsonObject {
+            put("id", ROUTE_CASING_LAYER)
+            put("type", "line")
+            put("source", ROUTE_SOURCE)
+            put("filter", Json.parseToJsonElement("""["all",["==","type","path"],["==","visible","true"],["==","state","active"]]"""))
+            putJsonObject("layout") {
+                put("line-join", "round")
+                put("line-cap", "round")
+            }
+            putJsonObject("paint") {
+                put("line-color", ROUTE_CASING_COLOR)
+                put("line-width", ROUTE_CASING_WIDTH)
+            }
+        },
+    )
 
     /** Every filtered layer's filter as an expression, with the template's level and room placeholders. */
     private val expressions: Map<String, JsonElement> by lazy {
@@ -152,9 +201,43 @@ object CampusMapStyle {
     }
 
     private const val PLAN_SOURCE = "openmaptiles"
+    private const val STUDY_PLACES_LAYER = "room_student_places"
+    private const val STUDY_PLACES_COLOR = "rgba(214, 241, 236, 1)"
+    private const val ROUTE_CASING_LAYER = "route_casing"
+    private const val ROUTE_CASING_COLOR = "rgba(255, 255, 255, 0.9)"
+    private val ROUTE_LINES = setOf("route_line_dashed", "route_line_current")
+    private const val ROUTE_WIDTH = 3
+    private const val ROUTE_CASING_WIDTH = 7
     private const val WALLS_LAYER = "borders"
     private const val NO_ROOM = "-1"
     private const val ACCENT = "#1846C7"
+
+    /**
+     * The dark map: every colour of the light template (and of the additions above) to its dark twin. Rooms sit
+     * above the footprint, corridors clearly above rooms and walls above both, as in the light plan; the kinds keep
+     * their hue (toilets purple, food orange, study places teal, services blue, halls yellow, sport red) at a dark
+     * tone that the light labels read on. The route and the selection take a light blue over a dark casing.
+     */
+    internal val DARK_COLORS: Map<String, String> = mapOf(
+        "rgba(230, 233, 235, 1)" to "rgba(22, 24, 27, 1)",
+        "rgba(210, 213, 215, 1)" to "rgba(32, 35, 39, 1)",
+        "rgba(233, 247, 232, 1)" to "rgba(28, 44, 32, 1)",
+        "rgba(255, 255, 255, 1)" to "rgba(66, 72, 80, 1)",
+        "rgba(244, 244, 245, 1)" to "rgba(44, 48, 54, 1)",
+        "rgba(246, 229, 255, 1)" to "rgba(72, 50, 94, 1)",
+        "rgba(255, 240, 229, 1)" to "rgba(94, 62, 34, 1)",
+        STUDY_PLACES_COLOR to "rgba(26, 74, 68, 1)",
+        "rgba(229, 244, 255, 1)" to "rgba(32, 62, 90, 1)",
+        "rgba(255, 248, 229, 1)" to "rgba(86, 74, 34, 1)",
+        "rgba(255, 229, 230, 1)" to "rgba(92, 40, 46, 1)",
+        "rgba(183, 196, 204, 1)" to "rgba(104, 116, 128, 1)",
+        "rgba(96, 96, 96, 1)" to "rgba(214, 218, 224, 1)",
+        "hsla(0, 0%, 100%, 0.75)" to "rgba(22, 24, 27, 0.8)",
+        ACCENT to "#8FADFF",
+        "rgba(24, 70, 199, 0.25)" to "rgba(143, 173, 255, 0.35)",
+        ROUTE_CASING_COLOR to "rgba(12, 14, 17, 0.9)",
+        "#FFFFFF" to "#0E1A45",
+    )
 
     /** The closest weight to the campus app's SF Pro Text Semibold among the mirror's open fonts (no SF Pro). */
     private const val FONT = "Noto Sans Bold"

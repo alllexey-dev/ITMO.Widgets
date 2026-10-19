@@ -7,7 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.feature.map.presentation.CampusMapViewModel
 
-/** The campus map over its view model; «Открыть в Картах» goes to the system map app through the host. */
+/** The campus map over its view model; «Открыть в Картах» (a building without a plan, «По городу») goes to the system map app through the host. */
 @Composable
 fun CampusMapRoute(viewModel: CampusMapViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -24,6 +24,10 @@ fun CampusMapRoute(viewModel: CampusMapViewModel, onBack: () -> Unit, modifier: 
             onPlace = viewModel::selectPlace,
             onResult = viewModel::openResult,
             onRoute = viewModel::route,
+            onRouteFrom = viewModel::routeFrom,
+            onPick = viewModel::pick,
+            onSwap = viewModel::swap,
+            onFitBuilding = viewModel::fitBuilding,
             onStep = viewModel::step,
             onCloseTrip = viewModel::closeTrip,
             onCloseRoom = viewModel::closeRoom,

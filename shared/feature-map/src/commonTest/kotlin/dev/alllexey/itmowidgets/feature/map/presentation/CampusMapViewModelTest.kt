@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.map.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.lesson.DayLesson
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
@@ -28,6 +29,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -64,7 +66,8 @@ class CampusMapViewModelTest {
         val state = plan(viewModel(lesson(room = "2403"), route = true))
 
         val trip = assertNotNull(state.trip)
-        assertEquals(UiText.Res(MapStrings.map_route_from_entrance), trip.from)
+        assertEquals(UiText.Res(MapStrings.map_route_entrance), trip.from)
+        assertEquals(UiText.Dynamic("2403"), trip.to)
         // The walk inside the entrance is trimmed, so the trip starts on the stairs.
         assertEquals(listOf(TripStepKind.STAIRS_UP, TripStepKind.FLOOR), trip.steps.map { it.kind })
         assertEquals(3, state.map.level)
@@ -78,13 +81,83 @@ class CampusMapViewModelTest {
         val vm = viewModel(lesson(room = "2403"), route = true)
         val trip = assertNotNull(plan(vm).trip)
 
-        assertEquals(UiText.Res(MapStrings.map_route_from_room, listOf(UiText.Dynamic("1124"))), trip.from)
+        assertEquals(UiText.Dynamic("1124"), trip.from)
         assertTrue(TripStepKind.CITY in trip.steps.map { it.kind })
         assertEquals(273, plan(vm).map.buildingId)
         val city = trip.steps.indexOfFirst { it.kind == TripStepKind.CITY }
         assertEquals("Кронверкский пр., 49", trip.steps[city].destination?.label)
         vm.step(trip.steps.lastIndex)
         assertEquals(13, plan(vm).map.buildingId)
+    }
+
+    @Test
+    fun fromARoomTheDestinationIsPickedBySearchInAnotherBuilding() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"))
+        collect(vm)
+        vm.routeFrom()
+
+        val picking = plan(vm)
+        assertEquals(RouteEnd.TO, picking.trip?.picking)
+        assertEquals(UiText.Dynamic("2403"), picking.trip?.from)
+        assertNull(picking.trip?.to)
+        assertTrue(picking.search.active)
+        // Before anything is typed, the building's entrances.
+        assertEquals(listOf(469L), picking.search.results.map { it.roomId })
+
+        vm.search("1124")
+        vm.openResult(plan(vm).search.elsewhere.single())
+
+        val trip = assertNotNull(plan(vm).trip)
+        assertNull(trip.picking)
+        assertEquals(UiText.Dynamic("1124"), trip.to)
+        assertTrue(TripStepKind.CITY in trip.steps.map { it.kind })
+        assertEquals(13, plan(vm).map.buildingId)
+        assertFalse(plan(vm).loading)
+        // The field hands back the empty text the route left in it: the route stays.
+        vm.search("")
+        assertNotNull(plan(vm).trip)
+    }
+
+    @Test
+    fun swappingTurnsTheEntranceStartIntoTheEnd() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"), route = true)
+        collect(vm)
+        vm.swap()
+
+        val trip = assertNotNull(plan(vm).trip)
+        assertEquals(UiText.Dynamic("2403"), trip.from)
+        assertEquals(UiText.Dynamic("Вход"), trip.to)
+        assertEquals(listOf(TripStepKind.STAIRS_DOWN, TripStepKind.FLOOR), trip.steps.map { it.kind })
+    }
+
+    @Test
+    fun theDestinationCanBeTappedOnAnotherBuildingsPlan() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"))
+        collect(vm)
+        vm.routeFrom()
+        vm.selectBuilding(273)
+        assertEquals(RouteEnd.TO, plan(vm).trip?.picking)
+
+        vm.selectRoom(1124)
+
+        val trip = assertNotNull(plan(vm).trip)
+        assertEquals(UiText.Dynamic("1124"), trip.to)
+        assertTrue(TripStepKind.CITY in trip.steps.map { it.kind })
+    }
+
+    @Test
+    fun aTapOnThePlanPicksTheStart() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"), route = true)
+        collect(vm)
+        vm.pick(RouteEnd.FROM)
+        assertEquals(RouteEnd.FROM, plan(vm).search.picking)
+
+        vm.selectRoom(77)
+
+        val trip = assertNotNull(plan(vm).trip)
+        assertNull(trip.picking)
+        assertEquals(UiText.Res(MapStrings.map_kind_restroom), trip.from)
+        assertEquals(UiText.Dynamic("2403"), trip.to)
     }
 
     @Test
@@ -131,8 +204,32 @@ class CampusMapViewModelTest {
     }
 
     @Test
+    fun aPlaceChipGoesToTheClosestFloorThatHasThePlace() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"))
+        collect(vm)
+        assertEquals(3, plan(vm).map.level)
+
+        vm.selectPlace(Place.RESTROOMS)
+
+        assertEquals(0, plan(vm).map.level)
+        assertEquals(MapPoint(30.3093, 59.9563), plan(vm).map.focus)
+    }
+
+    @Test
+    fun fittingTheBuildingDropsTheFocus() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"))
+        collect(vm)
+        assertNotNull(plan(vm).map.focus)
+
+        vm.fitBuilding()
+
+        assertNull(plan(vm).map.focus)
+        assertEquals(1, plan(vm).map.fit)
+    }
+
+    @Test
     fun noMirrorIsAnError() = runTest(main.dispatcher) {
-        val vm = CampusMapViewModel(SavedStateHandle(), FakeRepository(offline = true), DIRECTORY, gateway())
+        val vm = CampusMapViewModel(SavedStateHandle(), FakeRepository(offline = true), DIRECTORY, gateway(), dispatchers())
         collect(vm)
 
         assertEquals(CampusMapUiState.Failed(AppError.Network), vm.uiState.value)
@@ -150,8 +247,10 @@ class CampusMapViewModelTest {
 
     private fun viewModel(lesson: LessonDetailsArgs?, route: Boolean = false): CampusMapViewModel {
         val handle = SavedStateHandle(if (lesson == null) emptyMap() else CampusMapViewModel.argsOf(CampusMapArgs(lesson, route)))
-        return CampusMapViewModel(handle, FakeRepository(), DIRECTORY, gateway())
+        return CampusMapViewModel(handle, FakeRepository(), DIRECTORY, gateway(), dispatchers())
     }
+
+    private fun dispatchers() = AppDispatchers(main.dispatcher, main.dispatcher, main.dispatcher)
 
     private fun gateway() = object : DayLessonsGateway {
         override fun observe(from: LocalDate, to: LocalDate): Flow<List<LessonDay>> =

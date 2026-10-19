@@ -17,6 +17,16 @@ new iOS app.
 - Every feature module but the campus map keeps its Compose screens in `androidMain` (convention `itmowidgets.cmp.android`) and reads its strings from `:shared:compose-strings`; the screens look the same on Android, and their iOS code compiles no Compose.
 - The design system and the Compose strings are Android-only modules, the test kit's Compose helpers Android-only, and the shared route keys no longer extend Nav3's `NavKey`; only the campus map still brings Compose into the iOS framework.
 
+### Campus map polish (2026-10-19)
+
+- The map's chrome is compact and opaque over the plan: a building pill and place chips with the plan's icons, room
+  and route cards with icons, `Сюда` and `Отсюда` instead of `Маршрут` and `Открыть в Картах`; a route goes between
+  any two rooms (either end picked by the search or a tap on the plan, swapped with one tap); the plan is dark in the
+  dark theme; a building or a route on its way shows `Загружаем план...` and routing runs off the main thread.
+- Map follow-ups: rooms say what they are (`Аудитория · 4 этаж`), a place chip goes to the floor that has it, food
+  and coworkings have different colours, the route has a casing, `Показать корпус целиком` under the floors, and on
+  iOS the map is full screen (no tab bar, pass accessory or demo banner).
+
 ### Recordbook polish (2026-10-19)
 
 - The BARS offer and notices keep the title at full width with the button under it, no more words broken into a
@@ -30,6 +40,7 @@ new iOS app.
   friends load or when nobody is there), `Друзья` scrolls to the list with its bottom margin, the sheet's colour runs
   under the navigation bar, people use the friends list's compact row everywhere, Android avatars are M3 Expressive
   cookies (iOS keeps circles), and the sport catalog's friend avatars are no longer squashed.
+- The subject page's teachers use the same person row as the rest of the app (40 dp avatar, a cookie on Android).
 
 ### iOS native screens (2026-10-19)
 

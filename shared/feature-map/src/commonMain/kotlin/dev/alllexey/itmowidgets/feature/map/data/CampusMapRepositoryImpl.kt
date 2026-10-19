@@ -129,7 +129,9 @@ class CampusMapRepositoryImpl internal constructor(
         val path = root / FILES / file.file.substringAfterLast('/')
         if (withContext(dispatchers.io) { fileSystem.exists(path) }) return path
         val bytes = api.file(file.file)
-        if (bytes.toByteString().sha256().hex() != file.sha256) throw MirrorException(null)
+        // A building's tiles are megabytes: hashing them on the main thread froze the screen.
+        val hash = withContext(dispatchers.default) { bytes.toByteString().sha256().hex() }
+        if (hash != file.sha256) throw MirrorException(null)
         withContext(dispatchers.io) { writeAtomically(path, bytes) }
         return path
     }
