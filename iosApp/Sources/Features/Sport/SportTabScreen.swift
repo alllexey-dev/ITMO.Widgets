@@ -93,7 +93,6 @@ struct SportTabScreen: View {
         SportContentActions(
             openPoints: { router.open(AppRoutes.SportPoints.shared) },
             openBooking: { openLesson($0, from: .my) },
-            toggleSection: { my.viewModel.toggleSection(lessonId: $0) },
             stopSection: { my.viewModel.stopSection(sectionId: $0) },
             sectionDate: { my.viewModel.setSectionDate(sectionId: $0, index: Int32($1), on: $2) },
             retryMy: { my.viewModel.refresh(mode: .force) },
@@ -119,6 +118,7 @@ struct SportTabScreen: View {
             building: { viewModel.selectBuilding(name: $0) },
             teacher: { viewModel.selectTeacher(name: $0) },
             dayPart: { viewModel.selectDayPart(part: $0) },
+            onlyAvailable: { viewModel.setOnlyAvailable(on: $0) },
             onlyFree: { viewModel.setOnlyFree(on: $0) },
             onlyPinned: { viewModel.setOnlyPinned(on: $0) },
             onlyFriends: { viewModel.setOnlyFriends(on: $0) },
@@ -167,7 +167,6 @@ struct SportLessonItem: Identifiable {
 struct SportContentActions {
     var openPoints: () -> Void = {}
     var openBooking: (Int64) -> Void = { _ in }
-    var toggleSection: (Int64) -> Void = { _ in }
     var stopSection: (Int64) -> Void = { _ in }
     var sectionDate: (Int64, Int, Bool) -> Void = { _, _, _ in }
     var retryMy: () -> Void = {}
@@ -183,33 +182,59 @@ struct SportContentActions {
     var retrySign: () -> Void = {}
 }
 
-/// The tab without the ViewModels: the segmented choice and Mine or Sign-up.
+/// The tab without the ViewModels: the segmented choice over a pager of Mine and Sign-up, so a horizontal swipe
+/// switches them too. The shown part's list is `sport.list`.
 struct SportContent: View {
     @Binding var tab: SportTab
     let my: SportMyUiState
     let sign: SportSignUiState
     var actions = SportContentActions()
+    @State private var page: SportTab?
+
+    private static let parts = [SportTab.my, SportTab.sign]
 
     var body: some View {
-        ItmoScreenStack {
+        VStack(spacing: ItmoKit.gap) {
             ItmoSegmentedChoice(
                 label: AppStrings.string("title_sport"),
-                options: [SportTab.my, SportTab.sign],
+                options: Self.parts,
                 selection: $tab
             ) { AppStrings.string($0 == .my ? "sport_tab_my" : "sport_tab_sign") }
             .accessibilityIdentifier("sport.tabs")
-            switch tab {
-            case .my: SportMyPart(state: my, actions: actions) { tab = .sign }
-            case .sign: SportSignPart(state: sign, actions: actions)
+            .padding(.horizontal, ItmoKit.margin)
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 0) {
+                    ForEach(Self.parts, id: \.self) { part in
+                        ItmoScreenStack {
+                            switch part {
+                            case .my: SportMyPart(state: my, actions: actions) { tab = .sign }
+                            default: SportSignPart(state: sign, actions: actions)
+                            }
+                        }
+                        .accessibilityElement(children: .contain)
+                        .accessibilityIdentifier(part == tab ? "sport.list" : "sport.list.hidden")
+                        .containerRelativeFrame(.horizontal)
+                    }
+                }
+                .scrollTargetLayout()
             }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $page)
+            .scrollIndicators(.hidden)
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("sport.list")
+        .background(Color(.systemGroupedBackground))
+        .onChange(of: tab, initial: true) { _, tab in
+            guard page != tab else { return }
+            withAnimation(.smooth) { page = tab }
+        }
+        .onChange(of: page) { _, page in
+            if let page, page != tab { tab = page }
+        }
     }
 }
 
-/// Mine: the score ring that opens Where the points come from, the bookings by day as lesson cards with "make it a
-/// section" under the booked ones, then the sections with their next dates.
+/// Mine: the score ring that opens Where the points come from, the bookings by day as lesson cards, then the sections
+/// with their next dates. "Make it a section" lives in a booked lesson's sheet.
 struct SportMyPart: View {
     let state: SportMyUiState
     let actions: SportContentActions
@@ -252,9 +277,6 @@ struct SportMyPart: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("sport.booking.\(booking.lessonId)")
-                    if let section = booking.section {
-                        SportBookingSection(section: section) { actions.toggleSection(section.lessonId) }
-                    }
                 }
             }
         }
@@ -270,58 +292,87 @@ struct SportMyPart: View {
     }
 }
 
-/// A section as one group: the slot with its off switch and the place, then the next dates, each with its switch.
+/// A section as one group. The head is the sport with the slot, the teacher and the hall as symbol lines, the place in
+/// the section queue as a pill and the off switch; then the next dates, each with its status pill and its own switch.
 struct SportSectionGroup: View {
     let section: SportSectionCardUi
     let actions: SportContentActions
 
     var body: some View {
-        ItmoListGroup {
-            ItmoSwitchRow(
-                title: section.title,
-                subtitle: [section.slot.resolved, section.venue, section.place.resolved].compactMap { $0 }.joined(separator: "\n"),
-                symbol: .eventRepeat,
-                enabled: !section.busy,
-                isOn: Binding(get: { true }, set: { if !$0 { actions.stopSection(section.id) } })
-            )
-            .accessibilityHint(Text(verbatim: AppStrings.string("sport_section_off")))
+        ItmoListGroup(inset: ItmoKit.padding) {
+            HStack(spacing: ItmoSpacing.content) {
+                VStack(alignment: .leading, spacing: ItmoSpacing.related) {
+                    Text(verbatim: section.title).font(.itmo(.titleMedium, emphasized: true))
+                    SportMetaLine(symbol: .schedule, text: section.slot.resolved)
+                    if let teacher = section.teacher { SportMetaLine(symbol: .person, text: teacher) }
+                    if let place = section.place { SportMetaLine(symbol: .locationOn, text: place.resolved) }
+                    ItmoStatusPill(pill: ItmoPill(text: section.position.resolved, tone: .primary, symbol: .group))
+                }
+                .accessibilityElement(children: .combine)
+                Spacer(minLength: 0)
+                Toggle(isOn: Binding(get: { true }, set: { if !$0 { actions.stopSection(section.id) } })) {
+                    Text(verbatim: AppStrings.string("sport_section_off"))
+                }
+                .labelsHidden()
+                .disabled(section.busy)
+                .itmoTint()
+            }
+            .padding(ItmoKit.padding)
             ForEach(Array(section.dates.enumerated()), id: \.offset) { index, date in
-                ItmoSwitchRow(
-                    title: date.day.resolved,
-                    subtitle: date.status.resolved,
-                    enabled: date.enabled,
-                    isOn: Binding(get: { date.on }, set: { actions.sectionDate(section.id, index, $0) })
-                )
+                Toggle(isOn: Binding(get: { date.on }, set: { actions.sectionDate(section.id, index, $0) })) {
+                    // The pill follows the day and moves under it when the row is narrow or the text large.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: ItmoSpacing.content) { dateLabel(date) }
+                        VStack(alignment: .leading, spacing: ItmoSpacing.related) { dateLabel(date) }
+                    }
+                }
+                .disabled(!date.enabled)
+                .itmoTint()
+                .padding(.horizontal, ItmoKit.padding)
+                .padding(.vertical, 11)
+                .frame(minHeight: 52)
                 .accessibilityIdentifier("sport.section.\(section.id).date.\(index)")
             }
         }
         .accessibilityIdentifier("sport.section.\(section.id)")
     }
+
+    @ViewBuilder
+    private func dateLabel(_ date: SportSectionDateUi) -> some View {
+        Text(verbatim: date.day.resolved).font(.itmo(.bodyLarge)).fixedSize()
+        ItmoStatusPill(pill: ItmoPill(
+            text: date.status.resolved,
+            tone: date.tone,
+            symbol: date.state == .queued ? .hourglassTop : nil
+        ))
+        .fixedSize()
+    }
 }
 
-/// Under a booked lesson's card: "make it a section", or the pill "section" with the place; a full slot says so.
-struct SportBookingSection: View {
-    let section: SportSectionToggleUi
-    let toggle: () -> Void
+private extension SportSectionDateUi {
+    /// The queue's warning tone, as on a booking's queue pill; a spent limit is an error; the rest is quiet.
+    var tone: ItmoTone {
+        switch state {
+        case .queued: .warn
+        case .limit: .bad
+        default: .neutral
+        }
+    }
+}
+
+/// A secondary line with its small symbol: the slot, the teacher, the hall.
+struct SportMetaLine: View {
+    let symbol: AppSymbol
+    let text: String
 
     var body: some View {
-        HStack(spacing: ItmoSpacing.content) {
-            if section.on {
-                ItmoStatusPill(pill: ItmoPill(text: section.label.resolved, tone: .primary))
-            } else if section.enabled {
-                Button(action: toggle) { Text(verbatim: section.label.resolved).font(.itmo(.labelLarge, emphasized: true)) }
-                    .buttonStyle(.bordered)
-                    .tint(ItmoColor.primary)
-                    .controlSize(.small)
-                    .fixedSize()
-            }
-            if let detail = section.detail {
-                Text(verbatim: detail.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
-            }
+        Label {
+            Text(verbatim: text).font(.itmo(.bodyMedium)).lineLimit(2)
+        } icon: {
+            symbol.image.font(.itmo(.bodySmall)).accessibilityHidden(true)
         }
-        .padding(.horizontal, ItmoSpacing.related)
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("sport.booking.section.\(section.lessonId)")
+        .labelStyle(.titleAndIcon)
+        .foregroundStyle(.secondary)
     }
 }
 

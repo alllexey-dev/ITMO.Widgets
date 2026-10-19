@@ -74,6 +74,7 @@
     <string name="sport_join_future_step_3">Мест не хватит — останетесь в очереди, как на полное занятие.</string>
     <string name="sport_join_late_hint">До %1$s, а не до %2$s</string>
     <string name="sport_lesson_gone">Занятие уже недоступно</string>
+    <string name="sport_chip_available">Доступные</string>
     <string name="sport_chip_free">Есть места</string>
     <string name="sport_chip_morning">Утро</string>
     <string name="sport_chip_evening">Вечер</string>
@@ -166,16 +167,14 @@
     <string name="sport_section_place">%1$d-й из %2$d в секции</string>
     <string name="sport_section_chosen">Секцией выбрали: %1$d</string>
     <string name="sport_section_full">Мест в секции нет</string>
-    <string name="sport_section_slot">%1$s, %2$s, раз в две недели</string>
-    <string name="sport_section_date_queued">в очереди</string>
-    <string name="sport_section_date_queued_position">в очереди, %1$d-й из %2$d</string>
-    <string name="sport_section_date_waiting">встанем в очередь, когда откроется запись</string>
-    <string name="sport_section_date_limit">лимит на месяц исчерпан</string>
-    <string name="sport_section_date_skipped">пропустим это занятие</string>
+    <string name="sport_section_slot">%1$s, %2$s · раз в две недели</string>
+    <string name="sport_section_date_waiting">запись не открыта</string>
+    <string name="sport_section_date_limit">лимит исчерпан</string>
+    <string name="sport_section_date_skipped">пропустим</string>
     <string name="sport_section_off">Выключить секцию</string>
     <string name="sport_section_made">Сделали секцией</string>
     <string name="sport_section_stopped">Секция выключена</string>
-    <string name="sport_section_note">Раз в две недели встаём в очередь на это же занятие, как только на него открывается запись, пока в месячном лимите есть место. Каждая дата — одна очередь из лимита.</string>
+    <string name="sport_section_note">В очередь на каждую дату встаём сами, как только откроется запись. Одна дата — одна очередь из месячного лимита.</string>
     <string name="sport_search_hint">Вид спорта или преподаватель</string>
     <string name="sport_search_clear">Очистить поиск</string>
     <string name="sport_filters_title">Фильтры</string>
@@ -184,6 +183,7 @@
     <string name="sport_part_morning">Утро</string>
     <string name="sport_part_day">День</string>
     <string name="sport_part_evening">Вечер</string>
+    <string name="sport_filter_only_available">Только доступные мне</string>
     <string name="sport_filter_only_free">Только где есть места</string>
     <string name="sport_filter_only_pinned">Только мои секции</string>
     <string name="sport_filter_only_friends">Где записаны друзья</string>
