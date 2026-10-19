@@ -43,7 +43,7 @@ class SubjectLinksLoader(private val repository: SubjectLinksRepository) {
     /** The next list takes its own ranking: a pull ranks the links afresh. */
     fun rankAfresh() = order.reset()
 
-    /** Tapping the arrow of the current vote takes it back. */
+    /** Tapping the thumb of the current vote takes it back. */
     suspend fun vote(scope: ResourceScope, link: SubjectLink, up: Boolean): AppResult<Unit> {
         val value = if (up) 1 else -1
         return repository.vote(scope, link.id, if (link.myVote == value) 0 else value)

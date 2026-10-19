@@ -21,13 +21,14 @@ import kotlinx.serialization.json.JsonElement
  * lock screen shows only the title.
  */
 class DeviceConnectedPushHandler(
-    private val notifier: AppNotifier,
     private val services: CustomServicesRepository,
     private val diagnostics: AppDiagnostics,
 ) : FcmPayloadHandler {
     override val type: String = DeviceConnectedPayload.TYPE
 
-    override suspend fun handle(payload: JsonElement) {
+    override val channel: String = AppNotificationChannels.CONNECTIONS
+
+    override suspend fun handle(payload: JsonElement, notifier: AppNotifier) {
         if (!services.isEnabled()) return
         val connected = try {
             FcmDecoder.deviceConnected(payload)

@@ -56,6 +56,7 @@ import dev.alllexey.itmowidgets.core.storage.IosAppDirectories
 import dev.alllexey.itmowidgets.core.storage.KeychainSecureStore
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.RetiredPreferenceKeys
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
@@ -149,6 +150,7 @@ fun iosCoreModule(
     singleOf(::WidgetSettingsPreferences)
     singleOf(::SportSignSelectorPreferences)
     singleOf(::MarkSourcePreferences)
+    singleOf(::PushCategoryPreferences)
     singleOf(::InstallIdPreferences)
     single { UtilityStorage(get(), appVersion) }
     singleOf(::IosBackendGate) { bind<BackendGate>() }

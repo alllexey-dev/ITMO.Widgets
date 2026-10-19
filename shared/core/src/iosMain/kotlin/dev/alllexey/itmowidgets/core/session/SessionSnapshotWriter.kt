@@ -20,8 +20,10 @@ data class SessionSnapshot(
     val alertsAllowed: Boolean,
     /** The ITMO.Widgets services opt-in (`BackendGate`): the notification service books and settles only with it. */
     val servicesEnabled: Boolean,
+    /** The push channels the user turned off in the app (`PushCategoryPreferences`): the notification service drops them. */
+    val disabledPushes: List<String> = emptyList(),
     /** The `install` of `X-Client` (ADR 0034), so the notification service names the same install; null in the demo. */
-    val installId: String? = null
+    val installId: String? = null,
 )
 
 /** The only writer of [FILE]; the session's lifecycle effects call it on every session change. */

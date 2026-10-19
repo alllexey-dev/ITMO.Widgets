@@ -25,6 +25,7 @@ import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
 import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.RetiredPreferenceKeys
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
@@ -73,6 +74,7 @@ val storageModule = module {
     singleOf(::DeviceHintPreferences)
     singleOf(::AppearancePreferences)
     singleOf(::DemoPreferences)
+    singleOf(::PushCategoryPreferences)
     singleOf(::InstallIdPreferences)
     single<SessionDataCleaner>(named("install-id")) { get<InstallIdPreferences>() }
     single { UtilityStorage(dataStore = get(), appVersionName = androidContext().getString(R.string.app_version)) }
