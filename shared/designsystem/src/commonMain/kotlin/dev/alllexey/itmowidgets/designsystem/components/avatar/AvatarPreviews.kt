@@ -21,7 +21,7 @@ import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import kotlinx.coroutines.Dispatchers
 
-/** Initials at two sizes, a one-word name, and the empty circle of a missing user. */
+/** Initials at two sizes, a one-word name, and the empty shape of a missing user. */
 @Preview
 @Composable
 private fun AvatarInitialsPreview() = ItmoPreview {

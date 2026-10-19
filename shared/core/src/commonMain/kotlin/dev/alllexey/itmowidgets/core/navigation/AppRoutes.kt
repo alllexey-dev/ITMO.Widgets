@@ -188,18 +188,21 @@ object AppRoutes {
         override val sheetPolicy get() = SheetPolicy()
     }
 
-    /** The lesson sheet (`Лист пары`) of one lesson occurrence, from any lesson list. */
+    /**
+     * The lesson sheet (`Лист пары`) of one lesson occurrence, from any lesson list; the full height, so the friends on
+     * the lesson arriving later never resize it.
+     */
     @Serializable
     data class LessonDetails(val args: LessonDetailsArgs) : AppRoute {
         override val kind get() = RouteKind.SHEET
-        override val sheetPolicy get() = SheetPolicy()
+        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
     }
 
-    /** The lesson sheet of an own sport queue; exclusive with the sport tab's sheet. */
+    /** The lesson sheet of an own sport queue, the full height as [LessonDetails]; exclusive with the sport tab's sheet. */
     @Serializable
     data class PendingSportDetails(val args: PendingSportDetailsArgs) : AppRoute {
         override val kind get() = RouteKind.SHEET
-        override val sheetPolicy get() = SheetPolicy()
+        override val sheetPolicy get() = SheetPolicy(height = SheetPolicy.Height.FULL)
         override val exclusiveGroup get() = SPORT_DETAILS_GROUP
     }
 

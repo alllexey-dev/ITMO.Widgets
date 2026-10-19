@@ -70,45 +70,15 @@ struct ReportReviewForm: View {
     var sending = false
 
     var body: some View {
-        Form {
-            Section {
-                Picker(selection: $reason) {
-                    ForEach(ReviewReportReason.allCases, id: \.self) { reason in
-                        Text(verbatim: AppStrings.string("review_report_\(reason.name.lowercased())"))
-                            .tag(Optional(reason))
-                    }
-                } label: {
-                    EmptyView()
-                }
-                .pickerStyle(.inline)
-                .labelsHidden()
-            }
-            Section {
-                TextField(
-                    text: Binding(get: { comment }, set: { comment = Self.limited($0) }),
-                    prompt: Text(verbatim: AppStrings.string("review_report_comment")),
-                    axis: .vertical
-                ) { Text(verbatim: AppStrings.string("review_report_comment")) }
-                .lineLimit(3...8)
-                .accessibilityIdentifier("review_report_comment")
-            } footer: {
-                VStack(alignment: .leading, spacing: ItmoSpacing.related) {
-                    Text(verbatim: "\(comment.unicodeScalars.count)/\(Self.maxComment)").monospacedDigit()
-                    if let failure {
-                        Text(verbatim: failure).foregroundStyle(ItmoColor.error)
-                    }
-                }
-            }
-        }
-        .itmoTint()
-        .disabled(sending)
-    }
-
-    private static let maxComment = Int(TeacherReviewLimits.shared.MAX_COMMENT)
-
-    /// Backend counts code points, as `TeacherReviewLimits.length` does.
-    private static func limited(_ text: String) -> String {
-        guard text.unicodeScalars.count > maxComment else { return text }
-        return String(String.UnicodeScalarView(text.unicodeScalars.prefix(maxComment)))
+        ItmoReportForm(
+            reasons: ReviewReportReason.allCases,
+            label: { AppStrings.string("review_report_\($0.name.lowercased())") },
+            commentLabel: AppStrings.string("review_report_comment"),
+            maxComment: Int(TeacherReviewLimits.shared.MAX_COMMENT),
+            reason: $reason,
+            comment: $comment,
+            failure: failure,
+            sending: sending
+        )
     }
 }

@@ -1081,18 +1081,6 @@
         }
       }
     },
-    "notifications_bell_note" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Всё, что пришло, остаётся в колокольчике на «Сегодня»."
-          }
-        }
-      }
-    },
     "notifications_changes" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1105,14 +1093,38 @@
         }
       }
     },
-    "notifications_changes_text" : {
+    "notifications_channels_fix" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Перенос, другая аудитория, отмена"
+            "value" : "Открыть настройки"
+          }
+        }
+      }
+    },
+    "notifications_channels_text" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Система не покажет некоторые из включённых здесь."
+          }
+        }
+      }
+    },
+    "notifications_channels_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Часть уведомлений выключена"
           }
         }
       }
@@ -1136,7 +1148,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вход на сайт или в агент с вашим аккаунтом"
+            "value" : "Вход на сайт или в агент"
           }
         }
       }
@@ -1148,19 +1160,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заявки в друзья"
-          }
-        }
-      }
-    },
-    "notifications_friends_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Новые заявки и ответы на ваши"
+            "value" : "Друзья"
           }
         }
       }
@@ -1184,7 +1184,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Система не даёт ITMO.Widgets их показывать. Настройки ниже сохранятся и заработают, как только разрешите."
+            "value" : "Система не даёт их показывать."
           }
         }
       }
@@ -1225,18 +1225,6 @@
         }
       }
     },
-    "notifications_marks_bars_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "И напоминание войти, когда сессия закончилась"
-          }
-        }
-      }
-    },
     "notifications_marks_myitmo" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1261,90 +1249,6 @@
         }
       }
     },
-    "notifications_marks_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Новые и изменённые баллы со значением"
-          }
-        }
-      }
-    },
-    "notifications_night" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ночью, с 00:00 до 06:00, баллы и изменения расписания не приходят: они придут утром."
-          }
-        }
-      }
-    },
-    "notifications_preview_changes_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Физика: перенос на среду, 10:00"
-          }
-        }
-      }
-    },
-    "notifications_preview_friend" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Смирнов Кирилл"
-          }
-        }
-      }
-    },
-    "notifications_preview_marks_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Контрольная работа 2"
-          }
-        }
-      }
-    },
-    "notifications_preview_marks_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Матанализ: 9 из 10"
-          }
-        }
-      }
-    },
-    "notifications_preview_sport_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Волейбол, чт 15:20"
-          }
-        }
-      }
-    },
     "notifications_push_connection" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1353,42 +1257,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нужно подключение к ITMO.Widgets"
-          }
-        }
-      }
-    },
-    "notifications_push_note" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Их присылает сервер ITMO.Widgets. Выключить тип можно в настройках системы."
-          }
-        }
-      }
-    },
-    "notifications_push_off" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выключены"
-          }
-        }
-      }
-    },
-    "notifications_push_on" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Включены"
           }
         }
       }
@@ -1405,18 +1273,6 @@
         }
       }
     },
-    "notifications_sound_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "В настройках системы, для каждого типа"
-          }
-        }
-      }
-    },
     "notifications_sport" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1424,19 +1280,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Спорт и очереди"
-          }
-        }
-      }
-    },
-    "notifications_sport_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Записали из очереди или не получилось записать"
+            "value" : "Спорт"
           }
         }
       }

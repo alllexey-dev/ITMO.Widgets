@@ -14,7 +14,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Another user's sport with its Koin ViewModel, which reads the user's ISU and names from the destination's arguments.
- * Android hosts it in the shell's `UserSport` entry; the iOS shell hosts the same route.
+ * Android hosts it in the shell's `UserSport` entry.
  */
 @Composable
 fun UserSportRoute(

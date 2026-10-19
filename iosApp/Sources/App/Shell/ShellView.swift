@@ -73,9 +73,8 @@ extension ShellView {
     }
 }
 
-/// One tab's stack: its root, the screens the router pushed, and the demo banner above the tab bar. Today's and the
-/// recordbook's roots have the native root header; the other roots are still Compose screens that draw their own top
-/// bar.
+/// One tab's stack: its root, the screens the router pushed, and the demo banner above the tab bar. Every root draws
+/// the native root header (`itmoRootHeader`); a pushed screen has the stack's navigation bar.
 struct ShellStack: View {
     let tab: ShellTab
     @Bindable var router: AppRouter
@@ -84,14 +83,12 @@ struct ShellStack: View {
 
     var body: some View {
         // The banner sits under the stack, not in a `safeAreaInset`: the inset never reaches the screens a stack
-        // pushes, so the end of a pushed Compose screen would scroll behind the banner.
+        // pushes, so the end of a pushed screen would scroll behind the banner.
         VStack(spacing: 0) {
             NavigationStack(path: path) {
                 root
-                    .shellChrome(tab == .today || tab == .recordbook ? .native : .compose)
                     .navigationDestination(for: ShellDestination.self) { destination in
                         Routes.view(for: destination)
-                            .shellChrome(destination.chrome)
                     }
             }
             // SwiftUI screens open further routes and leave the stack through the router (settings).

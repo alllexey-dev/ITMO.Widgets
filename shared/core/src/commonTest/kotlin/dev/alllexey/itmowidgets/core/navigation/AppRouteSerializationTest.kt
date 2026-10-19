@@ -73,7 +73,7 @@ class AppRouteSerializationTest {
         }
         assertEquals(SheetPolicy.Dismissal.FORM, AppRoutes.ReviewEditor(RouteSamples.teacher).sheetPolicy.dismissal)
         assertEquals(
-            emptyList(),
+            listOf(AppRoutes.LessonDetails::class, AppRoutes.PendingSportDetails::class),
             RouteSamples.ofKind(RouteKind.SHEET)
                 .filter { it.sheetPolicy?.height == SheetPolicy.Height.FULL }
                 .map { it::class }

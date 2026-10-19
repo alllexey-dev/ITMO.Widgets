@@ -33,6 +33,7 @@ import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupIte
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.rows.Vote
 import dev.alllexey.itmowidgets.designsystem.components.rows.VotePill
+import dev.alllexey.itmowidgets.designsystem.components.rows.voteOf
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.displayName
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
@@ -53,9 +54,9 @@ import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
  * the text is never truncated; the footer names who wrote it (a named author or the source, both links, otherwise
  * `Анонимный отзыв`) with the verification under it and the vote pill centred beside them.
  *
- * [canVote] shows the arrows; without them a zero score is left out. [canReport] is the section's right; the more button offers
+ * [canVote] shows the thumbs; without them a zero score is left out. [canReport] is the section's right; the more button offers
  * `Пожаловаться` only on a community review the viewer has not reported yet and otherwise keeps its place invisibly.
- * While [busy] (a vote in flight) the arrows and the more button ignore taps.
+ * While [busy] (a vote in flight) the thumbs and the more button ignore taps.
  */
 @Composable
 fun TeacherReviewRow(

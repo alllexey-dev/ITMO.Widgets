@@ -3,7 +3,7 @@ import Shared
 import SwiftUI
 
 /// Fixture mode of the shell: in a Debug build a fixture session gate and demo banner without the shared
-/// session. Every tab root is its Compose screen.
+/// session. Every tab root is its SwiftUI screen.
 enum ShellFixtures {
     /// The launch argument that picks a fixture session instead of the shared one:
     /// `-itmoShellSession loading|signed-out|demo|signed-in`.

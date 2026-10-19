@@ -279,7 +279,7 @@ class UserProfileViewModel(
 
     fun removeFriend() = act { social.removeFriend(isu) }
 
-    /** The up or down arrow; tapping the arrow of the current vote takes it back. */
+    /** The like or dislike thumb; tapping the thumb of the current vote takes it back. */
     fun vote(reviewId: String, up: Boolean) {
         if (reviewBusy.value != null) return
         val review = readyReviews()?.reviews?.firstOrNull { it.id == reviewId } ?: return

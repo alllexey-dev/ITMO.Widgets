@@ -50,8 +50,8 @@ import org.robolectric.annotation.Config
 
 /**
  * The actions cases of the deleted `SubjectLinksVisualTest` on the Compose sheet, through the real view model where
- * the case acts: votes that keep the sheet open, `Мои баллы` only for a Google Sheet, the own score without arrows and
- * nothing for a private link, arrows hidden by a restriction, an own rejected link with its reason and own actions,
+ * the case acts: votes that keep the sheet open, `Мои баллы` only for a Google Sheet, the own score without thumbs and
+ * nothing for a private link, thumbs hidden by a restriction, an own rejected link with its reason and own actions,
  * another student's link with pinning and reporting; then the confirmed delete, a deleted link, one action at a time
  * and long text at 320 dp and font scale 1.3. The looks are the `LinkActionsSheetContent_*` goldens; the clipboard,
  * the toast and the navigation are the shell entry's.
@@ -81,19 +81,19 @@ class LinkActionsSheetTest {
         fun assertScore(score: String, vote: Int) {
             waitForIdle()
             onNode(hasText(score)).assertExists()
-            arrow("Полезная ссылка").apply { if (vote > 0) assertIsSelected() else assertIsNotSelected() }
-            arrow("Бесполезная ссылка").apply { if (vote < 0) assertIsSelected() else assertIsNotSelected() }
+            thumb("Полезная ссылка").apply { if (vote > 0) assertIsSelected() else assertIsNotSelected() }
+            thumb("Бесполезная ссылка").apply { if (vote < 0) assertIsSelected() else assertIsNotSelected() }
         }
 
         // The vote sits by the title, above the first action; another student's link names its author.
-        assertTrue(arrow("Бесполезная ссылка").getBoundsInRoot().bottom <= row(LinkAction.OPEN).getBoundsInRoot().top)
+        assertTrue(thumb("Бесполезная ссылка").getBoundsInRoot().bottom <= row(LinkAction.OPEN).getBoundsInRoot().top)
         onNodeWithText("Автор: Синтетический Автор").assertIsDisplayed()
         assertScore("0", 0)
-        arrow("Полезная ссылка").performClick()
+        thumb("Полезная ссылка").performClick()
         assertScore("1", 1)
-        arrow("Полезная ссылка").performClick()
+        thumb("Полезная ссылка").performClick()
         assertScore("0", 0)
-        arrow("Бесполезная ссылка").performClick()
+        thumb("Бесполезная ссылка").performClick()
         assertScore("−1", -1)
         assertEquals(0, dismissed)
         assertTouchTargets()
@@ -118,7 +118,7 @@ class LinkActionsSheetTest {
     }
 
     @Test
-    fun actionsSheetShowsTheOwnScoreWithoutArrowsAndNothingForAPrivateLink() = runComposeUiTest {
+    fun actionsSheetShowsTheOwnScoreWithoutThumbsAndNothingForAPrivateLink() = runComposeUiTest {
         setContent { Sheet(SubjectLinksSamples.content, "own-scores") }
 
         onNode(hasContentDescription("Рейтинг 5")).assertExists()
@@ -136,7 +136,7 @@ class LinkActionsSheetTest {
     }
 
     @Test
-    fun actionsSheetHidesArrowsUnderAVoteRestriction() = runComposeUiTest {
+    fun actionsSheetHidesThumbsUnderAVoteRestriction() = runComposeUiTest {
         setContent { Sheet(SubjectLinksSamples.restricted, "tasks-flow") }
 
         onNode(hasContentDescription("Рейтинг 0")).assertExists()
@@ -273,7 +273,7 @@ class LinkActionsSheetTest {
         assertTouchTargets()
     }
 
-    private fun ComposeUiTest.arrow(label: String): SemanticsNodeInteraction = onNode(hasContentDescription(label))
+    private fun ComposeUiTest.thumb(label: String): SemanticsNodeInteraction = onNode(hasContentDescription(label))
 
     private fun ComposeUiTest.row(action: LinkAction): SemanticsNodeInteraction =
         onNodeWithTag(LinkActionsSheetTestTags.row(action))

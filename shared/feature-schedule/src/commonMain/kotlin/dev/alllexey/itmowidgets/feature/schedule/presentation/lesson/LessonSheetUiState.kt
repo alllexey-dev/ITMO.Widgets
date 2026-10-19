@@ -9,7 +9,8 @@ import dev.alllexey.itmowidgets.core.text.UiText
 /**
  * The lesson sheet (`Лист пары`, docs/features/schedule.md): [over] `Практика, ср, 9 сентября` with the [status] pill,
  * the [subject], the big [room] (or `Онлайн` when [online]) with the [time] `10:00–11:30, 90 мин` and the building's
- * full [address]; the relevant [actions]; then the [changes], the [note] and the meeting [password], the [teacher],
+ * full [address]; the relevant [actions] ([actionsPending] while they may still change, the row keeps its place);
+ * then the [changes], the [note] and the meeting [password], the [teacher],
  * the [flow], the [sport] row and the [friends] on the lesson.
  */
 data class LessonSheetUiState(
@@ -21,6 +22,7 @@ data class LessonSheetUiState(
     val time: UiText,
     val address: String?,
     val actions: List<LessonAction>,
+    val actionsPending: Boolean,
     val changes: LessonSheetChanges?,
     val note: String?,
     val password: String?,
@@ -33,8 +35,17 @@ data class LessonSheetUiState(
 /** What an action tile does: `Маршрут` opens the campus map, the rest as named. */
 enum class LessonActionKind { ROUTE, VIDEO, FRIENDS, LINKS, SUBJECT }
 
-/** An action tile: [label] `Друзья 2`; [url] the meeting of [LessonActionKind.VIDEO], [route] what the others open. */
-data class LessonAction(val kind: LessonActionKind, val label: UiText, val url: String? = null, val route: AppRoute? = null)
+/**
+ * An action tile: [label] `Друзья 2`; [url] the meeting of [LessonActionKind.VIDEO], [route] what the others open;
+ * not [enabled] while there is nothing to open (`Друзья` while they load or with nobody on the lesson).
+ */
+data class LessonAction(
+    val kind: LessonActionKind,
+    val label: UiText,
+    val url: String? = null,
+    val route: AppRoute? = null,
+    val enabled: Boolean = true,
+)
 
 /**
  * The lesson's newest change: [summary] for an added or cancelled lesson, else a [lines] `было → стало` per field;

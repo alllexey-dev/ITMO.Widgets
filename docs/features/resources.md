@@ -137,9 +137,9 @@ made during the upload is sent next time.
 
 ## iOS
 
-The iOS app ([iOS app](../ios.md)) hosts the same Compose sheets in SwiftUI
-sheets through `shared/ios` `screens/ResourcesScreens.kt` and
-`iosApp/Sources/Features/Resources/LinkSheets.swift`; `Routes+Resources.swift`
+The iOS app ([iOS app](../ios.md)) draws the sheets in SwiftUI over the same view
+models (`iosApp/Sources/Features/Resources/LinkSheets.swift`,
+`LinkEditorSheet.swift`; arguments from `subjectLinksParameters`); `Routes+Resources.swift`
 maps the three sheet routes, the graph loads `resourcesModule` with
 `resourcesIosModule`, and the [subject page](subject-page.md#ios) shows links
 and chats as on Android. What differs:
@@ -147,8 +147,10 @@ and chats as on Android. What differs:
 - One router sheet at a time; from the subject page the actions sheet replaces
   itself with the editor or `Мои баллы` (`AppRouter.replaceSheet(with:)`). The
   author's profile closes every sheet.
-- The report is a Compose dialog over the actions sheet with its own view model;
-  `AppRoutes.ReportLink` has no iOS surface.
+- The report is a form sheet over the actions sheet with its own view model;
+  `AppRoutes.ReportLink` has no iOS surface. A delete asks in an alert.
+- The editor's categories are wrapping chips without icons; `Все ссылки` adds a
+  link with `+` in its bar.
 - The editor does not read the clipboard (iOS asks the user before an app reads
   it). Copy confirms with `links_copied`; failures show as a banner.
 - The demo shows `DemoSubjectLinks` and refuses every change

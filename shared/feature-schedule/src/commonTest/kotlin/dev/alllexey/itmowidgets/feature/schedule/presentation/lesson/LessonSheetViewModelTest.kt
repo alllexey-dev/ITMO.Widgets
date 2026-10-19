@@ -31,9 +31,15 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -56,9 +62,10 @@ class LessonSheetViewModelTest {
         services: Boolean = true,
         changes: FakeScheduleChangesRepository = FakeScheduleChangesRepository(),
         subjects: List<LessonSubjectSource> = emptyList(),
+        friendsOnLessons: LessonFriendsRepository = OneFriendOnLessons,
     ) = LessonSheetViewModel(
         SavedStateHandle(LessonSheetArgs.of(route)),
-        OneFriendOnLessons,
+        friendsOnLessons,
         FakeCustomServicesRepository(services),
         PositiveLevels,
         changes,
@@ -98,7 +105,7 @@ class LessonSheetViewModelTest {
 
     @Test
     fun withoutTheConnectionNoFriendsNoToneAndNoSubjectWithoutASource() = runTest(main.dispatcher) {
-        val state = viewModel(AppRoutes.LessonDetails(LESSON), services = false).uiState.first()
+        val state = viewModel(AppRoutes.LessonDetails(LESSON), services = false).uiState.first { !it.actionsPending }
 
         // Only the route: it needs neither the connection nor a subject source.
         assertEquals(listOf(AppRoutes.CampusMap(CampusMapArgs(LESSON, route = true))), state.actions.map { it.route })
@@ -137,13 +144,60 @@ class LessonSheetViewModelTest {
     fun anOnlineLessonHasNoRoomAndOnlyItsMeeting() = runTest(main.dispatcher) {
         val online = LESSON.copy(format = "Дистанционный", room = "дистант", zoomUrl = "https://example.org/meet", zoomPassword = "1234")
 
-        val state = viewModel(AppRoutes.LessonDetails(online), services = false).uiState.first()
+        val state = viewModel(AppRoutes.LessonDetails(online), services = false).uiState.first { !it.actionsPending }
 
         assertTrue(state.online)
         assertNull(state.room)
         assertNull(state.address)
         assertEquals("1234", state.password)
         assertEquals(listOf(LessonActionKind.VIDEO), state.actions.map { it.kind })
+    }
+
+    @Test
+    fun theTilesWaitForTheOptInAndTheSubjectAndFriendsKeepsItsPlaceWhileLoading() = runTest(main.dispatcher) {
+        val subject = CompletableDeferred<LessonSubject?>()
+        val friends = CompletableDeferred<List<UserSummary>>()
+        val vm = viewModel(
+            AppRoutes.LessonDetails(LESSON),
+            subjects = listOf(LessonSubjectSource { _, _, _ -> subject.await() }),
+            friendsOnLessons = object : LessonFriendsRepository {
+                override suspend fun friendsOnLesson(pairId: Long, date: LocalDate) = AppResult.Success(friends.await())
+            },
+        )
+        val states = mutableListOf<LessonSheetUiState>()
+        backgroundScope.launch { vm.uiState.collect(states::add) }
+        runCurrent()
+
+        assertTrue(states.last().actionsPending)
+
+        subject.complete(LessonSubject(AppRoutes.TabRoot(AppTab.RECORDBOOK), 0, AppRoutes.TabRoot(AppTab.RECORDBOOK)))
+        runCurrent()
+        val loading = states.last()
+        assertFalse(loading.actionsPending)
+        assertEquals(listOf(LessonActionKind.ROUTE, LessonActionKind.FRIENDS, LessonActionKind.SUBJECT), loading.actions.map { it.kind })
+        assertEquals(LessonAction(LessonActionKind.FRIENDS, UiText.Res(ScheduleStrings.schedule_sheet_friends_none), enabled = false), loading.actions[1])
+
+        friends.complete(emptyList())
+        runCurrent()
+        // Nobody there: the tile stays, disabled, so the row never reflows.
+        assertEquals(loading.actions, states.last().actions)
+    }
+
+    @Test
+    fun aSlowSubjectStopsHoldingTheTilesAfterAWhile() = runTest(main.dispatcher) {
+        val vm = viewModel(
+            AppRoutes.LessonDetails(LESSON),
+            subjects = listOf(LessonSubjectSource { _, _, _ -> awaitCancellation() }),
+        )
+        val states = mutableListOf<LessonSheetUiState>()
+        backgroundScope.launch { vm.uiState.collect(states::add) }
+        runCurrent()
+        assertTrue(states.last().actionsPending)
+
+        advanceTimeBy(1_001)
+
+        assertFalse(states.last().actionsPending)
+        assertEquals(listOf(LessonActionKind.ROUTE, LessonActionKind.FRIENDS), states.last().actions.map { it.kind })
     }
 
     private object OneFriendOnLessons : LessonFriendsRepository {

@@ -37,9 +37,9 @@ val componentBindingsModule = module {
 
     // An open set: each handler carries its own qualifier, the dispatcher reads them all.
     singleOf(::FriendshipPushHandler) { named("friendship"); bind<FcmPayloadHandler>() }
-    single<FcmPayloadHandler>(named("sport-free")) { SportSignPushHandler(QueueKind.FREE, get(), get()) }
-    single<FcmPayloadHandler>(named("sport-auto")) { SportSignPushHandler(QueueKind.AUTO, get(), get()) }
+    single<FcmPayloadHandler>(named("sport-free")) { SportSignPushHandler(QueueKind.FREE, get()) }
+    single<FcmPayloadHandler>(named("sport-auto")) { SportSignPushHandler(QueueKind.AUTO, get()) }
     singleOf(::SportAgentBookedPushHandler) { named("sport-agent"); bind<FcmPayloadHandler>() }
     singleOf(::DeviceConnectedPushHandler) { named("device-connected"); bind<FcmPayloadHandler>() }
-    single<FcmPayloadDispatcher> { FcmPayloadDispatcher(getAll(), get()) }
+    single<FcmPayloadDispatcher> { FcmPayloadDispatcher(getAll(), get(), get(), get()) }
 }

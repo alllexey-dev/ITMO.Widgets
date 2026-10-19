@@ -34,11 +34,6 @@ struct ShellDestination: Hashable {
     }
 
     var route: any AppRoute { key.route }
-
-    /// Who draws the top bar (the chrome rule, `docs/ios.md` Shell).
-    var chrome: ShellChrome {
-        Routes.target(for: route).chrome ?? .native
-    }
 }
 
 /// A sheet above the shell.
@@ -46,8 +41,7 @@ enum ShellSheet: Hashable, Identifiable {
     case linkUnavailable
     /// The web sign-in; `code` is a Universal Link's, checked as soon as the sheet opens.
     case webLogin(code: String?)
-    /// A feature's sheet key whose `RouteTarget` is `.composeSheet` (Compose content in a SwiftUI sheet) or
-    /// `.swiftUISheet`.
+    /// A feature's sheet key whose `RouteTarget` is `.swiftUISheet`.
     case route(ShellDestination)
 
     /// Also the sheet's accessibility identifier, `shell.sheet.<id>`, for the shell's own sheets; a route's content
@@ -248,7 +242,7 @@ final class AppRouter {
         switch Routes.target(for: route) {
         case let .tab(tab):
             return select(tab) ? .opened : .ignored
-        case .compose, .swiftUI:
+        case .swiftUI:
             sheet = nil
             paths[selectedTab, default: []].append(ShellDestination(route))
             return .opened
@@ -256,7 +250,7 @@ final class AppRouter {
             guard sheet == nil else { return .ignored }
             sheet = next
             return .opened
-        case .composeSheet, .swiftUISheet:
+        case .swiftUISheet:
             guard sheet == nil else { return .ignored }
             sheet = .route(ShellDestination(route))
             return .opened

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.ui.lesson
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,7 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,22 +26,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
-import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.buttons.tonalButtonColors
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.PersonListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
@@ -105,11 +111,14 @@ fun LessonSheetRoute(viewModel: LessonSheetViewModel, actions: LessonSheetAction
  * the time and the building's address (`Онлайн` for an online lesson), the relevant actions (Видео, Друзья, Ссылки,
  * Предмет), then the change `было → стало`, the note, the teacher with the tone of the reviews in words, the flow, the
  * sport queue as a row to Спорт and the friends on the lesson. Stateless.
+ *
+ * The bottom margin belongs to the last section, so `Друзья` scrolls the friends into view together with it.
  */
 @Composable
 fun LessonSheetContent(state: LessonSheetUiState, actions: LessonSheetActions, modifier: Modifier = Modifier) {
     val friends = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
+    val bottom = ItmoTheme.spacing.group
     SheetScaffold(
         title = state.over.asString(),
         modifier = modifier,
@@ -120,32 +129,44 @@ fun LessonSheetContent(state: LessonSheetUiState, actions: LessonSheetActions, m
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = ItmoTheme.spacing.screenMargin)
-                .padding(bottom = ItmoTheme.spacing.group),
+                .padding(bottom = if (state.friends.isEmpty()) bottom else 0.dp),
             verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
         ) {
             Hero(state)
-            if (state.actions.isNotEmpty()) {
-                ActionTiles(state.actions) { action ->
-                    when (action.kind) {
-                        LessonActionKind.VIDEO -> action.url?.let(actions.onVideo)
-                        LessonActionKind.FRIENDS -> scope.launch { friends.bringIntoView() }
-                        LessonActionKind.ROUTE, LessonActionKind.LINKS, LessonActionKind.SUBJECT -> action.route?.let(actions.onRoute)
+            if (state.actionsPending || state.actions.isNotEmpty()) {
+                Crossfade(state.actionsPending, label = "lesson actions") { pending ->
+                    if (pending) {
+                        ActionTilesPlaceholder()
+                    } else {
+                        ActionTiles(state.actions) { action ->
+                            when (action.kind) {
+                                LessonActionKind.VIDEO -> action.url?.let(actions.onVideo)
+                                LessonActionKind.FRIENDS -> scope.launch { friends.bringIntoView() }
+                                LessonActionKind.ROUTE, LessonActionKind.LINKS, LessonActionKind.SUBJECT -> action.route?.let(actions.onRoute)
+                            }
+                        }
                     }
                 }
             }
             state.changes?.let { Changes(it) }
             Details(state, actions)
             if (state.friends.isNotEmpty()) {
-                Column(Modifier.bringIntoViewRequester(friends).testTag(LessonSheetTestTags.FRIENDS)) {
+                Column(
+                    Modifier
+                        .bringIntoViewRequester(friends)
+                        .padding(bottom = bottom)
+                        .testTag(LessonSheetTestTags.FRIENDS),
+                ) {
                     SectionHeader(stringResource(Res.string.schedule_sheet_friends_title), count = "${state.friends.size}")
                     ListGroup {
                         state.friends.forEach { friend ->
                             item {
-                                ListRow(
+                                PersonListRow(
                                     friend.name,
+                                    friend.pictureUrl,
                                     Modifier.testTag(LessonSheetTestTags.friend(friend.isu)),
+                                    initials = friend.initials,
                                     subtitle = friend.groups.firstOrNull()?.name,
-                                    leading = { Avatar(friend.name, friend.pictureUrl, initials = friend.initials) },
                                     chevron = true,
                                     onClick = { actions.onProfile(friend.isu) },
                                 )
@@ -188,18 +209,29 @@ private fun Hero(state: LessonSheetUiState) {
     }
 }
 
-/** Equal tiles, the first filled, the rest in the kit's tonal colours; only the actions the lesson has. */
+/** The tiles' row, invisible, while the tiles may still change: the content below never moves when they come. */
 @Composable
-private fun ActionTiles(actions: List<LessonAction>, onAction: (LessonAction) -> Unit) {
+private fun ActionTilesPlaceholder() {
+    val placeholder = LessonAction(LessonActionKind.ROUTE, UiText.Dynamic(""), enabled = false)
+    ActionTiles(listOf(placeholder), Modifier.alpha(0f).clearAndSetSemantics {}) {}
+}
+
+/**
+ * Equal tiles, the first filled, the rest in the kit's tonal colours, a disabled one in the buttons' disabled colours;
+ * only the actions the lesson has.
+ */
+@Composable
+private fun ActionTiles(actions: List<LessonAction>, modifier: Modifier = Modifier, onAction: (LessonAction) -> Unit) {
     val tonal = tonalButtonColors()
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
+    val filled = ButtonDefaults.buttonColors()
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
         actions.forEachIndexed { index, action ->
-            val first = index == 0
+            val colors = if (index == 0) filled else tonal
             Column(
                 Modifier
                     .weight(1f)
                     .clip(ItmoTheme.shapes.large)
-                    .clickable(role = Role.Button) { onAction(action) }
+                    .clickable(enabled = action.enabled, role = Role.Button) { onAction(action) }
                     .testTag(LessonSheetTestTags.action(action.kind)),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
@@ -207,8 +239,8 @@ private fun ActionTiles(actions: List<LessonAction>, onAction: (LessonAction) ->
                 Surface(
                     modifier = Modifier.fillMaxWidth().heightIn(min = ItmoTheme.spacing.touchTarget),
                     shape = ItmoTheme.shapes.large,
-                    color = if (first) ItmoTheme.colorScheme.primary else tonal.containerColor,
-                    contentColor = if (first) ItmoTheme.colorScheme.onPrimary else tonal.contentColor,
+                    color = if (action.enabled) colors.containerColor else colors.disabledContainerColor,
+                    contentColor = if (action.enabled) colors.contentColor else colors.disabledContentColor,
                 ) {
                     Box(Modifier.padding(ItmoTheme.spacing.content), contentAlignment = Alignment.Center) {
                         Icon(action.kind.icon(), contentDescription = null)
@@ -218,6 +250,7 @@ private fun ActionTiles(actions: List<LessonAction>, onAction: (LessonAction) ->
                 val type = ItmoTheme.typography
                 Text(
                     action.label.asString(),
+                    color = if (action.enabled) ItmoTheme.colorScheme.onSurface else colors.disabledContentColor,
                     style = type.labelMedium,
                     maxLines = 1,
                     autoSize = TextAutoSize.StepBased(minFontSize = type.labelSmall.fontSize, maxFontSize = type.labelMedium.fontSize),
@@ -296,11 +329,11 @@ private fun Details(state: LessonSheetUiState, actions: LessonSheetActions) {
         }
         state.teacher?.let { teacher ->
             item {
-                ListRow(
+                PersonListRow(
                     teacher.name,
+                    pictureUrl = null,
                     Modifier.testTag(LessonSheetTestTags.TEACHER),
                     subtitle = teacher.tone.asString(),
-                    leading = { Avatar(teacher.name, null) },
                     chevron = teacher.isu != null,
                     onClick = teacher.isu?.let { isu -> { actions.onProfile(isu) } },
                 )

@@ -109,7 +109,7 @@ class SubjectLinksViewModelTest {
     private fun SubjectLinksUiState.scores() =
         sections.filterIsInstance<LinkSection.Category>().single { it.category == LinkCategory.SCORES }.links.map { it.id }
 
-    @Test fun arrowsSetAVoteAndTheSameArrowRemovesIt() = runTest(main.dispatcher) {
+    @Test fun thumbsSetAVoteAndTheSameThumbRemovesIt() = runTest(main.dispatcher) {
         show(linksSnapshot(shared = listOf(shared.copy(myVote = 1))))
         val vm = model()
 

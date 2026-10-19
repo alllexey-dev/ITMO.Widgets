@@ -11,16 +11,13 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.Push
 /** «Уведомления» at the design lab's axes, for the previews of both platforms. */
 object NotificationSettingsSamples {
     /**
-     * [state] is `on` (allowed, connected, Android channels known), `off` (denied by the system), `ios` (allowed, no
-     * per-type channels) or `offline` (not connected, the background restricted).
+     * [state] is `on` (allowed, connected, one push off), `off` (denied by the system), `channels` (a system channel of
+     * a type that is on is off) or `offline` (not connected, the background restricted).
      */
     fun state(state: String): NotificationSettingsUiState = when (state) {
         "off" -> on.copy(permission = NotificationPermission.DENIED)
-        "ios" -> on.copy(pushes = PushKind.entries.map { PushNotifications(it, connected = true, systemEnabled = null) })
-        "offline" -> on.copy(
-            pushes = PushKind.entries.map { PushNotifications(it, connected = false, systemEnabled = true) },
-            backgroundWorkRestricted = true,
-        )
+        "channels" -> on.copy(systemChannelsOff = true)
+        "offline" -> on.copy(connected = false, backgroundWorkRestricted = true)
         else -> on
     }
 
@@ -36,9 +33,10 @@ object NotificationSettingsSamples {
         ),
         scheduleChanges = true,
         pushes = listOf(
-            PushNotifications(PushKind.SPORT, connected = true, systemEnabled = true),
-            PushNotifications(PushKind.FRIENDS, connected = true, systemEnabled = true),
-            PushNotifications(PushKind.DEVICES, connected = true, systemEnabled = false),
+            PushNotifications(PushKind.SPORT, enabled = true),
+            PushNotifications(PushKind.FRIENDS, enabled = true),
+            PushNotifications(PushKind.DEVICES, enabled = false),
         ),
+        connected = true,
     )
 }
