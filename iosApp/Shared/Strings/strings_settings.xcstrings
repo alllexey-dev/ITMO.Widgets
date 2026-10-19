@@ -2545,6 +2545,30 @@
         }
       }
     },
+    "settings_version_copied" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия скопирована"
+          }
+        }
+      }
+    },
+    "settings_version_own_build" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "своя сборка"
+          }
+        }
+      }
+    },
     "settings_version_title" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",

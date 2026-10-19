@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.Space
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
+import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
 import dev.alllexey.itmowidgets.core.schedule.ScheduleExportRange
@@ -34,7 +35,6 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
-import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
@@ -70,7 +70,7 @@ internal fun settingsTestModule(spoilers: CustomSpoilerRepository = FakeCustomSp
         schedule = SchedulePageProvider(repository, FakeCalendarSync()),
         sport = SportPageProvider(repository),
         maintenance = MaintenancePageProvider(
-            refresher, FakeOnboardingRepository(completed = true), AppVersion("test"), RecordingDiagnostics(),
+            refresher, FakeOnboardingRepository(completed = true), AppBuild("test", "1", "github"), RecordingDiagnostics(),
         ),
     )
     viewModel { SettingsViewModel(pages, repository, refresher, get<SavedStateHandle>()) }

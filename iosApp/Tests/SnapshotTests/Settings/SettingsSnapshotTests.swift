@@ -201,7 +201,12 @@ enum SettingsFixtures {
                 trailingIcon: .refresh, enabled: false
             ),
             SettingItemCustomColor(id: .accentCustom, title: text(long), argb: Int32(bitPattern: 0xFF5C_6BC0), enabled: true),
-            SettingItemInfo(id: .theVersion, title: text(long), value: text("2.3.0-SNAPSHOT (2026-10-07, debug)")),
+            SettingItemInfo(id: .licenseMaplibre, title: text(long), value: text("2.3.0-SNAPSHOT (2026-10-07, debug)")),
+            // The version row of a fork's build: a tap copies the details.
+            SettingItemAction(
+                id: .theVersion, title: text("Версия"), description: nil,
+                value: text("2.3.0 (20292) · a1b2c3d · AlexPer777/ITMO.Widgets"), trailingIcon: nil, enabled: true
+            ),
         ]
         return SettingsUiState(
             page: .maintenance,

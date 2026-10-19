@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.di
 
-import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.AndroidWidgetPaletteSource
 import dev.alllexey.itmowidgets.app.DefaultWidgetPreviewFactory
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
@@ -11,8 +10,6 @@ import dev.alllexey.itmowidgets.feature.settings.data.AndroidQuickSettingsTileAc
 import dev.alllexey.itmowidgets.feature.settings.data.CustomSpoilerRepositoryImpl
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
-import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
-import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -20,7 +17,7 @@ import org.koin.dsl.module
 
 /**
  * The Android side of settings: the widget preview, the custom spoiler store, the platform accesses, the widgets'
- * theme palette and the version. The settings repositories are `settingsDataModule`'s.
+ * theme palette and the build's identity. The settings repositories are `settingsDataModule`'s.
  */
 val androidSettingsModule = module {
     factoryOf(::DefaultWidgetPreviewFactory) { bind<WidgetPreviewFactory>() }
@@ -28,5 +25,5 @@ val androidSettingsModule = module {
     factoryOf(::AndroidBackgroundWorkAccess) { bind<BackgroundWorkAccess>() }
     factoryOf(::AndroidQuickSettingsTileAccess) { bind<QuickSettingsTileAccess>() }
     factoryOf(::AndroidWidgetPaletteSource) { bind<WidgetPaletteSource>() }
-    factory { AppVersion(androidContext().getString(R.string.app_version)) }
+    single { appBuild() }
 }

@@ -33,6 +33,8 @@
     <string name="settings_schedule_notifications_title">Уведомления об изменениях</string>
     <string name="settings_schedule_footer">Нужно подключение к ITMO.Widgets.</string>
     <string name="settings_version_title">Версия</string>
+    <string name="settings_version_own_build">своя сборка</string>
+    <string name="settings_version_copied">Версия скопирована</string>
     <string name="settings_privacy_policy_title">Политика конфиденциальности</string>
     <string name="settings_licenses_title">Лицензии</string>
     <string name="settings_licenses_data_title">Данные</string>

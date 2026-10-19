@@ -534,7 +534,9 @@ system `geo:` intent and lets Android resolve the installed mapping application.
 - `Лицензии` opens a page with the source of the campus plans (`Планы корпусов`, `Университет ИТМО`: plans, routes,
   style and icons from the ITMO Campus app) and the licences of MapLibre Native (BSD 2-Clause, its full text) and of
   the map's Noto Sans labels (SIL OFL 1.1).
-- `Версия` displays the application version.
+- `Версия` displays the version and build number, the short commit when known
+  and, for a custom build, its source (`<owner>/<repo>` or `своя сборка`); a
+  tap copies the full details ([build identity](building.md#build-identity)).
 - The group's footer is `Неофициальное приложение. Не связано с Университетом
   ИТМО.`; the sign-in screen shows the same line under its buttons.
 
