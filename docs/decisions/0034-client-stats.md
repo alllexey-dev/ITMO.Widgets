@@ -85,8 +85,11 @@ through the admin API.
     new one is generated after sign-out and on reinstall. It is never derived
     from hardware or advertising identifiers.
 - **Official and custom builds.** A client is custom when its `channel` is not
-  one of the official values above or its `source` is set to anything but
-  `alllexey-dev/ITMO.Widgets` (agent: `alllexey-dev/itmo-widgets-agent`).
+  one of the official values above or its `source` is a repository other than
+  `alllexey-dev/ITMO.Widgets` (agent: `alllexey-dev/itmo-widgets-agent`);
+  `source=local` alone is no sign, since the owner builds locally too. The apps
+  send their distribution as `channel` when the build identity says
+  `official` and `custom` otherwise.
   Admin views show custom builds apart from official ones and group them by
   `base` (their upstream version; `version` when `base` is missing), then by
   `source`.
