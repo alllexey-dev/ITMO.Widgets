@@ -65,7 +65,8 @@ Android (`RecordbookRoute`, `ui/RecordbookScreen.kt`) and SwiftUI on iOS. It loa
   earlier answer brought (`RecordbookRepository.cachedControls` or `BarsRecordbookRepository.cachedControls`); the
   list never requests controls itself. A passed subject never needs attention. The reason replaces the kind, in red
   (or orange for sport points).
-- A row's number and its quiet source: [which number is shown](#which-number-is-shown). Points sit over a 0-100 bar
+- A row's number and its quiet source: [which number is shown](#which-number-is-shown); when beside it a word of the
+  name or the reason would not fit (a narrow phone, a large font), the number moves under them. Points sit over a 0-100 bar
   in the tone of the row's reason; a final result is a pill (`4C`, `Зачёт`, `2FX`, `Неявка`); a missing number is a
   dash.
 - Физкультура shows the sport total in a small ring (visits and bonus) and opens the Спорт tab; its official result

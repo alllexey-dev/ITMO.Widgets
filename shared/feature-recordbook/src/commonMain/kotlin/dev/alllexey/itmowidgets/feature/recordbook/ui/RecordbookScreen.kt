@@ -100,6 +100,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.kit.IconTile
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
@@ -359,9 +364,19 @@ private fun BarsRow(
 /** The kit's row icon tile. */
 private val IconTileHeight = 40.dp
 
-/** A subject: name and reason or kind on the left, the new-mark dot, the number over its source, the chevron. */
+/**
+ * A subject: name and reason or kind on the left, the new-mark dot, the number over its source, the chevron. The number
+ * moves under the name when beside it a word would not fit, so a narrow phone or a large font never breaks a word.
+ */
 @Composable
 private fun RecordRow(row: RecordbookRow, actions: RecordbookActions) {
+    val meta = row.meta.asString()
+    val nameStyle = ItmoTheme.typography.titleMedium
+    val metaStyle = ItmoTheme.typography.bodyMedium
+    val measurer = rememberTextMeasurer()
+    val longestWord = remember(row.name, meta, nameStyle, metaStyle, measurer) {
+        maxOf(measurer.longestWord(row.name, nameStyle), measurer.longestWord(meta, metaStyle))
+    }
     Row(
         Modifier
             .fillMaxWidth()
@@ -375,10 +390,25 @@ private fun RecordRow(row: RecordbookRow, actions: RecordbookActions) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
-            Text(row.name, style = ItmoTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(row.meta.asString(), style = ItmoTheme.typography.bodyMedium, color = row.metaTone.kit().ink())
-        }
+        NameAndValue(
+            name = {
+                Column(verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
+                    Text(row.name, style = nameStyle, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(meta, style = metaStyle, color = row.metaTone.kit().ink())
+                }
+            },
+            value = { RecordValue(row, actions) },
+            longestWord = longestWord,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(painterResource(KitRes.drawable.ic_chevron_right), contentDescription = null, tint = ItmoTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** The new-mark dot and the number over its source, pulsing while BARS has not answered yet. */
+@Composable
+private fun RecordValue(row: RecordbookRow, actions: RecordbookActions) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content)) {
         if (row.unread) {
             val label = stringResource(Res.string.recordbook_subject_new)
             Box(
@@ -401,9 +431,46 @@ private fun RecordRow(row: RecordbookRow, actions: RecordbookActions) {
                 sourceLabel = stringResource(Res.string.recordbook_sources_action, source),
             ) { RowValue(row.value) }
         }
-        Icon(painterResource(KitRes.drawable.ic_chevron_right), contentDescription = null, tint = ItmoTheme.colorScheme.onSurfaceVariant)
     }
 }
+
+/**
+ * [name] beside [value] (both centred) while [longestWord] px still fits beside it; otherwise [value] under [name] at
+ * the end, and [name] takes the whole width.
+ */
+@Composable
+private fun NameAndValue(
+    name: @Composable () -> Unit,
+    value: @Composable () -> Unit,
+    longestWord: Int,
+    modifier: Modifier = Modifier,
+) {
+    val gap = ItmoTheme.spacing.content
+    Layout(contents = listOf(name, value), modifier) { (names, values), constraints ->
+        val gapPx = gap.roundToPx()
+        val width = constraints.maxWidth
+        val shown = values.single().measure(Constraints(maxWidth = width))
+        val beside = width - shown.width - gapPx
+        if (beside >= longestWord) {
+            val text = names.single().measure(Constraints(maxWidth = beside))
+            val height = maxOf(text.height, shown.height)
+            layout(width, height) {
+                text.place(0, (height - text.height) / 2)
+                shown.place(width - shown.width, (height - shown.height) / 2)
+            }
+        } else {
+            val text = names.single().measure(Constraints(maxWidth = width))
+            layout(width, text.height + gapPx + shown.height) {
+                text.place(0, 0)
+                shown.place(width - shown.width, text.height + gapPx)
+            }
+        }
+    }
+}
+
+/** The widest single word of [text] in [style], in px. */
+private fun TextMeasurer.longestWord(text: String, style: TextStyle): Int =
+    text.split(' ').maxOfOrNull { measure(it, style, softWrap = false, maxLines = 1).size.width } ?: 0
 
 @Composable
 internal fun RowValue(value: RecordbookValue) {
