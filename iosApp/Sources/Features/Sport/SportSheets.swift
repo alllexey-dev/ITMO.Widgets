@@ -243,6 +243,7 @@ struct SportFilterActions {
     var building: (String?) -> Void = { _ in }
     var teacher: (String?) -> Void = { _ in }
     var dayPart: (SportDayPart) -> Void = { _ in }
+    var onlyAvailable: (Bool) -> Void = { _ in }
     var onlyFree: (Bool) -> Void = { _ in }
     var onlyPinned: (Bool) -> Void = { _ in }
     var onlyFriends: (Bool) -> Void = { _ in }
@@ -297,6 +298,11 @@ struct SportFiltersSheet: View {
                 ItmoChips(chips: teachers.map(\.kitChip), wrap: true) { actions.teacher(teachers[$0].value) }
             }
             ItmoListGroup {
+                ItmoSwitchRow(
+                    title: AppStrings.string("sport_filter_only_available"),
+                    symbol: .howToReg,
+                    isOn: Binding(get: { filters.onlyAvailable }, set: { actions.onlyAvailable($0) })
+                )
                 ItmoSwitchRow(
                     title: AppStrings.string("sport_filter_only_free"),
                     symbol: .check,

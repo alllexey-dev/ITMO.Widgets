@@ -80,12 +80,14 @@ object SportSignPresenter {
             (filters.building == null || buildingKey(lesson, input.catalog) == filters.building) &&
             (filters.teacher == null || teacherName(lesson, input.catalog) == filters.teacher) &&
             filters.dayPart.contains(start) &&
+            (!filters.onlyAvailable || action(lesson, busy = false, input.now) !is SportRowAction.Blocked) &&
             (!filters.onlyFree || mine || (lesson.isLessonReal && lesson.available > 0 && lesson.canSignIn)) &&
             (!filters.onlyPinned || lesson.sectionName in input.pinned) &&
             (!filters.onlyFriends || lesson.friendsBookings.isNotEmpty())
     }
 
     private fun chips(filters: SportSignFilters): List<SportChip> = listOf(
+        SportChip(SportQuickFilter.AVAILABLE, UiText.Res(SportStrings.sport_chip_available), filters.onlyAvailable),
         SportChip(SportQuickFilter.FREE, UiText.Res(SportStrings.sport_chip_free), filters.onlyFree),
         SportChip(SportQuickFilter.MORNING, UiText.Res(SportStrings.sport_chip_morning), filters.dayPart == SportDayPart.MORNING),
         SportChip(SportQuickFilter.EVENING, UiText.Res(SportStrings.sport_chip_evening), filters.dayPart == SportDayPart.EVENING),
@@ -247,6 +249,7 @@ object SportSignPresenter {
                 null
             },
             teacher = filters.teacher,
+            onlyAvailable = filters.onlyAvailable,
             onlyFree = filters.onlyFree,
             onlyPinned = filters.onlyPinned.takeIf { input.pinned.isNotEmpty() },
             onlyFriends = filters.onlyFriends,

@@ -10,6 +10,16 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Спорт (2026-10-19)
+
+- Спорт: `Секции` read at a glance (icon lines, status pills, a short note), `Сделать секцией` only in a booked lesson's sheet, the `Доступные` filter is back, and `Моё` / `Запись` switch by a swipe too (Android and iOS).
+
+### Campus map rooms (2026-10-19)
+
+- `201 (составное)` on Биржевая opens its own room on the campus map instead of room 201: the whole timetable text is
+  matched first. `RoomMatcherParityTest` checks the matcher on every room of Backend's synced lessons against
+  itmo-map-web's `rooms.js`.
+
 ### Widget polish (2026-10-19)
 
 - `Виджеты` shows every widget whole and in proportion (drawn at its launcher size, shrunk to the card), one card per row with the name and the buttons under it; `Расписание на день` keeps a short day compact at the top (an hour at most 32 dp, 36 pt on iOS), and on Android the `сейчас` line now crosses the current lesson, whose elapsed shade sits inside the block.
