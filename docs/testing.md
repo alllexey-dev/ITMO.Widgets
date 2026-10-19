@@ -212,6 +212,7 @@ runs (`scripts/ci-plan.sh --self-test` lists the cases).
 | `android-ship.yml` | nightly, on demand, label `full-ci` | Release checks without the key: `scripts/ship-check.sh` stages version, unsigned release builds with `check-play-policy.sh`, the upgrade from v2.2 and the shrunk builds on an emulator |
 | `android-nightly.yml` | nightly, on demand | The platform list on a Gradle Managed Device, `NavigationBenchmark` on an emulator, the advisory `buildHealth` report |
 | `ios-nightly.yml` | nightly, on demand | `test.sh --ci kn` over every shared module and all `UITests` |
+| `dist.yml` | on demand; published releases | Builds without the key ([building](building.md)): the self-signed `githubRelease` APK (on demand only) and `archive.sh --unsigned`, whose `.ipa` a release gets attached |
 
 - **The full suite on a PR.** Add the label `full-ci` to a risky PR (build
   changes, the shell, navigation, release or CI scripts): the PR then also runs
@@ -223,6 +224,9 @@ runs (`scripts/ci-plan.sh --self-test` lists the cases).
   `android-nightly` (platform tests, benchmarks) or `ios-nightly` opens an
   issue titled `Nightly <workflow> is failing`, or comments on the open one;
   the next passing nightly closes it. Fix it before the next release.
+- **Forks.** Pushes and scheduled runs build nothing outside
+  `alllexey-dev/ITMO.Widgets`, so a fork's sync with upstream costs it no
+  minutes; manual runs and the fork's own PRs run as upstream.
 - **A newer push cancels** the older run of the same PR; every `master` push
   keeps its own `android-ci` and `ios` result.
 
