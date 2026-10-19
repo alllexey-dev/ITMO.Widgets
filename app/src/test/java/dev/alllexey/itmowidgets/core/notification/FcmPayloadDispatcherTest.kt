@@ -6,7 +6,11 @@ import dev.alllexey.itmowidgets.client.push.FriendshipEventPayload
 import dev.alllexey.itmowidgets.client.push.SportAutoSignLessonsPayload
 import dev.alllexey.itmowidgets.client.push.SportFreeSignLessonsPayload
 import dev.alllexey.itmowidgets.core.network.Core2Harness.Companion.contractFixture
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
+import dev.alllexey.itmowidgets.core.text.UiText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonElement
@@ -25,9 +29,10 @@ class FcmPayloadDispatcherTest {
         val received = mutableListOf<String>()
         fun handler(name: String) = object : FcmPayloadHandler {
             override val type = name
-            override suspend fun handle(payload: JsonElement) { received += name + payload.jsonObject["id"]!!.jsonPrimitive.int }
+            override val channel = AppNotificationChannels.SPORT
+            override suspend fun handle(payload: JsonElement, notifier: AppNotifier) { received += name + payload.jsonObject["id"]!!.jsonPrimitive.int }
         }
-        val dispatcher = FcmPayloadDispatcher(listOf(handler("first"), handler("second")), RecordingDiagnostics())
+        val dispatcher = dispatcher(listOf(handler("first"), handler("second")), RecordingDiagnostics())
         for (wire in listOf("{", "null", "{}", "[]", "", "{\"type\":\"first\"}",
             "{\"type\":\"first\",\"payload\":null}", "{\"type\":\"first\",\"payload\":[1]}",
             "{\"type\":\"third\",\"payload\":{}}")) {
@@ -42,7 +47,7 @@ class FcmPayloadDispatcherTest {
     @Test fun `Backend's friendship and sport messages reach their handlers with the payload Core 2_0 decodes`() = runTest {
         val types = listOf(FriendshipEventPayload.TYPE, SportFreeSignLessonsPayload.TYPE, SportAutoSignLessonsPayload.TYPE)
         val recording = RecordingHandlers(*types.toTypedArray())
-        val dispatcher = FcmPayloadDispatcher(recording.handlers, RecordingDiagnostics())
+        val dispatcher = dispatcher(recording.handlers, RecordingDiagnostics())
 
         for (type in types) dispatcher.dispatch(fcmData(type).toString())
 
@@ -58,7 +63,7 @@ class FcmPayloadDispatcherTest {
 
     @Test fun `an unknown event of a known type still reaches its handler, which owns the payload`() = runTest {
         val recording = RecordingHandlers(FriendshipEventPayload.TYPE)
-        val dispatcher = FcmPayloadDispatcher(recording.handlers, RecordingDiagnostics())
+        val dispatcher = dispatcher(recording.handlers, RecordingDiagnostics())
         val known = fcmData(FriendshipEventPayload.TYPE)
         val payload = JsonObject(known["payload"]!!.jsonObject + ("event" to JsonPrimitive("FUTURE_EVENT")))
 
@@ -70,7 +75,7 @@ class FcmPayloadDispatcherTest {
     @Test fun `an unknown type is recorded and a blank or oversized message is dropped silently`() = runTest {
         val recording = RecordingHandlers("known")
         val diagnostics = RecordingDiagnostics()
-        val dispatcher = FcmPayloadDispatcher(recording.handlers, diagnostics)
+        val dispatcher = dispatcher(recording.handlers, diagnostics)
 
         dispatcher.dispatch("""{"type":"FUTURE_PAYLOAD","payload":{}}""")
         dispatcher.dispatch("   ")
@@ -86,7 +91,7 @@ class FcmPayloadDispatcherTest {
     @Test fun `a malformed message is recorded without its content`() = runTest {
         for (wire in listOf("""{"type":"known","payload":{"name":"Тестовый пользователь"""", """{"payload":{"name":"Тестовый"}}""")) {
             val diagnostics = RecordingDiagnostics()
-            val dispatcher = FcmPayloadDispatcher(RecordingHandlers("known").handlers, diagnostics)
+            val dispatcher = dispatcher(RecordingHandlers("known").handlers, diagnostics)
 
             dispatcher.dispatch(wire)
 
@@ -101,12 +106,13 @@ class FcmPayloadDispatcherTest {
         var handled = false
         val handler = object : FcmPayloadHandler {
             override val type = "type"
-            override suspend fun handle(payload: JsonElement) {
+            override val channel = AppNotificationChannels.SPORT
+            override suspend fun handle(payload: JsonElement, notifier: AppNotifier) {
                 if (fail) error("Synthetic failure")
                 handled = true
             }
         }
-        val dispatcher = FcmPayloadDispatcher(listOf(handler), RecordingDiagnostics())
+        val dispatcher = dispatcher(listOf(handler), RecordingDiagnostics())
         val wire = """{"type":"type","payload":{}}"""
         dispatcher.dispatch(wire)
         fail = false
@@ -114,13 +120,47 @@ class FcmPayloadDispatcherTest {
         assertTrue(handled)
         val cancelled = object : FcmPayloadHandler {
             override val type = "type"
-            override suspend fun handle(payload: JsonElement) { throw CancellationException() }
+            override val channel = AppNotificationChannels.SPORT
+            override suspend fun handle(payload: JsonElement, notifier: AppNotifier) { throw CancellationException() }
         }
         try {
-            FcmPayloadDispatcher(listOf(cancelled), RecordingDiagnostics()).dispatch(wire)
+            dispatcher(listOf(cancelled), RecordingDiagnostics()).dispatch(wire)
             fail("Cancellation must propagate")
         } catch (_: CancellationException) { }
     }
+
+    @Test fun `a type the user turned off still runs its handler but shows nothing, and the others still show`() = runTest {
+        val notifier = RecordingAppNotifier()
+        val categories = PushCategoryPreferences(InMemoryPreferencesDataStore())
+        fun posting(name: String, category: String) = object : FcmPayloadHandler {
+            override val type = name
+            override val channel = category
+            override suspend fun handle(payload: JsonElement, notifier: AppNotifier) {
+                notifier.cancel(category, 0)
+                notifier.show(AppNotification(category, 1, UiText.Dynamic(name), UiText.Dynamic(name), NotificationDestination.Sport))
+            }
+        }
+        val dispatcher = FcmPayloadDispatcher(
+            listOf(posting("sport", AppNotificationChannels.SPORT), posting("friends", AppNotificationChannels.FRIENDS)),
+            notifier,
+            categories,
+            RecordingDiagnostics(),
+        )
+        categories.setEnabled(AppNotificationChannels.SPORT, false)
+
+        dispatcher.dispatch("""{"type":"sport","payload":{}}""")
+        dispatcher.dispatch("""{"type":"friends","payload":{}}""")
+
+        assertEquals(listOf(AppNotificationChannels.FRIENDS), notifier.shown.map { it.channel })
+        assertEquals(listOf(AppNotificationChannels.SPORT to 0, AppNotificationChannels.FRIENDS to 0), notifier.cancelled)
+    }
+
+    private fun dispatcher(handlers: List<FcmPayloadHandler>, diagnostics: RecordingDiagnostics) = FcmPayloadDispatcher(
+        handlers,
+        RecordingAppNotifier(),
+        PushCategoryPreferences(InMemoryPreferencesDataStore()),
+        diagnostics,
+    )
 
     /** The `data` string of Backend's golden FCM message of [type], as the FCM service receives it. */
     private fun fcmData(type: String): JsonObject =
@@ -131,7 +171,8 @@ class FcmPayloadDispatcherTest {
         val handlers: List<FcmPayloadHandler> = types.map { name ->
             object : FcmPayloadHandler {
                 override val type = name
-                override suspend fun handle(payload: JsonElement) { received += name to payload }
+                override val channel = AppNotificationChannels.SPORT
+                override suspend fun handle(payload: JsonElement, notifier: AppNotifier) { received += name to payload }
             }
         }
     }

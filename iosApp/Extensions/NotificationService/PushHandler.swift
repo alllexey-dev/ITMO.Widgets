@@ -14,6 +14,8 @@ import UserNotifications
 ///   `notification_sport_success` or `_failure` over Android's text; a failure before MyITMO's answer keeps Backend's
 ///   "a place is free"; a full lesson, or nothing left to book, is dropped, as Android shows nothing. Every booking
 ///   and refusal is also left for the bell in the App Group.
+/// - A type the user turned off in the app (`disabledPushes` of session-v1.json): dropped; a sport push still books
+///   and leaves its result for the bell.
 struct PushHandler {
     let session: () -> SessionFile?
     let booker: SportPushBooker
@@ -25,13 +27,16 @@ struct PushHandler {
         guard let session = session(), !session.demo, let isu = session.isu, isu == message.recipientIsu else {
             return Self.dropped
         }
-        if message.type == PushMessage.friendship { return content }
-        if message.type == PushMessage.agentBooked { return Self.agentBooked(content, payload: message.payload) }
-        guard let queue = SportQueue(pushType: message.type) else { return content }
+        let muted = message.channel.map(session.disabledPushes.contains) ?? false
+        guard let queue = SportQueue(pushType: message.type) else {
+            if muted { return Self.dropped }
+            return message.type == PushMessage.agentBooked ? Self.agentBooked(content, payload: message.payload) : content
+        }
         guard session.servicesEnabled else { return Self.dropped }
 
         let booking = await booker.book(queue, payload: message.payload)
         booking.notices.forEach(record)
+        if muted { return Self.dropped }
         if let notice = booking.notices.first { return Self.rewritten(content, with: notice) }
         return booking.retryLater ? content : Self.dropped
     }

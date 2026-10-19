@@ -7,4 +7,9 @@ object AppNotificationChannels {
     const val SCHEDULE_CHANGES = "schedule_changes"
     const val MARKS = "marks"
     const val CONNECTIONS = "connections"
+
+    /** The categories Backend pushes; each has the app's own switch (`PushCategoryPreferences`). */
+    val PUSHES = listOf(SPORT, FRIENDS, CONNECTIONS)
+
+    val ALL = listOf(SPORT, FRIENDS, SCHEDULE_CHANGES, MARKS, CONNECTIONS)
 }

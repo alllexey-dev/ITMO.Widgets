@@ -157,8 +157,8 @@ records and shares the journal.
 
 The `SERVICES` and `PRIVACY` keys open `ConnectionDataScreen` (`Features/Connection/`, over `ConnectionViewModel`,
 with `ServicesConsentSheet`, which the first-run flow shares) and `NOTIFICATIONS` opens `NotificationSettingsScreen`
-(over `NotificationSettingsViewModel`; iOS has no switch per push type, so those rows open the app's notification
-settings). Both report the system state as `SettingsScreen` does. The connected devices (`ConnectionsScreen`) and the
+(over `NotificationSettingsViewModel`; the push switches reach the notification service as `disabledPushes` of
+session-v1.json). Both report the system state as `SettingsScreen` does. The connected devices (`ConnectionsScreen`) and the
 pairing sheet (`WebLoginSheet`) are drawn on the kit; their logic is the shared one.
 
 ## Strings and icons
@@ -298,8 +298,8 @@ calendar sync), keeps Android's periods in
   the notification settings into session-v1.json.
 - Taps. `NotificationTaps` reads the route from `userInfo` (`NotificationTapRoutes`) and hands it to the router, so a
   cold-start tap waits for the shell.
-- Notification service (Swift micro-client). `PushHandler` drops pushes for another ISU, signed out or the demo;
-  shows friendship pushes as Backend sent them; books sport pushes through `SportPushBooker` on MyITMO and reports
+- Notification service (Swift micro-client). `PushHandler` drops pushes for another ISU, signed out, the demo or a
+  type switched off in the app (a sport push still books first); shows friendship pushes as Backend sent them; books sport pushes through `SportPushBooker` on MyITMO and reports
   the outcome to Backend. `MyItmoAccess` refreshes the token under the `myitmo-refresh` lock. Tests replay the Kotlin
   golden fixtures (`NotificationServiceTests`), since `simctl push` never runs an extension.
 

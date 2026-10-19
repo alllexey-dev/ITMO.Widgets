@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.safeEnumOf
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
@@ -49,6 +50,7 @@ class SettingsRepositoryImpl(
     private val markSources: MarkSourcePreferences,
     private val deviceHints: DeviceHintPreferences,
     private val appearance: AppearancePreferences,
+    private val pushCategories: PushCategoryPreferences,
     private val backend: BackendGate,
     private val users: UsersApi,
     private val demo: DemoMode,
@@ -108,13 +110,15 @@ class SettingsRepositoryImpl(
             scheduleChecks.observeScheduleSportAutoSignEnabled(),
             scheduleChecks.observeScheduleChangesEnabled(),
             marks,
-            device
-        ) { showSportAutoSign, scheduleChangesEnabled, markSettings, deviceSettings ->
+            device,
+            pushCategories.observeDisabled()
+        ) { showSportAutoSign, scheduleChangesEnabled, markSettings, deviceSettings, disabledPushes ->
             AppLocalSettings(
                 showSportAutoSign = showSportAutoSign,
                 scheduleChangesEnabled = scheduleChangesEnabled,
                 marks = markSettings,
-                device = deviceSettings
+                device = deviceSettings,
+                disabledPushes = disabledPushes
             )
         }
 
@@ -140,6 +144,7 @@ class SettingsRepositoryImpl(
                 theme = appSettings.device.theme,
                 widgetsFollowTheme = appSettings.device.widgetsFollowTheme,
                 homePassVisible = appSettings.device.homePassVisible,
+                disabledPushes = appSettings.disabledPushes,
             )
         }
     }
@@ -196,6 +201,10 @@ class SettingsRepositoryImpl(
 
     override suspend fun setBackgroundWorkHintShown() {
         deviceHints.setBackgroundWorkHintShown()
+    }
+
+    override suspend fun setPushEnabled(channel: String, enabled: Boolean) {
+        pushCategories.setEnabled(channel, enabled)
     }
 
     override suspend fun setQrTileAdded(added: Boolean) {
@@ -329,7 +338,8 @@ private data class AppLocalSettings(
     val showSportAutoSign: Boolean,
     val scheduleChangesEnabled: Boolean,
     val marks: MarkLocalSettings,
-    val device: DeviceLocalSettings
+    val device: DeviceLocalSettings,
+    val disabledPushes: Set<String>
 )
 
 private data class MarkLocalSettings(
