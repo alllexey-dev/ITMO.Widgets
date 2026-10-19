@@ -71,7 +71,7 @@ struct SettingsScreen: View {
             if let message {
                 SettingsMessageBanner(text: message.text)
                     .task(id: message.id) {
-                        try? await Task.sleep(for: .seconds(3))
+                        try? await Task.sleep(for: SettingsMessageBanner.lifetime)
                         if self.message?.id == message.id { self.message = nil }
                     }
             }
@@ -204,6 +204,9 @@ struct SettingsMessage: Equatable {
 
 /// The message at the bottom of a settings page, what a snackbar is on Android; it leaves after a few seconds.
 struct SettingsMessageBanner: View {
+    /// How long a banner stays: a short confirmation, as Android's snackbar without an action.
+    static let lifetime: Duration = .seconds(2)
+
     let text: String
 
     var body: some View {

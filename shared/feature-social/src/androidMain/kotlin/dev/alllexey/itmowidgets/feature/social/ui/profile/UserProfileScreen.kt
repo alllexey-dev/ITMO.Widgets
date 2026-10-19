@@ -22,7 +22,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,6 +53,7 @@ import dev.alllexey.itmowidgets.designsystem.components.state.SkeletonStyle
 import dev.alllexey.itmowidgets.designsystem.kit.HeaderAction
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
@@ -177,7 +177,7 @@ fun UserProfileScreen(
                 is UserProfileUiState.Error -> ProfileError(state.error, actions.onRetry)
                 is UserProfileUiState.Content -> Card(state, actions, listState)
             }
-            SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
+            ItmoSnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
         }
     }
 }
@@ -375,8 +375,8 @@ private fun LazyListScope.teaching(state: UserProfileUiState.Content, actions: U
                 block.subjects.forEach { subject ->
                     item {
                         ListRow(
-                            subject,
-                            subtitle = text(SocialStrings.person_teaches_you),
+                            subject.name,
+                            subtitle = subject.note.asString(),
                             icon = painterResource(Res.drawable.ic_school),
                             iconTone = Tone.Primary,
                         )

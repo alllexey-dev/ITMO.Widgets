@@ -155,6 +155,7 @@ fun LessonSheetContent(state: LessonSheetUiState, actions: LessonSheetActions, m
                         .bringIntoViewRequester(friends)
                         .padding(bottom = bottom)
                         .testTag(LessonSheetTestTags.FRIENDS),
+                    verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
                 ) {
                     SectionHeader(stringResource(Res.string.schedule_sheet_friends_title), count = "${state.friends.size}")
                     ListGroup {

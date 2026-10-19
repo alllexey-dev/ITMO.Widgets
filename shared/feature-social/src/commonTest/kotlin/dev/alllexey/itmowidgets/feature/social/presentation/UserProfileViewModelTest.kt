@@ -1105,7 +1105,7 @@ class UserProfileViewModelTest {
 
         assertEquals(listOf(5), taught.asked)
         assertEquals(true, viewModel.content().teachingFirst)
-        assertEquals(listOf("Алгоритмы"), viewModel.content().teaching?.subjects)
+        assertEquals(listOf("Алгоритмы"), viewModel.content().teaching?.subjects?.map { it.name })
     }
 
     @Test
@@ -1119,7 +1119,7 @@ class UserProfileViewModelTest {
         val failed = viewModel(people = people, lessons = TaughtBy(AppResult.Failure(AppError.Network)))
         runCurrent()
         assertEquals(false, failed.content().teachingFirst)
-        assertEquals(emptyList(), failed.content().teaching?.subjects)
+        assertEquals(emptyList(), failed.content().teaching?.subjects?.map { it.name })
     }
 
     @Test
@@ -1137,7 +1137,7 @@ class UserProfileViewModelTest {
         gate.complete(Unit)
         runCurrent()
         assertEquals(false, viewModel.content().teachingFirst)
-        assertEquals(emptyList(), viewModel.content().teaching?.subjects)
+        assertEquals(emptyList(), viewModel.content().teaching?.subjects?.map { it.name })
     }
 
     @Test

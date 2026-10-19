@@ -97,7 +97,7 @@ internal class SportTestGraph(scope: CoroutineScope) {
     /** The slots a test gives lessons; a lesson without one offers no `Сделать секцией`. */
     val sectionSlots = mutableMapOf<Long, SportSectionSlot>()
     val sectionRequests = mutableListOf<Long>()
-    val sections = SportSectionsHolder(Sections(), scope)
+    val sections = SportSectionsHolder(Sections(), SportData, scope)
 
     /**
      * Only [holder], for a graph whose academic clock comes from another test module: what the schedule root's sport

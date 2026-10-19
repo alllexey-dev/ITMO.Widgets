@@ -34,6 +34,7 @@ import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.rows.Vote
 import dev.alllexey.itmowidgets.designsystem.components.rows.VotePill
 import dev.alllexey.itmowidgets.designsystem.components.rows.voteOf
+import dev.alllexey.itmowidgets.designsystem.kit.overlap
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.displayName
 import dev.alllexey.itmowidgets.shared.compose.strings.Res

@@ -58,6 +58,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.kit.ValueWithSource
 import dev.alllexey.itmowidgets.designsystem.kit.ink
+import dev.alllexey.itmowidgets.designsystem.kit.overlap
 import dev.alllexey.itmowidgets.designsystem.kit.tabular
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookBarsNotice
@@ -95,7 +96,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_history
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -315,9 +316,10 @@ internal fun BarsOfferRow(onConnect: () -> Unit, onHide: (() -> Unit)? = null) {
 }
 
 /**
- * A BARS row of a group: the icon tile, the [title] and [subtitle] over the [action] text button, the cross at the top
- * end with [onHide]. The text takes the whole width but the cross and the button sits under it, so a narrow phone or a
- * large font never squeezes the title into a column that breaks inside words.
+ * A BARS row of a group on the list-row grid, top-aligned as an M3 multi-line item: the icon tile, the [title] (and
+ * [subtitle]) and the cross at the end with [onHide] share the top edge; the [action] text button sits under the title
+ * with its label on the title's edge, its 48 dp target reaching into the space around it. The text takes the whole
+ * width, so a narrow phone or a large font never squeezes the title into a column that breaks inside words.
  */
 @Composable
 private fun BarsRow(
@@ -329,27 +331,38 @@ private fun BarsRow(
     subtitle: String? = null,
     onHide: (() -> Unit)? = null,
 ) {
+    val spacing = ItmoTheme.spacing
+    // The text button centres its label in the 48 dp target; this is the space above and below the label.
+    val labelInset = with(LocalDensity.current) { (spacing.touchTarget - ItmoTheme.typography.labelLarge.lineHeight.toDp()) / 2 }
+        .coerceAtLeast(0.dp)
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(start = ItmoTheme.spacing.cardPadding, end = if (onHide != null) ItmoTheme.spacing.related else ItmoTheme.spacing.cardPadding)
-            .padding(top = ItmoTheme.spacing.content, bottom = ItmoTheme.spacing.related),
-        horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+            .padding(start = spacing.cardPadding, end = if (onHide != null) spacing.related else spacing.cardPadding)
+            .padding(vertical = spacing.content),
+        horizontalArrangement = Arrangement.spacedBy(spacing.content),
     ) {
         IconTile(icon, iconTone)
-        Column(Modifier.weight(1f).padding(top = ItmoTheme.spacing.compact)) {
+        Column(Modifier.weight(1f)) {
             Text(title, style = ItmoTheme.typography.bodyLarge)
             if (subtitle != null) {
                 Text(subtitle, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
             }
-            // The label lines up with the title; the button keeps its touch area around it.
-            TextButton(onClick = onAction, Modifier.offset(x = -ButtonDefaults.TextButtonContentPadding.calculateStartPadding(LayoutDirection.Ltr))) {
+            TextButton(
+                onClick = onAction,
+                Modifier.overlap(
+                    top = labelInset - spacing.related,
+                    bottom = labelInset,
+                    start = ButtonDefaults.TextButtonContentPadding.calculateStartPadding(LayoutDirection.Ltr),
+                ),
+            ) {
                 Text(action)
             }
         }
         if (onHide != null) {
-            // Centred on the icon tile: the touch target is taller than the tile.
-            IconButton(onClick = onHide, Modifier.offset(y = (IconTileHeight - ItmoTheme.spacing.touchTarget) / 2)) {
+            // The button's 40 dp ring is as tall as the tile and starts with it.
+            val ring = (spacing.touchTarget - IconTileHeight) / 2
+            IconButton(onClick = onHide, Modifier.overlap(top = ring, bottom = ring)) {
                 Icon(
                     painterResource(KitRes.drawable.ic_close),
                     contentDescription = stringResource(Res.string.recordbook_bars_hide),

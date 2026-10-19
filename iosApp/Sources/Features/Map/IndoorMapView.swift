@@ -14,6 +14,9 @@ struct IndoorMapView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> MLNMapView {
         let view = MLNMapView(frame: .zero)
+        // Until the first plan style loads the view would show MapLibre's default map or an empty white frame; the
+        // screen's background shows through instead.
+        view.alpha = 0
         view.delegate = context.coordinator
         view.minimumZoomLevel = 16
         view.maximumZoomLevel = 22
@@ -102,6 +105,7 @@ struct IndoorMapView: UIViewRepresentable {
         nonisolated func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
             MainActor.assumeIsolated {
                 self.style = style
+                mapView.alpha = 1
                 addSprites(to: style)
                 update(style)
                 // Loading another building's style may reset the camera: frame it and its room or step again.

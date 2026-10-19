@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Owner polish pack (2026-10-19)
+
+- The lesson sheet's `Друзья на паре` header keeps the usual gap above the list, the BARS row is top-aligned with its button under the title, the person card says `Было у вас осенью 2025` for a subject of an earlier term instead of `Ведёт у вас`, the campus map opens in the theme's background instead of a white frame, snackbars and banners last 2 s (5 s with an action), and a section change reloads the queue entries at once.
+
 ### iOS framework without Compose (2026-10-19)
 
 - On iOS, Kotlin text (notifications, widget files, shares, the widgets gallery) comes from the app's string tables through Swift, and the app no longer carries the Compose resources (ADR 0035, proposed).

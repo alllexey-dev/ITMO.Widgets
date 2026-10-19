@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.DisplayMetrics
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
@@ -35,6 +37,7 @@ import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.MapLibreMapOptions
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
@@ -48,20 +51,25 @@ import org.maplibre.android.style.sources.GeoJsonSource
  * The native plan (MapLibre Android) of [scene]: the style is loaded once per building and theme (the dark plan in a
  * dark app theme), the floor switches by the shared layer filters, the route and the selection replace their GeoJSON,
  * and a tap reports the room under it. The style and the icons are built off the main thread; a spinner shows until
- * the style has loaded.
+ * the style has loaded, over the theme's background until the first one has, so the first frame never flashes white.
  */
 @SuppressLint("ClickableViewAccessibility")
 @Composable
 fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val background = ItmoTheme.colorScheme.background
     val mapView = remember {
         MapLibre.getInstance(context)
-        MapView(context).apply { onCreate(null) }
+        // Until its first full frame the view shows this colour; MapLibre's default is a light beige.
+        val options = MapLibreMapOptions.createFromAttributes(context).foregroundLoadColor(background.toArgb())
+        MapView(context, options).apply { onCreate(null) }
     }
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
     var style by remember { mutableStateOf<Style?>(null) }
     var sprites by remember { mutableStateOf<Map<String, Bitmap>?>(null) }
     var framed by remember { mutableStateOf<String?>(null) }
+    /** A style has loaded once; until then the theme's background covers the view. */
+    var shown by remember { mutableStateOf(false) }
     val tap by rememberUpdatedState(onRoomTap)
     val dark = ItmoTheme.colorScheme.background.luminance() < HALF
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -118,7 +126,10 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
         }
         val json = withContext(Dispatchers.Default) { CampusMapStyle.json(scene, dark) }
         val builder = icons.entries.fold(Style.Builder().fromJson(json)) { b, (name, icon) -> b.withImage(name, icon) }
-        loaded.setStyle(builder) { style = it }
+        loaded.setStyle(builder) {
+            style = it
+            shown = true
+        }
     }
     LaunchedEffect(style, scene.level, scene.route, scene.selection) {
         val current = style ?: return@LaunchedEffect
@@ -165,6 +176,8 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
     }
     Box(modifier) {
         AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
+        // The first style covered in the theme: an empty map (no style yet) clears to white.
+        if (!shown) Box(Modifier.fillMaxSize().background(background))
         if (style == null) CircularProgressIndicator(Modifier.align(Alignment.Center))
     }
 }

@@ -72,6 +72,8 @@ icons are bundled (`src/androidMain/assets/map_sprites` of `:shared:feature-map`
 `library` and `studoffice` recoloured from the campus app's orange to the teal of their rooms) and added at a pixel
 ratio of 3. Floors and the selected room switch by the filters `CampusMapStyle.filters` returns. The map shows no
 caption, MapLibre logo or attribution button; the plans' source and the licences are in Settings, `Лицензии`.
+Until the first style has loaded the view shows the theme's background (Android: MapLibre's load colour and a cover;
+iOS: the view stays transparent), never MapLibre's default map or a white frame.
 
 ## Data
 

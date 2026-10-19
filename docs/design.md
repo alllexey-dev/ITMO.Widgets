@@ -298,6 +298,9 @@ description and optional action: the kit's `ContentState` and
   filled; a text button is fine in a compact secondary message.
 - A refresh error with data on screen keeps the data and shows a snackbar with
   retry. Toasts are not used for recoverable errors.
+- Snackbars go through the kit's `ItmoSnackbarHost`: 2 s for a plain confirmation, 5 s with an action,
+  whatever the call asks; an indefinite one waits for its answer. iOS banners stay
+  `SettingsMessageBanner.lifetime` (2 s).
 - One state drives the whole area, so list and placeholder switch in one frame;
   no message under the previous list on an intermediate frame.
 

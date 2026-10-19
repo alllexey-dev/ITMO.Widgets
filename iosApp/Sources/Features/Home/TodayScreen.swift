@@ -37,7 +37,7 @@ struct TodayScreen: View {
             if let message {
                 SettingsMessageBanner(text: message.text)
                     .task(id: message.id) {
-                        try? await Task.sleep(for: .seconds(3))
+                        try? await Task.sleep(for: SettingsMessageBanner.lifetime)
                         if self.message?.id == message.id { self.message = nil }
                     }
             }

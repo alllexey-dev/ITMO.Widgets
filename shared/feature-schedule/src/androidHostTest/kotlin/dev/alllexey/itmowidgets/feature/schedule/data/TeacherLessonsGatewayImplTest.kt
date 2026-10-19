@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.feature.schedule.data.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.StudyTerm
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.PERSONAL_SCHEDULE_PATH
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.scheduleMyItmoClient
@@ -92,6 +93,19 @@ class TeacherLessonsGatewayImplTest {
     }
 
     @Test
+    fun `a subject not taught in the current term keeps the term of its newest lesson`() = runTest {
+        days[WEEKS[0].start] = listOf(day("2026-10-13", lesson(11, "Новое", TEACHER)))
+        days[WEEKS[2].start] = listOf(day("2026-03-03", lesson(21, "Весеннее", TEACHER)))
+        days[WEEKS[4].start] = listOf(day("2025-12-02", lesson(31, "Осеннее", TEACHER)))
+        days[WEEKS[5].start] = listOf(day("2025-09-23", lesson(41, "Весеннее", TEACHER)))
+
+        val lessons = (gateway().taughtBy(TEACHER).toList().last() as AppResult.Success).value
+
+        assertEquals(listOf("Новое", "Весеннее", "Осеннее"), lessons.subjects)
+        assertEquals(mapOf("Весеннее" to StudyTerm(2026, autumn = false), "Осеннее" to StudyTerm(2025, autumn = true)), lessons.past)
+    }
+
+    @Test
     fun `lessons come as the weeks answer with newer weeks first`() = runTest {
         WEEKS.forEach { gates[it.start] = CountDownLatch(1) }
         days[WEEKS.last().start] = listOf(day("2023-09-26", lesson(41, "Старое", TEACHER)))
@@ -100,9 +114,10 @@ class TeacherLessonsGatewayImplTest {
         val collecting = launch { gateway().taughtBy(TEACHER).collect(emissions::send) }
 
         gates.getValue(WEEKS.last().start).countDown()
-        assertEquals(AppResult.Success(TeacherLessons(setOf(41L), listOf("Старое"))), emissions.receive())
+        val old = mapOf("Старое" to StudyTerm(2023, autumn = true))
+        assertEquals(AppResult.Success(TeacherLessons(setOf(41L), listOf("Старое"), old)), emissions.receive())
         gates.getValue(WEEKS[0].start).countDown()
-        val both = AppResult.Success(TeacherLessons(setOf(11L, 41L), listOf("Новое", "Старое")))
+        val both = AppResult.Success(TeacherLessons(setOf(11L, 41L), listOf("Новое", "Старое"), old))
         assertEquals(both, emissions.receive())
         gates.values.forEach(CountDownLatch::countDown)
         collecting.join()

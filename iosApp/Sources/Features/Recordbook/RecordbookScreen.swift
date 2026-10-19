@@ -251,8 +251,8 @@ struct RecordbookBarsOfferRow: View {
     }
 }
 
-/// A BARS row of a group: the icon tile, the title and subtitle over the action, the cross at the top end with
-/// `hide`. The text takes the whole width but the cross and the button sits under it, so a narrow phone or a large
+/// A BARS row of a group, top-aligned as a multi-line list row: the icon tile, the title and subtitle over the action
+/// and the cross at the end with `hide` (as tall as the tile) share the top edge. The text takes the whole width but the cross and the button sits under it, so a narrow phone or a large
 /// Dynamic Type size never squeezes the title into a column that breaks inside words.
 private struct RecordbookBarsRow: View {
     let title: String
@@ -274,10 +274,8 @@ private struct RecordbookBarsRow: View {
                 Button(action, action: perform)
                     .buttonStyle(.borderless)
                     .itmoTint()
-                    .padding(.top, ItmoSpacing.compact)
+                    .padding(.top, ItmoSpacing.related)
             }
-            // The first line sits on the tile's centre line.
-            .padding(.top, 4)
             .frame(maxWidth: .infinity, alignment: .leading)
             if let hide {
                 Button(action: hide) {

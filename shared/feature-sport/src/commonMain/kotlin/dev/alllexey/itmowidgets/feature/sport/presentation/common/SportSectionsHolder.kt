@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.sport.domain.model.MySportSection
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
+import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportSectionRepository
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import kotlinx.coroutines.CoroutineScope
@@ -36,10 +37,12 @@ data class SportSectionsState(
 /**
  * Sections for the whole app (DECISIONS.md, Спорт, «Секция»): `Моё` and every lesson sheet read and change them through
  * this one holder, so a switch in a sheet shows in `Моё` at once. It outlives every screen and holds no user data:
- * the repository does, and its session cleaner clears it.
+ * the repository does, and its session cleaner clears it. Backend queues and cancels a section's dates inside the
+ * section request, so a change that went through reloads the queue entries right away.
  */
 class SportSectionsHolder(
     private val repository: SportSectionRepository,
+    private val queues: SportDataRepository,
     private val scope: CoroutineScope,
 ) {
     private val slots = MutableStateFlow<Map<Long, SportSectionSlot>>(emptyMap())
@@ -78,6 +81,7 @@ class SportSectionsHolder(
             val subscription = slot.subscriptionId
             val result = if (subscription == null) repository.create(lessonId) else repository.stop(subscription)
             notify(result, if (subscription == null) SportStrings.sport_section_made else SportStrings.sport_section_stopped)
+            if (result is AppResult.Success) queues.refreshSportQueueEntries()
             fetchSlots(slots.value.keys)
             busyLessons.update { it - lessonId }
         }
@@ -94,7 +98,9 @@ class SportSectionsHolder(
         if (sectionId in busySections.value) return
         scope.launch {
             busySections.update { it + sectionId }
-            notify(change(), done)
+            val result = change()
+            notify(result, done)
+            if (result is AppResult.Success) queues.refreshSportQueueEntries()
             if (done != null) fetchSlots(slots.value.keys)
             busySections.update { it - sectionId }
         }

@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.schedule.StudyTerm
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherNowLesson
 import dev.alllexey.itmowidgets.core.schedule.lessonTypeName
@@ -126,6 +127,23 @@ class UserProfileStateTest {
     }
 
     @Test
+    fun aSubjectOfAnEarlierTermSaysWhenItWasInsteadOfTheTeacherTeachingNow() {
+        val past = mapOf("Программирование" to StudyTerm(2025, autumn = true), "Дискретная математика" to StudyTerm(2026, autumn = false))
+        val taught = ProfilePart.Ready(TeacherLessons(setOf(1L), listOf("Алгоритмы", "Дискретная математика", "Программирование"), past))
+
+        val card = content(state(ProfilePart.Ready(teacher), ProfilePart.Ready(social), ProfilePart.Ready(reviews), taught))
+
+        assertEquals(
+            listOf(
+                TaughtSubject("Алгоритмы", UiText.Res(SocialStrings.person_teaches_you)),
+                TaughtSubject("Дискретная математика", UiText.Res(SocialStrings.person_taught_you_spring, listOf("2026"))),
+                TaughtSubject("Программирование", UiText.Res(SocialStrings.person_taught_you_autumn, listOf("2025"))),
+            ),
+            card.teaching?.subjects,
+        )
+    }
+
+    @Test
     fun whoTeachesTheViewerComesTeachingFirstWithTheReviewButton() {
         val both = teacher.copy(education = listOf(PersonEducation("M4150", 1, "ПИиКТ")))
         val writable = teacherReviews(5, canWrite = true).copy(knownTeacher = true)
@@ -134,7 +152,7 @@ class UserProfileStateTest {
         val card = content(state(ProfilePart.Ready(both), ProfilePart.Ready(social), ProfilePart.Ready(writable), taught))
 
         assertTrue(card.teachingFirst)
-        assertEquals(listOf("Алгоритмы"), card.teaching?.subjects)
+        assertEquals(listOf("Алгоритмы"), card.teaching?.subjects?.map { it.name })
         assertEquals(listOf(CardAction.WRITE_REVIEW, CardAction.ADD_FRIEND), card.actions)
 
         val notTaught = content(state(ProfilePart.Ready(both), ProfilePart.Ready(social), ProfilePart.Ready(writable)))

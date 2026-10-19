@@ -143,7 +143,8 @@ builds it:
   connection, for a pure teacher or on the own card. `onAction` ignores an action the card does not offer.
 - `Преподавание` (`TeachingBlock`) for anyone with a position, lessons with the viewer or reviews: the lesson they
   give now or next today as the card's hero (`TeacherNowLine` from the optional `TeacherNowGateway`, fetched with
-  the lessons and dropped with them at the deadline), the subjects they teach the viewer (`Ведёт у вас`), `Где найти`
+  the lessons and dropped with them at the deadline), the subjects they teach the viewer (`Ведёт у вас` in the current term, `Было у вас осенью 2025` or `весной 2026`
+  for an earlier one, from `TeacherLessons.past`), `Где найти`
   per room, then the reviews. `Учёба` (`StudyBlock`) for a student or a
   user with open rows: the groups (`M3206, 2 курс` with the faculty), then `Расписание`, `Спорт` and `Друзья` as
   Backend's viewer capabilities allow (all open to self); they lead to `AppRoutes.UserSchedule`, `UserSport` and
