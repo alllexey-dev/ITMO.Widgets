@@ -1,8 +1,9 @@
-// Test helpers for the features' commonTest and the screenshot harness; core-free.
+// Test helpers for the features' commonTest and the screenshot harness; core-free. The Compose helpers (UI test,
+// semantics checks, resource waits, the preview screenshots) are Android-only (ADR 0035): iOS tests get no Compose.
 // Every consumer test classpath gets the libraries below through `api`, so a test module needs only
 // `project(":shared:testing")`.
 plugins {
-    id("itmowidgets.cmp.ui")
+    id("itmowidgets.cmp.android")
     id("itmowidgets.testing")
 }
 
@@ -15,9 +16,9 @@ kotlin {
             api(libs.turbine)
             api(libs.okio.fakefilesystem)
             api(libs.ktor.client.mock)
-            api(libs.compose.ui.test)
         }
         androidMain.dependencies {
+            api(libs.compose.ui.test)
             api(libs.junit)
             api(libs.robolectric)
             // The preview screenshot harness (PreviewScreenshotTest) and the :app XML reference captures. The kit

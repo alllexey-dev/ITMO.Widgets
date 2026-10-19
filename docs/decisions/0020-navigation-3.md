@@ -18,8 +18,10 @@ is laid out under `NavDisplay`, so pushed screens cover it and the predictive Ba
 
 **Decision (2026-10-03).** The Android app has one Navigation 3 Compose shell in
 `MainActivity` (`app/shell/AppShell.kt`).
-- Routes are `@Serializable` keys on `navigation3-runtime` in `commonMain`; a key
+- Routes are `@Serializable` `AppRoute` keys in `commonMain`; a key
   declares its kind (tab root, overlay screen, sheet, dialog) and its sheet policy.
+  Since ADR 0035 they extend no Nav3 type: the shell shows them as
+  `NavEntry<AppRoute>`, so `navigation3-runtime` stays in `:app`.
   Feature keys join one polymorphic `SerializersModule`.
 - Sheets and dialogs are overlay scenes: a bottom-sheet scene strategy on
   `ModalBottomSheet` and `DialogSceneStrategy`. Results go back through the

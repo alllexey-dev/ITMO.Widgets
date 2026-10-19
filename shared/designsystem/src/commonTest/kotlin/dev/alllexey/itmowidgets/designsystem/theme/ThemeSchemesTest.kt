@@ -7,6 +7,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeSeeds
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
@@ -61,7 +62,7 @@ class ThemeSchemesTest {
     @Test
     fun presetsKeepTheirOwnHue() {
         val presets = AccentColor.entries - AccentColor.WALLPAPER - AccentColor.BRAND - AccentColor.CUSTOM
-        assertEquals(presets.toSet(), PresetSeeds.keys)
+        assertEquals(presets.toSet(), ThemeSeeds.PRESETS.keys)
         for (dark in listOf(false, true)) {
             val primaries = presets.map { resolveColorScheme(ThemeSpec(accent = it), dark).primary }
             assertEquals(primaries.size, primaries.toSet().size)

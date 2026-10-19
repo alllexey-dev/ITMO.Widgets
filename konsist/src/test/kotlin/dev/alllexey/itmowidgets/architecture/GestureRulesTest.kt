@@ -23,7 +23,7 @@ class GestureRulesTest {
     fun `no code maps a tab to a page`() {
         // Routes, widgets, shortcuts and links name an AppTab, the bar selects one; nothing pages through the tabs.
         val tabCode = productionFiles
-            .filter { SHARED_COMMON_MAIN.containsMatchIn(it.projectPath) || it.projectPath.startsWith(APP_MAIN) }
+            .filter { SHARED_MAIN.containsMatchIn(it.projectPath) || it.projectPath.startsWith(APP_MAIN) }
             .filter { APP_TAB.containsMatchIn(it.text) }
             .requireAtLeast(MIN_TAB_FILES, "files that name AppTab")
         tabCode.assertFalse { TAB_INDEX.containsMatchIn(it.text) }
@@ -37,7 +37,7 @@ class GestureRulesTest {
     private companion object {
         const val APP_MAIN = "/app/src/main/"
         val SCANNED_MODULES = listOf("/app/", "/shared/")
-        val SHARED_COMMON_MAIN = Regex("""^/shared/[^/]+/src/commonMain/""")
+        val SHARED_MAIN = Regex("""^/shared/[^/]+/src/(commonMain|androidMain)/""")
 
         const val APP_SHELL = "/app/src/main/java/dev/alllexey/itmowidgets/app/shell/"
         const val MIN_TAB_FILES = 5

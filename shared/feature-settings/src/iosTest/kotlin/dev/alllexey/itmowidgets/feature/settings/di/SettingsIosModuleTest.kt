@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
@@ -22,10 +23,10 @@ import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
+import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.feature.settings.data.IosWidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
-import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
@@ -33,6 +34,8 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPageState
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsViewModel
 import kotlin.random.Random
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -66,7 +69,7 @@ class SettingsIosModuleTest {
     /** Koin's `verify()` is JVM-only; on Kotlin/Native every definition is resolved instead. */
     @OptIn(KoinInternalApi::class)
     @Test
-    fun everyDefinitionResolvesAndEveryPageGetsItsOwnViewModel() {
+    fun everyDefinitionResolvesAndEveryPageGetsItsViewModel() {
         val koin = graph()
         val definitions = koin.instanceRegistry.instances.values.map { it.beanDefinition }.distinct()
             // The ViewModels take their page or a port bound elsewhere; they are resolved below.
@@ -74,10 +77,13 @@ class SettingsIosModuleTest {
 
         definitions.forEach { definition -> koin.get<Any>(definition.primaryType, definition.qualifier) }
 
-        SettingsPage.entries.forEach { page ->
+        // SERVICES, PRIVACY and NOTIFICATIONS are screens of their own, with their own ViewModels.
+        (SettingsPage.entries - OWN_SCREENS).forEach { page ->
             val viewModel = koin.get<SettingsViewModel> { parametersOf(*settingsPageParameters(page.name).toTypedArray()) }
             assertEquals(page, viewModel.uiState.value.page)
         }
+        koin.get<ConnectionViewModel>()
+        koin.get<NotificationSettingsViewModel>()
         koin.get<DiagnosticsViewModel>()
         assertSame(IosPlatformCapabilities, koin.get<PlatformCapabilities>())
         assertFalse(koin.get<QuickSettingsTileAccess>().canRequestAdd())
@@ -95,15 +101,13 @@ class SettingsIosModuleTest {
     }
 
     @Test
-    fun theRootListsTheRecordbookPageSinceMarkTrackingShipped() {
+    fun theRootListsTheNotificationsPageWhereTheMarkChecksLive() {
         val koin = graph()
         val state = SettingsPageState(
             local = LocalSettings(),
-            sharing = SharingSettingsState.Disabled,
             notificationsGranted = true,
             hasCustomSpoiler = false,
-            imageBusy = false,
-            backgroundWorkRestricted = false
+            imageBusy = false
         )
 
         val pages = koin.get<SettingsPages>().forPage(SettingsPage.ROOT).sections(SettingsPage.ROOT, state)
@@ -111,7 +115,7 @@ class SettingsIosModuleTest {
             .filterIsInstance<SettingItem.Navigation>()
             .map { it.page }
 
-        assertTrue(SettingsPage.RECORDBOOK in pages)
+        assertTrue(SettingsPage.NOTIFICATIONS in pages)
         assertTrue(SettingsPage.MAINTENANCE in pages)
         koin.close()
     }
@@ -140,7 +144,8 @@ class SettingsIosModuleTest {
     /**
      * The account module's types (`accountIosModule`, `authDataModule`), the onboarding flag, the recordbook graph's
      * mark tracking (`recordbookModule`), the schedule data graph's change tracking and calendar sync
-     * (`scheduleDataModule`), the app's directories under [root], and no main queue (the test blocks it).
+     * (`scheduleDataModule`), the social repository (`socialModule`), the app's directories under [root], and no main
+     * queue (the test blocks it).
      */
     private fun standIns(): Module = module {
         single<DemoMode> { FakeDemoMode(active = true) }
@@ -162,6 +167,7 @@ class SettingsIosModuleTest {
         single<MarkTracking> { FakeMarkTracking() }
         single<ScheduleChangeTracking> { FakeScheduleChangeTracking() }
         single<CalendarSync> { FakeCalendarSync() }
+        single<SocialRepository> { FakeSocialRepository() }
         single<AppDirectories> {
             object : AppDirectories {
                 override val files = root / "files"
@@ -190,5 +196,6 @@ class SettingsIosModuleTest {
     private companion object {
         const val ORIGIN = "https://dev.widgets.alllexey.dev"
         const val VERSION = "2.3-test"
+        val OWN_SCREENS = setOf(SettingsPage.SERVICES, SettingsPage.PRIVACY, SettingsPage.NOTIFICATIONS)
     }
 }

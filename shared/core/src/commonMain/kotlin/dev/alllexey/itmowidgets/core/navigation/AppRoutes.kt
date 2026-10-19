@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.core.navigation
 
-import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.PolymorphicModuleBuilder
 import kotlinx.serialization.modules.SerializersModule
@@ -276,13 +275,13 @@ object AppRoutes {
 typealias AppRouteRegistration = PolymorphicModuleBuilder<AppRoute>.() -> Unit
 
 /**
- * One module for every key: the core keys of [AppRoutes] plus each feature's [featureRoutes]. Registered under
- * [NavKey] (Nav3's back stacks) and [AppRoute] (the shell's own state: [ShellBackStack], [RouteQueue]).
+ * One module for every key: the core keys of [AppRoutes] plus each feature's [featureRoutes], registered under
+ * [AppRoute] for the shell's own state ([ShellBackStack], [RouteQueue]). Nav3 takes the keys as `NavEntry<AppRoute>`,
+ * so no Nav3 type reaches common code.
  */
 fun appRouteSerializersModule(vararg featureRoutes: AppRouteRegistration): SerializersModule {
     val registrations = listOf(AppRoutes.registration) + featureRoutes
     return SerializersModule {
-        polymorphic(NavKey::class) { registrations.forEach { it() } }
         polymorphic(AppRoute::class) { registrations.forEach { it() } }
     }
 }

@@ -182,6 +182,7 @@ dependencies {
     // @Preview of the Compose screens that stay in :app (debug tools); DebugToolsScreenshotTest renders them.
     implementation(libs.compose.ui.tooling.preview)
     // The Navigation 3 shell: NavDisplay and scenes, and a ViewModel store per entry.
+    implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     testImplementation(project(":shared:testing"))

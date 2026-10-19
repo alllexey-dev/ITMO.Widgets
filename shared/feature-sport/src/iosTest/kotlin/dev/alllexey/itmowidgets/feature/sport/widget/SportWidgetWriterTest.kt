@@ -4,13 +4,13 @@ import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
+import dev.alllexey.itmowidgets.core.settings.widgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.KeyTextResolver
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
-import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetKind
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSampleLabels
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSampleState

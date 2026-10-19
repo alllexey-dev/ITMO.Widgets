@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
+import dev.alllexey.itmowidgets.core.settings.seedArgb
 
 /**
  * The wallpaper's colours where the platform has them (Android 12+): the system's own scheme of each mode, as the
@@ -42,32 +43,12 @@ class WallpaperPalette(val light: ColorScheme, val dark: ColorScheme, val seedAr
  */
 fun resolveColorScheme(spec: ThemeSpec, dark: Boolean, wallpaper: WallpaperPalette? = null): ColorScheme {
     val system = wallpaper?.takeIf { spec.followsSystemScheme }?.let { if (dark) it.dark else it.light }
-    val scheme = system ?: themedColorScheme(spec.seedArgb(wallpaper), spec.style, spec.contrast, dark)
+    val scheme = system ?: themedColorScheme(spec.seedArgb(wallpaper?.seedArgb), spec.style, spec.contrast, dark)
     return if (dark && spec.pureBlack) scheme.withPureBlack() else scheme
 }
 
-/** The seed [spec] builds from: the preset's, the user's own, the wallpaper's or the brand blue. */
-internal fun ThemeSpec.seedArgb(wallpaper: WallpaperPalette?): Int = when (accent) {
-    AccentColor.WALLPAPER -> wallpaper?.seedArgb ?: BRAND_SEED
-    AccentColor.BRAND -> BRAND_SEED
-    AccentColor.CUSTOM -> customArgb
-    else -> PresetSeeds.getValue(accent)
-}
-
-/**
- * The preset seeds: hues around the brand blue. TonalSpot keeps only the hue, so a grey seed would come out tinted and
- * none is offered; Монохром is the grey look.
- */
-internal val PresetSeeds: Map<AccentColor, Int> = mapOf(
-    AccentColor.TEAL to 0xFF009688.toInt(),
-    AccentColor.GREEN to 0xFF43A047.toInt(),
-    AccentColor.AMBER to 0xFFFFA000.toInt(),
-    AccentColor.RED to 0xFFE53935.toInt(),
-    AccentColor.PINK to 0xFFD81B60.toInt(),
-    AccentColor.PURPLE to 0xFF8E24AA.toInt(),
-)
-
-private val ThemeSpec.followsSystemScheme: Boolean
+/** Whether [resolveColorScheme] takes the wallpaper's scheme unchanged (the widgets' palette too). */
+internal val ThemeSpec.followsSystemScheme: Boolean
     get() = accent == AccentColor.WALLPAPER && style == ThemeStyle.TONAL_SPOT && contrast == ThemeContrast.STANDARD
 
 /** MaterialKolor's scheme from [argb]; TonalSpot at standard contrast is the brand scheme's recipe. */
