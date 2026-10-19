@@ -10,18 +10,14 @@ import org.jetbrains.compose.resources.ResourcesExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
- * A shared module with Compose UI: itmowidgets.kmp.library plus Compose Multiplatform, the Compose compiler and
- * `composeResources` served through Android resources. The `Res` class lives in the module namespace and is public
- * only in the modules other modules read strings and icons from. With [ios] false (`itmowidgets.cmp.kit`) the module
- * has the Android target only: the Compose kit and the Compose strings, which iOS never links (ADR 0035).
+ * `itmowidgets.cmp.kit`: the Compose kit and the Compose strings, which iOS never links (ADR 0035).
+ * itmowidgets.kmp.android (the Android target only) plus Compose Multiplatform, the Compose compiler and
+ * `composeResources` served through Android resources. The `Res` class lives in the module namespace and is public, since every feature's Android UI
+ * reads its strings and icons. Features use itmowidgets.cmp.android instead.
  */
-open class CmpUiConventionPlugin : Plugin<Project> {
-
-    /** Whether the module has the iOS targets. */
-    protected open val ios: Boolean = true
-
+class CmpKitConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
-        pluginManager.apply(if (ios) "itmowidgets.kmp.library" else "itmowidgets.kmp.android")
+        pluginManager.apply("itmowidgets.kmp.android")
         pluginManager.apply("org.jetbrains.compose")
         pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
         pluginManager.apply("itmowidgets.strings")
@@ -46,18 +42,9 @@ open class CmpUiConventionPlugin : Plugin<Project> {
         extensions.configure<ComposeExtension> {
             (this as ExtensionAware).extensions.configure<ResourcesExtension> {
                 packageOfResClass = sharedNamespace
-                publicResClass = path in PUBLIC_RES_MODULES
+                publicResClass = true
                 generateResClass = ResourcesExtension.ResourceClassGeneration.Always
             }
         }
     }
-
-    private companion object {
-        val PUBLIC_RES_MODULES = setOf(":shared:compose-strings", ":shared:designsystem")
-    }
-}
-
-/** `itmowidgets.cmp.kit`: [CmpUiConventionPlugin] on the Android target only. */
-class CmpKitConventionPlugin : CmpUiConventionPlugin() {
-    override val ios: Boolean = false
 }

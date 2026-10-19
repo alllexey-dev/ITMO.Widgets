@@ -29,15 +29,14 @@ document describes the current state.
 
 `settings.gradle.kts` includes the projects below. `build-logic/` is an
 included build with the convention plugins (`itmowidgets.kmp.library`,
-`itmowidgets.cmp.ui`, `itmowidgets.cmp.android`, `itmowidgets.testing`,
-`itmowidgets.strings`, `itmowidgets.android.app`); versions live in
-`gradle/libs.versions.toml`. A feature applies `itmowidgets.cmp.android`:
-Compose UI in `androidMain`, strings from `:shared:compose-strings` only, so
-its iOS klib has no Compose. `:shared:designsystem` and
-`:shared:compose-strings` apply `itmowidgets.cmp.kit`, which is
-`itmowidgets.cmp.ui` with the Android target only
-([ADR 0035](decisions/0035-ios-without-compose.md)). `:shared:feature-map`
-still applies `itmowidgets.cmp.ui` until its screens move.
+`itmowidgets.kmp.android`, `itmowidgets.cmp.kit`, `itmowidgets.cmp.android`,
+`itmowidgets.testing`, `itmowidgets.strings`, `itmowidgets.android.app`);
+versions live in `gradle/libs.versions.toml`. Every feature applies
+`itmowidgets.cmp.android`: Compose UI in `androidMain`, strings from
+`:shared:compose-strings` only, so its iOS klib has no Compose.
+`:shared:designsystem` and `:shared:compose-strings` apply
+`itmowidgets.cmp.kit`: Compose Multiplatform with its resources on the Android
+target only ([ADR 0035](decisions/0035-ios-without-compose.md)).
 
 | Module | Holds |
 |---|---|
@@ -284,8 +283,7 @@ notifications, the tile), with frozen keys in `scripts/strings-frozen-keys.txt`.
   a copy of every module's catalog files into one public CMP `Res` and
   resolves `UiText` in Compose (`asString()`) and in suspend code
   (`resolve()`); every Compose screen reads its strings from that `Res`.
-  Feature modules compile no `Res` of their own (the campus map still does
-  until its screens move).
+  Feature modules compile no `Res` of their own.
 - Android Views, widgets and notifications resolve `UiText` with
   `resolve(context)` through the generated key -> `R` table
   (`ExportedStringIds`), Swift with `UiText.resolved` from the `.xcstrings`

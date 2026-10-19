@@ -35,10 +35,6 @@ gradlePlugin {
             id = "itmowidgets.cmp.kit"
             implementationClass = "dev.alllexey.itmowidgets.buildlogic.CmpKitConventionPlugin"
         }
-        register("cmpUi") {
-            id = "itmowidgets.cmp.ui"
-            implementationClass = "dev.alllexey.itmowidgets.buildlogic.CmpUiConventionPlugin"
-        }
         register("cmpAndroid") {
             id = "itmowidgets.cmp.android"
             implementationClass = "dev.alllexey.itmowidgets.buildlogic.CmpAndroidConventionPlugin"

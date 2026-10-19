@@ -1,11 +1,18 @@
 // The campus map: indoor plans, the router ported from itmo-map-web, room matching (docs/features/map.md).
-// Features read core, designsystem and compose-strings, never another feature.
+// Features read core, designsystem and compose-strings, never another feature. Compose UI and the map icons
+// (`assets/map_sprites`, which the iOS bundle references too) are Android-only (ADR 0035).
 plugins {
-    id("itmowidgets.cmp.ui")
+    id("itmowidgets.cmp.android")
     id("itmowidgets.testing")
 }
 
 kotlin {
+    android {
+        // The map icons in src/androidMain/assets.
+        androidResources {
+            enable = true
+        }
+    }
     sourceSets {
         commonMain.dependencies {
             implementation(project(":shared:core"))
@@ -15,9 +22,6 @@ kotlin {
             api(libs.koin.core.viewmodel)
         }
         androidMain.dependencies {
-            // The Compose kit and strings are Android-only modules (ADR 0035).
-            implementation(project(":shared:designsystem"))
-            implementation(project(":shared:compose-strings"))
             // The mirror's engine and the native map view of the Android screen.
             implementation(libs.ktor.client.okhttp)
             implementation(libs.maplibre.android)

@@ -1,7 +1,6 @@
 # 0035 The iOS framework links no Compose
 
-**Status.** Proposed (2026-10-19). Done for core and every feature but the campus map, whose screens move once its
-open work lands; until then `:shared:feature-map` keeps `itmowidgets.cmp.ui` and brings Compose into the framework.
+**Status.** Proposed (2026-10-19). Implemented for core and every feature module; the iOS framework links no Compose.
 
 **Decision.** After ADR 0031 no iOS screen draws Compose, so the `Shared` framework stops carrying Compose
 Multiplatform at all.
