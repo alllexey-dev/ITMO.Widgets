@@ -81,7 +81,8 @@ data class RecordbookSection(val title: UiText, val rows: List<RecordbookRow>)
 /**
  * One subject: [name], the reason or kind in [meta] (in [metaTone]), one [value] over its quiet [source] (`БАРС`,
  * `My ITMO`, `таблица`, `Спорт`; with the date of an old BARS answer when [stale]), the new-mark dot ([unread]) and
- * where a tap leads. [hasSources] rows open the sources sheet from their source.
+ * where a tap leads. [hasSources] rows open the sources sheet from their source. [pending] while the first BARS answer
+ * of the period runs: the number shown is My ITMO's and may change, so it pulses.
  */
 data class RecordbookRow(
     val id: Long,
@@ -94,6 +95,7 @@ data class RecordbookRow(
     val unread: Boolean,
     val target: RecordbookTarget,
     val hasSources: Boolean,
+    val pending: Boolean = false,
 )
 
 sealed interface RecordbookValue {

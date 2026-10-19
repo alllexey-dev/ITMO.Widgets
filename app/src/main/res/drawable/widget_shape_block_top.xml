@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- widget_shape_block with a flat bottom: the elapsed part of the current lesson ends at the now line. -->
+<!-- widget_shape_block inset by 3dp with a flat bottom: the elapsed part of the current lesson ends at the now line. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
@@ -8,6 +8,6 @@
     <corners
         android:bottomLeftRadius="0dp"
         android:bottomRightRadius="0dp"
-        android:topLeftRadius="12dp"
-        android:topRightRadius="12dp" />
+        android:topLeftRadius="9dp"
+        android:topRightRadius="9dp" />
 </shape>

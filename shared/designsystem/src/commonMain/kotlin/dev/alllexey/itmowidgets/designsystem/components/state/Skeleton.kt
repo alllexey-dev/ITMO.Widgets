@@ -7,8 +7,13 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
@@ -17,6 +22,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -30,7 +38,7 @@ import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 
 /** The shape of the content a [Skeleton] stands in for, with `Widget.ItmoWidgets.Skeleton.*`'s row defaults. */
 enum class SkeletonStyle(internal val defaultRows: Int, internal val defaultRowHeight: Dp) {
-    /** An avatar circle with two text bars per row (`Skeleton.List`). */
+    /** An avatar in the kit's avatar shape with two text bars per row (`Skeleton.List`). */
     List(defaultRows = 6, defaultRowHeight = 64.dp),
 
     /** A filled card with a title bar and a shorter line (`Skeleton.Cards`). */
@@ -43,8 +51,10 @@ enum class SkeletonStyle(internal val defaultRows: Int, internal val defaultRowH
  * motion. Rows that do not fit the bounds are not drawn; TalkBack skips it.
  *
  * Under the iOS style the shapes and bars are UIKit's `systemFill` (a bar over a card is the fill twice, as a
- * placeholder over a filled cell) and a card has the inset group's corners; the geometry and the pulse stay.
+ * placeholder over a filled cell) and a card has the inset group's corners; the geometry and the pulse stay. The
+ * avatar takes `Avatar`'s shape: the cookie with [ItmoTheme.expressive], a circle otherwise.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun Skeleton(
     style: SkeletonStyle,
@@ -57,6 +67,7 @@ fun Skeleton(
     val surface = if (ios) ItmoTheme.iosColors.systemFill else ItmoTheme.colorScheme.surfaceVariant
     val bar = if (ios) surface else ItmoTheme.colorScheme.onSurfaceVariant.copy(alpha = BAR_ALPHA)
     val cardRadius = if (ios) IosMetrics.insetGroupRadius else CardRadius
+    val avatarShape = if (ItmoTheme.expressive) MaterialShapes.Cookie9Sided.toShape() else CircleShape
     val alpha = rememberPulseAlpha()
     Canvas(
         modifier
@@ -72,12 +83,23 @@ fun Skeleton(
             if (top + height > size.height - inset) break
             val area = RowArea(left = inset, top = top, width = size.width - 2 * inset, height = height)
             when (style) {
-                SkeletonStyle.List -> drawListRow(area, surface, bar)
+                SkeletonStyle.List -> drawListRow(area, avatarShape, surface, bar)
                 SkeletonStyle.Cards -> drawCard(area, surface, bar, cardRadius.toPx())
             }
             top += height + RowGap.toPx()
         }
     }
+}
+
+/**
+ * Content on screen whose fresher value is still loading (My ITMO's points while BARS answers): it pulses like a
+ * [Skeleton] while [active] and stands still otherwise or under reduced motion. Takes the same room either way, so
+ * nothing moves when the answer comes.
+ */
+@Composable
+fun LoadingPulse(active: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val alpha = if (active) rememberPulseAlpha() else null
+    Box(modifier.graphicsLayer { this.alpha = alpha?.value ?: 1f }) { content() }
 }
 
 private class RowArea(val left: Float, val top: Float, val width: Float, val height: Float)
@@ -94,10 +116,11 @@ private fun DrawScope.drawCard(area: RowArea, surface: Color, bar: Color, radius
     }
 }
 
-private fun DrawScope.drawListRow(area: RowArea, surface: Color, bar: Color) {
+private fun DrawScope.drawListRow(area: RowArea, avatarShape: Shape, surface: Color, bar: Color) {
     val avatar = minOf(AvatarSize.toPx(), area.height - AvatarClearance.toPx())
     val centerY = area.top + area.height / 2
-    drawCircle(surface, radius = avatar / 2, center = Offset(area.left + avatar / 2, centerY))
+    val outline = avatarShape.createOutline(Size(avatar, avatar), layoutDirection, this)
+    translate(area.left, centerY - avatar / 2) { drawOutline(outline, surface) }
     val textLeft = area.left + avatar + AvatarTextGap.toPx()
     val textWidth = area.left + area.width - textLeft
     val barHeight = ListBarHeight.toPx()

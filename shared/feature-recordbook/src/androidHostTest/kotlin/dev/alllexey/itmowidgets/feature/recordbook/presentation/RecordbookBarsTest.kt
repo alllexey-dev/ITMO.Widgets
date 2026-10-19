@@ -134,16 +134,29 @@ class RecordbookBarsTest {
         assertFalse(vm.uiState.value.row(42).stale)
     }
 
-    @Test fun `My ITMO is shown while BARS still loads`() = runTest {
+    @Test fun `My ITMO is shown pending while BARS still loads`() = runTest {
         preference.enabled = true
         val slow = CompletableDeferred<AppResult<List<RecordbookSubject>>>()
         bars.subjectLoader = { slow.await() }
         val vm = loaded(); advanceUntilIdle()
         assertFalse(vm.uiState.value.content.refreshing)
         assertEquals("75", vm.uiState.value.row(42).points)
+        assertTrue(vm.uiState.value.row(42).pending)
         assertNull(vm.uiState.value.content.barsNotice)
         slow.complete(AppResult.Success(listOf(barsSubject(rate = null)))); advanceUntilIdle()
         assertEquals("91,5", vm.uiState.value.row(42).points)
+        assertFalse(vm.uiState.value.row(42).pending)
+    }
+
+    @Test fun `a reload over an earlier BARS answer is not pending`() = runTest {
+        preference.enabled = true
+        val vm = loaded(); advanceUntilIdle()
+        val slow = CompletableDeferred<AppResult<List<RecordbookSubject>>>()
+        bars.subjectLoader = { slow.await() }
+        vm.refresh(RefreshMode.Pull); advanceUntilIdle()
+        assertEquals("91,5", vm.uiState.value.row(42).points)
+        assertFalse(vm.uiState.value.row(42).pending)
+        slow.complete(AppResult.Success(listOf(barsSubject(rate = null)))); advanceUntilIdle()
     }
 
     @Test fun `a BARS answer advances the snapshot with the journals whose checkpoints are known`() = runTest {

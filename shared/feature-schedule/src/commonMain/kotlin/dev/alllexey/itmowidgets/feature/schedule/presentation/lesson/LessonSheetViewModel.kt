@@ -53,6 +53,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -60,6 +61,9 @@ import kotlin.time.Duration.Companion.minutes
  * timetable lesson, or `ARG_SPORT`, an own sport queue), its newest found change, the friends on it and the tone of
  * its teacher's reviews (both behind the opt-in), and its subject from the [subjects] that know it. Re-evaluated every
  * minute for `идёт ещё 48 мин`.
+ *
+ * The action tiles never reflow once shown: they wait for the opt-in and the subject (at most [SUBJECT_WAIT]), and
+ * `Друзья` keeps its place while the friends load and when nobody is there.
  */
 class LessonSheetViewModel(
     savedStateHandle: SavedStateHandle,
@@ -76,9 +80,11 @@ class LessonSheetViewModel(
     private val sport: PendingSportDetailsArgs? = savedStateHandle.get<String>(ARG_SPORT)?.let(LessonSheetArgs::sport)
     private val sheet: Sheet = lesson?.let(::sheetOf) ?: sheetOf(checkNotNull(sport) { "The lesson sheet needs a lesson" })
 
-    private val friends = MutableStateFlow<List<UserSummary>>(emptyList())
+    private val friends = MutableStateFlow(if (lesson == null) Friends.Off else Friends.Unknown)
     private val level = MutableStateFlow<TeacherLevel?>(null)
-    private val subject = MutableStateFlow<LessonSubject?>(null)
+    private val subject = MutableStateFlow(
+        if (lesson?.subjectId == null || subjects.isEmpty()) SubjectLookup.Found(null) else SubjectLookup.Pending,
+    )
 
     private val change: Flow<ScheduleChange?> = lesson?.let { args ->
         val occurrence = LessonOccurrence(args.pairId, LocalDate.parse(args.date))
@@ -96,19 +102,31 @@ class LessonSheetViewModel(
 
     val uiState: StateFlow<LessonSheetUiState> = combine(clock, change, friends, level, subject) { now, change, friends, level, subject ->
         state(now, change, friends, level, subject)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), state(time.localNow(), null, emptyList(), null, null))
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        state(time.localNow(), null, friends.value, null, subject.value),
+    )
 
     init {
         viewModelScope.launch { loadFriends() }
         viewModelScope.launch { loadLevel() }
         viewModelScope.launch { loadSubject() }
+        viewModelScope.launch {
+            delay(SUBJECT_WAIT)
+            subject.compareAndSet(SubjectLookup.Pending, SubjectLookup.Late)
+        }
     }
 
     private suspend fun loadFriends() {
         val args = lesson ?: return
-        if (!customServices.isEnabled()) return
+        if (!customServices.isEnabled()) {
+            friends.value = Friends.Off
+            return
+        }
+        friends.value = Friends.Loading
         val found = friendsRepository.friendsOnLesson(args.pairId, LocalDate.parse(args.date))
-        if (found is AppResult.Success) friends.value = found.value
+        friends.value = Friends.Found((found as? AppResult.Success)?.value.orEmpty())
     }
 
     private suspend fun loadLevel() {
@@ -118,17 +136,18 @@ class LessonSheetViewModel(
     }
 
     private suspend fun loadSubject() {
-        val args = lesson ?: return
-        val id = args.subjectId ?: return
-        subject.value = subjects.firstNotNullOfOrNull { it.subject(id, args.subjectName, sheet.date) }
+        if (subject.value != SubjectLookup.Pending) return
+        val args = checkNotNull(lesson)
+        val id = checkNotNull(args.subjectId)
+        subject.value = SubjectLookup.Found(subjects.firstNotNullOfOrNull { it.subject(id, args.subjectName, sheet.date) })
     }
 
     private fun state(
         now: LocalDateTime,
         change: ScheduleChange?,
-        friends: List<UserSummary>,
+        friends: Friends,
         level: TeacherLevel?,
-        subject: LessonSubject?,
+        subject: SubjectLookup,
     ): LessonSheetUiState {
         val cancelled = change?.kind == ScheduleChangeKind.CANCELLED
         return LessonSheetUiState(
@@ -148,7 +167,8 @@ class LessonSheetViewModel(
                 SEPARATOR,
             ),
             address = sheet.address.takeIf { !sheet.online },
-            actions = actions(friends, subject),
+            actions = actions(friends, (subject as? SubjectLookup.Found)?.subject),
+            actionsPending = friends == Friends.Unknown || subject == SubjectLookup.Pending,
             changes = change?.let {
                 LessonSheetChanges(
                     summary = if (it.kind == ScheduleChangeKind.UPDATED) null else it.summary(),
@@ -167,7 +187,7 @@ class LessonSheetViewModel(
             },
             flow = lesson?.flowName,
             sport = sportRow(),
-            friends = friends,
+            friends = (friends as? Friends.Found)?.people.orEmpty(),
         )
     }
 
@@ -187,7 +207,7 @@ class LessonSheetViewModel(
         )
     }
 
-    private fun actions(friends: List<UserSummary>, subject: LessonSubject?): List<LessonAction> = buildList {
+    private fun actions(friends: Friends, subject: LessonSubject?): List<LessonAction> = buildList {
         lesson?.takeIf { !sheet.online && (sheet.room != null || sheet.address != null) }?.let { args ->
             add(
                 LessonAction(
@@ -198,8 +218,14 @@ class LessonSheetViewModel(
             )
         }
         lesson?.zoomUrl?.let { add(LessonAction(LessonActionKind.VIDEO, UiText.Res(ScheduleStrings.schedule_sheet_video), url = it)) }
-        if (friends.isNotEmpty()) {
-            add(LessonAction(LessonActionKind.FRIENDS, UiText.Res(ScheduleStrings.schedule_sheet_friends, listOf(friends.size))))
+        if (friends != Friends.Off) {
+            val people = (friends as? Friends.Found)?.people.orEmpty()
+            val label = if (people.isEmpty()) {
+                UiText.Res(ScheduleStrings.schedule_sheet_friends_none)
+            } else {
+                UiText.Res(ScheduleStrings.schedule_sheet_friends, listOf(people.size))
+            }
+            add(LessonAction(LessonActionKind.FRIENDS, label, enabled = people.isNotEmpty()))
         }
         if (subject != null) {
             if (subject.links > 0) {
@@ -262,6 +288,21 @@ class LessonSheetViewModel(
 
     private fun minutes(from: LocalTime, to: LocalTime): Int = (to.toSecondOfDay() - from.toSecondOfDay()) / SECONDS_PER_MINUTE
 
+    /** The friends on the lesson: [Unknown] until the opt-in is read, [Off] without it or for a sport queue. */
+    private sealed interface Friends {
+        data object Unknown : Friends
+        data object Off : Friends
+        data object Loading : Friends
+        data class Found(val people: List<UserSummary>) : Friends
+    }
+
+    /** The lesson's subject: [Late] once [SUBJECT_WAIT] passed without an answer, so the tiles show without it. */
+    private sealed interface SubjectLookup {
+        data object Pending : SubjectLookup
+        data object Late : SubjectLookup
+        data class Found(val subject: LessonSubject?) : SubjectLookup
+    }
+
     /** The lesson as the sheet reads it, whichever arguments it came with. */
     private data class Sheet(
         val date: LocalDate,
@@ -284,5 +325,8 @@ class LessonSheetViewModel(
         private const val SECONDS_PER_MINUTE = 60
         private const val SEPARATOR = ", "
         private const val STOP_TIMEOUT_MILLIS = 5_000L
+
+        /** How long the tiles wait for the subject; a cold record book (the first sheet after a start) may take longer. */
+        private val SUBJECT_WAIT = 1_000.milliseconds
     }
 }

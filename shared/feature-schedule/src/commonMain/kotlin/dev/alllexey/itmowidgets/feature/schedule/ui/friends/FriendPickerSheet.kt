@@ -17,7 +17,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
-import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
@@ -27,7 +26,7 @@ import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
 import dev.alllexey.itmowidgets.designsystem.kit.GateCard
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
-import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.PersonListRow
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.SelectedUser
 import dev.alllexey.itmowidgets.feature.schedule.presentation.friends.FriendPickerUiState
@@ -139,13 +138,15 @@ fun FriendPickerSheetContent(state: FriendPickerUiState, actions: FriendPickerAc
 
 @Composable
 private fun Person(row: PickerRow, actions: FriendPickerActions, modifier: Modifier) {
-    ListRow(
+    PersonListRow(
         title = row.title.asString(),
+        pictureUrl = row.avatar,
         modifier = modifier
             .alpha(if (row.selectable) 1f else HIDDEN_ALPHA)
             .semantics { selected = row.selected },
+        name = row.person,
+        initials = row.initials,
         subtitle = row.status?.asString(),
-        leading = { Avatar(row.person, row.avatar, initials = row.initials) },
         accessory = if (row.selected) {
             {
                 Icon(

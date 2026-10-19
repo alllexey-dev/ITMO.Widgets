@@ -144,6 +144,7 @@ internal object RecordbookPresenter {
             unread = subjectNameKey(subject.name) in input.unread,
             target = if (subject.isPhysicalEducation) RecordbookTarget.Sport else RecordbookTarget.Subject(args(input.selection, subject)),
             hasSources = !subject.isPhysicalEducation,
+            pending = input.bars == RecordbookBarsData.Pending && !subject.isPhysicalEducation,
         )
     }
 

@@ -145,6 +145,18 @@
         }
       }
     },
+    "recordbook_bars_loading" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Баллы из БАРС загружаются"
+          }
+        }
+      }
+    },
     "recordbook_bars_login" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",

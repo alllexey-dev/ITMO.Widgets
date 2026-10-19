@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.qr.ui.widget
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.SizeF
 import android.view.LayoutInflater
 import android.view.View
 import dev.alllexey.itmowidgets.R
@@ -41,6 +42,7 @@ class QrSettingsPreview(
     private val ready = MutableStateFlow(false)
 
     init {
+        binding.qrPreviewFrame.size = SizeF(SIZE_DP, SIZE_DP)
         image.setOnClickListener { toggleSpoiler() }
     }
 
@@ -149,5 +151,10 @@ class QrSettingsPreview(
         imageJob?.cancel()
         image.setImageDrawable(null)
         bitmaps = null
+    }
+
+    private companion object {
+        /** The widget's 2 x 2 cells. */
+        const val SIZE_DP = 150f
     }
 }

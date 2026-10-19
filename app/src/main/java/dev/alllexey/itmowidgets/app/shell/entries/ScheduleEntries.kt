@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
 import android.view.View
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -28,7 +27,6 @@ import dev.alllexey.itmowidgets.core.navigation.FriendSelectionContract
 import dev.alllexey.itmowidgets.core.navigation.TabRequest
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
-import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.SelectedUser
 import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonSheetArgs
@@ -200,10 +198,10 @@ private fun MonthEntry(onClose: () -> Unit) {
     }
 }
 
-/** The sheets fill the shell's sheet on the lowest container. */
+/** The sheets fill the shell's sheet, whose own container shows through down to the screen's edge. */
 @Composable
 private fun SheetBody(content: @Composable () -> Unit) {
-    Box(Modifier.fillMaxSize().background(ItmoTheme.colorScheme.surfaceContainerLowest)) { content() }
+    Box(Modifier.fillMaxSize()) { content() }
 }
 
 private fun View.say(text: Int) = Snackbar.make(this, text, Snackbar.LENGTH_SHORT).show()

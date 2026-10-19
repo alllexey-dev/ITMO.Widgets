@@ -2,11 +2,14 @@ package dev.alllexey.itmowidgets.app.shell.entries
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import dev.alllexey.itmowidgets.app.shell.ActivityRoutes
 import dev.alllexey.itmowidgets.app.shell.BottomSheetSceneStrategy
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
@@ -30,6 +33,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTab
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresSheetTestTags
 import dev.alllexey.itmowidgets.feature.recordbook.ui.subject.SubjectTestTags
@@ -75,6 +79,20 @@ class RecordbookEntriesTest {
         // The title and its subtitle are one paragraph in the pushed header.
         compose.onNodeWithText("Тестовый предмет $CURRENT_SEMESTER", substring = true).assertExists()
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.RecordbookSubject(SUBJECT))).assertDoesNotExist()
+    }
+
+    @Test
+    fun aSwipeTurnsTheSubjectPageToTheNextTab() {
+        show()
+        compose.onNodeWithTag(RecordbookTestTags.row(entryId(CURRENT_SEMESTER))).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag(SubjectTestTags.list(SubjectTab.SCORES)).assertIsDisplayed()
+
+        compose.onNodeWithTag(SubjectTestTags.list(SubjectTab.SCORES)).performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag(SubjectTestTags.list(SubjectTab.LESSONS)).assertIsDisplayed()
+        compose.onNodeWithTag(SubjectTestTags.list(SubjectTab.SCORES)).assertIsNotDisplayed()
     }
 
     @Test
