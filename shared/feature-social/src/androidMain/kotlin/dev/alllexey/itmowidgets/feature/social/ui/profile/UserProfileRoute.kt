@@ -24,21 +24,20 @@ import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileEvent
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileViewModel
 import dev.alllexey.itmowidgets.feature.social.ui.reviews.TeacherReviewActions
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.compose.strings.common_partial_load_error
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.friends_action_failed
-import dev.alllexey.itmowidgets.shared.feature.social.friends_remove_confirm_message
-import dev.alllexey.itmowidgets.shared.feature.social.friends_remove_confirm_title
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_delete
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_delete_confirm
-import dev.alllexey.itmowidgets.shared.feature.social.user_action_remove
+import dev.alllexey.itmowidgets.shared.compose.strings.friends_action_failed
+import dev.alllexey.itmowidgets.shared.compose.strings.friends_remove_confirm_message
+import dev.alllexey.itmowidgets.shared.compose.strings.friends_remove_confirm_title
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_delete
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_delete_confirm
+import dev.alllexey.itmowidgets.shared.compose.strings.user_action_remove
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /**
  * Where the person profile leaves to; every exit is the host's (share, clipboard, navigation, links). The exits that
@@ -90,8 +89,8 @@ fun UserProfileRoute(exits: UserProfileExits, viewModel: UserProfileViewModel = 
                     }
                     UserProfileEvent.LoadFailed -> launch {
                         val result = snackbars.showSnackbar(
-                            message = getString(CoreRes.string.common_partial_load_error),
-                            actionLabel = getString(CoreRes.string.common_retry),
+                            message = getString(Res.string.common_partial_load_error),
+                            actionLabel = getString(Res.string.common_retry),
                             duration = SnackbarDuration.Long,
                         )
                         if (result == SnackbarResult.ActionPerformed) viewModel.refresh(RefreshMode.Force)
@@ -144,7 +143,7 @@ fun UserProfileRoute(exits: UserProfileExits, viewModel: UserProfileViewModel = 
         ConfirmDialog(
             title = stringResource(Res.string.friends_remove_confirm_title),
             confirmLabel = stringResource(Res.string.user_action_remove),
-            dismissLabel = stringResource(CoreRes.string.common_cancel),
+            dismissLabel = stringResource(Res.string.common_cancel),
             onConfirm = {
                 pendingRemoval = null
                 viewModel.removeFriend()
@@ -158,7 +157,7 @@ fun UserProfileRoute(exits: UserProfileExits, viewModel: UserProfileViewModel = 
         ConfirmDialog(
             title = stringResource(Res.string.teacher_review_delete_confirm),
             confirmLabel = stringResource(Res.string.teacher_review_delete),
-            dismissLabel = stringResource(CoreRes.string.common_cancel),
+            dismissLabel = stringResource(Res.string.common_cancel),
             onConfirm = {
                 pendingReviewDeletion = false
                 viewModel.deleteOwnReview()
