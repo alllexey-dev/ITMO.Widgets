@@ -33,20 +33,19 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.friends.FriendPick
 import dev.alllexey.itmowidgets.feature.schedule.presentation.friends.FriendPickerViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.friends.PickerFriends
 import dev.alllexey.itmowidgets.feature.schedule.presentation.friends.PickerRow
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_picker_empty
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_picker_gate_fix
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_picker_gate_reason
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_picker_gate_title
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_picker_note
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_picker_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
-import dev.alllexey.itmowidgets.shared.feature.schedule.Res
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_picker_empty
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_picker_gate_fix
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_picker_gate_reason
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_picker_gate_title
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_picker_note
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_picker_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [FriendPickerSheetContent]. */
@@ -84,7 +83,7 @@ fun FriendPickerSheetContent(state: FriendPickerUiState, actions: FriendPickerAc
     SheetScaffold(
         title = stringResource(Res.string.schedule_picker_title),
         modifier = modifier,
-        close = SheetClose(stringResource(CoreRes.string.common_close), actions.onClose),
+        close = SheetClose(stringResource(Res.string.common_close), actions.onClose),
     ) {
         Column(
             Modifier
@@ -118,10 +117,10 @@ fun FriendPickerSheetContent(state: FriendPickerUiState, actions: FriendPickerAc
                     modifier = Modifier.testTag(FriendPickerTestTags.GATE),
                 )
                 is PickerFriends.Failed -> ContentState(
-                    title = stringResource(CoreRes.string.common_load_error_title),
+                    title = stringResource(Res.string.common_load_error_title),
                     size = ContentStateSize.Compact,
                     description = friends.error.toUiText().asString(),
-                    action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
+                    action = ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
                 )
                 is PickerFriends.Content -> if (friends.rows.isEmpty()) {
                     ContentState(
