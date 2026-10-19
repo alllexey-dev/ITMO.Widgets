@@ -28,8 +28,13 @@ document describes the current state.
 
 `settings.gradle.kts` includes the projects below. `build-logic/` is an
 included build with the convention plugins (`itmowidgets.kmp.library`,
-`itmowidgets.cmp.ui`, `itmowidgets.testing`, `itmowidgets.strings`,
-`itmowidgets.android.app`); versions live in `gradle/libs.versions.toml`.
+`itmowidgets.cmp.ui`, `itmowidgets.cmp.android`, `itmowidgets.testing`,
+`itmowidgets.strings`, `itmowidgets.android.app`); versions live in
+`gradle/libs.versions.toml`. A feature on `itmowidgets.cmp.android` keeps its
+Compose UI in `androidMain` and reads strings from `:shared:compose-strings`
+only, so its iOS klib has no Compose
+([ADR 0035](decisions/0035-ios-without-compose.md)); `:shared:feature-qr` is
+the first, the others still use `itmowidgets.cmp.ui`.
 
 | Module | Holds |
 |---|---|

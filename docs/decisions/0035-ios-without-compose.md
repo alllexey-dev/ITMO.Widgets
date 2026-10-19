@@ -14,7 +14,7 @@ Multiplatform at all.
   it: screens, sheets, dialogs, routes, their previews and Compose-only helpers. `commonMain` keeps domain, data,
   presentation (view models, UI state, the samples Swift snapshot tests read) and `UiText`. The Compose compiler runs
   for the Android target only; Compose, Coil Compose, `lifecycle-runtime-compose` and `koin-compose` are `androidMain`
-  dependencies.
+  dependencies. The convention `itmowidgets.cmp.android` does this per module (`:shared:feature-qr` first).
 - Compose strings. Compose reads the catalog only through `:shared:compose-strings` (one `Res` over every catalog
   file), which becomes Android-only; feature modules generate no CMP `Res` of their own. The catalog files stay where
   ADR 0028 puts them (`src/commonMain/composeResources/values/strings_<owner>.xml`), as build-logic input.

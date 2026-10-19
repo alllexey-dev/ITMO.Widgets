@@ -53,26 +53,25 @@ import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassUiState
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeImage
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.qrColors
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.qr_pass_description
+import dev.alllexey.itmowidgets.shared.compose.strings.qr_pass_empty_description
+import dev.alllexey.itmowidgets.shared.compose.strings.qr_pass_empty_title
+import dev.alllexey.itmowidgets.shared.compose.strings.qr_pass_image_description
+import dev.alllexey.itmowidgets.shared.compose.strings.qr_pass_refresh
+import dev.alllexey.itmowidgets.shared.compose.strings.qr_pass_sheet_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_history
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
 import dev.alllexey.itmowidgets.shared.designsystem.ic_refresh
-import dev.alllexey.itmowidgets.shared.feature.qr.Res
-import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_description
-import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_empty_description
-import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_empty_title
-import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_image_description
-import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_refresh
-import dev.alllexey.itmowidgets.shared.feature.qr.qr_pass_sheet_title
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [QrPassSheetContent], read by host tests and the instrumented flows. */
@@ -108,7 +107,7 @@ fun QrPassSheetContent(
     Box(modifier) {
         SheetScaffold(
             title = stringResource(Res.string.qr_pass_sheet_title),
-            close = SheetClose(stringResource(CoreRes.string.common_close), onClose),
+            close = SheetClose(stringResource(Res.string.common_close), onClose),
         ) {
             Column(
                 Modifier
@@ -167,13 +166,13 @@ private fun PassArea(state: QrPassUiState, onRefresh: () -> Unit) {
                     if (status == QrPassStatus.Refreshing) ItmoLoadingIndicator()
                 }
                 code != null -> PassState(
-                    stringResource(CoreRes.string.common_load_error_title),
+                    stringResource(Res.string.common_load_error_title),
                     stringResource(Res.string.qr_pass_empty_description),
                 )
                 status is QrPassStatus.Failed -> PassState(
-                    stringResource(CoreRes.string.common_load_error_title),
+                    stringResource(Res.string.common_load_error_title),
                     status.error.toUiText().asString(),
-                    ContentStateAction(stringResource(CoreRes.string.common_retry), onRefresh),
+                    ContentStateAction(stringResource(Res.string.common_retry), onRefresh),
                 )
                 status == QrPassStatus.Empty -> PassState(
                     stringResource(Res.string.qr_pass_empty_title),
@@ -224,7 +223,7 @@ private fun StatusLine(status: QrPassStatus, onRefresh: () -> Unit) {
             Icon(painterResource(KitRes.drawable.ic_refresh), null, Modifier.size(ButtonIconSize))
             Text(
                 stringResource(
-                    if (status is QrPassStatus.Offline) CoreRes.string.common_retry else Res.string.qr_pass_refresh,
+                    if (status is QrPassStatus.Offline) Res.string.common_retry else Res.string.qr_pass_refresh,
                 ),
                 Modifier.padding(start = ItmoTheme.spacing.compact),
             )

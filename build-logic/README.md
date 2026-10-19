@@ -7,8 +7,12 @@ See [modules](../docs/architecture.md#modules) and
 [0028](../docs/decisions/0028-strings-and-icons.md) (strings and icons).
 
 - `convention/`: `itmowidgets.android.app`, `itmowidgets.kmp.library`,
-  `itmowidgets.cmp.ui` and `itmowidgets.testing` (SDK levels, JVM 17, targets
-  and source sets, Robolectric and Roborazzi defaults).
+  `itmowidgets.cmp.ui`, `itmowidgets.cmp.android` and `itmowidgets.testing`
+  (SDK levels, JVM 17, targets and source sets, Robolectric and Roborazzi
+  defaults). `itmowidgets.cmp.android` is Compose on the Android target only:
+  the compiler for `androidJvm`, Compose, the design system and
+  `:shared:compose-strings` in `androidMain`, no CMP `Res` of its own
+  ([ADR 0035](../docs/decisions/0035-ios-without-compose.md)).
 - `strings/`: `itmowidgets.strings`: the catalog check, the per-module key
   objects (`<Area>Strings`, `<Area>Plurals`), the Android string export and
   ids, the Apple string and symbol export (`exportAppleStrings`),

@@ -2,7 +2,9 @@ package dev.alllexey.itmowidgets.architecture
 
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.verify.assertFalse
+import dev.alllexey.itmowidgets.architecture.ArchitectureScope.moduleFile
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
+import java.io.File
 import org.junit.Test
 
 /** What common and iOS source sets may import. Android `R` is `UiTextRulesTest`'s. */
@@ -33,6 +35,23 @@ class KmpRulesTest {
         iosFiles().assertFalse { file -> file.imports.any { import -> COMPOSE.any(import.name::startsWith) } }
     }
 
+    @Test
+    fun `modules with Android-only Compose keep Compose out of common code`() {
+        // itmowidgets.cmp.android puts Compose, the design system and the Compose strings in androidMain only (ADR
+        // 0035); the rule names the file that would break the iOS compile first.
+        val modules = androidComposeModules().requireNonEmpty("modules on itmowidgets.cmp.android")
+        kmpFiles()
+            .filter { file -> modules.any { file.projectPath.startsWith("/shared/$it/") } }
+            .requireNonEmpty("common and iOS files of those modules")
+            .assertFalse { file -> file.imports.any { import -> COMPOSE.any(import.name::startsWith) } }
+    }
+
+    /** The `shared/` module directories whose build applies itmowidgets.cmp.android. */
+    private fun androidComposeModules(): List<String> =
+        moduleFile("shared", "").listFiles().orEmpty()
+            .filter { it.resolve("build.gradle.kts").takeIf(File::isFile)?.readText()?.contains(CMP_ANDROID) == true }
+            .map { it.name }
+
     private fun iosFiles(): List<KoFileDeclaration> = productionFiles
         .filter { it.isIosOutsideComposeKit() }
         .requireAtLeast(MIN_IOS_SOURCE_FILES, "iosMain files outside the Compose kit")
@@ -54,9 +73,13 @@ class KmpRulesTest {
             "coil3.compose",
             "com.materialkolor.ktx.",
             "dev.alllexey.itmowidgets.designsystem.",
+            "dev.alllexey.itmowidgets.shared.compose.strings.",
+            "dev.alllexey.itmowidgets.shared.designsystem.",
         )
 
         const val MIN_IOS_SOURCE_FILES = 100
+
+        const val CMP_ANDROID = "id(\"itmowidgets.cmp.android\")"
 
         /** The androidx artifacts that publish common and iOS variants. */
         val multiplatformAndroidx = listOf(
