@@ -221,17 +221,14 @@ struct RecordbookBarsNoticeRow: View {
     var body: some View {
         let failed = notice as? RecordbookBarsNoticeFailed
         ItmoListGroup {
-            ItmoRow(
+            RecordbookBarsRow(
                 title: AppStrings.string(failed == nil ? "recordbook_bars_expired" : "recordbook_bars_failed"),
                 subtitle: failed.map { AppErrorTextsKt.toUiText($0.error).resolved },
                 symbol: failed == nil ? .history : .error,
-                tone: .warn
+                tone: .warn,
+                action: AppStrings.string(failed == nil ? "recordbook_bars_sign_in" : "common_retry"),
+                perform: failed == nil ? signIn : retry
             )
-            .accessory {
-                Button(AppStrings.string(failed == nil ? "recordbook_bars_sign_in" : "common_retry"), action: failed == nil ? signIn : retry)
-                    .buttonStyle(.borderless)
-                    .itmoTint()
-            }
         }
         .accessibilityIdentifier("recordbook.barsNotice")
     }
@@ -243,24 +240,66 @@ struct RecordbookBarsOfferRow: View {
     var hide: (() -> Void)?
 
     var body: some View {
-        ItmoRow(title: AppStrings.string("recordbook_bars_offer"), symbol: .assignment, tone: .neutral)
-            .accessory {
-                Button(AppStrings.string("recordbook_bars_connect"), action: connect)
+        RecordbookBarsRow(
+            title: AppStrings.string("recordbook_bars_offer"),
+            symbol: .assignment,
+            tone: .neutral,
+            action: AppStrings.string("recordbook_bars_connect"),
+            perform: connect,
+            hide: hide
+        )
+    }
+}
+
+/// A BARS row of a group: the icon tile, the title and subtitle over the action, the cross at the top end with
+/// `hide`. The text takes the whole width but the cross and the button sits under it, so a narrow phone or a large
+/// Dynamic Type size never squeezes the title into a column that breaks inside words.
+private struct RecordbookBarsRow: View {
+    let title: String
+    var subtitle: String?
+    let symbol: AppSymbol
+    let tone: ItmoTone
+    let action: String
+    let perform: () -> Void
+    var hide: (() -> Void)?
+
+    var body: some View {
+        HStack(alignment: .top, spacing: ItmoSpacing.content) {
+            ItmoRowIcon(symbol: symbol, tone: tone)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(verbatim: title).font(.itmo(.bodyLarge))
+                if let subtitle {
+                    Text(verbatim: subtitle).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+                }
+                Button(action, action: perform)
                     .buttonStyle(.borderless)
                     .itmoTint()
-                if let hide {
-                    Button(action: hide) {
-                        AppSymbol.close.image.font(.itmo(.bodySmall, emphasized: true)).foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel(Text(verbatim: AppStrings.string("recordbook_bars_hide")))
+                    .padding(.top, ItmoSpacing.compact)
+            }
+            // The first line sits on the tile's centre line.
+            .padding(.top, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if let hide {
+                Button(action: hide) {
+                    AppSymbol.close.image
+                        .font(.itmo(.bodySmall, emphasized: true))
+                        .foregroundStyle(.secondary)
+                        // As tall as the tile, with a 44 pt hit area around it.
+                        .frame(width: 30, height: 30)
+                        .contentShape(.rect.inset(by: -7))
                 }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(Text(verbatim: AppStrings.string("recordbook_bars_hide")))
             }
-            // The row is one VoiceOver element: its buttons are its actions.
-            .accessibilityActions {
-                Button(AppStrings.string("recordbook_bars_connect"), action: connect)
-                if let hide { Button(AppStrings.string("recordbook_bars_hide"), action: hide) }
-            }
+        }
+        .padding(.horizontal, ItmoKit.padding)
+        .padding(.vertical, 11)
+        // The row is one VoiceOver element: its buttons are its actions.
+        .accessibilityElement(children: .combine)
+        .accessibilityActions {
+            Button(action, action: perform)
+            if let hide { Button(AppStrings.string("recordbook_bars_hide"), action: hide) }
+        }
     }
 }
 
@@ -302,6 +341,7 @@ struct RecordbookRowView: View {
             ) {
                 RecordbookValueView(value: row.value)
             }
+            .itmoLoadingPulse(row.pending, label: AppStrings.string("recordbook_bars_loading"))
             AppSymbol.chevronRight.image
                 .font(.itmo(.bodySmall, emphasized: true))
                 .foregroundStyle(.tertiary)

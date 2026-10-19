@@ -6,9 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,7 +19,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -56,7 +61,6 @@ import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [RecordbookSubjectScreen]. */
 object SubjectTestTags {
-    const val LIST = "subject:list"
     const val LOADING = "subject:loading"
     const val ERROR = "subject:error"
     const val TABS = "subject:tabs"
@@ -65,6 +69,8 @@ object SubjectTestTags {
     const val MATERIALS_GATE = "subject:materials_gate"
     const val REVIEWS_GATE = "subject:reviews_gate"
 
+    /** The list of one tab's page. */
+    fun list(tab: SubjectTab) = "subject:list:${tab.name.lowercase()}"
     fun teacher(index: Int) = "subject:teacher:$index"
     fun link(id: String) = "subject:link:$id"
 }
@@ -100,8 +106,8 @@ data class RecordbookSubjectActions(
 
 /**
  * Предмет (docs/features/subject-page.md): a pushed screen with the subject's name and `Дифзачёт, 3 семестр`, the tabs
- * `Баллы`, `Пары`, `Материалы` under it, each tab's content below. On `Материалы` the FAB adds a link. Stateless;
- * [RecordbookSubjectRoute] feeds it.
+ * `Баллы`, `Пары`, `Материалы` under it, each tab's content on a page below that a horizontal swipe turns. On
+ * `Материалы` the FAB adds a link. Stateless; [RecordbookSubjectRoute] feeds it.
  */
 @Composable
 fun RecordbookSubjectScreen(
@@ -109,7 +115,6 @@ fun RecordbookSubjectScreen(
     actions: RecordbookSubjectActions,
     modifier: Modifier = Modifier,
     snackbars: SnackbarHostState = remember { SnackbarHostState() },
-    listState: LazyListState = rememberLazyListState(),
 ) {
     val content = state as? RecordbookSubjectUiState.Content
     val materials = (content?.materials as? SubjectMaterials.Content)?.takeIf { content.tab == SubjectTab.MATERIALS }
@@ -144,7 +149,7 @@ fun RecordbookSubjectScreen(
                     }
                 }
                 is RecordbookSubjectUiState.Content -> AppRefreshBox(state.refreshing, actions.onRefresh, Modifier.fillMaxSize()) {
-                    Tabs(state, actions, listState)
+                    Tabs(state, actions)
                 }
             }
             SnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
@@ -152,44 +157,65 @@ fun RecordbookSubjectScreen(
     }
 }
 
+/**
+ * The tabs over a pager of their pages: a tap on a tab slides to its page, a horizontal swipe selects the next tab.
+ * Each page keeps its own scroll position.
+ */
 @Composable
-private fun Tabs(state: RecordbookSubjectUiState.Content, actions: RecordbookSubjectActions, listState: LazyListState) {
+private fun Tabs(state: RecordbookSubjectUiState.Content, actions: RecordbookSubjectActions) {
     val tabs = SubjectTab.entries
     val labels = listOf(
         stringResource(Res.string.subject_scores_title),
         stringResource(Res.string.subject_tab_lessons),
         stringResource(Res.string.subject_tab_materials),
     )
-    LazyColumn(
-        Modifier.fillMaxSize().testTag(SubjectTestTags.LIST),
-        state = listState,
-        contentPadding = PaddingValues(
-            start = ItmoTheme.spacing.screenMargin,
-            end = ItmoTheme.spacing.screenMargin,
-            top = ItmoTheme.spacing.related,
-            bottom = ItmoTheme.spacing.fabClearance,
-        ),
-        verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
-    ) {
-        item(key = "tabs") {
-            SegmentedChoice(
-                options = labels,
-                selectedIndex = tabs.indexOf(state.tab),
-                onSelect = { actions.onSelectTab(tabs[it]) },
-                modifier = Modifier.testTag(SubjectTestTags.TABS),
-            )
-        }
-        state.refreshError?.let { error ->
-            item(key = "refresh-error") {
-                ListGroupNote(stringResource(Res.string.recordbook_refresh_error, error.toUiText().asString()))
+    val pager = rememberPagerState(initialPage = tabs.indexOf(state.tab)) { tabs.size }
+    val lists = tabs.map { rememberLazyListState() }
+    val selected by rememberUpdatedState(state.tab)
+    val onSelect by rememberUpdatedState(actions.onSelectTab)
+    LaunchedEffect(state.tab) {
+        val page = tabs.indexOf(state.tab)
+        if (pager.currentPage != page) pager.animateScrollToPage(page)
+    }
+    LaunchedEffect(pager) {
+        snapshotFlow { pager.settledPage }.collect { page -> if (tabs[page] != selected) onSelect(tabs[page]) }
+    }
+    Column(Modifier.fillMaxSize()) {
+        SegmentedChoice(
+            options = labels,
+            // The swipe's destination, so the tab follows the finger before the page settles.
+            selectedIndex = pager.targetPage,
+            onSelect = { actions.onSelectTab(tabs[it]) },
+            modifier = Modifier
+                .padding(horizontal = ItmoTheme.spacing.screenMargin)
+                .padding(top = ItmoTheme.spacing.related, bottom = ItmoTheme.spacing.compact)
+                .testTag(SubjectTestTags.TABS),
+        )
+        HorizontalPager(pager, Modifier.weight(1f), key = { tabs[it] }, verticalAlignment = Alignment.Top) { page ->
+            LazyColumn(
+                Modifier.fillMaxSize().testTag(SubjectTestTags.list(tabs[page])),
+                state = lists[page],
+                contentPadding = PaddingValues(
+                    start = ItmoTheme.spacing.screenMargin,
+                    end = ItmoTheme.spacing.screenMargin,
+                    top = ItmoTheme.spacing.related,
+                    bottom = ItmoTheme.spacing.fabClearance,
+                ),
+                verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+            ) {
+                state.refreshError?.let { error ->
+                    item(key = "refresh-error") {
+                        ListGroupNote(stringResource(Res.string.recordbook_refresh_error, error.toUiText().asString()))
+                    }
+                }
+                tab(tabs[page], state, actions)
             }
         }
-        tab(state, actions)
     }
 }
 
-private fun LazyListScope.tab(state: RecordbookSubjectUiState.Content, actions: RecordbookSubjectActions) {
-    when (state.tab) {
+private fun LazyListScope.tab(tab: SubjectTab, state: RecordbookSubjectUiState.Content, actions: RecordbookSubjectActions) {
+    when (tab) {
         SubjectTab.SCORES -> scoresTab(state.scores, actions)
         SubjectTab.LESSONS -> lessonsTab(state.lessons, actions)
         SubjectTab.MATERIALS -> materialsTab(state.materials, actions)

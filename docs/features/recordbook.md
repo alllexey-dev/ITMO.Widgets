@@ -100,7 +100,11 @@ overlays score, grade, attempt and control tree; periods, identities, teachers, 
 
 - Not connected: the list is complete from My ITMO and one quiet line under it, `Контрольные и минимумы из БАРС`,
   offers `Подключить` (the BARS sign-in) and a cross that hides it. A completed sign-in connects BARS and loads again.
-- Connected: journals are requested in parallel with My ITMO; My ITMO is on screen at once.
+  This row and the notices below share one layout: the title over its button, the cross at the top end, so the title
+  keeps the row's width on a narrow phone or a large font.
+- Connected: journals are requested in parallel with My ITMO; My ITMO is on screen at once. Until the period's first
+  BARS answer comes (`RecordbookRow.pending`) every number but the sport one pulses in place (`LoadingPulse`, iOS
+  `itmoLoadingPulse`); a reload over an earlier answer shows that answer still.
 - An ended session (`Unauthorized`): one row over the list, `БАРС: сессия истекла`, with `Войти`; the earlier BARS
   answer of the period stays, its sources dimmed with its time or date. Another failure: `БАРС: не удалось
   загрузить` with `Повторить`, My ITMO values. Nothing is silently substituted.

@@ -270,6 +270,10 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
   the new data simply replaces the old. A skeleton is therefore never followed
   by an indicator. The schedule keeps its loaded range including
   pagination and replaces it with one snapshot; an error keeps the old data.
+- A value on screen that a slower source is about to replace (My ITMO's points
+  while the first BARS answer of the period runs) pulses like the skeleton in
+  place (`LoadingPulse`, iOS `itmoLoadingPulse`) and keeps its geometry, so the
+  answer changes the number without moving anything.
 - Card actions show local progress inside their button without changing its
   geometry and ignore a second tap.
 - Score rings and capacity bars are not loading indicators.
@@ -389,6 +393,7 @@ both platforms.
 | `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs: M3E's `ShortNavigationBar`, a label on every tab, the FILL 1 icon on the selected one | Not used: the SwiftUI shell's native tab bar |
 | `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | The action is a button capsule; loading is the large activity indicator |
 | `Skeleton` | First load without a cache, list or cards | Shapes in `systemFill`, cards with the inset group's corners; geometry and pulse stay |
+| `LoadingPulse` | A shown value that a slower source is about to replace | `itmoLoadingPulse(_:)`, the same pulse |
 | `AppRefreshBox` | Pull-to-refresh that the user asked for | Behaves as `UIRefreshControl`: the content follows the pull, the spinner's spokes above it, the refresh haptic at the threshold |
 | `ProgressButton` | A button with its own progress, same size, second tap ignored | A `UIButton` capsule: filled is prominent, tonal and outlined are bordered, text is plain; a press dims it |
 | `ItmoSwitch` | An on/off switch; with no callback it only shows the state and the row carries the toggle | A `UISwitch` in the accent with the toggle haptic |
