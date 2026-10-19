@@ -26,7 +26,6 @@ if (buildHealth) {
 // The verification aggregates (verifyQuick, verifyFull, verifyIosKlibs). Every convention registers `itmoVerifyQuick`;
 // the iOS umbrella and :konsist apply none, so they are left out of that list.
 val modulePaths = subprojects.map { it.path }
-val sharedPaths = modulePaths.filter { it.startsWith(":shared:") }
 val conventionPaths = modulePaths.filter { it == ":app" || (it.startsWith(":shared:") && it != ":shared:ios") }
 val buildLogic = gradle.includedBuild("build-logic")
 
@@ -61,12 +60,10 @@ tasks.register("verifyFull") {
     dependsOn(verifyQuick, ":app:lintPlayDebug")
 }
 
-// Compile-only: linking a framework or running iosSimulatorArm64Test needs Xcode. The test klibs keep iosTest from
-// rotting on PRs; only ios-nightly runs those tests.
+// Compile-only: linking a framework or running iosSimulatorArm64Test needs Xcode. Each module's itmoIosKlib includes
+// its test klib, which keeps iosTest from rotting on PRs; only ios-nightly runs those tests.
 tasks.register("verifyIosKlibs") {
     group = "verification"
     description = "iosSimulatorArm64 main and test klibs of every shared module (no Xcode; runs on Linux x86_64 too)."
-    dependsOn(
-        sharedPaths.flatMap { listOf("$it:compileKotlinIosSimulatorArm64", "$it:compileTestKotlinIosSimulatorArm64") },
-    )
+    dependsOn(conventionPaths.filter { it != ":app" }.map { "$it:itmoIosKlib" } + ":shared:ios:compileKotlinIosSimulatorArm64")
 }

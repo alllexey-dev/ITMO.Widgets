@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.title
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
+import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkSection
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
 import dev.alllexey.itmowidgets.shared.core.CoreStrings

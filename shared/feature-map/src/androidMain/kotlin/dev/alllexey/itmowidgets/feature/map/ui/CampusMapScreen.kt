@@ -78,9 +78,31 @@ import dev.alllexey.itmowidgets.feature.map.presentation.SearchResult
 import dev.alllexey.itmowidgets.feature.map.presentation.SearchView
 import dev.alllexey.itmowidgets.feature.map.presentation.TripStep
 import dev.alllexey.itmowidgets.feature.map.presentation.TripView
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_back
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.map_buildings
+import dev.alllexey.itmowidgets.shared.compose.strings.map_close
+import dev.alllexey.itmowidgets.shared.compose.strings.map_fit_building
+import dev.alllexey.itmowidgets.shared.compose.strings.map_floors
+import dev.alllexey.itmowidgets.shared.compose.strings.map_loading
+import dev.alllexey.itmowidgets.shared.compose.strings.map_no_plan_title
+import dev.alllexey.itmowidgets.shared.compose.strings.map_open_in_maps
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_badge_from
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_badge_to
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_from_here
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_here
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_next
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_not_found
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_pick_from
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_pick_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_pick_to
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_previous
+import dev.alllexey.itmowidgets.shared.compose.strings.map_route_swap
+import dev.alllexey.itmowidgets.shared.compose.strings.map_search_empty
+import dev.alllexey.itmowidgets.shared.compose.strings.map_search_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.map_search_other_buildings
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_left
@@ -94,31 +116,8 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_location_on
 import dev.alllexey.itmowidgets.shared.designsystem.ic_map
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_swap_vert
-import dev.alllexey.itmowidgets.shared.feature.map.Res
-import dev.alllexey.itmowidgets.shared.feature.map.map_buildings
-import dev.alllexey.itmowidgets.shared.feature.map.map_close
-import dev.alllexey.itmowidgets.shared.feature.map.map_fit_building
-import dev.alllexey.itmowidgets.shared.feature.map.map_floors
-import dev.alllexey.itmowidgets.shared.feature.map.map_loading
-import dev.alllexey.itmowidgets.shared.feature.map.map_no_plan_title
-import dev.alllexey.itmowidgets.shared.feature.map.map_open_in_maps
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_badge_from
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_badge_to
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_from_here
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_here
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_next
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_not_found
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_pick_from
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_pick_hint
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_pick_to
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_previous
-import dev.alllexey.itmowidgets.shared.feature.map.map_route_swap
-import dev.alllexey.itmowidgets.shared.feature.map.map_search_empty
-import dev.alllexey.itmowidgets.shared.feature.map.map_search_hint
-import dev.alllexey.itmowidgets.shared.feature.map.map_search_other_buildings
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What the map screen asks its route to do. */
@@ -166,11 +165,11 @@ fun CampusMapScreen(
         when (state) {
             CampusMapUiState.Loading -> ContentStateLoading(Modifier.fillMaxSize())
             is CampusMapUiState.Failed -> ContentState(
-                title = stringResource(CoreRes.string.common_load_error_title),
+                title = stringResource(Res.string.common_load_error_title),
                 icon = painterResource(KitRes.drawable.ic_error),
                 modifier = Modifier.fillMaxSize(),
                 description = state.error.toUiText().asString(),
-                action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
+                action = ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
             )
             is CampusMapUiState.NoPlan -> ContentState(
                 title = stringResource(Res.string.map_no_plan_title),
@@ -256,7 +255,7 @@ private fun PlanContent(state: CampusMapUiState.Plan, actions: CampusMapActions,
 private fun BackButton(onBack: () -> Unit, modifier: Modifier = Modifier) {
     Surface(modifier, shape = CircleShape, color = ItmoTheme.colorScheme.surfaceContainerHigh, shadowElevation = ChromeElevation) {
         IconButton(onClick = onBack) {
-            Icon(painterResource(KitRes.drawable.ic_arrow_back), stringResource(CoreRes.string.common_back))
+            Icon(painterResource(KitRes.drawable.ic_arrow_back), stringResource(Res.string.common_back))
         }
     }
 }

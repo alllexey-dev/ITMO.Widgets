@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.core.navigation
 
-import androidx.navigation3.runtime.NavKey
-
 /**
  * A destination of the shell. Every key is `@Serializable` and joins one polymorphic module
  * ([appRouteSerializersModule]), so feature modules can add their own keys and the back stacks survive process death;
@@ -10,7 +8,7 @@ import androidx.navigation3.runtime.NavKey
  * The key alone tells the shell how to show it: [kind] picks the layer, [sheetPolicy] the sheet's behaviour, and
  * [exclusiveGroup] names keys that are never shown at the same time.
  */
-interface AppRoute : NavKey {
+interface AppRoute {
     val kind: RouteKind
 
     /** How a [RouteKind.SHEET] opens and closes; null for every other kind. */

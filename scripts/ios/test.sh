@@ -2,7 +2,8 @@
 # test.sh [--ci] [--record]                           checks, xcodegen, build and test of the scheme without UITests
 # test.sh [--ci] [--record] --only <Target>/<Class>   the same, one test class (xcodebuild -only-testing)
 # test.sh [--ci] ui [<Class>...]                      the XCUITest target UITests, or only the listed classes
-# test.sh [--ci] kn <module>...                       iosSimulatorArm64Test of shared modules (`core` or `:shared:core`)
+# test.sh [--ci] kn [<module>...]                     iosSimulatorArm64Test of shared modules (`core` or `:shared:core`),
+#                                                     or of every module with an iOS target
 # test.sh sim                                         print this worktree's simulator UDID, creating it if needed
 # test.sh --cleanup                                   delete this worktree's simulator
 #
@@ -39,7 +40,7 @@ root=$(cd "$script_dir/../.." && pwd -P) || refuse "cannot resolve the repositor
 cd "$root" || refuse "cannot enter $root"
 
 usage() {
-  sed -n '2,7p' "$self" | sed 's/^# //' >&2
+  sed -n '2,8p' "$self" | sed 's/^# //' >&2
   exit 2
 }
 
@@ -73,7 +74,6 @@ while [ $# -gt 0 ]; do
     kn)
       mode=kn
       shift
-      [ $# -gt 0 ] || refuse "kn needs at least one shared module"
       while [ $# -gt 0 ]; do
         case "$1" in --*) break ;; esac
         name=${1#:shared:}
@@ -240,8 +240,12 @@ run_xcode() { # label
 
 run_kn() {
   local init
-  local -a tasks=()
-  for name in "${modules[@]}"; do tasks+=(":shared:$name:iosSimulatorArm64Test"); done
+  # Without modules, the unqualified task name: Gradle runs it in every project that has an iOS target.
+  local -a tasks=(iosSimulatorArm64Test)
+  if [ ${#modules[@]} -gt 0 ]; then
+    tasks=()
+    for name in "${modules[@]}"; do tasks+=(":shared:$name:iosSimulatorArm64Test"); done
+  fi
   ensure_sim
   # Points every K/N simulator test task at this worktree's simulator instead of KGP's shared default device.
   mkdir -p iosApp/build

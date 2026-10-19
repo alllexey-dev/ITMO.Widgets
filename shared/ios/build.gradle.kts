@@ -48,8 +48,6 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":shared:core"))
-            // The widget palettes of the gallery's samples (`widgetPalette`).
-            implementation(project(":shared:designsystem"))
             implementation(project(":shared:backend-client"))
             api(project(":shared:feature-qr"))
             api(project(":shared:feature-home"))

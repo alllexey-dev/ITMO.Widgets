@@ -17,7 +17,7 @@ import coil3.decode.DataSource
 import coil3.intercept.Interceptor
 import coil3.request.SuccessResult
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
-import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
+import dev.alllexey.itmowidgets.core.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import kotlinx.coroutines.Dispatchers
 

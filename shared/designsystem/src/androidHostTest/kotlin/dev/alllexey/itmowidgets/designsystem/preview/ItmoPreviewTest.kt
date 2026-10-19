@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.text.style.TextOverflow
+import dev.alllexey.itmowidgets.core.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.staticColorScheme
 import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
 import org.junit.Assert.assertNotEquals

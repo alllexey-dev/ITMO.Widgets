@@ -15,7 +15,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.today.TodayTodo
-import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
+import dev.alllexey.itmowidgets.core.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.feature.home.presentation.BellRow
 import dev.alllexey.itmowidgets.feature.home.presentation.BellUiState
 import dev.alllexey.itmowidgets.feature.home.presentation.TodayPresenter

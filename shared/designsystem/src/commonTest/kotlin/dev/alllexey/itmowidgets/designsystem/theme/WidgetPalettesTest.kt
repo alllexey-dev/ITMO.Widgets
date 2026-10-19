@@ -5,15 +5,34 @@ import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
+import dev.alllexey.itmowidgets.core.settings.widgetPalette
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-/** The widgets' roles are the roles of the scheme the app draws for the same appearance. */
+/**
+ * The widgets' roles are the roles of the scheme the app draws for the same appearance: core's palette, built without
+ * Compose, against [resolveColorScheme] through MaterialKolor.
+ */
 class WidgetPalettesTest {
 
     private val teal = ThemeSpec(accent = AccentColor.TEAL)
+
+    @Test
+    fun everySeededAppearanceGivesTheRolesOfTheAppsScheme() {
+        val specs = (AccentColor.entries - AccentColor.WALLPAPER).flatMap { accent ->
+            ThemeStyle.entries.flatMap { style ->
+                ThemeContrast.entries.map { contrast ->
+                    ThemeSpec(accent = accent, customArgb = 0xFF6A1B9A.toInt(), style = style, contrast = contrast)
+                }
+            }
+        }
+        for (spec in specs) {
+            val app = widgetPaletteOf(resolveColorScheme(spec, dark = false), resolveColorScheme(spec, dark = true))
+            assertEquals(app, spec.widgetPalette(), "$spec")
+        }
+    }
 
     @Test
     fun anAppearanceGivesItsSchemeRolesInBothModes() {

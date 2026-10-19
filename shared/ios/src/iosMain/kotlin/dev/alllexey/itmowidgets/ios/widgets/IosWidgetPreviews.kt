@@ -3,9 +3,9 @@ package dev.alllexey.itmowidgets.ios.widgets
 import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.settings.widgetPalette
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.UiTextResolver
-import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.qr.widget.QrPassSnapshot
 import dev.alllexey.itmowidgets.feature.qr.widget.QrPassSnapshotWriter
 import dev.alllexey.itmowidgets.feature.qr.widget.QrWidgetAppearance

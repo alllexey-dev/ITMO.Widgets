@@ -61,7 +61,8 @@ class NotificationSettingsViewModel(
         backgroundUnrestricted,
     ) { stored, granted, channelStates, unrestricted ->
         val marks = marksOf(stored)
-        val pushes = PushKind.entries.map { PushNotifications(it, it.channel !in stored.disabledPushes) }
+        // Without the capability (iOS) the switches are hidden and the stored ones kept for when they return.
+        val pushes = if (!capabilities.pushSwitches) emptyList() else PushKind.entries.map { PushNotifications(it, it.channel !in stored.disabledPushes) }
         val wanted = listOfNotNull(
             AppNotificationChannels.MARKS.takeIf { marks?.enabled == true },
             AppNotificationChannels.SCHEDULE_CHANGES.takeIf { stored.scheduleChangesEnabled },

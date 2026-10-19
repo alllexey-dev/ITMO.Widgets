@@ -16,6 +16,9 @@ internal const val BASE_PACKAGE = "dev.alllexey.itmowidgets"
 /** The per-module lifecycle task the root `verifyQuick` aggregates; module checks attach here. */
 internal const val VERIFY_QUICK_TASK = "itmoVerifyQuick"
 
+/** The per-module task the root `verifyIosKlibs` aggregates: the iosSimulatorArm64 main and test klibs, if any. */
+internal const val IOS_KLIB_TASK = "itmoIosKlib"
+
 /**
  * Core fakes shared by the tests of `:shared:core`, `:shared:compose-strings`, the ten `:shared:feature-*` modules
  * and `:app`. One source root in several modules instead of a separate fixtures module; never in `:shared:testing`

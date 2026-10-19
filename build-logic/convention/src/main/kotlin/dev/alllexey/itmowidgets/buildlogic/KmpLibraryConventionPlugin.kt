@@ -11,13 +11,18 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 /**
- * A shared module: the Android-KMP library plugin (`kotlin { android { } }`), iosArm64 and iosSimulatorArm64,
+ * A shared module: the Android-KMP library plugin (`kotlin { android { } }`), iosArm64 and iosSimulatorArm64 unless
+ * [ios] is false (`itmowidgets.kmp.android`: an Android-only module, its `commonMain` is Android code, ADR 0035),
  * JVM 17, host tests with Android resources and default return values (as in `:app`, whose moved tests log
  * through `android.util.Log`), kotlinx.serialization. `:shared:core` and the features also compile the core test
  * fixtures in `commonTest`. `com.android.lint` publishes the module's lint model, without which the `:app` lint
  * (checkDependencies) skips the module's sources; the module's own lint tasks are not part of any verify aggregate.
  */
-class KmpLibraryConventionPlugin : Plugin<Project> {
+open class KmpLibraryConventionPlugin : Plugin<Project> {
+
+    /** Whether the module has the iOS targets. */
+    protected open val ios: Boolean = true
+
     override fun apply(target: Project) = with(target) {
         pluginManager.apply("org.jetbrains.kotlin.multiplatform")
         pluginManager.apply("com.android.kotlin.multiplatform.library")
@@ -40,8 +45,10 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                     isReturnDefaultValues = true
                 }
             }
-            iosArm64()
-            iosSimulatorArm64()
+            if (ios) {
+                iosArm64()
+                iosSimulatorArm64()
+            }
 
             compilerOptions {
                 // expect/actual classes (CMP locale root) are Beta and warn without this flag.
@@ -74,5 +81,18 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
         }
 
         verifyQuickDependsOn { it == "testAndroidHostTest" || it == "compileCommonMainKotlinMetadata" }
+        // The root verifyIosKlibs: the module's iOS main and test klibs, nothing for an Android-only module.
+        tasks.register(IOS_KLIB_TASK) {
+            group = "verification"
+            dependsOn(
+                tasks.named { it == "compileKotlinIosSimulatorArm64" || it == "compileTestKotlinIosSimulatorArm64" },
+            )
+        }
+        Unit
     }
+}
+
+/** `itmowidgets.kmp.android`: a shared module with the Android target only. */
+class KmpAndroidLibraryConventionPlugin : KmpLibraryConventionPlugin() {
+    override val ios: Boolean = false
 }

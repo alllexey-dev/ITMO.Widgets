@@ -27,9 +27,17 @@ gradlePlugin {
             id = "itmowidgets.kmp.library"
             implementationClass = "dev.alllexey.itmowidgets.buildlogic.KmpLibraryConventionPlugin"
         }
-        register("cmpUi") {
-            id = "itmowidgets.cmp.ui"
-            implementationClass = "dev.alllexey.itmowidgets.buildlogic.CmpUiConventionPlugin"
+        register("kmpAndroid") {
+            id = "itmowidgets.kmp.android"
+            implementationClass = "dev.alllexey.itmowidgets.buildlogic.KmpAndroidLibraryConventionPlugin"
+        }
+        register("cmpKit") {
+            id = "itmowidgets.cmp.kit"
+            implementationClass = "dev.alllexey.itmowidgets.buildlogic.CmpKitConventionPlugin"
+        }
+        register("cmpAndroid") {
+            id = "itmowidgets.cmp.android"
+            implementationClass = "dev.alllexey.itmowidgets.buildlogic.CmpAndroidConventionPlugin"
         }
         register("testing") {
             id = "itmowidgets.testing"

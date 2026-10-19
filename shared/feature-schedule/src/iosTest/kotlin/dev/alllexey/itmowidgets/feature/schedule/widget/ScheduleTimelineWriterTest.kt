@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetPalette
+import dev.alllexey.itmowidgets.core.settings.widgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
@@ -21,7 +22,6 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTim
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetContentKind
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetLesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetLessonState
-import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import kotlin.random.Random

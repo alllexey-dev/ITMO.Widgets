@@ -1,6 +1,6 @@
-// The Compose kit: theme, tokens and components with their previews and goldens.
+// The Compose kit, Android only (ADR 0035): theme, tokens and components with their previews and goldens.
 plugins {
-    id("itmowidgets.cmp.ui")
+    id("itmowidgets.cmp.kit")
     id("itmowidgets.testing")
 }
 

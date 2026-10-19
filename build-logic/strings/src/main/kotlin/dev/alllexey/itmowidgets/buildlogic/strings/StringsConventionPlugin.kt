@@ -12,7 +12,7 @@ import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 /**
- * The string catalog (ADR 0028). itmowidgets.android.app and itmowidgets.cmp.ui apply it, so a module never adds a
+ * The string catalog (ADR 0028). itmowidgets.android.app, itmowidgets.cmp.kit and itmowidgets.cmp.android apply it, so a module never adds a
  * line for it; `:shared:core`, a plain KMP library, applies it itself.
  *
  * - Every module gets the `itmowidgetsStrings { androidExport(...) }` extension.

@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.map.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.DisplayMetrics
@@ -26,7 +27,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.map.presentation.CampusMapStyle
 import dev.alllexey.itmowidgets.feature.map.presentation.MapScene
-import dev.alllexey.itmowidgets.shared.feature.map.Res
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.maplibre.android.MapLibre
@@ -83,7 +83,7 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
             mapView.onDestroy()
         }
     }
-    LaunchedEffect(Unit) { sprites = loadSprites() }
+    LaunchedEffect(Unit) { sprites = loadSprites(context) }
     LaunchedEffect(mapView) {
         mapView.getMapAsync { loaded ->
             loaded.setMinZoomPreference(MIN_ZOOM)
@@ -170,13 +170,13 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
 }
 
 /**
- * The campus app's icons from the module's resources, at its pixel ratio of 3 (the bitmap's density says it); 36
- * PNGs of 72 px, read and decoded off the main thread.
+ * The campus app's icons from the module's assets, at its pixel ratio of 3 (the bitmap's density says it); 36 PNGs
+ * of 72 px, read and decoded off the main thread.
  */
-private suspend fun loadSprites(): Map<String, Bitmap> = withContext(Dispatchers.Default) {
+private suspend fun loadSprites(context: Context): Map<String, Bitmap> = withContext(Dispatchers.Default) {
     CampusMapStyle.SPRITES.associateWith { name ->
-        val bytes = Res.readBytes("files/map_sprites/$name.png")
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.size).apply { density = DisplayMetrics.DENSITY_DEFAULT * CampusMapStyle.SPRITE_PIXEL_RATIO }
+        context.assets.open(mapSpritePath(name)).use(BitmapFactory::decodeStream)
+            .apply { density = DisplayMetrics.DENSITY_DEFAULT * CampusMapStyle.SPRITE_PIXEL_RATIO }
     }
 }
 

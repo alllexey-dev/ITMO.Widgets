@@ -14,11 +14,15 @@ import UserNotifications
 ///   `notification_sport_success` or `_failure` over Android's text; a failure before MyITMO's answer keeps Backend's
 ///   "a place is free"; a full lesson, or nothing left to book, is dropped, as Android shows nothing. Every booking
 ///   and refusal is also left for the bell in the App Group.
-/// - A type the user turned off in the app (`disabledPushes` of session-v1.json): dropped; a sport push still books
-///   and leaves its result for the bell.
+/// - A type the user turned off in the app (`disabledPushes` of session-v1.json), with `honorsDisabledPushes` only:
+///   dropped; a sport push still books and leaves its result for the bell.
 struct PushHandler {
     let session: () -> SessionFile?
     let booker: SportPushBooker
+    /// Off until the extension holds `com.apple.developer.usernotifications.filtering`: without it iOS shows a dropped
+    /// push anyway, the app hides those switches, and a stored "off" the user can no longer change must not turn a
+    /// sport outcome back into Backend's alert.
+    var honorsDisabledPushes = false
     /// Leaves each booking or refusal for the bell (`SportResultInbox`).
     var record: (SportSignNotice) -> Void = { _ in }
 
@@ -27,7 +31,7 @@ struct PushHandler {
         guard let session = session(), !session.demo, let isu = session.isu, isu == message.recipientIsu else {
             return Self.dropped
         }
-        let muted = message.channel.map(session.disabledPushes.contains) ?? false
+        let muted = honorsDisabledPushes && (message.channel.map(session.disabledPushes.contains) ?? false)
         guard let queue = SportQueue(pushType: message.type) else {
             if muted { return Self.dropped }
             return message.type == PushMessage.agentBooked ? Self.agentBooked(content, payload: message.payload) : content
