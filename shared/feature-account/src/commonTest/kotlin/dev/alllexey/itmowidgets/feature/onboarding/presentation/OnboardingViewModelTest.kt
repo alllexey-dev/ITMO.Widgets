@@ -233,6 +233,7 @@ class OnboardingViewModelTest {
             wallpaperColors = true,
             pinWidgets = true,
             lockScreenWidgets = true,
+            pushSwitches = true,
         )
 
         fun lesson(subject: String, start: LocalTime, end: LocalTime) = DayLesson(

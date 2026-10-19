@@ -12,14 +12,15 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.Push
 object NotificationSettingsSamples {
     /**
      * [state] is `on` (allowed, connected, one push off), `off` (denied by the system), `channels` (a system channel of
-     * a type that is on is off) or `offline` (not connected, the background restricted).
+     * a type that is on is off) or `offline` (not connected, the background restricted). Without [pushSwitches]
+     * (`PlatformCapabilities.pushSwitches`, iOS) the push types are not listed.
      */
-    fun state(state: String): NotificationSettingsUiState = when (state) {
+    fun state(state: String, pushSwitches: Boolean = true): NotificationSettingsUiState = when (state) {
         "off" -> on.copy(permission = NotificationPermission.DENIED)
         "channels" -> on.copy(systemChannelsOff = true)
         "offline" -> on.copy(connected = false, backgroundWorkRestricted = true)
         else -> on
-    }
+    }.let { if (pushSwitches) it else it.copy(pushes = emptyList()) }
 
     private val on = NotificationSettingsUiState(
         loaded = true,

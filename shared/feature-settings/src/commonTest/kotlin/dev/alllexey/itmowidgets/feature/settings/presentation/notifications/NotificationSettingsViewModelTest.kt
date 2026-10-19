@@ -94,6 +94,26 @@ class NotificationSettingsViewModelTest {
     }
 
     @Test
+    fun withoutPushSwitchesNoPushIsListedNorCountedAndTheStoredOnesStay() = runTest(main.dispatcher) {
+        val ios = fixture(
+            LocalSettings(customServicesEnabled = true, disabledPushes = setOf("friends")),
+            capabilities = EveryPlatformCapability.copy(pushSwitches = false),
+        )
+        advanceUntilIdle()
+
+        val state = ios.viewModel.uiState.value
+        assertEquals(emptyList(), state.pushes)
+        assertEquals(
+            dev.alllexey.itmowidgets.core.text.UiText.Res(
+                dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings.notifications_subtitle_count,
+                listOf(2, 2),
+            ),
+            state.subtitle,
+        )
+        assertEquals(setOf("friends"), ios.settings.local.value.disabledPushes)
+    }
+
+    @Test
     fun marksAsAWholeSwitchEverySourceBarsOnlyOnceAnswered() = runTest(main.dispatcher) {
         val unanswered = fixture()
         val answered = fixture(LocalSettings(barsMarksEnabled = true))
