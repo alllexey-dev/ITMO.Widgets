@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copy only the iOS sign-in and first-run screens show (ADR 0028): exported to Localizable.xcstrings. -->
-<resources>
-    <!-- The first step's widgets row: iOS has Home Screen and Lock Screen widgets. -->
-    <string name="ios_onboarding_value_widgets_text">На экране «Домой» и блокировки</string>
-</resources>

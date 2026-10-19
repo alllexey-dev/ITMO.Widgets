@@ -52,14 +52,12 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.core.testing.FakeDayLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.FakeSportLessonTemplateController
-import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
@@ -166,10 +164,7 @@ class AccountEntriesTest {
                             FakeOnboardingRepository(completed = false),
                             FakeCustomServicesRepository(),
                             sessions,
-                            FakeDayLessonsGateway(),
-                            FakeSportScoreRepository(),
                             FakeCalendarSync(),
-                            FixedAcademicTime(),
                             AndroidPlatformCapabilities,
                             get<SavedStateHandle>(),
                         )

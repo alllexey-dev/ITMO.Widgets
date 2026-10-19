@@ -1,27 +1,14 @@
 package dev.alllexey.itmowidgets.feature.onboarding.presentation
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.core.lesson.DayLesson
-import dev.alllexey.itmowidgets.core.lesson.LessonDay
-import dev.alllexey.itmowidgets.core.lesson.LessonState
-import dev.alllexey.itmowidgets.core.lesson.LessonTarget
-import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
-import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionState
-import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
-import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
-import dev.alllexey.itmowidgets.core.testing.FakeDayLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
-import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
-import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
-import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -33,11 +20,8 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
 
-/** The three steps of the first run: the user's own data, the permissions one by one, the consent-gated connection. */
+/** The two steps of the first run: who signed in with the permissions one by one, the consent-gated connection. */
 class OnboardingViewModelTest {
 
     private val main = TestMainDispatcher()
@@ -49,17 +33,20 @@ class OnboardingViewModelTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun theFlowWalksThreeStepsAndEndsWithNotNow() = runTest(main.dispatcher) {
+    fun theFlowWalksTwoStepsAndEndsWithNotNow() = runTest(main.dispatcher) {
         val fixture = Fixture()
         advanceUntilIdle()
 
-        val walked = mutableListOf<OnboardingStep>(fixture.viewModel.uiState.value.step)
-        repeat(2) { fixture.viewModel.next(); walked += fixture.viewModel.uiState.value.step }
-        assertEquals(OnboardingStep.entries.toList(), walked.toList())
+        val walked = mutableListOf(fixture.viewModel.uiState.value.step)
+        fixture.viewModel.next()
+        walked += fixture.viewModel.uiState.value.step
+        assertEquals(listOf(OnboardingStep.PERMISSIONS, OnboardingStep.CONNECTION), walked.toList())
         assertFalse(fixture.onboarding.observeCompleted().first())
 
         fixture.viewModel.back()
         assertEquals(OnboardingStep.PERMISSIONS, fixture.viewModel.uiState.value.step)
+        fixture.viewModel.back()
+        assertEquals(OnboardingStep.PERMISSIONS, fixture.viewModel.uiState.value.step, "the first step has nothing before it")
         fixture.viewModel.next()
         fixture.viewModel.notNow()
         advanceUntilIdle()
@@ -73,41 +60,24 @@ class OnboardingViewModelTest {
     fun theStepSurvivesProcessDeath() = runTest(main.dispatcher) {
         val saved = SavedStateHandle()
         Fixture(saved).viewModel.next()
-        assertEquals(OnboardingStep.PERMISSIONS, Fixture(saved).viewModel.uiState.value.step)
+        assertEquals(OnboardingStep.CONNECTION, Fixture(saved).viewModel.uiState.value.step)
     }
 
     @Test
-    fun theFirstStepShowsThePersonTheLessonNowAndTheSportScore() = runTest(main.dispatcher) {
+    fun theFirstStepShowsTheFullNameAndTheIsu() = runTest(main.dispatcher) {
         val fixture = Fixture()
         advanceUntilIdle()
 
-        val state = fixture.viewModel.uiState.value
-        assertEquals(OnboardingMe("Александрова Мария", "АМ", null), state.me)
-        assertEquals(UiText.Res(AccountStrings.onboarding_value_now), state.lesson?.title)
-        assertEquals("Программирование", state.lesson?.lesson?.subject)
-        assertEquals(LessonState.NOW, state.lesson?.lesson?.state)
-        assertEquals(UiText.Res(AccountStrings.onboarding_value_sport_score, listOf(90)), state.sport)
-        assertEquals(listOf(10L), fixture.sport.scoreRequests, "the current period")
-        assertEquals(1, fixture.days.refreshes)
+        assertEquals(OnboardingMe("Александрова Мария Сергеевна", "АМ", null, 412345), fixture.viewModel.uiState.value.me)
     }
 
     @Test
-    fun afterTodaysLessonsTheFirstStepShowsTomorrowsFirst() = runTest(main.dispatcher) {
-        val fixture = Fixture(time = FixedAcademicTime(LocalDateTime(Today, LocalTime(19, 0))))
+    fun withoutTheNamePartsTheCardTakesTheTokenName() = runTest(main.dispatcher) {
+        val fixture = Fixture(user = CurrentUser(7, "Мария", null))
         advanceUntilIdle()
 
-        assertEquals(UiText.Res(AccountStrings.onboarding_value_tomorrow), fixture.viewModel.uiState.value.lesson?.title)
-        assertEquals("Физика", fixture.viewModel.uiState.value.lesson?.lesson?.subject)
-    }
-
-    @Test
-    fun withoutDataTheFirstStepKeepsItsDescriptions() = runTest(main.dispatcher) {
-        val fixture = Fixture(days = emptyList())
-        fixture.sport.periods = AppResult.Failure(dev.alllexey.itmowidgets.core.result.AppError.Network)
-        advanceUntilIdle()
-
-        assertNull(fixture.viewModel.uiState.value.lesson)
-        assertNull(fixture.viewModel.uiState.value.sport)
+        assertEquals(OnboardingMe("Мария", "М", null, 7), fixture.viewModel.uiState.value.me)
+        assertNull(Fixture(user = CurrentUser(7, null, null)).viewModel.uiState.value.me, "no name, no card")
     }
 
     @Test
@@ -196,29 +166,26 @@ class OnboardingViewModelTest {
 
     private class Fixture(
         saved: SavedStateHandle = SavedStateHandle(),
-        time: FixedAcademicTime = FixedAcademicTime(LocalDateTime(Today, LocalTime(12, 0))),
-        days: List<LessonDay> = Week,
+        user: CurrentUser = Person,
         connected: Boolean = false,
         capabilities: PlatformCapabilities = Capabilities,
     ) {
         val onboarding = FakeOnboardingRepository(completed = false)
         val services = FakeCustomServicesRepository(enabled = connected)
-        val session = FakeSessionRepository(
-            SessionState.SignedIn(CurrentUser(1, "Александрова Мария", null, familyName = "Александрова", givenName = "Мария")),
-        )
-        val days = FakeDayLessonsGateway(days)
-        val sport = FakeSportScoreRepository().apply {
-            periods = AppResult.Success(listOf(SportScorePeriod(9, "Осень"), SportScorePeriod(10, "Весна", current = true)))
-            score = AppResult.Success(SportScoreSummary(64, 26))
-        }
+        val session = FakeSessionRepository(SessionState.SignedIn(user))
         val calendar = FakeCalendarSync()
-        val viewModel = OnboardingViewModel(
-            onboarding, services, session, this.days, sport, calendar, time, capabilities, saved,
-        )
+        val viewModel = OnboardingViewModel(onboarding, services, session, calendar, capabilities, saved)
     }
 
     private companion object {
-        val Today = LocalDate(2026, 9, 7)
+        val Person = CurrentUser(
+            412345,
+            "Александрова Мария",
+            null,
+            familyName = "Александрова",
+            givenName = "Мария",
+            middleName = "Сергеевна",
+        )
 
         val Capabilities = PlatformCapabilities(
             quickSettingsTile = true,
@@ -234,25 +201,6 @@ class OnboardingViewModelTest {
             pinWidgets = true,
             lockScreenWidgets = true,
             pushSwitches = true,
-        )
-
-        fun lesson(subject: String, start: LocalTime, end: LocalTime) = DayLesson(
-            start = start,
-            end = end,
-            subject = subject,
-            typeId = 2,
-            teacher = null,
-            room = "1506",
-            building = "Кронверкский пр., 49",
-            online = false,
-            target = LessonTarget.Lesson(
-                LessonDetailsArgs(1, Today.toString(), subject, 2, "", "$start", "$end", null, null, "1506", null, null, null, null, null, null, null),
-            ),
-        )
-
-        val Week = listOf(
-            LessonDay(Today, listOf(lesson("Программирование", LocalTime(11, 40), LocalTime(13, 10))), null),
-            LessonDay(LocalDate(2026, 9, 8), listOf(lesson("Физика", LocalTime(10, 0), LocalTime(11, 30))), null),
         )
     }
 }

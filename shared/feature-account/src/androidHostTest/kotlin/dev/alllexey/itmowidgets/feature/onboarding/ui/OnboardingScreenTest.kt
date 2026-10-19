@@ -8,14 +8,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
-import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -73,20 +74,29 @@ class OnboardingScreenTest {
         for (value in States) {
             state = value
             waitForIdle()
-            // The lesson card shortens its lines by design; the chip's tiny avatar keeps its letters' size.
-            assertNoTextOverflow(allowed = hasAnyAncestor(hasTestTag(OnboardingTestTags.LESSON)) or hasText(INITIALS))
+            // The avatar keeps its letters' size.
+            assertNoTextOverflow(allowed = hasText(INITIALS))
         }
     }
 
     @Test
-    fun theFirstStepDrawsThePersonAndTheLesson() = runComposeUiTest {
-        setContent { Screen(OnboardingSamples.state("value")) }
+    fun theFirstStepDrawsWhoSignedIn() = runComposeUiTest {
+        setContent { Screen(OnboardingSamples.state("permissions-none")) }
 
         onNodeWithTag(OnboardingTestTags.ME).assertIsDisplayed()
-        onNodeWithTag(OnboardingTestTags.LESSON).assertIsDisplayed()
-        onNodeWithText("Программирование").assertIsDisplayed()
-        onNodeWithText("1 из 3").assertIsDisplayed()
-        onNodeWithText("30 из 100").performScrollTo().assertIsDisplayed()
+        onNodeWithText("Александрова Мария Сергеевна").assertIsDisplayed()
+        onNodeWithText("ИСУ 412345").assertIsDisplayed()
+        onNodeWithText("1 из 2").assertIsDisplayed()
+    }
+
+    /** Text without a colour of its own takes the screen's `onSurface`, not the default black (owner, 2026-10-19). */
+    @Test
+    fun theDarkThemeDrawsTheTitleLight() = runComposeUiTest {
+        setContent { ItmoTheme(dark = true) { OnboardingScreen(OnboardingSamples.state("permissions"), OnboardingActions()) } }
+
+        val pixels = onNodeWithText("Разрешения").captureToImage().toPixelMap()
+        val brightest = (0 until pixels.width).maxOf { x -> (0 until pixels.height).maxOf { y -> pixels[x, y].luminance() } }
+        assertTrue(brightest > 0.5f, "the title is drawn dark on the dark surface")
     }
 
     @Test
@@ -175,7 +185,7 @@ class OnboardingScreenTest {
 
     private companion object {
         val States: List<OnboardingUiState> = listOf(
-            "value", "value-empty", "permissions", "permissions-none", "connection", "connected",
+            "permissions", "permissions-none", "connection", "connected",
         ).map(OnboardingSamples::state)
 
         val NarrowWidth: Dp = 320.dp

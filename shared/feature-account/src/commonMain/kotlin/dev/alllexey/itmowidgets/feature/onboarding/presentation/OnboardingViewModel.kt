@@ -3,27 +3,17 @@ package dev.alllexey.itmowidgets.feature.onboarding.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.alllexey.itmowidgets.core.lesson.DayMoment
-import dev.alllexey.itmowidgets.core.lesson.LessonDay
-import dev.alllexey.itmowidgets.core.lesson.LessonState
-import dev.alllexey.itmowidgets.core.lesson.LessonTimelines
-import dev.alllexey.itmowidgets.core.lesson.TimelineItem
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncResult
-import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
+import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
-import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
-import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.personInitials
-import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,24 +23,18 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.plus
 
 /**
- * The first-run flow (DECISIONS.md, Первый запуск): three steps, no `Включить всё`. The first shows the user's own
- * data (today's lesson, the sport score) as it loads; the second asks each permission with its own button, and
- * `Далее` works without any; the third connects to ITMO.Widgets through the consent sheet or leaves it with
- * `Не сейчас`. Every choice is written through its own repository the moment it is made, so leaving at any step
- * leaves a consistent app. The step lives in the saved state: process death returns to the same page.
+ * The first-run flow (owner, 2026-10-19): two steps, no `Включить всё`. The first shows who signed in and asks each
+ * permission with its own button, and `Далее` works without any; the second connects to ITMO.Widgets through the
+ * consent sheet or leaves it with `Не сейчас`. Every choice is written through its own repository the moment it is
+ * made, so leaving at any step leaves a consistent app. The step lives in the saved state: process death returns to the same page.
  */
 class OnboardingViewModel(
     private val onboardingRepository: OnboardingRepository,
     private val customServicesRepository: CustomServicesRepository,
     private val sessionRepository: SessionRepository,
-    private val days: DayLessonsGateway,
-    private val sportScores: SportScoreRepository,
     private val calendarSync: CalendarSync,
-    private val time: AcademicTimeProvider,
     capabilities: PlatformCapabilities,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -69,12 +53,7 @@ class OnboardingViewModel(
             .launchIn(viewModelScope)
         sessionRepository.state
             .onEach { session ->
-                val me = (session as? SessionState.SignedIn)?.user?.let { user ->
-                    user.name?.trim()?.takeIf { it.isNotEmpty() }?.let { name ->
-                        OnboardingMe(name, personInitials(name, user.familyName, user.givenName), user.pictureUrl)
-                    }
-                }
-                mutableState.update { it.copy(me = me) }
+                mutableState.update { it.copy(me = (session as? SessionState.SignedIn)?.user?.let(::meOf)) }
             }
             .launchIn(viewModelScope)
         if (capabilities.calendarExport) {
@@ -82,12 +61,6 @@ class OnboardingViewModel(
                 .onEach { calendar -> mutableState.update { it.copy(calendarSynced = calendar.enabled) } }
                 .launchIn(viewModelScope)
         }
-        val today = time.today()
-        days.observe(today, today.plus(DatePeriod(days = 1)))
-            .onEach { loaded -> mutableState.update { it.copy(lesson = lessonOf(loaded)) } }
-            .launchIn(viewModelScope)
-        viewModelScope.launch { days.refresh(today, today.plus(DatePeriod(days = 1))) }
-        viewModelScope.launch { loadSport() }
     }
 
     /** The footer's primary action: one step forward, or the end of the flow on its last step. */
@@ -162,30 +135,14 @@ class OnboardingViewModel(
     /** `Не сейчас`: leaving the connection off is a valid answer. */
     fun notNow() = complete()
 
-    private suspend fun loadSport() {
-        val periods = sportScores.getScorePeriods() as? AppResult.Success ?: return
-        val current = periods.value.firstOrNull { it.current } ?: return
-        val summary = sportScores.getScoreSummary(current.id) as? AppResult.Success ?: return
-        mutableState.update {
-            it.copy(sport = UiText.Res(AccountStrings.onboarding_value_sport_score, listOf(summary.value.totalCapped)))
+    /** The full name when the token has its parts (`Фамилия Имя Отчество`), else its `name`. */
+    private fun meOf(user: CurrentUser): OnboardingMe? {
+        val name = if (user.familyName.isNullOrBlank() || user.givenName.isNullOrBlank()) {
+            user.name?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        } else {
+            listOfNotNull(user.familyName, user.givenName, user.middleName?.takeIf { it.isNotBlank() }).joinToString(" ") { it.trim() }
         }
-    }
-
-    /** Today's lesson now or next by the timeline's rules, else tomorrow's first. */
-    private fun lessonOf(loaded: List<LessonDay>): OnboardingLesson? {
-        val today = time.today()
-        val now = time.localNow()
-        val todays = loaded.firstOrNull { it.date == today }?.lessons.orEmpty()
-        LessonTimelines.build(todays, DayMoment.Today(now.time), today)
-            .filterIsInstance<TimelineItem.Lesson>()
-            .firstOrNull { it.lesson.state == LessonState.NOW || it.lesson.state == LessonState.NEXT }
-            ?.let { item ->
-                val title = if (item.lesson.state == LessonState.NOW) AccountStrings.onboarding_value_now else AccountStrings.onboarding_value_next
-                return OnboardingLesson(UiText.Res(title), item.lesson)
-            }
-        val tomorrow = today.plus(DatePeriod(days = 1))
-        val first = loaded.firstOrNull { it.date == tomorrow }?.lessons?.minByOrNull { it.start } ?: return null
-        return OnboardingLesson(UiText.Res(AccountStrings.onboarding_value_tomorrow), LessonTimelines.lesson(first, LessonState.UPCOMING))
+        return OnboardingMe(name, personInitials(name, user.familyName, user.givenName), user.pictureUrl, user.isu)
     }
 
     private fun send(event: OnboardingEvent) {
@@ -205,7 +162,7 @@ class OnboardingViewModel(
 
     private fun restoredStep(): OnboardingStep {
         val stored = savedStateHandle.get<String>(KEY_STEP)
-        return OnboardingStep.entries.firstOrNull { it.name == stored } ?: OnboardingStep.VALUE
+        return OnboardingStep.entries.firstOrNull { it.name == stored } ?: OnboardingStep.PERMISSIONS
     }
 
     private companion object {
