@@ -291,7 +291,7 @@ object ScheduleSamples {
         friends: List<UserSummary> = emptyList(),
     ) = LessonSheetUiState(
         UiText.Dynamic(over), status, subject, room?.let(UiText::Dynamic), online, UiText.Dynamic(time), address, actions,
-        changes, note, password, teacher, flow, sport, friends,
+        actionsPending = false, changes, note, password, teacher, flow, sport, friends,
     )
 
     private val subjectRoute = AppRoutes.TabRoot(AppTab.RECORDBOOK)

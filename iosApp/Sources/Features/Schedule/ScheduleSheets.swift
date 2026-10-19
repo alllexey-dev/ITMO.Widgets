@@ -66,6 +66,7 @@ struct LessonSheetViewActions {
 
 /// The lesson sheet without the ViewModel: the status and the subject, the big room (or online) with the time and
 /// the address, the relevant actions, the change, the note, the teacher, the flow, the sport row and the friends.
+/// While the actions may still change their row keeps its height, empty, so nothing below moves when they come.
 struct LessonSheetContent: View {
     let state: LessonSheetUiState
     var actions = LessonSheetViewActions()
@@ -74,7 +75,11 @@ struct LessonSheetContent: View {
         ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: ItmoKit.gap) {
                 hero
-                if !state.actions.isEmpty {
+                if state.actionsPending {
+                    tile(LessonSheetContent.placeholder, first: true) {}
+                        .hidden()
+                        .accessibilityHidden(true)
+                } else if !state.actions.isEmpty {
                     HStack(alignment: .top, spacing: ItmoSpacing.related) {
                         ForEach(state.actions.indices, id: \.self) { index in
                             tile(state.actions[index], first: index == 0) {
@@ -133,6 +138,11 @@ struct LessonSheetContent: View {
         }
     }
 
+    /// What the empty row measures while the actions may still change.
+    private static let placeholder = LessonAction(
+        kind: .route, label: UiTextDynamic(value: " "), url: nil, route: nil, enabled: false
+    )
+
     private func tile(_ action: LessonAction, first: Bool, run: @escaping () -> Void) -> some View {
         Button(action: run) {
             VStack(spacing: ItmoSpacing.compact) {
@@ -140,13 +150,28 @@ struct LessonSheetContent: View {
                     .font(.itmo(.titleLarge))
                     .frame(maxWidth: .infinity, minHeight: 52)
                     // The rest in the primary container (Android's tonal button): a grey tile reads as disabled.
-                    .foregroundStyle(first ? ItmoColor.onPrimary : ItmoColor.onPrimaryContainer)
-                    .background(first ? ItmoColor.primary : ItmoColor.primaryContainer, in: .rect(cornerRadius: 18))
-                Text(verbatim: action.label.resolved).font(.itmo(.labelMedium)).lineLimit(1).foregroundStyle(.primary)
+                    .foregroundStyle(tileForeground(action, first: first))
+                    .background(tileBackground(action, first: first), in: .rect(cornerRadius: 18))
+                Text(verbatim: action.label.resolved)
+                    .font(.itmo(.labelMedium))
+                    .lineLimit(1)
+                    .foregroundStyle(action.enabled ? HierarchicalShapeStyle.primary : HierarchicalShapeStyle.tertiary)
             }
         }
         .buttonStyle(.plain)
+        .disabled(!action.enabled)
         .accessibilityIdentifier("lessonSheet.action.\(action.kind.name.lowercased())")
+    }
+
+    /// `Друзья` while they load or with nobody on the lesson: the grey of a disabled control.
+    private func tileForeground(_ action: LessonAction, first: Bool) -> Color {
+        if !action.enabled { return Color(.tertiaryLabel) }
+        return first ? ItmoColor.onPrimary : ItmoColor.onPrimaryContainer
+    }
+
+    private func tileBackground(_ action: LessonAction, first: Bool) -> Color {
+        if !action.enabled { return Color(.tertiarySystemFill) }
+        return first ? ItmoColor.primary : ItmoColor.primaryContainer
     }
 
     private func symbol(_ kind: LessonActionKind) -> AppSymbol {

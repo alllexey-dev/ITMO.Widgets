@@ -396,7 +396,7 @@ both platforms.
 | `ButtonRow` | Two buttons side by side, stacked at full width when the labels do not fit | Its buttons take the `ProgressButton` capsules |
 | `Pill` | The `моя` badge, a count, a status in its tone over a 12 % wash | Capsules in the iOS type |
 | `ToneDot` | The review tone dot, an empty slot until the tone arrives | Same |
-| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise: surname and given name by `personInitials`, from ITMO.ID's name parts when the caller passes `initials` | Same; `ItmoAvatar` takes the initials from the shared `personInitials` or a model's `initials` |
+| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise: surname and given name by `personInitials`, from ITMO.ID's name parts when the caller passes `initials`; M3 Expressive's nine-sided cookie with the expressive switch, a circle otherwise | A circle; `ItmoAvatar` takes the initials from the shared `personInitials` or a model's `initials` |
 | `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
 | `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | A section header in `secondaryLabel` at UIKit's insets |
 | `GroupActionRow` | The last row of a group that leads further | A cell with the icon in the tint and the disclosure indicator |
@@ -488,7 +488,7 @@ screens that have not moved yet.
 | `ItmoCard`, `IconTile` | One topic per card (`cardContent`), a tonal card, the one hero (`cardHero`); an icon in a tone's tile |
 | `StatusPill`, `PillSpec` | `идёт`, `далее`, `изменена`, `отменена`, `очередь 2 из 5`, `записаны`, `онлайн`; `solid` for `идёт` |
 | `SegmentedChoice` | The one choice pattern for two to four options and in-screen tabs: connected toggle buttons, a check on the chosen one up to three options |
-| `ListGroup`, `ListRow`, `SwitchListRow`, `ListGroupNote` | Connected groups of rows: icon tile or avatar, title, subtitle, lines below it, count, value, accessory, chevron, destructive; a switch row; a caption |
+| `ListGroup`, `ListRow`, `SwitchListRow`, `PersonListRow`, `ListGroupNote` | Connected groups of rows: icon tile or avatar, title, subtitle, lines below it, count, value, accessory, chevron, destructive; a switch row; a person with a 40 dp avatar, the one row for people in every list; a caption |
 | `GateCard`, `ActionCard`, `LockNote`, `StaleContent` | Gated (what, why, one fix), worth doing, locked without a fix, old data dimmed under its date; empty and error stay `ContentState` |
 | `LessonView`, `LessonCard` | One lesson outside a day list: subject; `тип, преподаватель`; `аудитория, корпус` (none online); note; pills; friends; with `onClick` the card opens the lesson |
 | `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary` (one clock: it grows monotonically, so overlapping lessons get one `сейчас` marker), `Окно 2 ч 10 мин` rows, a change note and an `одновременно с «…»` note under a lesson; with `onLessonClick` each lesson is a target |
@@ -544,8 +544,8 @@ What adapts under `Ios`:
   the M3E look is Android's only.
 
 What stays the same: content visuals are one drawing on both platforms (the
-score ring, the grade scale, the timeline marker, the avatar and the hero
-avatar mask without the expressive shape, the steps indicator's geometry,
+score ring, the grade scale, the timeline marker, the avatar without the
+expressive cookie, the steps indicator's geometry,
 Material Symbols icons, the lesson-type accents and the extended colours);
 only the chrome around them follows the style. Text, icons and behaviour of a
 screen do not change between styles.

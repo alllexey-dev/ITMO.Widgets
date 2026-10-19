@@ -10,6 +10,13 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Lesson sheet people and avatars (2026-10-19)
+
+- Lesson sheet: the action tiles no longer jump in after it opens (`Друзья` keeps its place, disabled while the
+  friends load or when nobody is there), `Друзья` scrolls to the list with its bottom margin, the sheet's colour runs
+  under the navigation bar, people use the friends list's compact row everywhere, Android avatars are M3 Expressive
+  cookies (iOS keeps circles), and the sport catalog's friend avatars are no longer squashed.
+
 ### Widgets (2026-10-18)
 
 - The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in

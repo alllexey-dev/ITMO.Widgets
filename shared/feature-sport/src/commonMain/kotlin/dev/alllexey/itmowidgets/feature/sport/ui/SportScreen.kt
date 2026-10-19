@@ -429,7 +429,8 @@ private fun CatalogRow(row: SportCatalogRow, actions: SportSignActions) {
                 KindTag(row.kind.asString(), row.kindTone, row.place?.asString())
                 if (row.occupancy != null || row.friends.isNotEmpty()) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
-                        row.occupancy?.let { OccupancyBar(it.text.asString(), it.share, it.tone.tone()) }
+                        // Weighted, so the bar gives way first and the friends' avatars keep their size.
+                        row.occupancy?.let { OccupancyBar(it.text.asString(), it.share, it.tone.tone(), Modifier.weight(1f, fill = false)) }
                         FriendAvatars(row.friends)
                     }
                 }
