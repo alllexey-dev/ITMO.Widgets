@@ -19,18 +19,17 @@ import dev.alllexey.itmowidgets.designsystem.components.dialogs.ReportDialogStat
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ReportDialogSurface
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
-import dev.alllexey.itmowidgets.shared.feature.resources.Res
-import dev.alllexey.itmowidgets.shared.feature.resources.links_report_broken
-import dev.alllexey.itmowidgets.shared.feature.resources.links_report_comment
-import dev.alllexey.itmowidgets.shared.feature.resources.links_report_other
-import dev.alllexey.itmowidgets.shared.feature.resources.links_report_send
-import dev.alllexey.itmowidgets.shared.feature.resources.links_report_spam
-import dev.alllexey.itmowidgets.shared.feature.resources.links_report_title
-import dev.alllexey.itmowidgets.shared.feature.resources.links_report_wrong_subject
+import dev.alllexey.itmowidgets.shared.compose.strings.links_report_broken
+import dev.alllexey.itmowidgets.shared.compose.strings.links_report_comment
+import dev.alllexey.itmowidgets.shared.compose.strings.links_report_other
+import dev.alllexey.itmowidgets.shared.compose.strings.links_report_send
+import dev.alllexey.itmowidgets.shared.compose.strings.links_report_spam
+import dev.alllexey.itmowidgets.shared.compose.strings.links_report_title
+import dev.alllexey.itmowidgets.shared.compose.strings.links_report_wrong_subject
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 
 /**
  * What [ReportLinkDialog] shows: the picked [reason], the [comment], whether the report is on its way and the [error]
@@ -92,7 +91,7 @@ fun ReportLinkDialog(state: ReportLinkDialogState, actions: ReportLinkActions) {
         state = state.toKit(),
         commentLabel = stringResource(Res.string.links_report_comment),
         sendLabel = stringResource(Res.string.links_report_send),
-        dismissLabel = stringResource(CoreRes.string.common_cancel),
+        dismissLabel = stringResource(Res.string.common_cancel),
         onReasonSelect = { actions.onReasonSelect(ResourceReportReason.entries[it]) },
         onCommentChange = actions.onCommentChange,
         onSend = actions.onSend,
@@ -109,7 +108,7 @@ private fun ReportLinkDialogSurface(state: ReportLinkDialogState, actions: Repor
         state = state.toKit(),
         commentLabel = stringResource(Res.string.links_report_comment),
         sendLabel = stringResource(Res.string.links_report_send),
-        dismissLabel = stringResource(CoreRes.string.common_cancel),
+        dismissLabel = stringResource(Res.string.common_cancel),
         onReasonSelect = { actions.onReasonSelect(ResourceReportReason.entries[it]) },
         onCommentChange = actions.onCommentChange,
         onSend = actions.onSend,
