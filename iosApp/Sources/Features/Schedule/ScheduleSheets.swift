@@ -164,7 +164,7 @@ struct LessonSheetContent: View {
         .accessibilityIdentifier("lessonSheet.action.\(action.kind.name.lowercased())")
     }
 
-    /// `Друзья` while they load or with nobody on the lesson: the grey of a disabled control.
+    /// The friends tile while they load or with nobody on the lesson: the grey of a disabled control.
     private func tileForeground(_ action: LessonAction, first: Bool) -> Color {
         if !action.enabled { return Color(.tertiaryLabel) }
         return first ? ItmoColor.onPrimary : ItmoColor.onPrimaryContainer
