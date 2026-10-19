@@ -12,23 +12,11 @@ import dev.alllexey.itmowidgets.feature.onboarding.ui.preview.OnboardingSamples
 
 /*
  * The harness names a baseline `<function>_<@Preview name>`; each step is a function called `OnboardingScreen` in a
- * holder class of its own, at the design lab's axes and the answered states.
+ * holder class of its own, with the answered states.
  */
 
 @Composable
 private fun OnboardingPreview(step: String) = ItmoPreview { OnboardingScreen(OnboardingSamples.state(step), OnboardingActions()) }
-
-internal class OnboardingScreenValuePreview {
-    @Preview(name = "value")
-    @Composable
-    fun OnboardingScreen() = OnboardingPreview("value")
-}
-
-internal class OnboardingScreenValueEmptyPreview {
-    @Preview(name = "value-empty")
-    @Composable
-    fun OnboardingScreen() = OnboardingPreview("value-empty")
-}
 
 internal class OnboardingScreenPermissionsPreview {
     @Preview(name = "permissions")

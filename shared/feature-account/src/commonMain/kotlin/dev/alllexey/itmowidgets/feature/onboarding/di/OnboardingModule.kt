@@ -19,8 +19,8 @@ val onboardingDataModule = module {
 
 /**
  * The first-run flow and its gate. The onboarding flag comes from [onboardingDataModule]; the session, the opt-in, the
- * day lessons, the sport score, the calendar sync and the capabilities from the platform's feature bindings. The flow's step survives process death in its
- * `SavedStateHandle` under `onboarding_step`.
+ * calendar sync and the capabilities from the platform's feature bindings. The flow's step survives process death in
+ * its `SavedStateHandle` under `onboarding_step`.
  */
 val onboardingModule = module {
     viewModelOf(::OnboardingViewModel)

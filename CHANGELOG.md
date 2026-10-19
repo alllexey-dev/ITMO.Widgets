@@ -10,6 +10,11 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### First run in two steps (2026-10-19)
+
+- The first-run flow has two steps instead of three: `Разрешения`, topped by a card with the full name and the ISU from ITMO.ID, then `Друзья и очередь` with one line, `Что хранит сервер`, `Подключить` and `Не сейчас`. The `Всё уже на месте` step (the lesson card and the `И ещё` rows) is gone, and every line of copy is shorter.
+- On Android the first-run titles and the name are no longer black in the dark theme.
+
 ### Lesson subject without opening it first (2026-10-19)
 
 - The lesson sheet shows `Предмет` and `Ссылки 3` right away, also for a subject never opened in Зачётка: a subject whose links the device has never loaded no longer hides both tiles, the sheet fetches its links once.
