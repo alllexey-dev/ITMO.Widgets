@@ -177,7 +177,7 @@ class SportSignViewModelTest {
     }
 
     @Test
-    fun theQuickChipsAreFreeMorningEveningFriends() = runTest(main.dispatcher) {
+    fun theQuickChipsAreAvailableFreeMorningEveningFriends() = runTest(main.dispatcher) {
         emitCatalog(SportCardFixtures.lesson(1))
         val lesson = sections.queueLesson(1).copy(sectionName = SportCardFixtures.lesson(1).sectionName.raw)
         sections.sections.value = LoadState.Content(listOf(MySportSection(1, lesson, emptyList(), place = 1, subscribers = 1)))
@@ -185,9 +185,36 @@ class SportSignViewModelTest {
         advanceUntilIdle()
 
         assertEquals(
-            listOf(SportQuickFilter.FREE, SportQuickFilter.MORNING, SportQuickFilter.EVENING, SportQuickFilter.FRIENDS),
+            listOf(SportQuickFilter.AVAILABLE, SportQuickFilter.FREE, SportQuickFilter.MORNING, SportQuickFilter.EVENING, SportQuickFilter.FRIENDS),
             viewModel.uiState.value.chips.map { it.filter },
         )
+    }
+
+    @Test
+    fun availableHidesOnlyTheLessonsThatCanBeNeitherSignedNorQueuedFor() = runTest(main.dispatcher) {
+        val open = lessonOn(1, day = 8, hour = 15)
+        val full = lessonOn(2, day = 8, hour = 16).full()
+        val closed = lessonOn(3, day = 8, hour = 17).copy(canSignIn = false, unavailableReasons = listOf(UnavailableReason.HealthGroupMismatch))
+        val mine = lessonOn(4, day = 8, hour = 19).copy(signed = true, canSignIn = false, unavailableReasons = listOf(UnavailableReason.AlreadyEnrolled))
+        emitCatalog(open, full, closed, mine)
+        val viewModel = viewModel()
+        viewModel.selectDate(LocalDate(2026, 9, 8))
+        advanceUntilIdle()
+        assertTrue(viewModel.day().rows.single { it.lessonId == 3L }.action is SportRowAction.Blocked)
+
+        viewModel.toggle(SportQuickFilter.AVAILABLE)
+        advanceUntilIdle()
+
+        assertEquals(listOf(1L, 2L, 4L), viewModel.day().rows.map { it.lessonId }, "a full lesson can be queued for, the own one stays")
+        assertTrue(viewModel.uiState.value.chips.first().selected)
+        assertEquals(1, viewModel.uiState.value.filterCount)
+        viewModel.openFilters()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.filters!!.onlyAvailable)
+
+        viewModel.setOnlyAvailable(false)
+        advanceUntilIdle()
+        assertEquals(listOf(1L, 2L, 3L, 4L), viewModel.day().rows.map { it.lessonId })
     }
 
     @Test
