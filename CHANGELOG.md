@@ -14,6 +14,10 @@ new iOS app.
 
 - Teacher reviews vote with like and dislike thumbs instead of arrows, as links do: Android has one `VotePill` for links and reviews (the subject page's `Материалы` takes it too), iOS already used `ItmoVotePill` everywhere; `arrow_drop_up` is gone.
 
+### Спорт (2026-10-19)
+
+- Спорт: `Секции` read at a glance (icon lines, status pills, a short note), `Сделать секцией` only in a booked lesson's sheet, the `Доступные` filter is back, and `Моё` / `Запись` switch by a swipe too (Android and iOS).
+
 ### Campus map rooms (2026-10-19)
 
 - `201 (составное)` on Биржевая opens its own room on the campus map instead of room 201: the whole timetable text is

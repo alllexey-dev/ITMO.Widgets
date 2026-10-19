@@ -325,6 +325,18 @@
         }
       }
     },
+    "sport_chip_available" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступные"
+          }
+        }
+      }
+    },
     "sport_chip_evening" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",
@@ -549,6 +561,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ещё %1$lld"
+          }
+        }
+      }
+    },
+    "sport_filter_only_available" : {
+      "comment" : "Generated from strings_sport.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Только доступные мне"
           }
         }
       }
@@ -1842,31 +1866,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "лимит на месяц исчерпан"
-          }
-        }
-      }
-    },
-    "sport_section_date_queued" : {
-      "comment" : "Generated from strings_sport.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "в очереди"
-          }
-        }
-      }
-    },
-    "sport_section_date_queued_position" : {
-      "comment" : "Generated from strings_sport.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "в очереди, %1$lld-й из %2$lld"
+            "value" : "лимит исчерпан"
           }
         }
       }
@@ -1878,7 +1878,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "пропустим это занятие"
+            "value" : "пропустим"
           }
         }
       }
@@ -1890,7 +1890,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "встанем в очередь, когда откроется запись"
+            "value" : "запись не открыта"
           }
         }
       }
@@ -1938,7 +1938,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Раз в две недели встаём в очередь на это же занятие, как только на него открывается запись, пока в месячном лимите есть место. Каждая дата — одна очередь из лимита."
+            "value" : "В очередь на каждую дату встаём сами, как только откроется запись. Одна дата — одна очередь из месячного лимита."
           }
         }
       }
@@ -1986,7 +1986,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@, %2$@, раз в две недели"
+            "value" : "%1$@, %2$@ · раз в две недели"
           }
         }
       }

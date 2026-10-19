@@ -88,6 +88,8 @@ internal object SportSizes {
     val ringThickness = 8.dp
     val ringThicknessLarge = 12.dp
     val smallIcon = 16.dp
+    /** A group row's minimum height, as the kit's rows (design.md "Connected groups"). */
+    val groupRow = 56.dp
     val icon = 20.dp
     val dot = 10.dp
     val checkIcon = 24.dp
