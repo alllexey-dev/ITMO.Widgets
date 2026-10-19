@@ -19,7 +19,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.lesson.TimelineItem
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.navigation.EntryRoute
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
@@ -52,21 +52,20 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.home.presentation.TodayDay
 import dev.alllexey.itmowidgets.feature.home.presentation.TodayHero
 import dev.alllexey.itmowidgets.feature.home.presentation.TodayUiState
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
-import dev.alllexey.itmowidgets.shared.feature.home.Res
-import dev.alllexey.itmowidgets.shared.feature.home.today_empty_title
-import dev.alllexey.itmowidgets.shared.feature.home.today_join
-import dev.alllexey.itmowidgets.shared.feature.home.today_route
-import dev.alllexey.itmowidgets.shared.feature.home.today_online
-import dev.alllexey.itmowidgets.shared.feature.home.today_todo_title
+import dev.alllexey.itmowidgets.shared.compose.strings.today_empty_title
+import dev.alllexey.itmowidgets.shared.compose.strings.today_join
+import dev.alllexey.itmowidgets.shared.compose.strings.today_online
+import dev.alllexey.itmowidgets.shared.compose.strings.today_route
+import dev.alllexey.itmowidgets.shared.compose.strings.today_todo_title
+import dev.alllexey.itmowidgets.shared.designsystem.ic_directions
+import dev.alllexey.itmowidgets.shared.designsystem.ic_today
+import dev.alllexey.itmowidgets.shared.designsystem.ic_videocam
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
-import dev.alllexey.itmowidgets.shared.designsystem.ic_today
-import dev.alllexey.itmowidgets.shared.designsystem.ic_directions
-import dev.alllexey.itmowidgets.shared.designsystem.ic_videocam
 
 /** Test tags of [TodayScreen]. */
 object TodayTestTags {
@@ -109,10 +108,10 @@ fun TodayScreen(
         is TodayUiState.Failed -> AppRefreshBox(state.retrying, actions.onRetry, modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 ContentState(
-                    title = stringResource(CoreRes.string.common_load_error_title),
+                    title = stringResource(Res.string.common_load_error_title),
                     modifier = Modifier.testTag(TodayTestTags.ERROR),
                     description = state.error.toUiText().asString(),
-                    action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
+                    action = ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
                 )
             }
         }
