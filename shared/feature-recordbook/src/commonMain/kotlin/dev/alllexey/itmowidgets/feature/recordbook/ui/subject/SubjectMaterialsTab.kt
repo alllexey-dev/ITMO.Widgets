@@ -15,9 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
+import dev.alllexey.itmowidgets.designsystem.components.rows.Vote
+import dev.alllexey.itmowidgets.designsystem.components.rows.VoteLabels
+import dev.alllexey.itmowidgets.designsystem.components.rows.VotePill
+import dev.alllexey.itmowidgets.designsystem.components.rows.voteOf
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
@@ -30,13 +35,13 @@ import dev.alllexey.itmowidgets.designsystem.kit.ListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
-import dev.alllexey.itmowidgets.designsystem.kit.VotePill
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLinkRow
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectMaterials
 import dev.alllexey.itmowidgets.feature.recordbook.ui.kit
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.links_score
 import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_down
 import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_up
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
@@ -132,7 +137,8 @@ private fun LinkRow(row: SubjectLinkRow, args: SubjectLinksArgs, actions: Record
                 onClick = { actions.onOpenLink(row.url) },
             )
             .heightIn(min = ItmoTheme.spacing.touchTarget)
-            .padding(start = ItmoTheme.spacing.cardPadding, end = ItmoTheme.spacing.content)
+            // The vote pill's own 16 dp inset inside its 48 dp targets keeps it off the edge.
+            .padding(start = ItmoTheme.spacing.cardPadding, end = if (row.score != null) 0.dp else ItmoTheme.spacing.content)
             .padding(vertical = ItmoTheme.spacing.content)
             .testTag(SubjectTestTags.link(row.id)),
         verticalAlignment = Alignment.CenterVertically,
@@ -158,12 +164,13 @@ private fun LinkRow(row: SubjectLinkRow, args: SubjectLinksArgs, actions: Record
         row.score?.let { score ->
             VotePill(
                 score = score,
-                myVote = row.myVote,
-                upLabel = stringResource(CoreRes.string.links_vote_up),
-                downLabel = stringResource(CoreRes.string.links_vote_down),
-                onUp = { actions.onVote(row.id, true) },
-                onDown = { actions.onVote(row.id, false) },
-                enabled = row.canVote,
+                myVote = voteOf(row.myVote),
+                scoreDescription = stringResource(CoreRes.string.links_score, score),
+                onVote = if (row.canVote) { vote -> actions.onVote(row.id, vote == Vote.Up) } else null,
+                labels = VoteLabels(
+                    up = stringResource(CoreRes.string.links_vote_up),
+                    down = stringResource(CoreRes.string.links_vote_down),
+                ),
             )
         }
     }
