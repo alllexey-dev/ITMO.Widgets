@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation.notifications
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
@@ -26,10 +27,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * «Уведомления», the one home of notification settings (DECISIONS.md). The local checks (marks, schedule changes) are
- * switched here; turning one on without the permission asks for it, and while the system restricts the app in the
- * background the once-per-device hint is offered and a row leads to the system page. The pushes of ITMO.Widgets have
- * no switch of the app: the connection and the system decide them, so their rows lead there.
+ * «Уведомления», the one home of notification settings (DECISIONS.md). Every type has its switch here: the local checks
+ * (marks, schedule changes) start and stop the check itself, the pushes of ITMO.Widgets are dropped on the device while
+ * off (`FcmPayloadDispatcher`, the iOS notification service). Turning a type on without the permission asks for it;
+ * turning a check on while the system restricts the app in the background offers the once-per-device hint.
  *
  * The host reports what only it can read: [onPermissionChanged], [onChannelsChanged] (Android's per-channel switches)
  * and, on every return, [onBackgroundWorkChanged].
@@ -60,14 +61,19 @@ class NotificationSettingsViewModel(
         backgroundUnrestricted,
     ) { stored, granted, channelStates, unrestricted ->
         val marks = marksOf(stored)
+        val pushes = PushKind.entries.map { PushNotifications(it, it.channel !in stored.disabledPushes) }
+        val wanted = listOfNotNull(
+            AppNotificationChannels.MARKS.takeIf { marks?.enabled == true },
+            AppNotificationChannels.SCHEDULE_CHANGES.takeIf { stored.scheduleChangesEnabled },
+        ) + pushes.filter { it.enabled && stored.customServicesEnabled }.map { it.kind.channel }
         NotificationSettingsUiState(
             loaded = true,
             permission = granted,
             marks = marks,
             scheduleChanges = stored.scheduleChangesEnabled,
-            pushes = PushKind.entries.map { kind ->
-                PushNotifications(kind, stored.customServicesEnabled, channelStates?.get(kind.channel))
-            },
+            pushes = pushes,
+            connected = stored.customServicesEnabled,
+            systemChannelsOff = granted != NotificationPermission.DENIED && wanted.any { channelStates?.get(it) == false },
             backgroundWorkRestricted = unrestricted == false && (stored.scheduleChangesEnabled || marks?.enabled == true),
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, NotificationSettingsUiState())
@@ -81,7 +87,7 @@ class NotificationSettingsViewModel(
         permission.value = NotificationPermission.UNKNOWN
     }
 
-    /** Android's channels by id, enabled or not; iOS has none per type. */
+    /** Android's channels by id (`AppNotificationChannels.ALL`), enabled or not; iOS has none per type. */
     fun onChannelsChanged(enabled: Map<String, Boolean>) {
         channels.value = enabled
     }
@@ -114,19 +120,13 @@ class NotificationSettingsViewModel(
 
     fun setScheduleChanges(enabled: Boolean) = updateCheck(enabled) { scheduleChanges.setEnabled(enabled) }
 
-    /** A push row: its system channel where there is one, else the connection when it is off, else the app's page. */
-    fun openPush(kind: PushKind) {
-        val push = uiState.value.pushes.firstOrNull { it.kind == kind } ?: return
-        send(
-            when {
-                !push.connected -> NotificationSettingsEvent.OpenConnection
-                push.systemEnabled != null -> NotificationSettingsEvent.OpenChannelSettings(kind.channel)
-                else -> NotificationSettingsEvent.OpenSystemSettings
-            },
-        )
-    }
+    /** A push needs no background work of the app, so no hint; the permission is still asked for. */
+    fun setPush(kind: PushKind, enabled: Boolean) =
+        update(enabled, offerHint = false) { settings.setPushEnabled(kind.channel, enabled) }
 
-    /** The gate's button. */
+    fun openConnection() = send(NotificationSettingsEvent.OpenConnection)
+
+    /** The permission gate's button. */
     fun requestPermission() = send(NotificationSettingsEvent.RequestPermission)
 
     fun openSystemSettings() = send(NotificationSettingsEvent.OpenSystemSettings)
@@ -144,8 +144,10 @@ class NotificationSettingsViewModel(
         )
     }
 
-    /** Stores a check's switch; turning it on asks for notifications if they are off and offers the hint once. */
-    private fun updateCheck(enabled: Boolean, store: suspend () -> Unit) {
+    private fun updateCheck(enabled: Boolean, store: suspend () -> Unit) = update(enabled, offerHint = true, store)
+
+    /** Stores a switch; turning it on asks for notifications if they are off and, for a check, offers the hint once. */
+    private fun update(enabled: Boolean, offerHint: Boolean, store: suspend () -> Unit) {
         viewModelScope.launch {
             try {
                 store()
@@ -157,7 +159,7 @@ class NotificationSettingsViewModel(
             }
             if (!enabled) return@launch
             if (permission.value != NotificationPermission.ALLOWED) eventQueue.send(NotificationSettingsEvent.RequestPermission)
-            offerBackgroundWorkHint()
+            if (offerHint) offerBackgroundWorkHint()
         }
     }
 

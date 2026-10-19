@@ -176,6 +176,7 @@ class DemoNetworkGateTest {
         stores.markSources,
         stores.deviceHints,
         stores.appearance,
+        stores.pushCategories,
         gate,
         backendClient.users,
         demo,

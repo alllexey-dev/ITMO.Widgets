@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -25,4 +26,5 @@ class PreferenceStores(dataStore: DataStore<Preferences> = InMemoryPreferencesDa
     val deviceHints = DeviceHintPreferences(dataStore)
     val appearance = AppearancePreferences(dataStore)
     val demoPreferences = DemoPreferences(dataStore)
+    val pushCategories = PushCategoryPreferences(dataStore)
 }

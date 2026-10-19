@@ -362,12 +362,17 @@ file through the share sheet.
 opens it) is the one home of notification settings (DECISIONS.md, Screens):
 `NotificationSettingsViewModel` (`:shared:feature-settings`,
 `presentation/notifications`) under a Compose and a SwiftUI screen. The subtitle
-is `включено N из M` (the local checks that are on) or `запрещены в системе`.
+is `включено N из M` (the types that can arrive and are on: the checks, and the
+pushes while connected) or `запрещены в системе`.
 
 - While the system denies notifications, a gate (`Уведомления запрещены`,
   `Разрешить`: the permission dialog while it can still appear, else the app's
-  system page) stands first; the settings below stay, dimmed.
-- Every type shows how it arrives (the notifiers' titles with sample values).
+  system page) stands first; the settings below stay, dimmed. Otherwise, on
+  Android, while the system channel of a type that is on here is off, one card
+  (`Часть уведомлений выключена`, `Открыть настройки`: the app's notification
+  page) stands first instead.
+- Every type is one row with its switch: a name and no description, except
+  `Новые устройства` (`Вход на сайт или в агент`).
 - `Баллы` turns the background mark check ([mark tracking](features/marks-tracking.md))
   on or off as a whole; while on, its sources follow under it. None needs
   `Подключение к ITMO.Widgets`: the check talks only to My ITMO, BARS and public
@@ -399,18 +404,20 @@ is `включено N из M` (the local checks that are on) or `запреще
   first check only takes a new snapshot.
 - Turning a check on without the permission asks for it as the gate does; the
   switch stays on whatever the answer is.
-- The pushes of ITMO.Widgets (`Спорт и очереди`, `Заявки в друзья`, `Новые
-  устройства`) have no switch of the app. Without the connection the row says
-  `Нужно подключение к ITMO.Widgets` and opens «Подключение и данные». On Android
-  the row shows its channel's state (`Включены` or `Выключены`) and opens the
-  channel's system page; on iOS, which has no switch per type, the app's
-  notification settings.
-- A note says that nothing of marks and schedule changes arrives 00:00-06:00:
-  it comes in the morning (the notifiers' fixed rule).
+- The pushes of ITMO.Widgets (`Спорт`, `Друзья`, `Новые устройства`) have the
+  app's switch per type, stored in `PushCategoryPreferences` by channel
+  (`sport_notifications_enabled`, `friends_notifications_enabled`,
+  `connections_notifications_enabled`; absent means on; a device setting that
+  survives sign-out). Backend has no per-type preference, so the device drops
+  them: `FcmPayloadDispatcher` on Android, the notification service on iOS
+  ([notifications](features/notifications.md#flow)). A sport push still books
+  while its type is off. Turning a push on without the permission asks for it;
+  no background work hint. Without the connection one row
+  `Нужно подключение к ITMO.Widgets` opens «Подключение и данные» and the push
+  switches are disabled.
 - `Работа в фоне` ([background work](#background-work)) appears while a check is
   on and the system restricts the app.
-- `Звук и вибрация` opens the app's notification settings of the system; the
-  last line says that everything that came stays in the bell on Сегодня.
+- `Звук и вибрация` opens the app's notification settings of the system.
 
 ### iOS
 
@@ -463,8 +470,9 @@ FCM categories are `Спорт: автозапись` (`sport`), `Друзья` 
 `Подключения устройств` (`connections`); the local schedule check posts to
 `Изменения расписания` (`schedule_changes`) and the mark check to `Оценки`
 (`marks`). All five are at default importance. Android controls permission,
-sound and category visibility; there are no duplicate in-app switches, and the
-switches of «Уведомления» switch the checks themselves, not the categories.
+sound and category visibility. The switches of «Уведомления» switch the checks
+themselves and, for the pushes, whether the device shows them; they never
+change a channel.
 Disabled notification permission suppresses only the visual alert, not sport
 automation already enabled by the user or the background checks. Disabling
 user services suppresses FCM actions and attempts to unregister this device.

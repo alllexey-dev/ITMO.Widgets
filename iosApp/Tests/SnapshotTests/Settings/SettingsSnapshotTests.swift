@@ -165,7 +165,8 @@ enum SettingsFixtures {
                 pureBlack: false
             ),
             widgetsFollowTheme: false,
-            homePassVisible: true
+            homePassVisible: true,
+            disabledPushes: []
         )
     }
 
