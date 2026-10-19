@@ -385,6 +385,18 @@
         }
       }
     },
+    "schedule_sheet_friends_none" : {
+      "comment" : "Generated from strings_schedule.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друзья"
+          }
+        }
+      }
+    },
     "schedule_sheet_friends_title" : {
       "comment" : "Generated from strings_schedule.xml",
       "extractionState" : "manual",

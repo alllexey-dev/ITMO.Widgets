@@ -38,6 +38,7 @@
     <string name="schedule_sheet_route">Маршрут</string>
     <string name="schedule_sheet_video">Видео</string>
     <string name="schedule_sheet_friends">Друзья %1$d</string>
+    <string name="schedule_sheet_friends_none">Друзья</string>
     <string name="schedule_sheet_links">Ссылки %1$d</string>
     <string name="schedule_sheet_subject">Предмет</string>
     <string name="schedule_sheet_changes">Изменения</string>
