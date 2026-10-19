@@ -5,6 +5,8 @@ import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
+import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
@@ -70,6 +72,22 @@ class RecordbookLessonSubjectsTest {
         assertEquals(known, source().subject(1L, "Тестовый предмет", autumn))
         assertEquals(1, repository.programRequests)
         assertEquals(listOf(3), repository.subjectRequests)
+    }
+
+    @Test fun `a fresh install with the record book and the subject never opened gets the subject and its links`() = runTest {
+        repository.cachedPrograms = null
+        repository.cachedSubjects = null
+        val loaded = links.state.value
+        links.state.value = SubjectLinksState.Loading
+        links.onRefresh = { links.state.value = loaded }
+        assertEquals(known, source().subject(1L, "Тестовый предмет", autumn))
+        assertEquals(1, links.refreshes)
+    }
+
+    @Test fun `a failed first fetch still opens the subject, with no links`() = runTest {
+        links.state.value = SubjectLinksState.Loading
+        links.refreshResult = AppResult.Failure(AppError.Network)
+        assertEquals(known.copy(links = 0), source().subject(1L, "Тестовый предмет", autumn))
     }
 
     @Test fun `without the connection the subject opens with no links`() = runTest {
