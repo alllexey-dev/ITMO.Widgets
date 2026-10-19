@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Votes (2026-10-19)
+
+- Teacher reviews vote with like and dislike thumbs instead of arrows, as links do: Android has one `VotePill` for links and reviews (the subject page's `Материалы` takes it too), iOS already used `ItmoVotePill` everywhere; `arrow_drop_up` is gone.
+
 ### Widgets (2026-10-18)
 
 - The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in

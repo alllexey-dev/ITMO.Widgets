@@ -27,7 +27,7 @@ import kotlin.test.assertEquals
 @RunWith(RobolectricTestRunner::class)
 class VotePillTest {
     @Test
-    fun bothArrowsAreLabelled48DpTargets() = runComposeUiTest {
+    fun bothThumbsAreLabelled48DpTargets() = runComposeUiTest {
         setContent { ItmoTheme { VotePill(12, myVote = null, SCORE, onVote = {}, Labels) } }
 
         listOf(UP, DOWN).forEach { label ->
@@ -39,7 +39,7 @@ class VotePillTest {
     }
 
     @Test
-    fun theArrowsReportTheirVoteAndShowTheOwnOne() = runComposeUiTest {
+    fun theThumbsReportTheirVoteAndShowTheOwnOne() = runComposeUiTest {
         val votes = mutableListOf<Vote>()
         setContent { ItmoTheme { VotePill(3, myVote = Vote.Up, SCORE, onVote = { votes += it }, Labels) } }
 
@@ -47,21 +47,6 @@ class VotePillTest {
         onNodeWithContentDescription(DOWN).assertIsNotSelected().performClick()
 
         assertEquals(listOf(Vote.Up, Vote.Down), votes)
-    }
-
-    @Test
-    fun thumbsKeepTheSelectedVoteLabelsAndTouchTargets() = runComposeUiTest {
-        val votes = mutableListOf<Vote>()
-        setContent {
-            ItmoTheme {
-                VotePill(3, Vote.Down, SCORE, { votes += it }, Labels, icons = VoteIcons.Thumbs)
-            }
-        }
-
-        onNodeWithContentDescription(UP).assertIsNotSelected().performClick()
-        onNodeWithContentDescription(DOWN).assertIsSelected().performClick()
-        assertEquals(listOf(Vote.Up, Vote.Down), votes)
-        assertTouchTargets()
     }
 
     @Test

@@ -109,7 +109,7 @@ class LinkRowTest {
     }
 
     @Test
-    fun theVoteArrowsStayOwnTargetsAndTheRowCarriesTheVotes() = runComposeUiTest {
+    fun theVoteThumbsStayOwnTargetsAndTheRowCarriesTheVotes() = runComposeUiTest {
         val votes = mutableListOf<Vote>()
         setContent {
             ItmoTheme {
