@@ -217,8 +217,8 @@ struct UserProfileContent: View {
             }
             if !block.subjects.isEmpty || !block.rooms.isEmpty {
                 ItmoListGroup {
-                    ForEach(block.subjects, id: \.self) { subject in
-                        ItmoRow(title: subject, subtitle: AppStrings.string("person_teaches_you"), symbol: .school, tone: .primary)
+                    ForEach(block.subjects, id: \.name) { subject in
+                        ItmoRow(title: subject.name, subtitle: subject.note.resolved, symbol: .school, tone: .primary)
                     }
                     ForEach(Array(block.rooms.enumerated()), id: \.offset) { _, room in
                         ItmoRow(

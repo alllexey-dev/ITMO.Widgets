@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +39,7 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.services.ServicesConsentSheet
 import dev.alllexey.itmowidgets.designsystem.kit.IconTile
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.kit.LessonCard
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
@@ -128,7 +128,7 @@ fun OnboardingScreen(
             }
             Footer(state, actions)
         }
-        SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
+        ItmoSnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
     }
     if (consentShown) ServicesConsentSheet(onConnect = actions.onConsent, onDismiss = actions.onDismissConsent)
 }

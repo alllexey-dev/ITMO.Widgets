@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateUiState
 import dev.alllexey.itmowidgets.shared.compose.strings.Res
@@ -93,7 +93,7 @@ fun AppUpdateScreen(
                 AppUpdateOffer(state, onUpdate, onLater, onSkip)
             }
         }
-        SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
+        ItmoSnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
     }
 }
 

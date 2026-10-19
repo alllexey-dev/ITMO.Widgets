@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
@@ -73,6 +72,7 @@ import dev.alllexey.itmowidgets.core.navigation.from
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.designsystem.components.navigation.NavigationBarTokens
 import dev.alllexey.itmowidgets.designsystem.host.ItmoComposeHost
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGate
@@ -177,7 +177,7 @@ class ShellHost(
                 // Test tags become resource ids, so the UiAutomator journeys of :baselineprofile find the shell.
                 Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                     ShellContent(navigator, registry, surface, onDemoSignIn = ::signOut)
-                    SnackbarHost(
+                    ItmoSnackbarHost(
                         snackbars,
                         Modifier
                             .align(Alignment.BottomCenter)

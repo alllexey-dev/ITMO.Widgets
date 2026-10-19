@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.schedule.StudyTerm
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherNowLesson
 import dev.alllexey.itmowidgets.core.schedule.lessonTypeName
@@ -59,7 +60,10 @@ data class TeacherNowLine(val heading: UiText, val place: UiText, val lesson: Ui
  * ([subjects], newest first) and where to find them; the reviews follow under it on the screen
  * ([UserProfileUiState.Content.reviews]).
  */
-data class TeachingBlock(val subjects: List<String>, val rooms: List<ProfileLine>, val now: TeacherNowLine? = null)
+data class TeachingBlock(val subjects: List<TaughtSubject>, val rooms: List<ProfileLine>, val now: TeacherNowLine? = null)
+
+/** A subject the person teaches the viewer: [note] is `Ведёт у вас` in the current term, else when it was. */
+data class TaughtSubject(val name: String, val note: UiText)
 
 /** `Учёба`: the groups, then the rows Backend lets the viewer open. */
 data class StudyBlock(val groups: List<ProfileLine>, val schedule: Boolean, val sport: Boolean, val friends: Boolean)
@@ -131,8 +135,9 @@ fun userProfileUiState(
     }
     val user = block?.profile?.user
     val section = profileReviews((reviews as? ProfilePart.Ready)?.value, personality, busyId, summaryExpanded)
-    val subjects = (teaches as? ProfilePart.Ready)?.value?.subjects.orEmpty()
-    val teaching = teachingBlock(personality, subjects, section, now)
+    val lessons = (teaches as? ProfilePart.Ready)?.value
+    val subjects = lessons?.subjects.orEmpty()
+    val teaching = teachingBlock(personality, lessons, section, now)
     val study = studyBlock(personality, block)
     val isSelf = block?.isSelf == true
     val friends = block?.profile?.relationship == RelationshipState.FRIENDS && !isSelf
@@ -197,13 +202,25 @@ private fun cardActions(
     return ordered.take(MAX_ACTIONS)
 }
 
-private fun teachingBlock(person: Person?, subjects: List<String>, reviews: ProfileReviews?, now: TeacherNowLesson?): TeachingBlock? {
+private fun teachingBlock(person: Person?, lessons: TeacherLessons?, reviews: ProfileReviews?, now: TeacherNowLesson?): TeachingBlock? {
+    val subjects = lessons?.subjects.orEmpty()
     val teaches = person?.positions?.isNotEmpty() == true || subjects.isNotEmpty() || reviews != null || now != null
     if (!teaches) return null
     val rooms = person?.rooms.orEmpty().map {
         ProfileLine(UiText.Res(SocialStrings.person_room, listOf(it.number)), it.building)
     }
-    return TeachingBlock(subjects, rooms, now?.let(::teacherNowLine))
+    val taught = subjects.map { TaughtSubject(it, taughtNote(lessons?.past?.get(it))) }
+    return TeachingBlock(taught, rooms, now?.let(::teacherNowLine))
+}
+
+/**
+ * `Ведёт у вас` now; a past term in a neutral form with its season and year (`Было у вас весной 2026`). The year goes
+ * as text: a number argument is grouped on iOS (`2 026`).
+ */
+private fun taughtNote(past: StudyTerm?): UiText = when {
+    past == null -> UiText.Res(SocialStrings.person_teaches_you)
+    past.autumn -> UiText.Res(SocialStrings.person_taught_you_autumn, listOf(past.year.toString()))
+    else -> UiText.Res(SocialStrings.person_taught_you_spring, listOf(past.year.toString()))
 }
 
 internal fun teacherNowLine(lesson: TeacherNowLesson): TeacherNowLine {

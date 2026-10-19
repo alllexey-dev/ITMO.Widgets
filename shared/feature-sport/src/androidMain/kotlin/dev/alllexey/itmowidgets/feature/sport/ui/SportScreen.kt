@@ -18,7 +18,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,6 +53,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.ChipSpec
 import dev.alllexey.itmowidgets.designsystem.kit.FilterChips
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoRootScreen
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.kit.LessonCard
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
@@ -183,7 +183,7 @@ fun SportScreen(
                     }
                 }
             }
-            SnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
+            ItmoSnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
         }
     }
     if (tab == SportTab.SIGN) {

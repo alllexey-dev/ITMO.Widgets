@@ -144,7 +144,7 @@ class SportBookingsHolderTest {
         holder.cancel(SportCardFixtures.booking(7))
         advanceUntilIdle()
 
-        val tab = SportMyViewModel(bookings, data, holder, SportSectionsHolder(FakeSportSectionRepository(), applicationScope()), FixedAcademicTime())
+        val tab = SportMyViewModel(bookings, data, holder, SportSectionsHolder(FakeSportSectionRepository(), data, applicationScope()), FixedAcademicTime())
         assertEquals(AppError.Network.toUiText(), tab.events.first())
     }
 

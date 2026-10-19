@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +33,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.GateCard
 import dev.alllexey.itmowidgets.designsystem.kit.HeaderAction
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoRootScreen
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
@@ -171,7 +171,7 @@ fun MeScreen(
                     }
                 }
             }
-            SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
+            ItmoSnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
         }
     }
     if (confirmingSignOut) {

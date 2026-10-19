@@ -5,6 +5,7 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.schedule.StudyTerm
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
@@ -25,6 +26,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 
 /**
  * Asks for every week of [StudyWeeks.sampled] at once. Weeks that ended before today never change: they are kept on
@@ -59,7 +61,7 @@ class TeacherLessonsGatewayImpl(
         val past = weeks.filter { it.endInclusive < today }.mapTo(hashSetOf()) { it.start }
         val arrived = finishedWeeks().filterKeys { it in past }.toMutableMap()
         val arrivalLock = Mutex()
-        if (arrived.isNotEmpty()) send(AppResult.Success(arrived.lessonsWith(teacherIsu)))
+        if (arrived.isNotEmpty()) send(AppResult.Success(arrived.lessonsWith(teacherIsu, today)))
         val failures = weeks.filter { it.start !in arrived }.map { week ->
             async(dispatchers.io) {
                 val lessons = try {
@@ -72,7 +74,7 @@ class TeacherLessonsGatewayImpl(
                 if (week.start in past) remember(started, week.start, lessons, past)
                 arrivalLock.withLock {
                     arrived[week.start] = lessons
-                    send(AppResult.Success(arrived.lessonsWith(teacherIsu)))
+                    send(AppResult.Success(arrived.lessonsWith(teacherIsu, today)))
                 }
                 null
             }
@@ -128,13 +130,18 @@ class TeacherLessonsGatewayImpl(
             }
             .distinct()
 
-    private fun Map<LocalDate, List<WeekLesson>>.lessonsWith(teacherIsu: Int): TeacherLessons {
+    /** A week's term is the one of its last day so far, so the current week is always in the current term. */
+    private fun Map<LocalDate, List<WeekLesson>>.lessonsWith(teacherIsu: Int, today: LocalDate): TeacherLessons {
         val taught = entries.sortedByDescending { it.key }
-            .flatMap { it.value }
-            .filter { it.teacherIsu == teacherIsu.toLong() }
+            .flatMap { (monday, lessons) -> lessons.filter { it.teacherIsu == teacherIsu.toLong() }.map { monday to it } }
+        val now = StudyTerm.of(today)
+        val newest = taught.filter { it.second.subject.isNotEmpty() }
+            .distinctBy { it.second.subject }
+            .associate { (monday, lesson) -> lesson.subject to StudyTerm.of(minOf(monday.plus(6, DateTimeUnit.DAY), today)) }
         return TeacherLessons(
-            flowIds = taught.mapTo(linkedSetOf(), WeekLesson::flowId),
-            subjects = taught.map(WeekLesson::subject).filter(String::isNotEmpty).distinct(),
+            flowIds = taught.mapTo(linkedSetOf()) { it.second.flowId },
+            subjects = newest.keys.toList(),
+            past = newest.filterValues { it != now },
         )
     }
 

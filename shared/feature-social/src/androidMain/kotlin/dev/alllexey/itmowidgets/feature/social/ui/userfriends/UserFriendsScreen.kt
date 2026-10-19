@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -21,6 +20,7 @@ import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.UserFriendsUiState
 import dev.alllexey.itmowidgets.feature.social.ui.list.userList
@@ -104,7 +104,7 @@ fun UserFriendsScreen(
                     }
                 }
             }
-            SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
+            ItmoSnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
         }
     }
 }

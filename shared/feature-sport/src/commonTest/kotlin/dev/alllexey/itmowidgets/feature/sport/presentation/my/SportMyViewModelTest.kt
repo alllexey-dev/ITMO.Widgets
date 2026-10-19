@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.shortPersonName
@@ -39,6 +40,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -76,7 +78,7 @@ class SportMyViewModelTest {
             time,
             applicationScope(),
         ),
-        SportSectionsHolder(sections, applicationScope()),
+        SportSectionsHolder(sections, data, applicationScope()),
         time,
     )
 
@@ -148,6 +150,36 @@ class SportMyViewModelTest {
         assertEquals(UiText.Res(SportStrings.sport_section_place, listOf(5, 5)), on.detail)
         assertEquals(UiText.Res(SportStrings.sport_section_made), viewModel.events.first())
         assertEquals(listOf(107L), viewModel.uiState.value.sections.map { it.id })
+    }
+
+    @Test
+    fun everySectionChangeThatWentThroughReloadsTheQueueEntriesAtOnce() = runTest(main.dispatcher) {
+        sections.slots[7] = SportSectionSlot(7, subscribers = 4, cap = 12, full = false, subscriptionId = null, place = null)
+        emitSnapshot()
+        val viewModel = viewModel()
+        advanceUntilIdle()
+        val before = data.entriesRefreshCount
+
+        viewModel.toggleSection(7)
+        advanceUntilIdle()
+        assertEquals(before + 1, data.entriesRefreshCount, "Backend queued the dates inside the request")
+
+        val section = sections.sections.value.valueOrNull()!!.single()
+        val start = section.lesson.start + 14.days
+        sections.sections.value = LoadState.Content(listOf(section.copy(dates = listOf(SportSectionDate(start, start + 90.minutes, SportSectionDateState.QUEUED, 21L)))))
+        advanceUntilIdle()
+        viewModel.setSectionDate(section.id, 0, on = false)
+        advanceUntilIdle()
+        assertEquals(before + 2, data.entriesRefreshCount, "the skipped date's entry is cancelled")
+
+        viewModel.stopSection(section.id)
+        advanceUntilIdle()
+        assertEquals(before + 3, data.entriesRefreshCount)
+
+        sections.failure = AppError.Network
+        viewModel.toggleSection(7)
+        advanceUntilIdle()
+        assertEquals(before + 3, data.entriesRefreshCount, "a refused change has nothing new to show")
     }
 
     @Test

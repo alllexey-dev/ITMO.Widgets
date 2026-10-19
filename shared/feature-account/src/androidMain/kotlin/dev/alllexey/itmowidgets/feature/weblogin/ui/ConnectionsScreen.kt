@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -29,6 +28,7 @@ import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.kit.IconTile
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
 import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
@@ -126,7 +126,7 @@ fun ConnectionsScreen(
                     ConnectionList(state, actions)
                 }
             }
-            SnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
+            ItmoSnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
         }
     }
     val content = state as? ConnectionsUiState.Content

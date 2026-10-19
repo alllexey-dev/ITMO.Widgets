@@ -124,7 +124,8 @@ slot. Semantics are in Backend's sport automation contract (Sections).
   the error tone (the monthly limit had no free slot; not retried). The pill
   follows the day and moves under it on a narrow row or a large font. One short
   note under the list says each date spends one queue of the monthly limit.
-  Turning a section off keeps the queues it already made.
+  Turning a section off keeps the queues it already made. Backend queues and cancels the dates inside the
+  section request, so every section change that went through reloads the queue entries at once.
 
 ## Loading states
 

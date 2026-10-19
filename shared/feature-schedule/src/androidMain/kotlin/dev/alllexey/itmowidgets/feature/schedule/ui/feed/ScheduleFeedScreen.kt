@@ -23,7 +23,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -54,6 +53,7 @@ import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoadin
 import dev.alllexey.itmowidgets.designsystem.kit.HeaderAction
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoRootScreen
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.kit.LessonTimeline
 import dev.alllexey.itmowidgets.designsystem.kit.PillSpec
 import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
@@ -242,7 +242,7 @@ private fun Body(
                     Feed(state, body, actions, listState)
                 }
             }
-            SnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
+            ItmoSnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
         }
     }
 }

@@ -538,7 +538,7 @@ extension View {
             if let message = messages.message {
                 SettingsMessageBanner(text: message.text)
                     .task(id: message.id) {
-                        try? await Task.sleep(for: .seconds(3))
+                        try? await Task.sleep(for: SettingsMessageBanner.lifetime)
                         if messages.message?.id == message.id { messages.message = nil }
                     }
             }

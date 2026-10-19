@@ -83,7 +83,7 @@ class SportSignViewModelTest {
     private fun TestScope.viewModel(): SportSignViewModel {
         val delegate = bookingDelegate(FakeSportBookingRepository(), schedule, data, this, actions)
         return SportSignViewModel(
-            schedule, data, preferences, SportSectionsHolder(sections, backgroundScope), timetable,
+            schedule, data, preferences, SportSectionsHolder(sections, data, backgroundScope), timetable,
             SportSharedLessonResolver(schedule, time), time,
             delegate, SportAutoSignFlow(delegate, time),
         )

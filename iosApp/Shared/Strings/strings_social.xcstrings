@@ -313,6 +313,30 @@
         }
       }
     },
+    "person_taught_you_autumn" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Было у вас осенью %1$@"
+          }
+        }
+      }
+    },
+    "person_taught_you_spring" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Было у вас весной %1$@"
+          }
+        }
+      }
+    },
     "person_teaches_you" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",

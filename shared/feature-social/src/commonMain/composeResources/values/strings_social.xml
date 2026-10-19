@@ -56,6 +56,8 @@
     <string name="person_role_student">Студент, %1$s</string>
     <string name="person_room">ауд. %1$s</string>
     <string name="person_teaches_you">Ведёт у вас</string>
+    <string name="person_taught_you_autumn">Было у вас осенью %1$s</string>
+    <string name="person_taught_you_spring">Было у вас весной %1$s</string>
     <string name="person_section_teaching">Преподавание</string>
     <string name="person_now_teaching">Сейчас ведёт пару до %1$s</string>
     <string name="person_next_lesson">Сегодня ещё пара в %1$s</string>

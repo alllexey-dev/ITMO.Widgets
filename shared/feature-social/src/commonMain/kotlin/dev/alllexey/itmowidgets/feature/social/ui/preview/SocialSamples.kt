@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
+import dev.alllexey.itmowidgets.core.schedule.StudyTerm
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherNowLesson
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -146,7 +147,8 @@ object SocialSamples {
                 absence = SocialAbsence.NOT_REGISTERED,
                 reviews = TeacherReviews(107834, ershovReviews, null, canWrite = teaching, canVote = true,
                     canReport = true, knownTeacher = true, summary = ReviewPreviewFixtures.summary.copy(reviewCount = 24)),
-                subjects = if (teaching) listOf("Программирование") else emptyList(),
+                subjects = if (teaching) listOf("Программирование", "Информатика") else emptyList(),
+                past = mapOf("Информатика" to StudyTerm(2025, autumn = true)),
                 now = nowLesson("Программирование", 2, if (teaching) "1506" else "2337", if (teaching) "M3205" else "M3201"),
             )
             "both" -> state(
@@ -197,6 +199,7 @@ object SocialSamples {
         absence: SocialAbsence? = null,
         reviews: TeacherReviews? = null,
         subjects: List<String> = emptyList(),
+        past: Map<String, StudyTerm> = emptyMap(),
         self: Boolean = false,
         now: TeacherNowLesson? = null,
     ): UserProfileUiState = userProfileUiState(
@@ -204,7 +207,7 @@ object SocialSamples {
         person = ProfilePart.Ready(person),
         social = social?.let { ProfilePart.Ready(SocialBlock(it, self, busy = false)) } ?: ProfilePart.Absent,
         reviews = reviews?.let { ProfilePart.Ready(it) } ?: ProfilePart.Absent,
-        teaches = ProfilePart.Ready(TeacherLessons(emptySet(), subjects)),
+        teaches = ProfilePart.Ready(TeacherLessons(emptySet(), subjects, past)),
         absence = absence,
         now = now,
     )

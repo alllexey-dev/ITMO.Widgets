@@ -16,17 +16,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.rows.VoteLabels
+import dev.alllexey.itmowidgets.designsystem.kit.overlap
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_actions
@@ -153,26 +152,6 @@ internal fun OwnReviewStatus.label(): StringResource? = when (this) {
     OwnReviewStatus.REJECTED -> Res.string.teacher_review_status_rejected
     OwnReviewStatus.HIDDEN -> Res.string.teacher_review_status_hidden
     OwnReviewStatus.PUBLISHED -> null
-}
-
-/**
- * The View's negative margins: the content keeps its measured size and target, but reports [top], [bottom] and
- * [start] less to the parent and is drawn shifted by them, so a 48 dp target reaches into the space around it.
- */
-internal fun Modifier.overlap(top: Dp = 0.dp, bottom: Dp = 0.dp, start: Dp = 0.dp): Modifier = layout { measurable, constraints ->
-    val vertical = (top + bottom).roundToPx()
-    val horizontal = start.roundToPx()
-    val placeable = measurable.measure(
-        constraints.copy(
-            minHeight = 0,
-            minWidth = 0,
-            maxHeight = if (constraints.hasBoundedHeight) constraints.maxHeight + vertical else constraints.maxHeight,
-            maxWidth = if (constraints.hasBoundedWidth) constraints.maxWidth + horizontal else constraints.maxWidth,
-        ),
-    )
-    val width = (placeable.width - horizontal).coerceAtLeast(0)
-    val height = (placeable.height - vertical).coerceAtLeast(0)
-    layout(width, height) { placeable.place(-horizontal, -top.roundToPx()) }
 }
 
 /** The 24 dp `ic_more_vert` in its 48 dp target (12 dp padding). */
