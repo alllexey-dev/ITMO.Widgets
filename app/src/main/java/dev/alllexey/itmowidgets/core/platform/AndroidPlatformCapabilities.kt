@@ -16,4 +16,5 @@ val AndroidPlatformCapabilities = PlatformCapabilities(
     wallpaperColors = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
     pinWidgets = true,
     lockScreenWidgets = false,
+    pushSwitches = true,
 )

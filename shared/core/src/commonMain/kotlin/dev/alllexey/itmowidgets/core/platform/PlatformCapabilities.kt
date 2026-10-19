@@ -29,4 +29,9 @@ data class PlatformCapabilities(
     val pinWidgets: Boolean,
     /** Lock Screen widgets and the pass Control, listed in the widgets gallery. */
     val lockScreenWidgets: Boolean,
+    /**
+     * The app's own switch of each push type (`PushCategoryPreferences`): the device drops a push of a type that is off.
+     * iOS can hide a delivered push only with `com.apple.developer.usernotifications.filtering`.
+     */
+    val pushSwitches: Boolean,
 )

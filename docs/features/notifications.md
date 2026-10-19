@@ -79,6 +79,13 @@ the SwiftUI screens; details are in [settings](../settings.md#notifications).
   means on, kept on sign-out). Without the connection one row
   `Нужно подключение к ITMO.Widgets` opens «Подключение и данные» and the push
   switches are disabled.
+- iOS lists no push switch and no connection row
+  (`PlatformCapabilities.pushSwitches`): the notification service can hide a
+  delivered push only with `com.apple.developer.usernotifications.filtering`,
+  which the app does not hold yet, so all three would do nothing (Спорт
+  included: iOS has no local sport notification, only the remote push). The
+  stored switches stay, and the notification service ignores them
+  (`PushHandler.honorsDisabledPushes`): a type left off before is shown.
 - One card stands first while the system keeps something back: the permission
   (`Разрешить`; the settings below stay, dimmed), else on Android a system
   channel of a type that is on here (`Открыть настройки`, the app's
@@ -142,7 +149,8 @@ See [iOS app](../ios.md#notifications) and
   `EntryRouteParser`.
 - Backend pushes arrive as `mutable-content` alerts; the notification service
   runs a Swift port of the [sport handler](#sport-handler) before showing. Another
-  account, the demo, a missing opt-in and a type switched off in the app
-  (`disabledPushes` of session-v1.json, written by `SessionSnapshotSync`) drop
-  the push; a switched-off sport push still books and leaves its result for the
-  bell. Dropped pushes are not hidden until the filtering entitlement exists.
+  account, the demo and a missing opt-in drop the push. Dropped pushes are not
+  hidden until the filtering entitlement exists; until then the types switched
+  off in the app (`disabledPushes` of session-v1.json, written by
+  `SessionSnapshotSync`) are ignored and their switches hidden
+  ([settings page](#settings-page)).

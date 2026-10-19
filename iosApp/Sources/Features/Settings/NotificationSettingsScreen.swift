@@ -5,8 +5,9 @@ import UserNotifications
 
 /// the notifications page (`notifications_title`) (`AppRoutes.Settings` `NOTIFICATIONS`) over the shared `NotificationSettingsViewModel`, as Android's
 /// `NotificationSettingsScreen`. The screen feeds the ViewModel what only iOS knows, on appear and on every return to
-/// the app: the notification permission and Background App Refresh. Every type has the app's own switch; the push
-/// switches reach the notification service through `session-v1.json`.
+/// the app: the notification permission and Background App Refresh. Every type has the app's own switch, except the
+/// pushes: without `com.apple.developer.usernotifications.filtering` the notification service cannot hide a push, so
+/// the ViewModel lists none (`PlatformCapabilities.pushSwitches`).
 struct NotificationSettingsScreen: View {
     @State private var model = ObservableViewModel(NotificationSettingsViewModel.self, state: \.uiState)
     @State private var message: SettingsMessage?
@@ -159,7 +160,8 @@ struct NotificationSettingsContent: View {
                             isOn: Binding(get: { state.scheduleChanges }, set: actions.scheduleChanges)
                         )
                         .accessibilityIdentifier("notifications.changes")
-                        if !state.connected {
+                        // The connection only gates the push switches, which iOS does not list yet.
+                        if !state.connected && !state.pushes.isEmpty {
                             ItmoRow(
                                 title: AppStrings.string("notifications_push_connection"),
                                 symbol: .cloudOff,
