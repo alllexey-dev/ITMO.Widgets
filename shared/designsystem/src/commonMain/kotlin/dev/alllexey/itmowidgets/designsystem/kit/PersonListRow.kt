@@ -37,5 +37,5 @@ fun PersonListRow(
     )
 }
 
-/** The avatar of a [PersonListRow], `Skeleton.List`'s 40 dp. */
-private val PersonAvatarSize = 40.dp
+/** The avatar of a [PersonListRow], `Skeleton.List`'s 40 dp; for a person leading a row of another kind too. */
+val PersonAvatarSize = 40.dp

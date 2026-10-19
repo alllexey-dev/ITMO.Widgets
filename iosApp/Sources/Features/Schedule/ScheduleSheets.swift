@@ -25,7 +25,8 @@ struct LessonSheet: View {
     }
 
     var body: some View {
-        ItmoSheet(title: model.state.over.resolved, height: .content) {
+        // The full height from the first frame, as on Android: the friends arriving later never resize the sheet.
+        ItmoSheet(title: model.state.over.resolved, height: .full) {
             LessonSheetContent(
                 state: model.state,
                 actions: LessonSheetViewActions(

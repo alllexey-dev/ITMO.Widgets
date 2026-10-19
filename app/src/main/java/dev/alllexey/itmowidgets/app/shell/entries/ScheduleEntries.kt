@@ -198,10 +198,7 @@ private fun MonthEntry(onClose: () -> Unit) {
     }
 }
 
-/**
- * The sheets fill the shell's sheet, whose own container shows through down to the screen's edge, and keep its whole
- * height, so rows that load late (the friends on a lesson) never resize it.
- */
+/** The sheets fill the shell's sheet, whose own container shows through down to the screen's edge. */
 @Composable
 private fun SheetBody(content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize()) { content() }

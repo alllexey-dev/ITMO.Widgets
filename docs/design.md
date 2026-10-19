@@ -458,9 +458,10 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
 - Pushed screens cover the bar: back, a title, no navigation bar. The bar stays in place under them, so the
   predictive Back uncovers the root with its bar. The title and its subtitle flow as one paragraph
   (`ItmoDetailScreen`, 64 dp in one line) and a long title wraps in full, never truncated.
-- Sheets come in three sizes (`SheetPolicy.Height`): content height (`FIT_CONTENT`, the pass, the links, the lesson
-  sheet, the month sheet, the friend picker), 82 % of the window (`TALL`, the bell's sheet, the sport lesson sheet) or
-  the whole height below the status bar (`FULL`, no key uses it now); none goes under the status bar.
+- Sheets come in three sizes (`SheetPolicy.Height`): content height (`FIT_CONTENT`, the pass, the links, the month
+  sheet, the friend picker), 82 % of the window (`TALL`, the bell's sheet, the sport lesson sheet) or the whole height
+  below the status bar (`FULL`, the lesson sheet, so the friends arriving later never resize it); none goes under the
+  status bar.
 - Tabs switch by a tap on the bar only, with a fade through; Back is the platform's predictive Back
   ([Tab switching and Back](#tab-switching-and-back)).
 
