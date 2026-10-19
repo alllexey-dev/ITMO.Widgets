@@ -104,7 +104,7 @@ object SubjectLinksSamples {
     val content = state(snapshot)
     val restricted = state(snapshot, listOf(voteRestriction))
 
-    /** Without the custom-services opt-in: the same links, scores without arrows. */
+    /** Without the custom-services opt-in: the same links, scores without thumbs. */
     val offline = state(snapshot.copy(servicesEnabled = false))
     val own = state(ownStates)
     val loading = SubjectLinksUiState()

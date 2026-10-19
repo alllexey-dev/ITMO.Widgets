@@ -14,6 +14,10 @@ new iOS app.
 
 - On iOS the last Compose screens are native SwiftUI: all links of a subject, a link's actions, the link editor and the link report, the review editor and another user's sport; the Compose host (`ComposeHost`, the `.compose` routes and `shared/ios` `screens/`) is gone.
 
+### Votes (2026-10-19)
+
+- Teacher reviews vote with like and dislike thumbs instead of arrows, as links do: Android has one `VotePill` for links and reviews (the subject page's `Материалы` takes it too), iOS already used `ItmoVotePill` everywhere; `arrow_drop_up` is gone.
+
 ### Спорт (2026-10-19)
 
 - Спорт: `Секции` read at a glance (icon lines, status pills, a short note), `Сделать секцией` only in a booked lesson's sheet, the `Доступные` filter is back, and `Моё` / `Запись` switch by a swipe too (Android and iOS).

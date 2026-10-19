@@ -138,7 +138,7 @@ subject page ([subject page](subject-page.md)) say the tone in words instead (`T
   (`core/presentation/StableOrder`): a vote answer or an editor update changes
   scores in place, a new review follows the shown ones; a new screen or retry
   takes Backend's order again.
-- Vote arrows only with `canVote`; tapping the current vote takes it back. One
+- Vote thumbs only with `canVote`; tapping the current vote takes it back. One
   vote or deletion at a time; a failure (for example `AppError.Restricted`)
   shows a snackbar and keeps the section.
 - `Пожаловаться` only on another user's own review with `canReport` that the

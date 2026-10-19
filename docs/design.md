@@ -190,8 +190,8 @@ background:
   heading keeps 12 dp to it.
 - Own and others' items share the row style; an own one is told by a small
   `моя` badge (`secondaryContainer`), never by a different surface or
-  outline. Others' links carry the compact vote pill `▲ N ▼`
-  (the kit's `VotePill`: a 32 dp pill inside 48 dp arrow targets).
+  outline. Others' links and reviews carry the one vote pill, like and dislike
+  thumbs around the score (`VotePill`: a 32 dp pill inside 48 dp targets).
 - Captions put a second fact on a second line or join facts with a comma; no
   « · ». The last row that leads further (`Все ссылки, N`, `Все пары, N`,
   `Добавить ссылку`) is the kit's `GroupActionRow` or, on the redesigned
@@ -400,7 +400,7 @@ both platforms.
 | `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
 | `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | A section header in `secondaryLabel` at UIKit's insets |
 | `GroupActionRow` | The last row of a group that leads further | A cell with the icon in the tint and the disclosure indicator |
-| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | A cell; the vote buttons are 44 pt targets, the pill on `tertiarySystemFill` |
+| `LinkRow`, `VotePill` | A link with its own badge; the one vote pill of links and reviews: like and dislike thumbs around the score, the own vote filled and in `primary`, only the score when voting is not allowed | A cell; the vote buttons are 44 pt targets, the pill on `tertiarySystemFill` |
 | `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
 | `DetailsHeader` | The head of every details sheet | Title 2 semibold, secondary text and icons in `secondaryLabel`, the map button a tinted capsule |
 | `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | No handle (the host's grabber); the header is the sheet's navigation bar ([Platform styles](#platform-styles)) |
@@ -495,7 +495,6 @@ screens that have not moved yet.
 | `toLessonView`, `toTimelineRows`, `lessonTypeAccent` | The shared lesson presentation (`core/lesson`) drawn by the kit: texts resolved, pills toned (`идёт` solid `Primary`, `далее` `Neutral`, `изменена` and `очередь` `Warning`, `отменена` `Error`, `записаны` `Success`, `онлайн` `Neutral` with the camera), lesson types coloured |
 | `SectionHeader`, `TextTile` | A section's title with a neutral count at the end; a short text (`+9`) in a tone's tile, the size of an `IconTile` |
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
-| `VotePill` | The votes of a link: like/dislike thumbs around the score, the viewer's own vote filled and in `primary`, only the score when voting is not allowed |
 | `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a bar (88 dp, down to 44 dp in a tight row; the text never wraps) and `22 из 24` in a tone |
 | `WeekStrip`, `WeekStripDay` | Past weekday/date labels are dimmed on both platforms; today and the selected day (including a past selection) keep full emphasis. One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on a `primary` indicator that slides on the scheme's default spatial spring while the colours crossfade (a week gaining or losing the choice fades it in place; snaps under reduced motion); a pager of these pages by weeks |
 
@@ -772,7 +771,7 @@ in [Shared components](#shared-components).
   quiet BARS row; `RecordbookSourcesSheetContent` on `SheetScaffold`.
 - Subject page: `RecordbookSubjectScreen` (`ui/subject/`) on `ItmoDetailScreen`: the tabs as `SegmentedChoice`, the
   hero card with the kit's `GradeScale` and the connected sheet, checkpoint groups of `ListGroup` rows with a thin bar,
-  teacher rows with an `Avatar`, link rows with the kit's `VotePill`, the gates as `GateCard`.
+  teacher rows with an `Avatar`, link rows with `VotePill`, the gates as `GateCard`.
 - The «Мои баллы» sheet: `SheetScoresSheet` of `:shared:feature-recordbook`
   (`ui/sheets/SheetScoresSheet.kt`) on the kit's `SheetScaffold` (handle, title,
   subject, one bounded area of at least 288 dp for loading, failures and the

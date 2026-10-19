@@ -74,7 +74,7 @@ class SubjectLinksViewModel(
         }
     }
 
-    /** Tapping the arrow of the current vote removes it. A vote keeps the actions sheet open, so it sends no [LinkEvent.Done]. */
+    /** Tapping the thumb of the current vote removes it. A vote keeps the actions sheet open, so it sends no [LinkEvent.Done]. */
     fun vote(id: String, up: Boolean) {
         val link = find(id) ?: return
         val value = if (up) 1 else -1
