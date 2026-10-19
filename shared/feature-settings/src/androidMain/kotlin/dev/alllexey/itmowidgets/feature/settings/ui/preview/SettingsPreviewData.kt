@@ -20,77 +20,76 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.compose.strings.app_unofficial_notice
 import dev.alllexey.itmowidgets.shared.compose.strings.me_group_app
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_extra_large
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_large
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_normal
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_group_colors
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_group_contrast
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_wallpaper_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_contrast_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_dark_black_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_dark_black_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_tonal_spot
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_vibrant
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_expressive
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_fidelity
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_content
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_neutral
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_monochrome
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_tonal_spot_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_vibrant_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_expressive_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_fidelity_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_content_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_neutral_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_style_monochrome_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_contrast_standard
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_contrast_medium
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_theme_contrast_high
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_amber
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_brand
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_custom
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_green
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_pink
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_purple
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_red
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_teal
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_wallpaper
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_calendar_sync_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_diagnostics_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_access
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_group_widgets
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_privacy_policy_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_data_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_license
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_maplibre_text
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_noto_text
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_note
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_licenses_plans_value
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_circle
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_fade
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_qr_animation_none
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_refresh_widgets_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_restart_onboarding_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_footer
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_notifications_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sport_auto_sign_description
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_schedule_sport_auto_sign_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_services_enabled
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_teacher_filter_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_sport_time_filter_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_version_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_group_colors
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_group_contrast
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_wallpaper_footer
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_contrast_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_dark_black_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_dark_black_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_tonal_spot
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_vibrant
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_expressive
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_fidelity
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_content
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_neutral
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_monochrome
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_tonal_spot_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_vibrant_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_expressive_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_fidelity_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_content_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_neutral_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_monochrome_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_contrast_standard
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_contrast_medium
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_contrast_high
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_amber
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_brand
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_custom
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_green
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_pink
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_purple
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_red
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_teal
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_wallpaper
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_calendar_sync_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_calendar_sync_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_diagnostics_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_group_access
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_group_widgets
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_ics_export_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_ics_export_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_privacy_policy_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_licenses_data_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_licenses_license
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_licenses_maplibre_text
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_licenses_noto_text
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_licenses_plans_note
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_licenses_plans_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_licenses_plans_value
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_animation_circle
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_animation_fade
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_qr_animation_none
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_refresh_widgets_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_restart_onboarding_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_restart_onboarding_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_schedule_footer
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_schedule_notifications_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_schedule_sport_auto_sign_description
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_schedule_sport_auto_sign_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_services_enabled
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_sport_teacher_filter_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_sport_time_filter_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_version_title
 import org.jetbrains.compose.resources.StringResource
 
 /**
@@ -118,7 +117,7 @@ internal object SettingsPreviewData {
             items = listOf(navigation(SettingsPage.WIDGETS))
         ),
         SettingSection(
-            title = res(CoreRes.string.me_group_app),
+            title = res(Res.string.me_group_app),
             items = listOf(
                 navigation(SettingsPage.APPEARANCE),
                 navigation(SettingsPage.HOME),
@@ -299,7 +298,7 @@ internal object SettingsPreviewData {
                 navigation(SettingsPage.LICENSES),
                 SettingItem.Info(SettingRowId.VERSION, res(Res.string.settings_version_title), UiText.Dynamic(VERSION))
             ),
-            footer = res(CoreRes.string.app_unofficial_notice)
+            footer = res(Res.string.app_unofficial_notice)
         )
     )
 
@@ -391,9 +390,9 @@ internal object SettingsPreviewData {
 
     private fun WidgetTextSize.label() = res(
         when (this) {
-            WidgetTextSize.NORMAL -> CoreRes.string.settings_widget_text_size_normal
-            WidgetTextSize.LARGE -> CoreRes.string.settings_widget_text_size_large
-            WidgetTextSize.EXTRA_LARGE -> CoreRes.string.settings_widget_text_size_extra_large
+            WidgetTextSize.NORMAL -> Res.string.settings_widget_text_size_normal
+            WidgetTextSize.LARGE -> Res.string.settings_widget_text_size_large
+            WidgetTextSize.EXTRA_LARGE -> Res.string.settings_widget_text_size_extra_large
         }
     )
 

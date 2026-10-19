@@ -13,12 +13,11 @@ import androidx.compose.ui.semantics.contentDescription
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
 import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsToggleRow
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_sample
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_appearance_sample_action
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_home_card_schedule_changes_title
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_sample
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_sample_action
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_home_card_schedule_changes_title
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -44,7 +43,7 @@ internal fun AppearanceSample(modifier: Modifier = Modifier) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
             Button(onClick = {}) { Text(stringResource(Res.string.settings_appearance_sample_action)) }
-            TonalButton(onClick = {}) { Text(stringResource(CoreRes.string.common_cancel)) }
+            TonalButton(onClick = {}) { Text(stringResource(Res.string.common_cancel)) }
         }
     }
 }

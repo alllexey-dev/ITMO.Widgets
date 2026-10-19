@@ -36,7 +36,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_back
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -87,7 +87,7 @@ fun SettingsScreen(
             title = state.page.title.asString(),
             navigation = {
                 AppTopBarBack(
-                    stringResource(CoreRes.string.settings_back),
+                    stringResource(Res.string.settings_back),
                     actions.onBack,
                     Modifier.testTag(SettingsTestTags.BACK),
                 )
