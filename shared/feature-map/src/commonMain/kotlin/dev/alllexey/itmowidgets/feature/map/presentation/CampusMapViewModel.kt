@@ -239,7 +239,8 @@ class CampusMapViewModel(
                 target = if (room != null) Target(room, match?.room) else state.target,
                 approximate = match?.takeIf(RoomMatch::approximate),
                 focus = match?.room?.point,
-                trip = null,
+                // Picking a route end may look for it in another building; anything else leaves the route.
+                trip = state.trip.takeIf { state.picking != null },
             )
         }
     }

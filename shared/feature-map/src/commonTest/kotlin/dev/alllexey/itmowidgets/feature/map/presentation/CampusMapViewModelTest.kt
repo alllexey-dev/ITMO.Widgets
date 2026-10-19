@@ -128,6 +128,21 @@ class CampusMapViewModelTest {
     }
 
     @Test
+    fun theDestinationCanBeTappedOnAnotherBuildingsPlan() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"))
+        collect(vm)
+        vm.routeFrom()
+        vm.selectBuilding(273)
+        assertEquals(RouteEnd.TO, plan(vm).trip?.picking)
+
+        vm.selectRoom(1124)
+
+        val trip = assertNotNull(plan(vm).trip)
+        assertEquals(UiText.Dynamic("1124"), trip.to)
+        assertTrue(TripStepKind.CITY in trip.steps.map { it.kind })
+    }
+
+    @Test
     fun aTapOnThePlanPicksTheStart() = runTest(main.dispatcher) {
         val vm = viewModel(lesson(room = "2403"), route = true)
         collect(vm)

@@ -324,9 +324,10 @@ private fun MapChip(
         shadowElevation = ChromeElevation,
     ) {
         Row(
-            Modifier.heightIn(min = ChipHeight).padding(start = 6.dp, end = if (trailing != null) 8.dp else 12.dp),
+            Modifier.heightIn(min = ChipHeight)
+                .padding(start = ItmoTheme.spacing.compact, end = if (trailing != null) ItmoTheme.spacing.compact else ItmoTheme.spacing.content),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
         ) {
             leading()
             Text(label, style = ItmoTheme.typography.labelLarge, maxLines = 1)
@@ -385,7 +386,7 @@ private fun Floors(levels: List<LevelChip>, onLevel: (Int) -> Unit, modifier: Mo
                         Box(
                             Modifier
                                 .align(Alignment.TopEnd)
-                                .padding(4.dp)
+                                .padding(ItmoTheme.spacing.related)
                                 .size(10.dp)
                                 .background(if (level.selected) colors.onPrimary else colors.primary, CircleShape)
                                 .border(2.dp, if (level.selected) colors.primary else colors.surfaceContainerHigh, CircleShape),
