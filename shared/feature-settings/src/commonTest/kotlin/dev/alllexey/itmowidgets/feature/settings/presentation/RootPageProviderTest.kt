@@ -1,6 +1,10 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
+import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
@@ -12,7 +16,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
@@ -29,109 +32,120 @@ class RootPageProviderTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun rootIsACompactCatalogueWithoutSwitchesOrArbitraryOptionSummaries() =
+    fun rootIsACompactCatalogueWithoutSwitches() =
         runTest(main.dispatcher) {
             val fixture = createFixture(local = LocalSettings(customServicesEnabled = true))
             advanceUntilIdle()
 
+            val sections = fixture.viewModel.uiState.value.sections
             assertEquals(SettingsPage.ROOT, fixture.viewModel.uiState.value.page)
-            assertEquals(3, fixture.viewModel.uiState.value.sections.size)
-            assertEquals(8, fixture.viewModel.allItems().size)
-            assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
-            val navigation = fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
             assertEquals(
-                // Лицензии opens from Обслуживание, not from the root.
-                SettingsPage.entries.filter { it != SettingsPage.ROOT && it != SettingsPage.PRIVACY && it != SettingsPage.LICENSES },
-                navigation.map { it.page }
+                listOf(UiText.Res(SettingsStrings.settings_group_accounts), UiText.Res(CoreStrings.me_group_app), null),
+                sections.map { it.title }
             )
-            assertTrue(navigation.all { it.description == null })
-            assertTrue(navigation.filter { it.page != SettingsPage.SERVICES }.all { it.value == null })
-            assertEquals(UiText.Res(SettingsStrings.settings_services_enabled), navigation.first().value)
-            val applicationSection = fixture.viewModel.uiState.value.sections.single {
-                it.title == UiText.Res(CoreStrings.me_group_app)
-            }
             assertEquals(
                 listOf(
-                    SettingsPage.APPEARANCE,
-                    SettingsPage.HOME,
-                    SettingsPage.SCHEDULE,
-                    SettingsPage.SPORT,
-                    SettingsPage.MAINTENANCE
+                    SettingRowId.PAGE_SERVICES,
+                    SettingRowId.BARS,
+                    SettingRowId.PAGE_NOTIFICATIONS,
+                    SettingRowId.PAGE_WIDGETS,
+                    SettingRowId.PAGE_APPEARANCE,
+                    SettingRowId.PAGE_SECTIONS,
+                    SettingRowId.PAGE_ABOUT
                 ),
-                applicationSection.items.filterIsInstance<SettingItem.Navigation>().map { it.page }
+                fixture.viewModel.allItems().map { it.id }
             )
+            assertTrue(fixture.viewModel.allItems().none { it is SettingItem.Toggle })
+            assertEquals(UiText.Res(SettingsStrings.settings_services_enabled), navigation(fixture, SettingsPage.SERVICES).value)
+            assertEquals(UiText.Res(SettingsStrings.settings_accent_color_wallpaper), navigation(fixture, SettingsPage.APPEARANCE).value)
+            assertEquals(null, navigation(fixture, SettingsPage.SECTIONS).value)
             assertEquals(null, fixture.viewModel.uiState.value.themePreview)
             assertEquals(0, fixture.repository.refreshSharingCount)
         }
 
     @Test
-    fun homePassCanBeHiddenAndShownWithoutRefreshingWidgets() = runTest(main.dispatcher) {
-        val fixture = createFixture(page = SettingsPage.HOME)
+    fun theBarsRowOpensTheSignInUntilBarsIsConnected() = runTest(main.dispatcher) {
+        val fixture = createFixture()
+        val events = recordEvents(fixture)
         advanceUntilIdle()
-        assertTrue(fixture.viewModel.toggle(SettingRowId.HOME_PASS_VISIBLE).checked)
 
-        fixture.viewModel.onToggleChanged(SettingRowId.HOME_PASS_VISIBLE, false)
+        val off = fixture.viewModel.action(SettingRowId.BARS)
+        assertEquals(UiText.Res(SettingsStrings.settings_bars_off), off.value)
+        fixture.viewModel.onAction(SettingRowId.BARS)
         advanceUntilIdle()
-        assertFalse(fixture.viewModel.toggle(SettingRowId.HOME_PASS_VISIBLE).checked)
-        assertFalse(fixture.repository.local.value.homePassVisible)
+        assertEquals(listOf<SettingsEvent>(SettingsEvent.OpenBarsLogin), events)
 
-        fixture.viewModel.onToggleChanged(SettingRowId.HOME_PASS_VISIBLE, true)
+        fixture.bars.value = BarsConnection.EXPIRED
         advanceUntilIdle()
-        assertTrue(fixture.viewModel.toggle(SettingRowId.HOME_PASS_VISIBLE).checked)
-        assertEquals(0, fixture.widgetRefresher.refreshCount)
+        assertEquals(UiText.Res(SettingsStrings.settings_bars_expired), fixture.viewModel.action(SettingRowId.BARS).value)
+
+        fixture.bars.value = BarsConnection.CONNECTED
+        advanceUntilIdle()
+        val connected = fixture.viewModel.allItems().single { it.id == SettingRowId.BARS }
+        assertEquals(SettingItem.Info(SettingRowId.BARS, UiText.Res(SettingsStrings.settings_bars_title), UiText.Res(SettingsStrings.settings_bars_connected)), connected)
     }
 
     @Test
-    fun theNotificationsRowSaysOnlyWhenTheSystemDeniesThemAndMaintenanceShowsTheVersion() =
+    fun theNotificationsRowCountsTheTypesThatAreOnOrSaysTheSystemDeniesThem() =
         runTest(main.dispatcher) {
             val fixture = createFixture()
             advanceUntilIdle()
-            val row = {
-                fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>()
-                    .single { it.page == SettingsPage.NOTIFICATIONS }
-            }
+            val row = { navigation(fixture, SettingsPage.NOTIFICATIONS) }
 
-            assertEquals(null, row().value)
+            // Not connected: the marks and the schedule changes, both on by default.
+            assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(2, 2)), row().value)
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
             advanceUntilIdle()
-            assertEquals(UiText.Res(SettingsStrings.settings_notifications_blocked), row().value)
+            assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_denied), row().value)
             fixture.viewModel.onNotificationPermissionChanged(granted = true)
-            advanceUntilIdle()
-            assertEquals(null, row().value)
-
-            val maintenance = createFixture(page = SettingsPage.MAINTENANCE)
-            advanceUntilIdle()
-            val version = maintenance.viewModel.allItems()
-                .filterIsInstance<SettingItem.Action>()
-                .single { it.id == SettingRowId.VERSION }
-            assertEquals(versionSummary(TEST_BUILD), version.value)
-        }
-
-    @Test
-    fun theAccessGroupLeadsToTheConnectionAndTheNotifications() =
-        runTest(main.dispatcher) {
-            val fixture = createFixture()
-            advanceUntilIdle()
-
-            val access = fixture.viewModel.uiState.value.sections.first()
-            assertEquals(
-                listOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS),
-                access.items.filterIsInstance<SettingItem.Navigation>().map { it.page }
+            fixture.repository.local.value = fixture.repository.local.value.copy(
+                customServicesEnabled = true,
+                disabledPushes = setOf(AppNotificationChannels.FRIENDS),
             )
-            assertEquals(UiText.Res(SettingsStrings.connection_title), SettingsPage.SERVICES.title)
-            assertEquals(UiText.Res(SettingsStrings.notifications_title), SettingsPage.NOTIFICATIONS.title)
+            advanceUntilIdle()
+            assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(4, 5)), row().value)
         }
 
     @Test
-    fun theWidgetsGroupIsOneRowToTheGalleryWhereTheWidgetsFollowTheTheme() =
-        runTest(main.dispatcher) {
-            val root = createFixture()
-            advanceUntilIdle()
-            val widgets = root.viewModel.uiState.value.sections.single {
-                it.title == UiText.Res(SettingsStrings.settings_group_widgets)
-            }
-            assertEquals(listOf(SettingRowId.PAGE_WIDGETS), widgets.items.map { it.id })
+    fun theWidgetsRowCountsThePlacedWidgets() = runTest(main.dispatcher) {
+        val fixture = createFixture()
+        advanceUntilIdle()
+        assertEquals(null, navigation(fixture, SettingsPage.WIDGETS).value)
 
+        fixture.viewModel.onPlacedWidgets(WidgetFormat.DAY, 2)
+        fixture.viewModel.onPlacedWidgets(WidgetFormat.PASS, 1)
+        advanceUntilIdle()
+        assertEquals(UiText.Res(SettingsStrings.settings_widgets_placed, listOf(3)), navigation(fixture, SettingsPage.WIDGETS).value)
+    }
+
+    @Test
+    fun theAboutPageShowsTheVersion() = runTest(main.dispatcher) {
+        val about = createFixture(page = SettingsPage.ABOUT)
+        advanceUntilIdle()
+        assertEquals(versionSummary(TEST_BUILD), about.viewModel.action(SettingRowId.VERSION).value)
+        assertEquals(UiText.Res(SettingsStrings.connection_title), SettingsPage.SERVICES.title)
+        assertEquals(UiText.Res(SettingsStrings.notifications_title), SettingsPage.NOTIFICATIONS.title)
+    }
+
+    @Test
+    fun theDevicesPageOpensTheWebSignInAndTheConnectedDevices() = runTest(main.dispatcher) {
+        val fixture = createFixture(page = SettingsPage.DEVICES)
+        val events = recordEvents(fixture)
+        advanceUntilIdle()
+        assertEquals(listOf(SettingRowId.PAIR_DEVICE, SettingRowId.CONNECTED_DEVICES), fixture.viewModel.allItems().map { it.id })
+
+        fixture.viewModel.onAction(SettingRowId.PAIR_DEVICE)
+        fixture.viewModel.onAction(SettingRowId.CONNECTED_DEVICES)
+        advanceUntilIdle()
+        assertEquals(
+            listOf<SettingsEvent>(SettingsEvent.OpenRoute(AppRoutes.WebLogin()), SettingsEvent.OpenRoute(AppRoutes.Connections)),
+            events
+        )
+    }
+
+    @Test
+    fun theWidgetsFollowTheThemeFromTheGallery() =
+        runTest(main.dispatcher) {
             val fixture = createFixture(page = SettingsPage.WIDGETS)
             advanceUntilIdle()
             val toggle = fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME)
@@ -145,4 +159,7 @@ class RootPageProviderTest {
             assertTrue(fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME).checked)
             assertEquals(1, fixture.widgetRefresher.refreshCount)
         }
+
+    private fun navigation(fixture: Fixture, page: SettingsPage): SettingItem.Navigation =
+        fixture.viewModel.allItems().filterIsInstance<SettingItem.Navigation>().single { it.page == page }
 }

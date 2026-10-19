@@ -1,8 +1,10 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation.notifications
 
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
+import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 
 /**
@@ -28,13 +30,30 @@ data class NotificationSettingsUiState(
     val subtitle: UiText?
         get() = when {
             !loaded -> null
-            permission == NotificationPermission.DENIED -> UiText.Res(SettingsStrings.notifications_subtitle_denied)
-            else -> {
-                val pushSwitches = if (connected) pushes.map { it.enabled } else emptyList()
-                val switches = listOfNotNull(marks?.enabled, scheduleChanges) + pushSwitches
-                UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(switches.count { it }, switches.size))
-            }
+            else -> notificationsSummary(
+                denied = permission == NotificationPermission.DENIED,
+                switches = listOfNotNull(marks?.enabled, scheduleChanges) + if (connected) pushes.map { it.enabled } else emptyList(),
+            )
         }
+}
+
+/** `запрещены в системе`, or how many of [switches] (the types that can arrive) are on; the settings root says it too. */
+internal fun notificationsSummary(denied: Boolean, switches: List<Boolean>): UiText =
+    if (denied) {
+        UiText.Res(SettingsStrings.notifications_subtitle_denied)
+    } else {
+        UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(switches.count { it }, switches.size))
+    }
+
+/** The switches of the types that can arrive, from the stored values, as «Уведомления» lists them. */
+internal fun notificationSwitches(local: LocalSettings, capabilities: PlatformCapabilities): List<Boolean> {
+    val marks = (local.myItmoMarksEnabled || local.barsMarksEnabled == true || local.sheetMarksEnabled).takeIf { capabilities.marks }
+    val pushes = if (capabilities.pushSwitches && local.customServicesEnabled) {
+        PushKind.entries.map { it.channel !in local.disabledPushes }
+    } else {
+        emptyList()
+    }
+    return listOfNotNull(marks, local.scheduleChangesEnabled) + pushes
 }
 
 enum class NotificationPermission { UNKNOWN, ALLOWED, DENIED }
@@ -66,7 +85,7 @@ sealed interface NotificationSettingsEvent {
     /** The app's notification page of the system: its channels, sound and vibration. */
     data object OpenSystemSettings : NotificationSettingsEvent
 
-    /** «Подключение и данные»: the pushes need the connection. */
+    /** «Сервер ITMO.Widgets»: the pushes need the connection. */
     data object OpenConnection : NotificationSettingsEvent
 
     /** The once-per-device offer to let the app work in the background. */

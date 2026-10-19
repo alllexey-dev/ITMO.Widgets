@@ -101,6 +101,8 @@ class SettingsRepositoryImplTest {
     @Test
     fun scheduleSportAutoSignUpdatesLocalSettingsWithoutEnablingServicesOrCallingBackend() = runTest {
         val fixture = createRepository()
+        assertTrue(fixture.repository.observeLocalSettings().first().showSportAutoSign)
+        fixture.repository.setScheduleSportAutoSignEnabled(false)
         assertFalse(fixture.repository.observeLocalSettings().first().showSportAutoSign)
         val enabledSettings = async(start = CoroutineStart.UNDISPATCHED) {
             fixture.repository.observeLocalSettings().first { it.showSportAutoSign }
@@ -111,7 +113,7 @@ class SettingsRepositoryImplTest {
         assertEquals(LocalSettings(showSportAutoSign = true), enabledSettings.await())
         assertTrue(fixture.stores.scheduleChecks.getScheduleSportAutoSignEnabled())
         fixture.repository.setScheduleSportAutoSignEnabled(false)
-        assertEquals(LocalSettings(), fixture.repository.observeLocalSettings().first())
+        assertEquals(LocalSettings(showSportAutoSign = false), fixture.repository.observeLocalSettings().first())
         assertFalse(fixture.stores.scheduleChecks.getScheduleSportAutoSignEnabled())
         assertFalse(fixture.stores.servicesOptIn.getCustomServicesEnabled())
         assertTrue(fixture.api.requests.isEmpty())

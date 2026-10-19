@@ -1,42 +1,6 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
-    "me_connection_off" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не подключено"
-          }
-        }
-      }
-    },
-    "me_connection_on" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключено"
-          }
-        }
-      }
-    },
-    "me_connection_title" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключение и данные"
-          }
-        }
-      }
-    },
     "me_friends_error" : {
       "comment" : "Generated from strings_me.xml",
       "extractionState" : "manual",
@@ -157,6 +121,18 @@
         }
       }
     },
+    "me_group_links" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылки"
+          }
+        }
+      }
+    },
     "me_group_people" : {
       "comment" : "Generated from strings_me.xml",
       "extractionState" : "manual",
@@ -169,18 +145,6 @@
         }
       }
     },
-    "me_group_widgets" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ITMO.Widgets"
-          }
-        }
-      }
-    },
     "me_isu" : {
       "comment" : "Generated from strings_me.xml",
       "extractionState" : "manual",
@@ -189,6 +153,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ИСУ %1$lld"
+          }
+        }
+      }
+    },
+    "me_map" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карта"
+          }
+        }
+      }
+    },
+    "me_map_subtitle" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Корпуса и аудитории"
           }
         }
       }
@@ -213,54 +201,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сайт университета"
-          }
-        }
-      }
-    },
-    "me_needs_connection" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нужно подключение"
-          }
-        }
-      }
-    },
-    "me_notifications_title" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Уведомления"
-          }
-        }
-      }
-    },
-    "me_privacy_description" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Кто видит расписание, спорт и друзей"
-          }
-        }
-      }
-    },
-    "me_privacy_title" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Приватность"
           }
         }
       }
@@ -345,30 +285,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Профиль не загрузился"
-          }
-        }
-      }
-    },
-    "me_web_login_subtitle" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вход на сайт по QR или коду"
-          }
-        }
-      }
-    },
-    "me_web_login_title" : {
-      "comment" : "Generated from strings_me.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключить устройство"
           }
         }
       }

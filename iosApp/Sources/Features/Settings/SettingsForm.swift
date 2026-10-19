@@ -204,8 +204,6 @@ struct SettingsIosCopy {
 
     private func replacement(for key: String) -> String? {
         switch key {
-        case "settings_notifications_allowed": "ios_settings_notifications_allowed"
-        case "settings_notifications_blocked": "ios_settings_notifications_blocked"
         // The background work row is Background App Refresh on iOS: it opens the app's page in Settings.
         case "settings_background_work_title": "ios_background_refresh_title"
         case "background_work_hint":

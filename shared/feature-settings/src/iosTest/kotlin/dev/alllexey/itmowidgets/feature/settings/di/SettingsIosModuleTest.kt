@@ -116,7 +116,7 @@ class SettingsIosModuleTest {
             .map { it.page }
 
         assertTrue(SettingsPage.NOTIFICATIONS in pages)
-        assertTrue(SettingsPage.MAINTENANCE in pages)
+        assertTrue(SettingsPage.ABOUT in pages)
         koin.close()
     }
 
@@ -196,6 +196,6 @@ class SettingsIosModuleTest {
     private companion object {
         const val ORIGIN = "https://dev.widgets.alllexey.dev"
         const val VERSION = "2.3-test"
-        val OWN_SCREENS = setOf(SettingsPage.SERVICES, SettingsPage.PRIVACY, SettingsPage.NOTIFICATIONS)
+        val OWN_SCREENS = setOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS)
     }
 }

@@ -35,9 +35,9 @@ class SettingsPreviewDataTest {
         val pages = mapOf(
             SettingsPage.ROOT to SettingsPreviewData.Root,
             SettingsPage.WIDGETS to SettingsPreviewData.widgets(local = LocalSettings(customServicesEnabled = true)),
-            SettingsPage.SCHEDULE to SettingsPreviewData.Schedule,
-            SettingsPage.SPORT to SettingsPreviewData.Sport,
-            SettingsPage.MAINTENANCE to SettingsPreviewData.Maintenance,
+            SettingsPage.SECTIONS to SettingsPreviewData.Sections,
+            SettingsPage.DEVICES to SettingsPreviewData.Devices,
+            SettingsPage.ABOUT to SettingsPreviewData.About,
             SettingsPage.LICENSES to SettingsPreviewData.Licenses,
             SettingsPage.APPEARANCE to SettingsPreviewData.Appearance,
         )

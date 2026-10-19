@@ -1,12 +1,10 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation.connection
 
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 
 /**
- * «Подключение и данные» (DECISIONS.md): the one home of the connection to ITMO.Widgets. [loaded] turns true with the
+ * «Сервер ITMO.Widgets» (DECISIONS.md): the one home of the connection to ITMO.Widgets. [loaded] turns true with the
  * first stored opt-in, so the switch never animates from a made-up default.
  */
 data class ConnectionUiState(
@@ -14,11 +12,7 @@ data class ConnectionUiState(
     val connected: Boolean = false,
     /** False in the demo: the switch shows the demo's opt-in and changes nothing. */
     val changeable: Boolean = true,
-    /** What the friends row says while connected: the friends and the new requests; null before Backend answers. */
-    val friends: UiText? = null,
-    val friendRequests: Int = 0,
     val privacy: ConnectionPrivacy = ConnectionPrivacy.OnlyYou,
-    val bars: BarsConnection = BarsConnection.NOT_CONNECTED,
 )
 
 /** «Кто видит»: only the owner while not connected, else the audiences Backend keeps. */

@@ -24,8 +24,8 @@ class SettingsPagesTest {
     // Lazy: the fixture's ViewModel needs the main dispatcher setUp installs.
     private val pages by lazy { createFixture().pages }
     private val navigationRows = SettingsPage.entries.filter { it != SettingsPage.ROOT }.map(SettingRowId::navigation)
-    /** «Подключение и данные» and «Уведомления» have view models of their own; no provider builds them. */
-    private val ownScreens = setOf(SettingsPage.SERVICES, SettingsPage.PRIVACY, SettingsPage.NOTIFICATIONS)
+    /** «Сервер ITMO.Widgets» and «Уведомления» have view models of their own; no provider builds them. */
+    private val ownScreens = setOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS)
 
     @Test
     fun everySettingsPageHasExactlyOneProviderAndTheOwnScreensNone() {

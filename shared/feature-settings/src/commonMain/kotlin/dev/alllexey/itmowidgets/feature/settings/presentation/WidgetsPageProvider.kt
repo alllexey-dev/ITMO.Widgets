@@ -153,13 +153,9 @@ internal class WidgetGalleryRows(private val capabilities: PlatformCapabilities,
     fun gallery(state: SettingsPageState): WidgetGallery {
         val local = state.local
         val theme = local.theme.takeIf { local.widgetsFollowTheme }
-        val placed = state.placedWidgets.values.sum()
         val sample = UiText.Res(SettingsStrings.settings_widget_sample_note)
         return WidgetGallery(
-            subtitle = UiText.Res(
-                if (capabilities.pinWidgets) SettingsStrings.settings_widgets_placed else SettingsStrings.settings_widgets_placed_home,
-                listOf(placed)
-            ).takeIf { placed > 0 },
+            subtitle = placedWidgetsSummary(state.placedWidgets, capabilities),
             cards = listOf(
                 card(
                     state, WidgetFormat.NEXT, SettingsStrings.settings_widget_next_title, SettingsStrings.settings_widget_next_description,
@@ -367,4 +363,12 @@ internal class WidgetGalleryRows(private val capabilities: PlatformCapabilities,
         /** The widgets of the UX overhaul, still being refined; the classic list and the pass are not. */
         val BETA = setOf(WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.SPORT)
     }
+}
+
+/** `2 на главном экране` (iOS `на экране «Домой»`), the gallery's subtitle and the root's value; null while none is placed. */
+internal fun placedWidgetsSummary(placed: Map<WidgetFormat, Int>, capabilities: PlatformCapabilities): UiText? {
+    val count = placed.values.sum()
+    if (count == 0) return null
+    val key = if (capabilities.pinWidgets) SettingsStrings.settings_widgets_placed else SettingsStrings.settings_widgets_placed_home
+    return UiText.Res(key, listOf(count))
 }

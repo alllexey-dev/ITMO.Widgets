@@ -20,11 +20,11 @@ class ScheduleCheckPreferencesTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun `sport auto sign starts off and schedule changes start on`() = runTest {
+    fun `sport auto sign and schedule changes start on`() = runTest {
         val preferences = ScheduleCheckPreferences(InMemoryPreferencesDataStore())
 
-        assertFalse(preferences.getScheduleSportAutoSignEnabled())
-        assertFalse(preferences.observeScheduleSportAutoSignEnabled().first())
+        assertTrue(preferences.getScheduleSportAutoSignEnabled())
+        assertTrue(preferences.observeScheduleSportAutoSignEnabled().first())
         assertTrue(preferences.getScheduleChangesEnabled())
         assertTrue(preferences.observeScheduleChangesEnabled().first())
     }
@@ -33,11 +33,11 @@ class ScheduleCheckPreferencesTest {
     fun `persists both switches`() = runTest {
         val preferences = ScheduleCheckPreferences(InMemoryPreferencesDataStore())
 
-        preferences.setScheduleSportAutoSignEnabled(true)
+        preferences.setScheduleSportAutoSignEnabled(false)
         preferences.setScheduleChangesEnabled(false)
 
-        assertTrue(preferences.getScheduleSportAutoSignEnabled())
-        assertTrue(preferences.observeScheduleSportAutoSignEnabled().first())
+        assertFalse(preferences.getScheduleSportAutoSignEnabled())
+        assertFalse(preferences.observeScheduleSportAutoSignEnabled().first())
         assertFalse(preferences.getScheduleChangesEnabled())
         assertFalse(preferences.observeScheduleChangesEnabled().first())
     }
@@ -50,27 +50,27 @@ class ScheduleCheckPreferencesTest {
             fileDataStore(file, CoroutineScope(backgroundScope.coroutineContext + storageJob))
         )
         try {
-            assertFalse(preferences.observeScheduleSportAutoSignEnabled().first())
-            val enabled = async(start = CoroutineStart.UNDISPATCHED) {
-                preferences.observeScheduleSportAutoSignEnabled().first { it }
-            }
-            preferences.setScheduleSportAutoSignEnabled(true)
-            assertTrue(enabled.await())
-
+            assertTrue(preferences.observeScheduleSportAutoSignEnabled().first())
             val disabled = async(start = CoroutineStart.UNDISPATCHED) {
                 preferences.observeScheduleSportAutoSignEnabled().first { !it }
             }
             preferences.setScheduleSportAutoSignEnabled(false)
             assertFalse(disabled.await())
+
+            val enabled = async(start = CoroutineStart.UNDISPATCHED) {
+                preferences.observeScheduleSportAutoSignEnabled().first { it }
+            }
             preferences.setScheduleSportAutoSignEnabled(true)
+            assertTrue(enabled.await())
+            preferences.setScheduleSportAutoSignEnabled(false)
         } finally {
             storageJob.cancelAndJoin()
         }
 
         val restoredFile = fileDataStore(file, backgroundScope)
         val restored = ScheduleCheckPreferences(restoredFile)
-        assertTrue(restored.getScheduleSportAutoSignEnabled())
-        assertTrue(restored.observeScheduleSportAutoSignEnabled().first())
+        assertFalse(restored.getScheduleSportAutoSignEnabled())
+        assertFalse(restored.observeScheduleSportAutoSignEnabled().first())
         assertFalse(ServicesOptInPreferences(restoredFile).getCustomServicesEnabled())
     }
 }

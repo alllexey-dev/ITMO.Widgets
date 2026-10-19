@@ -44,16 +44,15 @@ class MeViewModel(
     val isRefreshing: Boolean get() = refreshes.refreshing.value
 
     val uiState: StateFlow<MeUiState> = combine(
-        combine(sessionRepository.state, customServices.observeEnabled(), ::Pair),
+        sessionRepository.state,
         socialRepository.observeCurrentUser(),
         socialRepository.observeFriends(),
         socialRepository.observeRequests(),
         signOutInProgress
-    ) { (session, servicesEnabled), backendUser, friends, requests, signingOut ->
+    ) { session, backendUser, friends, requests, signingOut ->
         MeUiState(
             header = header((session as? SessionState.SignedIn)?.user, backendUser),
             friends = summarize(friends, requests),
-            connected = servicesEnabled,
             signOutInProgress = signingOut,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, MeUiState())

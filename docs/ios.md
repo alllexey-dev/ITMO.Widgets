@@ -149,8 +149,8 @@ notification permission and Background App Refresh to the ViewModel on appear an
 calendar switch asks EventKit for access in Swift (`Features/Calendar/`). `DiagnosticsScreen` lists `AppDiagnostics`
 records and shares the journal.
 
-The `SERVICES` and `PRIVACY` keys open `ConnectionDataScreen` (`Features/Connection/`, over `ConnectionViewModel`,
-with `ServicesConsentSheet`, which the first-run flow shares) and `NOTIFICATIONS` opens `NotificationSettingsScreen`
+The `SERVICES` key (and the old `PRIVACY`) opens `ConnectionDataScreen` (`Features/Connection/`, over
+`ConnectionViewModel`, with `ServicesConsentSheet`, which the first-run flow shares, and `StoredDataSheet`) and `NOTIFICATIONS` opens `NotificationSettingsScreen`
 (over `NotificationSettingsViewModel`; without the filtering entitlement it lists no push switch, see
 [Degradations](#degradations)). Both report the system state as `SettingsScreen` does. The connected devices (`ConnectionsScreen`) and the
 pairing sheet (`WebLoginSheet`) are drawn on the kit; their logic is the shared one.

@@ -42,6 +42,7 @@ class ScheduleWidgetSnapshotStoreGoldenTest {
 
     @Test
     fun `a snapshot round-trips with its version marker first`() = runTest(dispatcher) {
+        preferences.setScheduleSportAutoSignEnabled(false)
         store().write(sample)
 
         assertTrue(file.readText(), file.readText().startsWith(MARKER))

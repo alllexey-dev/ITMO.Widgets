@@ -46,7 +46,7 @@ object ServicesConsentTags {
 
 /**
  * The consent before connecting to ITMO.Widgets (DECISIONS.md: enabling always goes through it), the one sheet of
- * «Подключение и данные», the gates that link there and the first-run step. [onConnect] is the only way the opt-in
+ * «Сервер ITMO.Widgets», the gates that link there and the first-run step. [onConnect] is the only way the opt-in
  * turns on; [onDismiss] (`Не сейчас`, the close button, a swipe) leaves it off.
  */
 @OptIn(ExperimentalMaterial3Api::class)

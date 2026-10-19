@@ -1,8 +1,8 @@
 # Web sign-in and device pairing
 
 Product behaviour: [Как это работает: веб-версия](../how-it-works/web.md).
-The row of «Подключение и данные» (`Устройства`) and the sheet are called
-`Подключить устройство`: the same sheet signs a browser in and pairs a device
+The first row of `Устройства` (a settings page under «Сервер ITMO.Widgets») and
+the sheet are called `Подключить устройство`: the same sheet signs a browser in and pairs a device
 ([Device pairing](#device-pairing)). Both need the connection to ITMO.Widgets.
 
 The web version at `https://<domain>/app/` has no password form: a browser
@@ -14,9 +14,8 @@ parser, data, view model and sheet. Backend contract:
 
 ## Entry point
 
-- `Подключить устройство` on the profile tab is always shown (nothing hides without the connection): while
-  `Подключение к ITMO.Widgets` is off (`MeUiState.connected`, from `CustomServicesRepository.observeEnabled()`) it
-  says `Нужно подключение` and opens the connection instead, so there is never a row that can only fail.
+- `Подключить устройство` is on `Устройства` (`SettingsPage.DEVICES`), which «Сервер ITMO.Widgets» lists only
+  while connected, so there is never a row that can only fail.
 - It opens the sheet key `AppRoutes.WebLogin` (`SheetPolicy(textInput =
   true)`) once; the demo session refuses it (`ShellGate`). The sheet scene
   (`ShellScenes.kt`) opens it expanded to content, up to the height below the status bar,
@@ -163,7 +162,7 @@ The link stays in the view model's memory; the saved state never holds it.
 ## Connected devices
 
 `Подключённые устройства` (`AppRoutes.Connections`, `ConnectionsViewModel`)
-opens from the sheet, from «Подключение и данные» (`Устройства`) and from a
+opens from the sheet, from `Устройства` of «Сервер ITMO.Widgets» and from a
 new-connection push. Each device is a row of one group: the kind's tile, the
 name, when it connected and was last active, the badge and a tonal `Отключить`.
 `GET /api/users/me/connections` lists web sessions and agents with the kind

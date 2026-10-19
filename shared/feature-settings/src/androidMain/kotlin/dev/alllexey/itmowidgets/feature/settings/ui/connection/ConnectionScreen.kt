@@ -4,15 +4,16 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +30,8 @@ import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIn
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.services.ServicesConsentSheet
+import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
+import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.components.services.StoredDataGroup
 import dev.alllexey.itmowidgets.designsystem.kit.IconTile
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
@@ -38,65 +41,55 @@ import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.SmallButton
-import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
 import dev.alllexey.itmowidgets.designsystem.kit.SwitchListRow
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
-import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionPrivacy
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.PrivacyTopic
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
-import dev.alllexey.itmowidgets.shared.designsystem.ic_book_2
 import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_month
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_done
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
 import dev.alllexey.itmowidgets.shared.designsystem.ic_delete
 import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
-import dev.alllexey.itmowidgets.shared.designsystem.ic_grading
+import dev.alllexey.itmowidgets.shared.designsystem.ic_folder
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_link
-import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
-import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code_scanner
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
-import dev.alllexey.itmowidgets.shared.designsystem.ic_visibility_off
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import org.jetbrains.compose.resources.painterResource
 
-/** What «Подключение и данные» asks of its host. [onConnectedChange] gets `true` only after the consent sheet. */
+/** What «Сервер ITMO.Widgets» asks of its host. [onConnectedChange] gets `true` only after the consent sheet. */
 data class ConnectionActions(
     val onBack: () -> Unit = {},
     val onConnectedChange: (Boolean) -> Unit = {},
     val onAudience: (PrivacyTopic, SharingVisibility) -> Unit = { _, _ -> },
     val onRetryPrivacy: () -> Unit = {},
-    val onFriends: () -> Unit = {},
-    val onQueue: () -> Unit = {},
-    val onLinks: () -> Unit = {},
     val onSource: () -> Unit = {},
-    val onBars: () -> Unit = {},
-    val onPairDevice: () -> Unit = {},
     val onDevices: () -> Unit = {},
     val onDeleteAccount: () -> Unit = {},
 )
 
-/** Test tags of «Подключение и данные». */
+/** Test tags of «Сервер ITMO.Widgets». */
 object ConnectionTags {
     const val SCREEN = "connection"
     const val SWITCH = "connection_switch"
     const val AUDIENCES = "connection_audiences"
-    const val BARS = "connection_bars"
     const val DEVICES = "connection_devices"
+    const val STORED = "connection_stored"
+    const val STORED_SHEET = "connection_stored_sheet"
     const val DELETE = "connection_delete"
 }
 
 /**
- * «Подключение и данные» (DECISIONS.md, Screens), the one home of the connection to ITMO.Widgets: the status with its
- * switch, what the connection gives (rows lead to their sections while connected), what works without it, what the
- * server keeps, who sees what, BARS, the devices and the account deletion. Turning it on always goes through the
- * consent sheet; [consentShown] opens the screen with it (the sheet's own state is kept across recreation).
+ * «Сервер ITMO.Widgets» (DECISIONS.md, Screens), the one home of the connection to ITMO.Widgets: the status with its
+ * switch, then while connected who sees what and the devices, before it what the connection gives; what the server
+ * keeps opens in a sheet, and the account deletion comes last in both. Turning it on always goes through the consent
+ * sheet; [consentShown] opens the screen with it (the sheets' own state is kept across recreation).
  */
 @Composable
 fun ConnectionScreen(
@@ -107,6 +100,7 @@ fun ConnectionScreen(
     scrollState: ScrollState = rememberScrollState(),
 ) {
     var consent by rememberSaveable { mutableStateOf(consentShown) }
+    var stored by rememberSaveable { mutableStateOf(false) }
     ItmoDetailScreen(
         title = text(SettingsStrings.connection_title),
         onBack = actions.onBack,
@@ -124,21 +118,30 @@ fun ConnectionScreen(
                 verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
             ) {
                 StatusCard(state) { on -> if (on) consent = true else actions.onConnectedChange(false) }
-                Gives(state, actions)
-                Offline()
-                SectionHeader(text(if (state.connected) SettingsStrings.connection_stored_on else SettingsStrings.connection_stored_off))
-                StoredDataGroup {
-                    ListRow(
-                        text(SettingsStrings.connection_source),
-                        icon = painterResource(Res.drawable.ic_code_blocks),
-                        chevron = true,
-                        onClick = actions.onSource,
-                    )
+                if (state.connected) Audiences(state.privacy, actions) else Gives()
+                ListGroup(Modifier.padding(top = ItmoTheme.spacing.group)) {
+                    if (state.connected) {
+                        item {
+                            ListRow(
+                                text(SettingsStrings.connection_devices),
+                                Modifier.testTag(ConnectionTags.DEVICES),
+                                subtitle = text(SettingsStrings.connection_devices_list_text),
+                                icon = painterResource(Res.drawable.ic_devices),
+                                chevron = true,
+                                onClick = actions.onDevices,
+                            )
+                        }
+                    }
+                    item {
+                        ListRow(
+                            text(if (state.connected) SettingsStrings.connection_stored_on else SettingsStrings.connection_stored_off),
+                            Modifier.testTag(ConnectionTags.STORED),
+                            icon = painterResource(Res.drawable.ic_folder),
+                            chevron = true,
+                            onClick = { stored = true },
+                        )
+                    }
                 }
-                ListGroupNote(text(CoreStrings.services_stored_token))
-                Audiences(state.privacy, actions)
-                Bars(state.bars, actions)
-                Devices(state.connected, actions)
                 ListGroup(Modifier.padding(top = ItmoTheme.spacing.group).testTag(ConnectionTags.DELETE)) {
                     item {
                         ListRow(
@@ -165,6 +168,7 @@ fun ConnectionScreen(
             onDismiss = { consent = false },
         )
     }
+    if (stored) StoredDataSheet(state.connected, actions.onSource, onDismiss = { stored = false })
 }
 
 @Composable
@@ -204,21 +208,16 @@ private fun StatusCard(state: ConnectionUiState, onSwitch: (Boolean) -> Unit) {
     }
 }
 
+/** What the connection gives, before it is on. */
 @Composable
-private fun Gives(state: ConnectionUiState, actions: ConnectionActions) {
-    val on = state.connected
-    val tone = if (on) Tone.Success else Tone.Neutral
+private fun Gives() {
     SectionHeader(text(SettingsStrings.connection_gives))
     ListGroup {
         item {
             ListRow(
                 text(SettingsStrings.connection_friends),
-                subtitle = state.friends?.asString() ?: text(SettingsStrings.connection_friends_text),
+                subtitle = text(SettingsStrings.connection_friends_text),
                 icon = painterResource(Res.drawable.ic_group),
-                iconTone = tone,
-                badge = state.friendRequests.takeIf { it > 0 },
-                chevron = on,
-                onClick = actions.onFriends.takeIf { on },
             )
         }
         item {
@@ -226,44 +225,15 @@ private fun Gives(state: ConnectionUiState, actions: ConnectionActions) {
                 text(SettingsStrings.connection_queue),
                 subtitle = text(SettingsStrings.connection_queue_text),
                 icon = painterResource(Res.drawable.ic_sprint),
-                iconTone = tone,
-                chevron = on,
-                onClick = actions.onQueue.takeIf { on },
             )
         }
         item {
             ListRow(
                 text(SettingsStrings.connection_links),
-                subtitle = text(if (on) SettingsStrings.connection_links_on else SettingsStrings.connection_links_off),
+                subtitle = text(SettingsStrings.connection_links_off),
                 icon = painterResource(Res.drawable.ic_link),
-                iconTone = tone,
-                chevron = on,
-                onClick = actions.onLinks.takeIf { on },
             )
         }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun Offline() {
-    SectionHeader(text(SettingsStrings.connection_offline))
-    ItmoCard {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(PillGap), verticalArrangement = Arrangement.spacedBy(PillGap)) {
-            listOf(
-                Res.drawable.ic_calendar_month to SettingsStrings.connection_offline_schedule,
-                Res.drawable.ic_book_2 to SettingsStrings.connection_offline_recordbook,
-                Res.drawable.ic_grading to SettingsStrings.connection_offline_bars,
-                Res.drawable.ic_qr_code to SettingsStrings.connection_offline_pass,
-                Res.drawable.ic_sprint to SettingsStrings.connection_offline_sport,
-            ).forEach { (icon, label) -> StatusPill(text(label), icon = painterResource(icon)) }
-        }
-        Text(
-            text(SettingsStrings.connection_offline_text),
-            Modifier.padding(top = ItmoTheme.spacing.related),
-            color = ItmoTheme.colorScheme.onSurfaceVariant,
-            style = ItmoTheme.typography.bodyMedium,
-        )
     }
 }
 
@@ -271,15 +241,8 @@ private fun Offline() {
 private fun Audiences(privacy: ConnectionPrivacy, actions: ConnectionActions) {
     SectionHeader(text(SettingsStrings.connection_audience))
     when (privacy) {
-        ConnectionPrivacy.OnlyYou -> ListGroup {
-            item {
-                ListRow(
-                    text(SettingsStrings.connection_only_you),
-                    subtitle = text(SettingsStrings.connection_only_you_text),
-                    icon = painterResource(Res.drawable.ic_visibility_off),
-                )
-            }
-        }
+        // Only while not connected, when the page has no audiences.
+        ConnectionPrivacy.OnlyYou -> Unit
         ConnectionPrivacy.Loading -> ItmoCard(Modifier.testTag(ConnectionTags.AUDIENCES)) {
             Box(Modifier.padding(ItmoTheme.spacing.related).align(Alignment.CenterHorizontally)) {
                 ItmoLoadingIndicator(Modifier.size(LoadingSize))
@@ -340,62 +303,44 @@ private fun SharingVisibility.label(): String = text(
     },
 )
 
+/** What the server keeps (or will keep), the link to its code and the token note, in a sheet of their own. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Bars(bars: BarsConnection, actions: ConnectionActions) {
-    SectionHeader(text(SettingsStrings.connection_bars))
-    val action = when (bars) {
-        BarsConnection.CONNECTED -> null
-        BarsConnection.EXPIRED -> SettingsStrings.connection_bars_sign_in
-        BarsConnection.NOT_CONNECTED -> SettingsStrings.connection_bars_connect
-    }
-    ListGroup(Modifier.testTag(ConnectionTags.BARS)) {
-        item {
-            ListRow(
-                text(SettingsStrings.connection_bars),
-                subtitle = text(
-                    when (bars) {
-                        BarsConnection.CONNECTED -> SettingsStrings.connection_bars_connected
-                        BarsConnection.EXPIRED -> SettingsStrings.connection_bars_expired
-                        BarsConnection.NOT_CONNECTED -> SettingsStrings.connection_bars_off
-                    },
-                ),
-                icon = painterResource(Res.drawable.ic_grading),
-                iconTone = when (bars) {
-                    BarsConnection.CONNECTED -> Tone.Success
-                    BarsConnection.EXPIRED -> Tone.Warning
-                    BarsConnection.NOT_CONNECTED -> Tone.Neutral
-                },
-                accessory = if (action != null) {
-                    { SmallButton(text(action), actions.onBars) }
-                } else {
-                    null
-                },
-            )
-        }
+private fun StoredDataSheet(connected: Boolean, onSource: () -> Unit, onDismiss: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        dragHandle = null,
+        containerColor = ItmoTheme.colorScheme.surfaceContainerLow,
+    ) {
+        StoredDataContent(connected, onSource, onDismiss)
     }
 }
 
+/** The stored data sheet's body. */
 @Composable
-private fun Devices(connected: Boolean, actions: ConnectionActions) {
-    SectionHeader(text(SettingsStrings.connection_devices))
-    ListGroup(Modifier.testTag(ConnectionTags.DEVICES)) {
-        item {
-            ListRow(
-                text(SettingsStrings.connection_pair),
-                subtitle = text(if (connected) SettingsStrings.connection_pair_text else SettingsStrings.connection_devices_off),
-                icon = painterResource(Res.drawable.ic_qr_code_scanner),
-                chevron = connected,
-                onClick = actions.onPairDevice.takeIf { connected },
-            )
-        }
-        item {
-            ListRow(
-                text(SettingsStrings.connection_devices_list),
-                subtitle = text(if (connected) SettingsStrings.connection_devices_list_text else SettingsStrings.connection_devices_off),
-                icon = painterResource(Res.drawable.ic_devices),
-                chevron = connected,
-                onClick = actions.onDevices.takeIf { connected },
-            )
+internal fun StoredDataContent(connected: Boolean, onSource: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    SheetScaffold(
+        title = text(if (connected) SettingsStrings.connection_stored_on else SettingsStrings.connection_stored_off),
+        modifier = modifier.testTag(ConnectionTags.STORED_SHEET),
+        close = SheetClose(text(CoreStrings.common_close), onDismiss),
+    ) {
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = ItmoTheme.spacing.section)
+                .padding(bottom = ItmoTheme.spacing.section),
+            verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+        ) {
+            StoredDataGroup {
+                ListRow(
+                    text(SettingsStrings.connection_source),
+                    icon = painterResource(Res.drawable.ic_code_blocks),
+                    chevron = true,
+                    onClick = onSource,
+                )
+            }
+            ListGroupNote(text(CoreStrings.services_stored_token))
         }
     }
 }
@@ -404,5 +349,4 @@ private fun Devices(connected: Boolean, actions: ConnectionActions) {
 private fun text(key: String): String = UiText.Res(key).asString()
 
 private val StatusTileSize = 48.dp
-private val PillGap = 6.dp
 private val LoadingSize = 40.dp

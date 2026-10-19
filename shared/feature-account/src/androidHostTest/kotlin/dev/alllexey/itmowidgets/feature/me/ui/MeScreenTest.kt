@@ -81,14 +81,9 @@ class MeScreenTest {
         }
 
         onNodeWithTag(MeTestTags.FRIENDS_ROW).assertDoesNotExist()
-        onNodeWithTag(MeTestTags.PRIVACY_ROW).assertDoesNotExist()
         onNodeWithText("Друзья недоступны").assertExists()
         onNodeWithText("Подключить").performClick()
-        // Nothing is hidden: the web sign-in row stays and leads to the connection too.
-        scrollTo(MeTestTags.WEB_LOGIN_ROW)
-        onNodeWithText("Нужно подключение", useUnmergedTree = true).assertExists()
-        onNodeWithTag(MeTestTags.WEB_LOGIN_ROW).performClick()
-        assertEquals(2, opened)
+        assertEquals(1, opened)
     }
 
     @Test
@@ -108,11 +103,8 @@ class MeScreenTest {
         val calls = mutableListOf<String>()
         val actions = MeActions(
             onOpenFriends = { calls += "friends" },
-            onOpenPrivacy = { calls += "privacy" },
-            onOpenConnection = { calls += "connection" },
-            onOpenNotifications = { calls += "notifications" },
             onOpenWidgets = { calls += "widgets" },
-            onOpenWebLogin = { calls += "web" },
+            onOpenMap = { calls += "map" },
             onOpenMyItmo = { calls += "my itmo" },
             onOpenSettings = { calls += "settings" },
             onOpenDebugTools = { calls += "debug" },
@@ -123,9 +115,8 @@ class MeScreenTest {
 
         onNodeWithTag(MeTestTags.SHARE).performClick()
         for (tag in listOf(
-            MeTestTags.FRIENDS_ROW, MeTestTags.PRIVACY_ROW, MeTestTags.CONNECTION_ROW, MeTestTags.NOTIFICATIONS_ROW,
-            MeTestTags.WIDGETS_ROW, MeTestTags.WEB_LOGIN_ROW, MeTestTags.MY_ITMO_ROW, MeTestTags.SETTINGS_ROW,
-            MeTestTags.DEBUG_TOOLS_ROW, MeTestTags.TELEGRAM, MeTestTags.GITHUB,
+            MeTestTags.FRIENDS_ROW, MeTestTags.WIDGETS_ROW, MeTestTags.SETTINGS_ROW, MeTestTags.DEBUG_TOOLS_ROW,
+            MeTestTags.MAP_ROW, MeTestTags.MY_ITMO_ROW, MeTestTags.TELEGRAM, MeTestTags.GITHUB,
         )) {
             scrollTo(tag)
             onNodeWithTag(tag).performClick()
@@ -133,8 +124,7 @@ class MeScreenTest {
 
         assertEquals(
             listOf(
-                "share Александрова Мария 284731", "friends", "privacy", "connection", "notifications", "widgets", "web",
-                "my itmo", "settings", "debug", "TELEGRAM", "GITHUB",
+                "share Александрова Мария 284731", "friends", "widgets", "settings", "debug", "map", "my itmo", "TELEGRAM", "GITHUB",
             ),
             calls,
         )

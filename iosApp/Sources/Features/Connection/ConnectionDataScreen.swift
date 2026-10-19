@@ -1,14 +1,14 @@
 import Shared
 import SwiftUI
 
-/// the connection page (`connection_title`) (`AppRoutes.Settings` `SERVICES`, also `PRIVACY`) over the shared `ConnectionViewModel`, as
-/// Android's `ConnectionScreen`: the status with its switch, what the connection gives, what works without it, what
-/// the server keeps, who sees what, BARS, the devices and the account deletion. Turning it on always goes through
-/// `ServicesConsentSheet`.
+/// the connection page (`connection_title`) (`AppRoutes.Settings` `SERVICES`, also `PRIVACY`) over the shared
+/// `ConnectionViewModel`, as Android's `ConnectionScreen`: the status with its switch, then while connected who sees
+/// what and the devices, before it what the connection gives; what the server keeps opens in a sheet, and the account
+/// deletion comes last. Turning it on always goes through `ServicesConsentSheet`.
 struct ConnectionDataScreen: View {
     @State private var model = ObservableViewModel(ConnectionViewModel.self, state: \.uiState)
     @State private var showsConsent = false
-    @State private var showsBarsLogin = false
+    @State private var showsStoredData = false
     @State private var message: SettingsMessage?
     @Environment(AppRouter.self) private var router
     @Environment(\.openURL) private var openURL
@@ -22,13 +22,8 @@ struct ConnectionDataScreen: View {
                 },
                 audience: { topic, visibility in model.viewModel.setAudience(topic: topic, visibility: visibility) },
                 retryPrivacy: { model.viewModel.retryPrivacy() },
-                friends: { router.open(AppRoutes.Friends.shared) },
-                queue: { _ = router.open(entry: EntryRoute(tab: .sport)) },
-                links: { _ = router.open(entry: EntryRoute(tab: .recordbook)) },
-                source: { if let url = URL(string: ProjectLinks.shared.SERVICES_SOURCE_URL) { openURL(url) } },
-                bars: { showsBarsLogin = true },
-                pairDevice: { router.open(AppRoutes.WebLogin(code: nil)) },
-                devices: { router.open(AppRoutes.Connections.shared) },
+                devices: { router.open(AppRoutes.Settings(page: SettingsPage.devices.name)) },
+                storedData: { showsStoredData = true },
                 deleteAccount: { model.viewModel.deleteAccount() }
             )
         )
@@ -50,8 +45,10 @@ struct ConnectionDataScreen: View {
                 model.viewModel.setConnected(enabled: true)
             }
         }
-        .sheet(isPresented: $showsBarsLogin) {
-            BarsLoginSheet { showsBarsLogin = false }
+        .sheet(isPresented: $showsStoredData) {
+            StoredDataSheet(connected: model.state.connected) {
+                if let url = URL(string: ProjectLinks.shared.SERVICES_SOURCE_URL) { openURL(url) }
+            }
         }
         .overlay(alignment: .bottom) {
             if let message {
@@ -72,13 +69,8 @@ struct ConnectionDataActions {
     var switchChanged: (Bool) -> Void = { _ in }
     var audience: (PrivacyTopic, SharingVisibility) -> Void = { _, _ in }
     var retryPrivacy: () -> Void = {}
-    var friends: () -> Void = {}
-    var queue: () -> Void = {}
-    var links: () -> Void = {}
-    var source: () -> Void = {}
-    var bars: () -> Void = {}
-    var pairDevice: () -> Void = {}
     var devices: () -> Void = {}
+    var storedData: () -> Void = {}
     var deleteAccount: () -> Void = {}
 }
 
@@ -91,21 +83,27 @@ struct ConnectionDataContent: View {
         ItmoScreenStack {
             if state.loaded {
                 statusCard
-                gives
-                offline
-                ItmoSectionHeader(title: AppStrings.string(state.connected ? "connection_stored_on" : "connection_stored_off"))
-                StoredDataGroup {
+                if state.connected { audiences } else { gives }
+                ItmoListGroup {
+                    if state.connected {
+                        ItmoRow(
+                            title: AppStrings.string("connection_devices"),
+                            subtitle: AppStrings.string("connection_devices_list_text"),
+                            symbol: .devices,
+                            chevron: true,
+                            action: actions.devices
+                        )
+                        .accessibilityIdentifier("connection.devices")
+                    }
                     ItmoRow(
-                        title: AppStrings.string("connection_source"),
-                        symbol: .codeBlocks,
+                        title: AppStrings.string(state.connected ? "connection_stored_on" : "connection_stored_off"),
+                        symbol: .folder,
                         chevron: true,
-                        action: actions.source
+                        action: actions.storedData
                     )
+                    .accessibilityIdentifier("connection.stored")
                 }
-                ItmoGroupNote(text: AppStrings.string("services_stored_token"))
-                audiences
-                bars
-                devices
+                .padding(.top, ItmoSpacing.group)
                 ItmoListGroup {
                     ItmoRow(
                         title: AppStrings.string("connection_delete"),
@@ -150,77 +148,36 @@ struct ConnectionDataContent: View {
         }
     }
 
+    /// What the connection gives, before it is on.
     private var gives: some View {
-        let on = state.connected
-        let tone: ItmoTone = on ? .ok : .neutral
-        return Group {
+        Group {
             ItmoSectionHeader(title: AppStrings.string("connection_gives"))
             ItmoListGroup {
                 ItmoRow(
                     title: AppStrings.string("connection_friends"),
-                    subtitle: state.friends?.resolved ?? AppStrings.string("connection_friends_text"),
-                    symbol: .group,
-                    tone: tone,
-                    badge: state.friendRequests > 0 ? Int(state.friendRequests) : nil,
-                    chevron: on,
-                    action: on ? actions.friends : nil
+                    subtitle: AppStrings.string("connection_friends_text"),
+                    symbol: .group
                 )
                 ItmoRow(
                     title: AppStrings.string("connection_queue"),
                     subtitle: AppStrings.string("connection_queue_text"),
-                    symbol: .sprint,
-                    tone: tone,
-                    chevron: on,
-                    action: on ? actions.queue : nil
+                    symbol: .sprint
                 )
                 ItmoRow(
                     title: AppStrings.string("connection_links"),
-                    subtitle: AppStrings.string(on ? "connection_links_on" : "connection_links_off"),
-                    symbol: .link,
-                    tone: tone,
-                    chevron: on,
-                    action: on ? actions.links : nil
+                    subtitle: AppStrings.string("connection_links_off"),
+                    symbol: .link
                 )
             }
         }
     }
-
-    private var offline: some View {
-        Group {
-            ItmoSectionHeader(title: AppStrings.string("connection_offline"))
-            ItmoCard {
-                ItmoFlow(spacing: 6) {
-                    ForEach(Self.offlinePills, id: \.1) { symbol, key in
-                        ItmoStatusPill(pill: ItmoPill(text: AppStrings.string(key), symbol: symbol))
-                    }
-                }
-                Text(verbatim: AppStrings.string("connection_offline_text"))
-                    .font(.itmo(.bodyMedium))
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 4)
-            }
-        }
-    }
-
-    private static let offlinePills: [(AppSymbol, String)] = [
-        (.calendarMonth, "connection_offline_schedule"),
-        (.book2, "connection_offline_recordbook"),
-        (.grading, "connection_offline_bars"),
-        (.qrCode, "connection_offline_pass"),
-        (.sprint, "connection_offline_sport"),
-    ]
 
     @ViewBuilder private var audiences: some View {
         ItmoSectionHeader(title: AppStrings.string("connection_audience"))
         switch onEnum(of: state.privacy) {
         case .onlyYou:
-            ItmoListGroup {
-                ItmoRow(
-                    title: AppStrings.string("connection_only_you"),
-                    subtitle: AppStrings.string("connection_only_you_text"),
-                    symbol: .visibilityOff
-                )
-            }
+            // Only while not connected, when the page has no audiences.
+            EmptyView()
         case .loading:
             ItmoCard {
                 ProgressView().itmoTint().frame(maxWidth: .infinity).padding(ItmoSpacing.related)
@@ -290,57 +247,25 @@ struct ConnectionDataContent: View {
         case .nobody: AppStrings.string("settings_privacy_nobody")
         }
     }
+}
 
-    private var bars: some View {
-        let (subtitle, tone, action): (String, ItmoTone, String?) = switch state.bars {
-        case .connected: ("connection_bars_connected", .ok, nil)
-        case .expired: ("connection_bars_expired", .warn, "connection_bars_sign_in")
-        case .notConnected: ("connection_bars_off", .neutral, "connection_bars_connect")
-        }
-        return Group {
-            ItmoSectionHeader(title: AppStrings.string("connection_bars"))
-            ItmoListGroup {
-                ItmoRow(
-                    title: AppStrings.string("connection_bars"),
-                    subtitle: AppStrings.string(subtitle),
-                    symbol: .grading,
-                    tone: tone
-                ).accessory {
-                    if let action {
-                        Button(AppStrings.string(action), action: actions.bars)
-                            .buttonStyle(.glass)
-                            .itmoTint()
-                            .accessibilityIdentifier("connection.bars.action")
-                    }
-                }
-            }
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("connection.bars")
-        }
-    }
+/// What the server keeps (or will keep), the link to its code and the token note, as Android's `StoredDataSheet`.
+struct StoredDataSheet: View {
+    let connected: Bool
+    let source: () -> Void
 
-    private var devices: some View {
-        let on = state.connected
-        return Group {
-            ItmoSectionHeader(title: AppStrings.string("connection_devices"))
-            ItmoListGroup {
+    var body: some View {
+        ItmoSheet(title: AppStrings.string(connected ? "connection_stored_on" : "connection_stored_off")) {
+            StoredDataGroup {
                 ItmoRow(
-                    title: AppStrings.string("connection_pair"),
-                    subtitle: AppStrings.string(on ? "connection_pair_text" : "connection_devices_off"),
-                    symbol: .qrCodeScanner,
-                    chevron: on,
-                    action: on ? actions.pairDevice : nil
-                )
-                ItmoRow(
-                    title: AppStrings.string("connection_devices_list"),
-                    subtitle: AppStrings.string(on ? "connection_devices_list_text" : "connection_devices_off"),
-                    symbol: .devices,
-                    chevron: on,
-                    action: on ? actions.devices : nil
+                    title: AppStrings.string("connection_source"),
+                    symbol: .codeBlocks,
+                    chevron: true,
+                    action: source
                 )
             }
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("connection.devices")
+            ItmoGroupNote(text: AppStrings.string("services_stored_token"))
         }
+        .accessibilityIdentifier("connection.stored.sheet")
     }
 }

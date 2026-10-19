@@ -22,6 +22,9 @@ enum class SettingRowId(val key: String) {
     QR_RESET_IMAGE("qr_reset_image"),
     QR_TILE("qr_tile"),
     HOME_PASS_VISIBLE("home_pass_visible"),
+    BARS("bars"),
+    PAIR_DEVICE("pair_device"),
+    CONNECTED_DEVICES("connected_devices"),
     SPORT_TEACHER_FILTER("sport_teacher_filter"),
     SPORT_TIME_FILTER("sport_time_filter"),
     REFRESH_WIDGETS("refresh_widgets"),
@@ -42,13 +45,11 @@ enum class SettingRowId(val key: String) {
 
     // Navigation rows: `page_` and the lowercase name of the page they open.
     PAGE_SERVICES("page_services"),
-    PAGE_PRIVACY("page_privacy"),
     PAGE_NOTIFICATIONS("page_notifications"),
     PAGE_WIDGETS("page_widgets"),
-    PAGE_HOME("page_home"),
-    PAGE_SCHEDULE("page_schedule"),
-    PAGE_SPORT("page_sport"),
-    PAGE_MAINTENANCE("page_maintenance"),
+    PAGE_SECTIONS("page_sections"),
+    PAGE_DEVICES("page_devices"),
+    PAGE_ABOUT("page_about"),
     PAGE_LICENSES("page_licenses"),
     PAGE_APPEARANCE("page_appearance");
 
@@ -57,13 +58,11 @@ enum class SettingRowId(val key: String) {
         fun navigation(page: SettingsPage): SettingRowId = when (page) {
             SettingsPage.ROOT -> throw IllegalArgumentException("The root settings page has no navigation row")
             SettingsPage.SERVICES -> PAGE_SERVICES
-            SettingsPage.PRIVACY -> PAGE_PRIVACY
             SettingsPage.NOTIFICATIONS -> PAGE_NOTIFICATIONS
             SettingsPage.WIDGETS -> PAGE_WIDGETS
-            SettingsPage.HOME -> PAGE_HOME
-            SettingsPage.SCHEDULE -> PAGE_SCHEDULE
-            SettingsPage.SPORT -> PAGE_SPORT
-            SettingsPage.MAINTENANCE -> PAGE_MAINTENANCE
+            SettingsPage.SECTIONS -> PAGE_SECTIONS
+            SettingsPage.DEVICES -> PAGE_DEVICES
+            SettingsPage.ABOUT -> PAGE_ABOUT
             SettingsPage.LICENSES -> PAGE_LICENSES
             SettingsPage.APPEARANCE -> PAGE_APPEARANCE
         }

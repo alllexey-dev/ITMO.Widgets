@@ -1,7 +1,7 @@
 import XCTest
 
 /// Settings and the error journal on the shared demo session: opened from the me tab, a sub-page pushed by
-/// its row, a switch that keeps its value across a relaunch, and the journal from the maintenance page. The rows carry
+/// its row, a switch that keeps its value across a relaunch, and the journal from «О приложении». The rows carry
 /// `settings.row.<SettingRowId.key>`, a page's form `settings.page.<page>`; texts are Russian on an English iPhone.
 final class SettingsUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
@@ -37,16 +37,16 @@ final class SettingsUITests: XCTestCase {
     func testASwitchKeepsItsValueAcrossARelaunch() {
         let app = XCUIApplication.itmo(session: .demo)
         app.launch()
-        openPage(app, "schedule")
+        openPage(app, "sections")
         let toggle = settingsSwitch(app, "schedule_sport_auto_sign")
         let before = isOn(toggle)
 
         XCTAssertTrue(flip(toggle, to: !before), "the switch follows the stored value")
-        attachScreenshot(named: "schedule")
+        attachScreenshot(named: "sections")
 
         app.terminate()
         app.launch()
-        openPage(app, "schedule")
+        openPage(app, "sections")
         let relaunched = settingsSwitch(app, "schedule_sport_auto_sign")
         XCTAssertEqual(isOn(relaunched), !before, "the stored value survives the relaunch")
 
@@ -56,14 +56,14 @@ final class SettingsUITests: XCTestCase {
 
     /// The calendar group: the switch and the `.ics` row; the demo's own schedule is synthetic, so the sheet
     /// writes a file without a request. The switch is not flipped: it would show the system's calendar prompt.
-    func testTheSchedulePageOffersTheCalendarAndTheIcsFile() {
+    func testTheSectionsPageOffersTheCalendarAndTheIcsFile() {
         let app = XCUIApplication.itmo(session: .demo)
         app.launch()
-        openPage(app, "schedule")
+        openPage(app, "sections")
 
         XCTAssertTrue(settingsSwitch(app, "calendar_sync").exists)
         let export = element(app, "settings.row.ics_export")
-        if !export.isHittable { element(app, "settings.page.schedule").swipeUp() }
+        if !export.isHittable { element(app, "settings.page.sections").swipeUp() }
         export.tap()
 
         let week = element(app, "ics.range.week")
@@ -74,7 +74,7 @@ final class SettingsUITests: XCTestCase {
         attachScreenshot(named: "ics-ready")
 
         element(app, "ics.close").tap()
-        XCTAssertTrue(element(app, "settings.page.schedule").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "settings.page.sections").waitForExistence(timeout: stepTimeout))
     }
 
     /// The mark checks: My ITMO and the sheets; BARS joins with the account's first BARS answer.
@@ -124,10 +124,10 @@ final class SettingsUITests: XCTestCase {
         XCTAssertFalse(element(app, "settings.row.qr_custom_image").exists)
     }
 
-    func testDiagnosticsOpenFromMaintenanceAndGoBack() {
+    func testDiagnosticsOpenFromAboutAndGoBack() {
         let app = XCUIApplication.itmo(session: .demo)
         app.launch()
-        openPage(app, "maintenance")
+        openPage(app, "about")
         XCTAssertTrue(element(app, "settings.row.app_version").exists)
 
         element(app, "settings.row.diagnostics").tap()
@@ -135,7 +135,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(element(app, "diagnostics.screen").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "diagnostics")
         app.navigationBars.buttons.firstMatch.tap()
-        XCTAssertTrue(element(app, "settings.page.maintenance").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(element(app, "settings.page.about").waitForExistence(timeout: stepTimeout))
     }
 
     func testRootAtAccessibilityTextSize() {
@@ -148,12 +148,12 @@ final class SettingsUITests: XCTestCase {
         attachScreenshot(named: "root-ax1")
 
         // The form is lazy: the last row exists once it scrolls near the screen.
-        let maintenance = element(app, "settings.row.page_maintenance")
-        for _ in 0..<6 where !maintenance.exists || !maintenance.isHittable {
+        let about = element(app, "settings.row.page_about")
+        for _ in 0..<6 where !about.exists || !about.isHittable {
             element(app, "settings.page.root").swipeUp()
         }
-        XCTAssertTrue(maintenance.waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(maintenance.isShown, "the last row is reachable and drawn at AX1")
+        XCTAssertTrue(about.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(about.isShown, "the last row is reachable and drawn at AX1")
         attachScreenshot(named: "root-ax1-end")
     }
 

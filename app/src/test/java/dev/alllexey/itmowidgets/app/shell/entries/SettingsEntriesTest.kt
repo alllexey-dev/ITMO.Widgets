@@ -33,7 +33,7 @@ import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
-import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.AboutPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsTestTags
@@ -87,9 +87,9 @@ class SettingsEntriesTest {
         awaitRows()
         compose.onNodeWithTag(EntryRegistry.placeholderTag(AppRoutes.Settings())).assertDoesNotExist()
 
-        clickRow(SettingRowId.navigation(SettingsPage.MAINTENANCE))
+        clickRow(SettingRowId.navigation(SettingsPage.ABOUT))
         assertEquals(
-            listOf(AppRoutes.Settings(), AppRoutes.Settings(SettingsPage.MAINTENANCE.name)),
+            listOf(AppRoutes.Settings(), AppRoutes.Settings(SettingsPage.ABOUT.name)),
             navigator.state.overlays,
         )
 
@@ -98,9 +98,9 @@ class SettingsEntriesTest {
     }
 
     @Test
-    fun theMaintenancePageOpensTheJournalWhichRendersAndCloses() {
+    fun theAboutPageOpensTheJournalWhichRendersAndCloses() {
         show()
-        act { open(AppRoutes.Settings(SettingsPage.MAINTENANCE.name)) }
+        act { open(AppRoutes.Settings(SettingsPage.ABOUT.name)) }
         awaitRows()
 
         clickRow(SettingRowId.DIAGNOSTICS)
@@ -108,20 +108,20 @@ class SettingsEntriesTest {
         compose.onNodeWithTag(DiagnosticsTestTags.EMPTY).assertIsDisplayed()
 
         clickTop(DiagnosticsTestTags.BACK)
-        assertEquals(listOf(AppRoutes.Settings(SettingsPage.MAINTENANCE.name)), navigator.state.overlays)
+        assertEquals(listOf(AppRoutes.Settings(SettingsPage.ABOUT.name)), navigator.state.overlays)
     }
 
     @Test
     fun thePrivacyPolicyRowOpensTheSiteInTheBrowser() {
         show()
-        act { open(AppRoutes.Settings(SettingsPage.MAINTENANCE.name)) }
+        act { open(AppRoutes.Settings(SettingsPage.ABOUT.name)) }
         awaitRows()
 
         clickRow(SettingRowId.PRIVACY_POLICY)
 
         val started = shadowOf(compose.activity).nextStartedActivity
         assertEquals(Intent.ACTION_VIEW, started?.action)
-        assertEquals(BuildConfig.WIDGETS_BASE_URL + MaintenancePageProvider.PRIVACY_POLICY_PATH, started.dataString)
+        assertEquals(BuildConfig.WIDGETS_BASE_URL + AboutPageProvider.PRIVACY_POLICY_PATH, started.dataString)
     }
 
     @Test

@@ -169,30 +169,6 @@
         }
       }
     },
-    "ios_settings_notifications_allowed" : {
-      "comment" : "Generated from strings_ios_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Разрешены в iOS"
-          }
-        }
-      }
-    },
-    "ios_settings_notifications_blocked" : {
-      "comment" : "Generated from strings_ios_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Запрещены в iOS"
-          }
-        }
-      }
-    },
     "ios_shortcut_qr_phrase_open" : {
       "comment" : "Generated from strings_ios_shortcuts.xml",
       "extractionState" : "manual",

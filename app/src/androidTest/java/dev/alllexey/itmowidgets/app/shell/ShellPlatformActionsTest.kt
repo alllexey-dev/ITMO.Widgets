@@ -82,7 +82,7 @@ class ShellPlatformActionsTest {
 
     @Test
     fun thePrivacyPolicyRowOpensTheSiteInTheBrowser() = onComposeShell {
-        onActivity { it.navigator().open(AppRoutes.Settings(SettingsPage.MAINTENANCE.name)) }
+        onActivity { it.navigator().open(AppRoutes.Settings(SettingsPage.ABOUT.name)) }
 
         click(PRIVACY_POLICY)
 
@@ -103,7 +103,7 @@ class ShellPlatformActionsTest {
         // Denied for good: the request answers without a dialog, and the shell explains with the locked dialog.
         CALENDAR_PERMISSIONS.forEach { shell("pm set-permission-flags ${context.packageName} $it user-fixed") }
         onComposeShell {
-            onActivity { it.navigator().open(AppRoutes.Settings(SettingsPage.SCHEDULE.name)) }
+            onActivity { it.navigator().open(AppRoutes.Settings(SettingsPage.SECTIONS.name)) }
 
             click(CALENDAR_SYNC)
             click(OPEN_SETTINGS)

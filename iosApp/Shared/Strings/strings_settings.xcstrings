@@ -193,78 +193,6 @@
         }
       }
     },
-    "connection_bars" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "БАРС"
-          }
-        }
-      }
-    },
-    "connection_bars_connect" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключить"
-          }
-        }
-      }
-    },
-    "connection_bars_connected" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключён: баллы по контрольным точкам"
-          }
-        }
-      }
-    },
-    "connection_bars_expired" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сессия закончилась, баллы не обновляются"
-          }
-        }
-      }
-    },
-    "connection_bars_off" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Баллы по контрольным точкам, без нашего сервера"
-          }
-        }
-      }
-    },
-    "connection_bars_sign_in" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Войти"
-          }
-        }
-      }
-    },
     "connection_delete" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -337,54 +265,6 @@
         }
       }
     },
-    "connection_devices_off" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нужно подключение к ITMO.Widgets"
-          }
-        }
-      }
-    },
-    "connection_friend_requests_count" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld новые заявки"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld новых заявок"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld новая заявка"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld новой заявки"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "connection_friends" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -393,42 +273,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Друзья"
-          }
-        }
-      }
-    },
-    "connection_friends_count" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld друга"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld друзей"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld друг"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld друга"
-                }
-              }
-            }
           }
         }
       }
@@ -477,126 +321,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сейчас хранятся только на этом устройстве"
-          }
-        }
-      }
-    },
-    "connection_links_on" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Общие ссылки группы, ваши видны только вам"
-          }
-        }
-      }
-    },
-    "connection_offline" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Работает и без подключения"
-          }
-        }
-      }
-    },
-    "connection_offline_bars" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "БАРС"
-          }
-        }
-      }
-    },
-    "connection_offline_pass" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пропуск"
-          }
-        }
-      }
-    },
-    "connection_offline_recordbook" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Зачётка"
-          }
-        }
-      }
-    },
-    "connection_offline_schedule" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Расписание"
-          }
-        }
-      }
-    },
-    "connection_offline_sport" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Запись на спорт"
-          }
-        }
-      }
-    },
-    "connection_offline_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Напрямую из My ITMO и БАРС, без нашего сервера"
-          }
-        }
-      }
-    },
-    "connection_only_you" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Только вы"
-          }
-        }
-      }
-    },
-    "connection_only_you_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пока подключения нет, ваши данные видите только вы"
           }
         }
       }
@@ -764,7 +488,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Подключение и данные"
+            "value" : "Сервер ITMO.Widgets"
           }
         }
       }
@@ -1333,6 +1057,18 @@
         }
       }
     },
+    "settings_about_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О приложении"
+          }
+        }
+      }
+    },
     "settings_accent_color_amber" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1549,6 +1285,54 @@
         }
       }
     },
+    "settings_bars_connected" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключён"
+          }
+        }
+      }
+    },
+    "settings_bars_expired" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти"
+          }
+        }
+      }
+    },
+    "settings_bars_off" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не подключён"
+          }
+        }
+      }
+    },
+    "settings_bars_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "БАРС"
+          }
+        }
+      }
+    },
     "settings_calendar_sync_calendar_missing" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1717,26 +1501,14 @@
         }
       }
     },
-    "settings_group_access" : {
+    "settings_group_accounts" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Доступ"
-          }
-        }
-      }
-    },
-    "settings_group_maintenance" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Обслуживание"
+            "value" : "Аккаунты"
           }
         }
       }
@@ -1808,7 +1580,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "На экране «Сегодня». Виджет и быстрые команды пропуска останутся доступны."
+            "value" : "Виджет и быстрые команды пропуска останутся доступны."
           }
         }
       }
@@ -1821,18 +1593,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показывать кнопку пропуска"
-          }
-        }
-      }
-    },
-    "settings_home_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Главный экран"
           }
         }
       }
@@ -1953,30 +1713,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Лицензии"
-          }
-        }
-      }
-    },
-    "settings_notifications_allowed" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Разрешены в Android"
-          }
-        }
-      }
-    },
-    "settings_notifications_blocked" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Запрещены в Android"
           }
         }
       }
@@ -2228,19 +1964,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Нужно подключение к ITMO.Widgets."
-          }
-        }
-      }
-    },
-    "settings_schedule_notifications_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Уведомления об изменениях"
+            "value" : "Для автозаписи нужно подключение к ITMO.Widgets."
           }
         }
       }
@@ -2265,6 +1989,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Автозапись на спорт"
+          }
+        }
+      }
+    },
+    "settings_sections_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разделы"
           }
         }
       }

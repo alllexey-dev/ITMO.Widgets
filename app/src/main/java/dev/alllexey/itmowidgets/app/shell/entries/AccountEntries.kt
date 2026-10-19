@@ -125,11 +125,9 @@ internal fun MeTabRoot(navigator: Nav3AppNavigator) {
 
 private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions(
     onOpenFriends = { navigator.open(AppRoutes.Friends) },
-    onOpenPrivacy = { navigator.open(AppRoutes.Settings(PRIVACY_PAGE)) },
     onOpenConnection = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
-    onOpenNotifications = { navigator.open(AppRoutes.Settings(SettingsPage.NOTIFICATIONS.name)) },
     onOpenWidgets = { navigator.open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) },
-    onOpenWebLogin = { navigator.open(AppRoutes.WebLogin()) },
+    onOpenMap = { navigator.open(AppRoutes.CampusMap()) },
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },
     onOpenDebugTools = { navigator.open(AppRoutes.DebugTools) },
@@ -335,8 +333,5 @@ private inline fun <reified VM : ViewModel> entryViewModel(): VM {
     return viewModel { KoinStarter.ensureStarted(context).get<VM> { parametersOf(createSavedStateHandle()) } }
 }
 
-/** `SettingsPage.PRIVACY`: «Подключение и данные», where `Кто видит` lives. */
-private const val PRIVACY_PAGE = "PRIVACY"
-
-/** `SettingsPage.SERVICES`: «Подключение и данные». */
+/** `SettingsPage.SERVICES`: «Сервер ITMO.Widgets». */
 private const val SERVICES_PAGE = "SERVICES"

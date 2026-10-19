@@ -6,45 +6,51 @@ import dev.alllexey.itmowidgets.core.settings.HexColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsStatusRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
+import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.notificationSwitches
+import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.notificationsSummary
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 
 /**
- * The catalogue: one row per detail page («Подключение и данные» with its state, «Уведомления» saying when the system
- * denies them, the widgets gallery); and the appearance page, whose rows are the stored [ThemeSpec] (DS-ACC1, DS-ACC2).
+ * The catalogue: the accounts (the server with its state, BARS with its sign-in), then one row per page with what it
+ * holds in a word (the notifications that are on, the placed widgets, the accent); and the appearance page, whose
+ * rows are the stored [ThemeSpec] (DS-ACC1, DS-ACC2).
  */
 class RootPageProvider(
     private val repository: SettingsRepository,
+    private val barsStatus: BarsStatusRepository,
     private val capabilities: PlatformCapabilities = EveryPlatformCapability
 ) : SettingsPageProvider {
 
-    override val pages = setOf(SettingsPage.ROOT, SettingsPage.APPEARANCE, SettingsPage.HOME)
+    override val pages = setOf(SettingsPage.ROOT, SettingsPage.APPEARANCE)
 
     override val rows = setOf(
+        SettingRowId.BARS,
         SettingRowId.ACCENT_COLOR,
         SettingRowId.ACCENT_CUSTOM,
         SettingRowId.THEME_PALETTE,
         SettingRowId.THEME_CONTRAST,
         SettingRowId.DARK_BLACK,
-        SettingRowId.HOME_PASS_VISIBLE,
     )
+
+    /** Only the root reads BARS. */
+    override fun observeState(page: SettingsPage, state: Flow<SettingsPageState>): Flow<SettingsPageState> =
+        if (page == SettingsPage.ROOT) {
+            combine(state, barsStatus.observe()) { pageState, bars -> pageState.copy(bars = bars) }
+        } else {
+            state
+        }
 
     override fun sections(page: SettingsPage, state: SettingsPageState) = when (page) {
         SettingsPage.APPEARANCE -> appearance(state.local.theme)
-        SettingsPage.HOME -> listOf(
-            SettingSection(
-                title = null,
-                items = listOf(SettingItem.Toggle(
-                    id = SettingRowId.HOME_PASS_VISIBLE,
-                    title = UiText.Res(SettingsStrings.settings_home_pass_title),
-                    checked = state.local.homePassVisible,
-                )),
-                footer = UiText.Res(SettingsStrings.settings_home_pass_description),
-            )
-        )
         else -> root(state)
     }
 
@@ -53,7 +59,7 @@ class RootPageProvider(
 
     private fun root(state: SettingsPageState) = listOf(
         SettingSection(
-            title = UiText.Res(SettingsStrings.settings_group_access),
+            title = UiText.Res(SettingsStrings.settings_group_accounts),
             items = listOf(
                 SettingRows.navigation(
                     SettingsPage.SERVICES,
@@ -65,31 +71,45 @@ class RootPageProvider(
                         }
                     )
                 ),
-                SettingRows.navigation(
-                    SettingsPage.NOTIFICATIONS,
-                    value = when (state.notificationsGranted) {
-                        true -> null
-                        false -> UiText.Res(SettingsStrings.settings_notifications_blocked)
-                        null -> null
-                    }
-                )
+                bars(state.bars)
             )
-        ),
-        SettingSection(
-            title = UiText.Res(SettingsStrings.settings_group_widgets),
-            items = listOf(SettingRows.navigation(SettingsPage.WIDGETS))
         ),
         SettingSection(
             title = UiText.Res(CoreStrings.me_group_app),
-            items = listOfNotNull(
-                SettingRows.navigation(SettingsPage.APPEARANCE),
-                SettingRows.navigation(SettingsPage.HOME),
-                SettingRows.navigation(SettingsPage.SCHEDULE),
-                SettingRows.navigation(SettingsPage.SPORT),
-                SettingRows.navigation(SettingsPage.MAINTENANCE)
+            items = listOf(
+                SettingRows.navigation(
+                    SettingsPage.NOTIFICATIONS,
+                    value = notificationsSummary(
+                        denied = state.notificationsGranted == false,
+                        switches = notificationSwitches(state.local, capabilities)
+                    )
+                ),
+                SettingRows.navigation(SettingsPage.WIDGETS, value = placedWidgetsSummary(state.placedWidgets, capabilities)),
+                SettingRows.navigation(SettingsPage.APPEARANCE, value = accentColor(state.local.theme.accent).value),
+                SettingRows.navigation(SettingsPage.SECTIONS)
             )
+        ),
+        SettingSection(
+            title = null,
+            items = listOf(SettingRows.navigation(SettingsPage.ABOUT))
         )
     )
+
+    /** Connected BARS only says so; otherwise the row opens the sign-in. */
+    private fun bars(bars: BarsConnection): SettingItem {
+        val title = UiText.Res(SettingsStrings.settings_bars_title)
+        return when (bars) {
+            BarsConnection.CONNECTED -> SettingItem.Info(SettingRowId.BARS, title, UiText.Res(SettingsStrings.settings_bars_connected))
+            BarsConnection.EXPIRED, BarsConnection.NOT_CONNECTED -> SettingItem.Action(
+                id = SettingRowId.BARS,
+                title = title,
+                value = UiText.Res(
+                    if (bars == BarsConnection.EXPIRED) SettingsStrings.settings_bars_expired else SettingsStrings.settings_bars_off
+                ),
+                trailingIcon = AppIcon.CHEVRON_RIGHT
+            )
+        }
+    }
 
     /**
      * The colours, then contrast and the black background. The custom colour row shows only while it is the accent.
@@ -139,11 +159,11 @@ class RootPageProvider(
     )
 
     override fun onToggleChanged(scope: SettingsPageScope, id: SettingRowId, checked: Boolean) {
-        when (id) {
-            SettingRowId.HOME_PASS_VISIBLE -> scope.updateLocalSetting { repository.setHomePassVisible(checked) }
-            SettingRowId.DARK_BLACK -> updateTheme(scope) { it.copy(pureBlack = checked) }
-            else -> Unit
-        }
+        if (id == SettingRowId.DARK_BLACK) updateTheme(scope) { it.copy(pureBlack = checked) }
+    }
+
+    override fun onAction(scope: SettingsPageScope, id: SettingRowId) {
+        if (id == SettingRowId.BARS) scope.send(SettingsEvent.OpenBarsLogin)
     }
 
     /** The custom colour row reports its colour as `#RRGGBB`; picking it also makes it the accent. */

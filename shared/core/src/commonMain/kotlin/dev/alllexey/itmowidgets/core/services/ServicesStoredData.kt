@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.shared.core.CoreStrings
 data class StoredDatum(val icon: AppIcon, val text: UiText)
 
 /**
- * What the server keeps, named once for «Подключение и данные», the consent sheet and the first-run step.
+ * What the server keeps, named once for «Сервер ITMO.Widgets», the consent sheet and the first-run step.
  *
  * **The list must match the Backend schema.** It mirrors the tables `users` (ISU, name, photo), `user_groups`,
  * `lessons`, `user_sport_lessons` with `sport_*_sign_entries`, the private links of `resources` and `devices`. A new

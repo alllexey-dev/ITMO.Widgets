@@ -28,6 +28,7 @@ import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_large
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size_normal
 import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_group_colors
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_group_contrast
@@ -66,8 +67,6 @@ import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_wal
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_calendar_sync_description
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_calendar_sync_title
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_diagnostics_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_group_access
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_group_widgets
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_ics_export_description
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_ics_export_title
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_privacy_policy_title
@@ -85,7 +84,6 @@ import dev.alllexey.itmowidgets.shared.compose.strings.settings_refresh_widgets_
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_restart_onboarding_description
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_restart_onboarding_title
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_schedule_footer
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_schedule_notifications_title
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_schedule_sport_auto_sign_description
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_schedule_sport_auto_sign_title
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_services_enabled
@@ -105,42 +103,34 @@ internal object SettingsPreviewData {
     /** The build the presentation tests' fixture reports. */
     private val BUILD = AppBuild("2.1-test", "20100", AppBuild.CUSTOM, "AlexPer777/ITMO.Widgets", "a1b2c3d4e5f6")
 
+    /** Services on and notifications allowed with the defaults: the checks and the three pushes, every one on. */
     val Root = state(
         SettingsPage.ROOT,
         SettingSection(
-            title = res(Res.string.settings_group_access),
+            title = UiText.Res(SettingsStrings.settings_group_accounts),
             items = listOf(
                 navigation(SettingsPage.SERVICES, value = res(Res.string.settings_services_enabled)),
-                navigation(SettingsPage.NOTIFICATIONS)
+                SettingItem.Action(
+                    id = SettingRowId.BARS,
+                    title = UiText.Res(SettingsStrings.settings_bars_title),
+                    value = UiText.Res(SettingsStrings.settings_bars_off),
+                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                )
             )
-        ),
-        SettingSection(
-            title = res(Res.string.settings_group_widgets),
-            items = listOf(navigation(SettingsPage.WIDGETS))
         ),
         SettingSection(
             title = res(Res.string.me_group_app),
             items = listOf(
-                navigation(SettingsPage.APPEARANCE),
-                navigation(SettingsPage.HOME),
-                navigation(SettingsPage.SCHEDULE),
-                navigation(SettingsPage.SPORT),
-                navigation(SettingsPage.MAINTENANCE)
+                navigation(SettingsPage.NOTIFICATIONS, value = UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(5, 5))),
+                navigation(SettingsPage.WIDGETS),
+                navigation(SettingsPage.APPEARANCE, value = res(Res.string.settings_accent_color_wallpaper)),
+                navigation(SettingsPage.SECTIONS)
             )
-        )
-    )
-
-    val Home = state(
-        SettingsPage.HOME,
+        ),
         SettingSection(
             title = null,
-            items = listOf(SettingItem.Toggle(
-                id = SettingRowId.HOME_PASS_VISIBLE,
-                title = UiText.Res(SettingsStrings.settings_home_pass_title),
-                checked = true,
-            )),
-            footer = UiText.Res(SettingsStrings.settings_home_pass_description),
-        ),
+            items = listOf(navigation(SettingsPage.ABOUT))
+        )
     )
 
     val Appearance = appearance(ThemeSpec())
@@ -212,28 +202,21 @@ internal object SettingsPreviewData {
         return SettingsUiState(SettingsPage.WIDGETS, rows.page(state), loaded = true, gallery = rows.gallery(state))
     }
 
-    val Schedule = state(
-        SettingsPage.SCHEDULE,
+    val Sections = state(
+        SettingsPage.SECTIONS,
         SettingSection(
-            title = null,
-            items = listOf(
-                navigation(SettingsPage.NOTIFICATIONS, title = res(Res.string.settings_schedule_notifications_title))
-            )
-        ),
-        SettingSection(
-            title = null,
+            title = UiText.Res(CoreStrings.tab_today),
             items = listOf(
                 SettingItem.Toggle(
-                    id = SettingRowId.SCHEDULE_SPORT_AUTO_SIGN,
-                    title = res(Res.string.settings_schedule_sport_auto_sign_title),
-                    description = res(Res.string.settings_schedule_sport_auto_sign_description),
-                    checked = false
+                    id = SettingRowId.HOME_PASS_VISIBLE,
+                    title = UiText.Res(SettingsStrings.settings_home_pass_title),
+                    checked = true,
                 )
             ),
-            footer = res(Res.string.settings_schedule_footer)
+            footer = UiText.Res(SettingsStrings.settings_home_pass_description),
         ),
         SettingSection(
-            title = null,
+            title = UiText.Res(SettingsStrings.settings_group_schedule),
             items = listOf(
                 SettingItem.Toggle(
                     id = SettingRowId.CALENDAR_SYNC,
@@ -246,15 +229,18 @@ internal object SettingsPreviewData {
                     title = res(Res.string.settings_ics_export_title),
                     description = res(Res.string.settings_ics_export_description),
                     trailingIcon = AppIcon.DOWNLOAD
+                ),
+                SettingItem.Toggle(
+                    id = SettingRowId.SCHEDULE_SPORT_AUTO_SIGN,
+                    title = res(Res.string.settings_schedule_sport_auto_sign_title),
+                    description = res(Res.string.settings_schedule_sport_auto_sign_description),
+                    checked = true
                 )
-            )
-        )
-    )
-
-    val Sport = state(
-        SettingsPage.SPORT,
+            ),
+            footer = res(Res.string.settings_schedule_footer)
+        ),
         SettingSection(
-            title = null,
+            title = UiText.Res(SettingsStrings.settings_group_sport),
             items = listOf(
                 SettingItem.Toggle(
                     id = SettingRowId.SPORT_TEACHER_FILTER,
@@ -270,8 +256,29 @@ internal object SettingsPreviewData {
         )
     )
 
-    val Maintenance = state(
-        SettingsPage.MAINTENANCE,
+    val Devices = state(
+        SettingsPage.DEVICES,
+        SettingSection(
+            title = null,
+            items = listOf(
+                SettingItem.Action(
+                    id = SettingRowId.PAIR_DEVICE,
+                    title = UiText.Res(SettingsStrings.connection_pair),
+                    description = UiText.Res(SettingsStrings.connection_pair_text),
+                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                ),
+                SettingItem.Action(
+                    id = SettingRowId.CONNECTED_DEVICES,
+                    title = UiText.Res(SettingsStrings.connection_devices_list),
+                    description = UiText.Res(SettingsStrings.connection_devices_list_text),
+                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                )
+            )
+        )
+    )
+
+    val About = state(
+        SettingsPage.ABOUT,
         SettingSection(
             title = null,
             items = listOf(
@@ -335,7 +342,7 @@ internal object SettingsPreviewData {
 
     /** Every row kind with long Russian text, a locked switch, a switch still loading and a disabled row. */
     val LongText = SettingsUiState(
-        page = SettingsPage.HOME,
+        page = SettingsPage.SECTIONS,
         loaded = true,
         sections = listOf(
             SettingSection(

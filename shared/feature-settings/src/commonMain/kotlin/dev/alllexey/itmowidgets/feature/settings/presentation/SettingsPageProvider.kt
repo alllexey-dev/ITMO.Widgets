@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
+import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import kotlinx.coroutines.flow.Flow
 
@@ -40,8 +41,8 @@ interface SettingsPageProvider {
 }
 
 /**
- * Everything a settings page is built from. [calendar] and [diagnosticsCount] are read only by the pages that show
- * them; other pages keep the defaults.
+ * Everything a settings page is built from. [calendar], [diagnosticsCount] and [bars] are read only by the pages that
+ * show them; other pages keep the defaults.
  */
 data class SettingsPageState(
     val local: LocalSettings,
@@ -51,6 +52,7 @@ data class SettingsPageState(
     val imageBusy: Boolean,
     val calendar: CalendarSyncState = CalendarSyncState(),
     val diagnosticsCount: Int = 0,
+    val bars: BarsConnection = BarsConnection.NOT_CONNECTED,
     /** How many widgets of each format the home screen holds, as the gallery screen last counted; empty until then. */
     val placedWidgets: Map<WidgetFormat, Int> = emptyMap(),
 )

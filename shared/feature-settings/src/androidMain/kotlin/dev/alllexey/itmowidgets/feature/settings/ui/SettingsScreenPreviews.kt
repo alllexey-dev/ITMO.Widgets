@@ -31,10 +31,10 @@ internal class SettingsScreenRootPreview {
     fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Root)
 }
 
-internal class SettingsScreenHomePreview {
-    @Preview(name = "home")
+internal class SettingsScreenSectionsPreview {
+    @Preview(name = "sections", heightDp = 1000)
     @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Home)
+    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Sections)
 }
 
 internal class SettingsScreenAppearancePreview {
@@ -61,22 +61,16 @@ internal class SettingsScreenAppearanceCustomPreview {
     )
 }
 
-internal class SettingsScreenSchedulePreview {
-    @Preview(name = "schedule")
+internal class SettingsScreenDevicesPreview {
+    @Preview(name = "devices")
     @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Schedule)
+    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Devices)
 }
 
-internal class SettingsScreenSportPreview {
-    @Preview(name = "sport")
+internal class SettingsScreenAboutPreview {
+    @Preview(name = "about")
     @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Sport)
-}
-
-internal class SettingsScreenMaintenancePreview {
-    @Preview(name = "maintenance")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Maintenance)
+    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.About)
 }
 
 internal class SettingsScreenLicensesPreview {

@@ -5,17 +5,11 @@ import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
-import dev.alllexey.itmowidgets.core.social.SocialRepository
-import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
-import dev.alllexey.itmowidgets.feature.settings.domain.BarsStatusRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
-import dev.alllexey.itmowidgets.shared.feature.settings.SettingsPlurals
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -31,16 +25,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 
 /**
- * «Подключение и данные» (DECISIONS.md, Screens). The opt-in with what it gives, the audiences of «Кто видит» while
- * connected, and the state of BARS. Turning the connection on reaches here only after the consent sheet; the screen
- * opens it. Connecting reloads the audiences from Backend, masked for at least [MIN_PRIVACY_LOADING_MS] so a fast
+ * «Сервер ITMO.Widgets» (DECISIONS.md, Screens): the opt-in and the audiences of «Кто видит» while connected. Turning
+ * the connection on reaches here only after the consent sheet; the screen opens it. Connecting reloads the audiences from Backend, masked for at least [MIN_PRIVACY_LOADING_MS] so a fast
  * answer does not flash; disconnecting forgets them at once.
  */
 class ConnectionViewModel(
     private val customServices: CustomServicesRepository,
     private val settings: SettingsRepository,
-    private val social: SocialRepository,
-    barsStatus: BarsStatusRepository,
     private val widgetRefreshRequester: WidgetRefreshRequester,
 ) : ViewModel() {
 
@@ -50,8 +41,6 @@ class ConnectionViewModel(
     private val privacyRefreshMutex = Mutex()
     private val eventQueue = EventQueue<ConnectionEvent>()
     val events: Flow<ConnectionEvent> = eventQueue.events
-
-    private val bars: Flow<BarsConnection> = barsStatus.observe()
 
     private val privacy: Flow<SharingSettingsState> = combine(
         settings.observeSharingSettings(),
@@ -65,40 +54,16 @@ class ConnectionViewModel(
         }
     }
 
-    private val friends: Flow<Pair<UiText?, Int>> = combine(social.observeFriends(), social.observeRequests()) { list, requests ->
-        val friendCount = (list as? LoadState.Content)?.value?.size
-        val incoming = (requests as? LoadState.Content)?.value?.incoming?.size ?: 0
-        val text = friendCount?.let { count ->
-            if (incoming > 0) {
-                UiText.Joined(
-                    listOf(
-                        UiText.Plural(SettingsPlurals.connection_friends_count, count, listOf(count)),
-                        UiText.Plural(SettingsPlurals.connection_friend_requests_count, incoming, listOf(incoming)),
-                    ),
-                    ", ",
-                )
-            } else {
-                UiText.Plural(SettingsPlurals.connection_friends_count, count, listOf(count))
-            }
-        }
-        text to incoming
-    }
-
     val uiState: StateFlow<ConnectionUiState> = combine(
         customServices.observeEnabled(),
         changeable,
         privacy,
-        bars,
-        friends,
-    ) { connected, canChange, sharing, barsState, (friendsText, requests) ->
+    ) { connected, canChange, sharing ->
         ConnectionUiState(
             loaded = true,
             connected = connected,
             changeable = canChange,
-            friends = friendsText.takeIf { connected },
-            friendRequests = if (connected) requests else 0,
             privacy = if (connected) sharing.toPrivacy() else ConnectionPrivacy.OnlyYou,
-            bars = barsState,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, ConnectionUiState())
 
@@ -108,7 +73,6 @@ class ConnectionViewModel(
             customServices.observeEnabled().distinctUntilChanged().collectLatest { enabled ->
                 if (enabled) {
                     refreshPrivacy()
-                    social.refresh()
                 } else {
                     privacyRefreshing.value = false
                     settings.disableSharingSettings()

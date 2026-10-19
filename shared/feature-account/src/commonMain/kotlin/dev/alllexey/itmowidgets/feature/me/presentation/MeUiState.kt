@@ -28,14 +28,12 @@ data class MeHeader(
 }
 
 /**
- * The Профиль tab (docs/features/me.md): the header, the people rows or their gate, the ITMO.Widgets rows, the app
- * rows and the sign-out. Every text is built here, so the Compose and SwiftUI views only lay it out.
+ * The Профиль tab (docs/features/me.md): the header, the people rows or their gate, the app rows, the links and the
+ * sign-out. Every text is built here, so the Compose and SwiftUI views only lay it out.
  */
 data class MeUiState(
     val header: MeHeader = MeHeader(),
     val friends: MeFriendsSummary = MeFriendsSummary.Loading,
-    /** The ITMO.Widgets connection (custom services) is on. */
-    val connected: Boolean = false,
     val signOutInProgress: Boolean = false,
 ) {
     /** `3 друга, 1 заявка`; null while there is nothing to say. */
@@ -54,13 +52,6 @@ data class MeUiState(
 
     /** The badge on the friends row: incoming requests. */
     val incomingRequests: Int get() = (friends as? MeFriendsSummary.Content)?.incomingRequests ?: 0
-
-    val connectionStatus: UiText
-        get() = UiText.Res(if (connected) AccountStrings.me_connection_on else AccountStrings.me_connection_off)
-
-    /** The web sign-in row says what it does, or that it needs the connection (its tap then opens the connection). */
-    val webLoginSubtitle: UiText
-        get() = UiText.Res(if (connected) AccountStrings.me_web_login_subtitle else AccountStrings.me_needs_connection)
 }
 
 private fun friendsCount(count: Int) = UiText.Plural(CorePlurals.friends_count, count, listOf(count))

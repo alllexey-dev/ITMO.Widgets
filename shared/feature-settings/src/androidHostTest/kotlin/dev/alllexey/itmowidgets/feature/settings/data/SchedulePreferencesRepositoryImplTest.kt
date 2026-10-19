@@ -20,11 +20,13 @@ class SchedulePreferencesRepositoryImplTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun schedulePreferenceDefaultsOffAndObservesStorageChangesWithoutCustomServices() = runTest {
+    fun schedulePreferenceDefaultsOnAndObservesStorageChangesWithoutCustomServices() = runTest {
         val file = temporaryFolder.newFile("settings.preferences_pb").apply { delete() }
         val dataStore = PreferenceDataStoreFactory.create(scope = backgroundScope, produceFile = { file })
         val storage = ScheduleCheckPreferences(dataStore)
         val repository: SchedulePreferencesRepository = SchedulePreferencesRepositoryImpl(storage)
+        assertTrue(repository.observeSportAutoSignEnabled().first())
+        storage.setScheduleSportAutoSignEnabled(false)
         assertFalse(repository.observeSportAutoSignEnabled().first())
 
         val enabled = async(start = CoroutineStart.UNDISPATCHED) {
