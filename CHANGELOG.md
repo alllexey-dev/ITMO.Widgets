@@ -23,6 +23,7 @@ new iOS app.
   friends load or when nobody is there), `Друзья` scrolls to the list with its bottom margin, the sheet's colour runs
   under the navigation bar, people use the friends list's compact row everywhere, Android avatars are M3 Expressive
   cookies (iOS keeps circles), and the sport catalog's friend avatars are no longer squashed.
+- The subject page's teachers use the same person row as the rest of the app (40 dp avatar, a cookie on Android).
 
 ### iOS native screens (2026-10-19)
 
