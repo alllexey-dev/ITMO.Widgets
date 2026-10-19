@@ -12,6 +12,9 @@ package dev.alllexey.itmowidgets.core.platform
  *   sheet.
  * - [PlatformCapabilities.reviews]: the teacher reviews on the profile with their editor and report,
  *   the subject page's links with all links, the link editor, a link's actions and its report, and the teacher tones.
+ * - [PlatformCapabilities.pushSwitches]: off until the notification service holds
+ *   `com.apple.developer.usernotifications.filtering`; without it iOS shows a push the extension drops, so a switch
+ *   would not work.
  */
 val IosPlatformCapabilities = PlatformCapabilities(
     quickSettingsTile = false,
@@ -26,4 +29,5 @@ val IosPlatformCapabilities = PlatformCapabilities(
     wallpaperColors = false,
     pinWidgets = false,
     lockScreenWidgets = true,
+    pushSwitches = false,
 )

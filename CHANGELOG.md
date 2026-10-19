@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### iOS push switches hidden (2026-10-19)
+
+- On iOS «Уведомления» hides `Спорт`, `Друзья` and `Новые устройства` until the app holds Apple's notification filtering entitlement; every push shows, the stored switches stay.
+
 ### iOS strings without Compose (2026-10-19)
 
 - On iOS, Kotlin text (notifications, widget files, shares, the widgets gallery) comes from the app's string tables through Swift, and the app no longer carries the Compose resources (ADR 0035, proposed).

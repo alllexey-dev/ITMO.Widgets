@@ -229,23 +229,38 @@ final class NotificationServiceTests: XCTestCase {
         XCTAssertTrue(transport.requests.isEmpty)
     }
 
-    /// A type turned off in the app shows nothing; a sport push still books and leaves its result for the bell.
+    /// With the filtering entitlement, a type turned off in the app shows nothing; a sport push still books and
+    /// leaves its result for the bell.
     func testATypeTurnedOffInTheAppIsDroppedButSportStillBooks() async throws {
         var session = Self.signedIn
         session.disabledPushes = ["sport", "friends", "connections"]
         for name in ["FRIENDSHIP_EVENT_PAYLOAD", "DEVICE_CONNECTED_PAYLOAD", "SPORT_AGENT_BOOKED_PAYLOAD"] {
-            let shown = await handler(session: session).handle(try push(name))
+            let shown = await handler(session: session, honorsDisabledPushes: true).handle(try push(name))
             XCTAssertTrue(shown.title.isEmpty && shown.body.isEmpty, name)
         }
         transport.answers[Self.signUp] = .reply(200, try fixture("lessons", "json"))
         var recorded: [ITMOWidgets.SportSignNotice] = []
-        var sport = handler(session: session)
+        var sport = handler(session: session, honorsDisabledPushes: true)
         sport.record = { recorded.append($0) }
 
         let shown = await sport.handle(try push("SPORT_FREE_SIGN_LESSONS_PAYLOAD"))
 
         XCTAssertTrue(shown.title.isEmpty && shown.body.isEmpty)
         XCTAssertEqual(recorded.map(\.booked), [true])
+    }
+
+    /// Without the filtering entitlement the switches are hidden, so a type stored as off is shown as any other.
+    func testATypeStoredAsOffIsShownWithoutTheFilteringEntitlement() async throws {
+        var session = Self.signedIn
+        session.disabledPushes = ["sport", "friends", "connections"]
+        let friendship = try push("FRIENDSHIP_EVENT_PAYLOAD")
+        let shownFriendship = await handler(session: session).handle(friendship)
+        XCTAssertTrue(shownFriendship === friendship)
+        transport.answers[Self.signUp] = .reply(200, try fixture("lessons", "json"))
+
+        let sport = await handler(session: session).handle(try push("SPORT_FREE_SIGN_LESSONS_PAYLOAD"))
+
+        XCTAssertEqual(sport.title, "Вы записаны на спорт")
     }
 
     func testAnEndedLessonIsNotBooked() async throws {
@@ -407,11 +422,13 @@ final class NotificationServiceTests: XCTestCase {
 
     private func handler(
         session: SessionFile? = NotificationServiceTests.signedIn,
-        now: Date = NotificationServiceTests.now
+        now: Date = NotificationServiceTests.now,
+        honorsDisabledPushes: Bool = false
     ) -> PushHandler {
         PushHandler(
             session: { session },
-            booker: SportPushBooker(access: access(now: now), calls: calls(), now: { now })
+            booker: SportPushBooker(access: access(now: now), calls: calls(), now: { now }),
+            honorsDisabledPushes: honorsDisabledPushes
         )
     }
 
