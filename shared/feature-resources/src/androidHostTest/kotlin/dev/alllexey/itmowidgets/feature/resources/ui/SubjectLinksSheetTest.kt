@@ -107,7 +107,7 @@ class SubjectLinksSheetTest {
     }
 
     @Test
-    fun arrowsChangeTheScoreAndTheSameArrowTakesTheVoteBack() = runComposeUiTest {
+    fun thumbsChangeTheScoreAndTheSameThumbTakesTheVoteBack() = runComposeUiTest {
         val repository = VotingRepository(SubjectLinksSamples.snapshot)
         val model = model(repository)
         setContent { Route(model) }
@@ -116,16 +116,16 @@ class SubjectLinksSheetTest {
         fun assertScore(score: String, vote: Int) {
             waitForIdle()
             onNode(hasText(title) and hasText(score)).assertExists()
-            arrow(title, "Полезная ссылка").apply { if (vote > 0) assertIsSelected() else assertIsNotSelected() }
-            arrow(title, "Бесполезная ссылка").apply { if (vote < 0) assertIsSelected() else assertIsNotSelected() }
+            thumb(title, "Полезная ссылка").apply { if (vote > 0) assertIsSelected() else assertIsNotSelected() }
+            thumb(title, "Бесполезная ссылка").apply { if (vote < 0) assertIsSelected() else assertIsNotSelected() }
         }
 
         assertScore("0", 0)
-        arrow(title, "Полезная ссылка").performClick()
+        thumb(title, "Полезная ссылка").performClick()
         assertScore("1", 1)
-        arrow(title, "Полезная ссылка").performClick()
+        thumb(title, "Полезная ссылка").performClick()
         assertScore("0", 0)
-        arrow(title, "Бесполезная ссылка").performClick()
+        thumb(title, "Бесполезная ссылка").performClick()
         // A negative score is written with a typographic minus.
         assertScore("−1", -1)
         assertEquals(-1, repository.link("tasks-flow").myVote)
@@ -144,7 +144,7 @@ class SubjectLinksSheetTest {
             scoresInPlace())
         val before = top("Старая таблица")
 
-        arrow("Старая таблица", "Полезная ссылка").performClick()
+        thumb("Старая таблица", "Полезная ссылка").performClick()
         waitForIdle()
 
         assertEquals(9, repository.link("scores-old").score)
@@ -164,15 +164,15 @@ class SubjectLinksSheetTest {
         assertTrue(scoreDescriptions("Баллы нашей группы").isEmpty())
         assertEquals(listOf("Рейтинг 8"), scoreDescriptions("Баллы всего потока"))
         assertEquals(listOf("Рейтинг 2"), scoreDescriptions("Баллы по таблице преподавателя"))
-        // The own vote of another student's link is told by the selected arrow.
-        arrow("Баллы по таблице преподавателя", "Полезная ссылка").assertIsSelected()
+        // The own vote of another student's link is told by the selected thumb.
+        thumb("Баллы по таблице преподавателя", "Полезная ссылка").assertIsSelected()
         // One connected group: the rows of a section stand 2 dp apart.
         val gap = top("Баллы нашей группы") - bottom("Баллы всего потока")
         assertEquals(2f, gap.value, 0.5f)
     }
 
     @Test
-    fun ownRowsSayTheirReviewStateAndOthersShowVotesWithoutArrowsUnderARestriction() = runComposeUiTest {
+    fun ownRowsSayTheirReviewStateAndOthersShowVotesWithoutThumbsUnderARestriction() = runComposeUiTest {
         var state by mutableStateOf(SubjectLinksSamples.restricted)
         setContent { Sheet(state) }
 
@@ -193,7 +193,7 @@ class SubjectLinksSheetTest {
     }
 
     @Test
-    fun withoutTheConnectionOthersLinksShowTheirScoreWithoutArrows() = runComposeUiTest {
+    fun withoutTheConnectionOthersLinksShowTheirScoreWithoutThumbs() = runComposeUiTest {
         setContent { Sheet(SubjectLinksSamples.offline) }
 
         onAllNodesWithContentDescription("Полезная ссылка").assertCountEquals(0)
@@ -241,7 +241,7 @@ class SubjectLinksSheetTest {
         val row = onNode(hasText("Баллы всего потока"))
         assertEquals("Действия со ссылкой", row.fetchSemanticsNode().config[SemanticsActions.OnLongClick].label)
         row.performSemanticsAction(SemanticsActions.OnLongClick)
-        arrow("Задания потока", "Бесполезная ссылка").performClick()
+        thumb("Задания потока", "Бесполезная ссылка").performClick()
         onNodeWithTag(SubjectLinksSheetTestTags.ADD).performClick()
         onNodeWithContentDescription("Закрыть").performClick()
 
@@ -250,7 +250,7 @@ class SubjectLinksSheetTest {
         assertEquals(listOf("vote:tasks-flow:false", "add", "close"), events)
     }
 
-    private fun ComposeUiTest.arrow(title: String, label: String): SemanticsNodeInteraction =
+    private fun ComposeUiTest.thumb(title: String, label: String): SemanticsNodeInteraction =
         onNode(hasContentDescription(label) and hasAnyAncestor(hasText(title)))
 
     private fun ComposeUiTest.top(title: String): Dp = onNode(hasText(title)).getBoundsInRoot().top

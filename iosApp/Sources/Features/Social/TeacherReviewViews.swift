@@ -1,8 +1,8 @@
 import Shared
 import SwiftUI
 
-/// What the review rows report, in `UserProfileViewModel`'s terms. `vote` names the arrow that was tapped (`up`);
-/// tapping the arrow of the current vote takes it back upstream. `edit` and `delete` belong to the viewer's own review.
+/// What the review rows report, in `UserProfileViewModel`'s terms. `vote` names the thumb that was tapped (`up`);
+/// tapping the thumb of the current vote takes it back upstream. `edit` and `delete` belong to the viewer's own review.
 struct TeacherReviewActions {
     var vote: (String, Bool) -> Void = { _, _ in }
     var report: (UserProfileUiStateContent, String) -> Void = { _, _ in }
@@ -59,9 +59,9 @@ struct ProfileReviewsSection: View {
 
 /// Another viewer's or a copied review: the caption (subject, date) with the more button for reporting, the full text,
 /// then who wrote it (a named author or the source, both links, otherwise `teacher_review_anonymous`) with the verification
-/// under it and the votes beside them. Without `canVote` the arrows go and a zero score is left out. The more button
+/// under it and the votes beside them. Without `canVote` the thumbs go and a zero score is left out. The more button
 /// offers `teacher_review_report` only on a community review the viewer has not reported yet, else keeps its place invisibly.
-/// While `busy` (a vote in flight) the arrows and the more button ignore taps.
+/// While `busy` (a vote in flight) the thumbs and the more button ignore taps.
 struct TeacherReviewRowView: View {
     let review: TeacherReview
     let canVote: Bool
