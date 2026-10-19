@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Спорт (2026-10-19)
+
+- Спорт: `Секции` read at a glance (icon lines, status pills, a short note), `Сделать секцией` only in a booked lesson's sheet, the `Доступные` filter is back, and `Моё` / `Запись` switch by a swipe too (Android and iOS).
+
 ### Client statistics (2026-10-19)
 
 - Every Backend request also carries `X-Client` (ADR 0034): `kind`, version, build, channel, OS version and a random
