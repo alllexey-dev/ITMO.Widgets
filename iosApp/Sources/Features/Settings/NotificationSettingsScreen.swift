@@ -5,8 +5,8 @@ import UserNotifications
 
 /// the notifications page (`notifications_title`) (`AppRoutes.Settings` `NOTIFICATIONS`) over the shared `NotificationSettingsViewModel`, as Android's
 /// `NotificationSettingsScreen`. The screen feeds the ViewModel what only iOS knows, on appear and on every return to
-/// the app: the notification permission and Background App Refresh. iOS has no switch per push type, so those rows
-/// open the app's page in Settings, or the connection page (`connection_title`) while not connected.
+/// the app: the notification permission and Background App Refresh. Every type has the app's own switch; the push
+/// switches reach the notification service through `session-v1.json`.
 struct NotificationSettingsScreen: View {
     @State private var model = ObservableViewModel(NotificationSettingsViewModel.self, state: \.uiState)
     @State private var message: SettingsMessage?
@@ -23,7 +23,8 @@ struct NotificationSettingsScreen: View {
                 marks: { viewModel.setMarks(enabled: $0) },
                 markSource: { viewModel.setMarkSource(source: $0, enabled: $1) },
                 scheduleChanges: { viewModel.setScheduleChanges(enabled: $0) },
-                push: { viewModel.openPush(kind: $0) },
+                push: { viewModel.setPush(kind: $0, enabled: $1) },
+                connection: { viewModel.openConnection() },
                 requestPermission: { viewModel.requestPermission() },
                 systemSettings: { viewModel.openSystemSettings() },
                 backgroundWork: { viewModel.openBackgroundWorkSettings() }
@@ -36,8 +37,6 @@ struct NotificationSettingsScreen: View {
             case .requestPermission:
                 Task { await requestPermission() }
             case .openSystemSettings:
-                open(UIApplication.openNotificationSettingsURLString)
-            case .openChannelSettings:
                 open(UIApplication.openNotificationSettingsURLString)
             case .openConnection:
                 router.open(AppRoutes.Settings(page: SettingsPage.services.name))
@@ -115,7 +114,8 @@ struct NotificationSettingsActions {
     var marks: (Bool) -> Void = { _ in }
     var markSource: (MarkCheckSource, Bool) -> Void = { _, _ in }
     var scheduleChanges: (Bool) -> Void = { _ in }
-    var push: (PushKind) -> Void = { _ in }
+    var push: (PushKind, Bool) -> Void = { _, _ in }
+    var connection: () -> Void = {}
     var requestPermission: () -> Void = {}
     var systemSettings: () -> Void = {}
     var backgroundWork: () -> Void = {}
@@ -139,25 +139,38 @@ struct NotificationSettingsContent: View {
                         symbol: .notificationsOff,
                         tone: .bad
                     )
+                } else if state.systemChannelsOff {
+                    ItmoGateCard(
+                        title: AppStrings.string("notifications_channels_title"),
+                        reason: AppStrings.string("notifications_channels_text"),
+                        fix: (AppStrings.string("notifications_channels_fix"), actions.systemSettings),
+                        symbol: .notificationsOff,
+                        tone: .bad
+                    )
                 }
                 VStack(alignment: .leading, spacing: ItmoKit.gap) {
                     ItmoSectionHeader(title: AppStrings.string("notifications_what"))
                     ItmoListGroup {
                         if let marks = state.marks { marksBlock(marks) }
-                        typeBlock(
+                        typeSwitch(
                             title: "notifications_changes",
-                            text: "notifications_changes_text",
                             symbol: .editCalendar,
                             tone: .warn,
-                            isOn: Binding(get: { state.scheduleChanges }, set: actions.scheduleChanges),
-                            preview: NotificationPreviews.shared.scheduleChanges
+                            isOn: Binding(get: { state.scheduleChanges }, set: actions.scheduleChanges)
                         )
-                        .accessibilityElement(children: .contain)
                         .accessibilityIdentifier("notifications.changes")
-                        ForEach(state.pushes, id: \.kind) { push in pushBlock(push) }
+                        if !state.connected {
+                            ItmoRow(
+                                title: AppStrings.string("notifications_push_connection"),
+                                symbol: .cloudOff,
+                                tone: .neutral,
+                                chevron: true,
+                                action: actions.connection
+                            )
+                            .accessibilityIdentifier("notifications.connection")
+                        }
+                        ForEach(state.pushes, id: \.kind) { push in pushSwitch(push) }
                     }
-                    ItmoGroupNote(text: AppStrings.string("notifications_push_note"))
-                    ItmoGroupNote(text: AppStrings.string("notifications_night"))
                 }
                 .opacity(denied ? 0.8 : 1)
                 if state.backgroundWorkRestricted {
@@ -175,14 +188,12 @@ struct NotificationSettingsContent: View {
                 ItmoListGroup {
                     ItmoRow(
                         title: AppStrings.string("notifications_sound"),
-                        subtitle: AppStrings.string("notifications_sound_text"),
                         symbol: .volumeUp,
                         chevron: true,
                         action: actions.systemSettings
                     )
                 }
                 .padding(.top, ItmoSpacing.compact)
-                ItmoGroupNote(text: AppStrings.string("notifications_bell_note"))
             }
         }
     }
@@ -191,7 +202,6 @@ struct NotificationSettingsContent: View {
         VStack(alignment: .leading, spacing: 0) {
             typeSwitch(
                 title: "notifications_marks",
-                text: "notifications_marks_text",
                 symbol: .star,
                 tone: .primary,
                 isOn: Binding(get: { marks.enabled }, set: actions.marks)
@@ -200,7 +210,6 @@ struct NotificationSettingsContent: View {
                 ForEach(marks.sources, id: \.source) { source in
                     ItmoSwitchRow(
                         title: AppStrings.string(Self.title(source.source)),
-                        subtitle: source.source == .bars ? AppStrings.string("notifications_marks_bars_text") : nil,
                         enabled: !denied,
                         isOn: Binding(get: { source.enabled }, set: { actions.markSource(source.source, $0) })
                     )
@@ -208,60 +217,49 @@ struct NotificationSettingsContent: View {
                     .accessibilityIdentifier("notifications.marks.\(source.source.name.lowercased())")
                 }
             }
-            NotificationPreviewView(preview: NotificationPreviews.shared.marks)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("notifications.marks")
     }
 
-    private func typeBlock(
-        title: String, text: String, symbol: AppSymbol, tone: ItmoTone, isOn: Binding<Bool>, preview: NotificationPreview
+    /// A type with its switch: the icon in its tone while on, neutral while off or unavailable.
+    private func typeSwitch(
+        title: String, text: String? = nil, symbol: AppSymbol, tone: ItmoTone, enabled: Bool = true, isOn: Binding<Bool>
     ) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            typeSwitch(title: title, text: text, symbol: symbol, tone: tone, isOn: isOn)
-            NotificationPreviewView(preview: preview)
-        }
-    }
-
-    /// A type with its own switch: the icon in its tone while on, neutral while off.
-    private func typeSwitch(title: String, text: String, symbol: AppSymbol, tone: ItmoTone, isOn: Binding<Bool>) -> some View {
-        Toggle(isOn: isOn) {
+        let active = enabled && !denied
+        return Toggle(isOn: isOn) {
             HStack(spacing: ItmoSpacing.content) {
-                ItmoIconTile(symbol: symbol, tone: isOn.wrappedValue ? tone : .neutral, size: 30)
+                ItmoIconTile(symbol: symbol, tone: isOn.wrappedValue && active ? tone : .neutral, size: 30)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(verbatim: AppStrings.string(title)).font(.itmo(.bodyLarge))
-                    Text(verbatim: AppStrings.string(text)).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+                    if let text {
+                        Text(verbatim: AppStrings.string(text)).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+                    }
                 }
             }
         }
-        .disabled(denied)
+        .disabled(!active)
         .itmoTint()
         .padding(.horizontal, ItmoKit.padding)
         .padding(.vertical, 11)
         .frame(minHeight: 52)
     }
 
-    /// A push: the connection it needs, the way to change it in Settings, and how it arrives.
-    private func pushBlock(_ push: PushNotifications) -> some View {
-        let (title, text, symbol, tone): (String, String, AppSymbol, ItmoTone) = switch push.kind {
-        case .sport: ("notifications_sport", "notifications_sport_text", .sprint, .ok)
-        case .friends: ("notifications_friends", "notifications_friends_text", .personAdd, .tertiary)
-        case .devices: ("notifications_devices", "notifications_devices_text", .devices, .primary)
+    /// A push type: the app's switch; it waits for the connection, without which Backend sends nothing.
+    private func pushSwitch(_ push: PushNotifications) -> some View {
+        let (title, symbol, tone): (String, AppSymbol, ItmoTone) = switch push.kind {
+        case .sport: ("notifications_sport", .sprint, .ok)
+        case .friends: ("notifications_friends", .personAdd, .tertiary)
+        case .devices: ("notifications_devices", .devices, .primary)
         }
-        let on = push.connected && push.systemEnabled?.boolValue != false
-        return VStack(alignment: .leading, spacing: 0) {
-            ItmoRow(
-                title: AppStrings.string(title),
-                subtitle: AppStrings.string(push.connected ? text : "notifications_push_connection"),
-                symbol: symbol,
-                tone: on ? tone : .neutral,
-                trailing: push.connected ? push.systemEnabled.map { AppStrings.string($0.boolValue ? "notifications_push_on" : "notifications_push_off") } : nil,
-                chevron: true,
-                action: { actions.push(push.kind) }
-            )
-            if push.connected { NotificationPreviewView(preview: push.preview) }
-        }
-        .accessibilityElement(children: .contain)
+        return typeSwitch(
+            title: title,
+            text: push.kind == .devices ? "notifications_devices_text" : nil,
+            symbol: symbol,
+            tone: tone,
+            enabled: state.connected,
+            isOn: Binding(get: { push.enabled }, set: { actions.push(push.kind, $0) })
+        )
         .accessibilityIdentifier("notifications.push.\(push.kind.name.lowercased())")
     }
 
@@ -275,33 +273,4 @@ struct NotificationSettingsContent: View {
 
     /// Under the row's text, past its icon tile.
     static let inset: CGFloat = 58
-}
-
-/// How a type arrives: a miniature of the system notification with the app's mark.
-struct NotificationPreviewView: View {
-    let preview: NotificationPreview
-
-    var body: some View {
-        HStack(spacing: 10) {
-            AppSymbol.school.image
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 22, height: 22)
-                .background(ItmoColor.primary, in: .rect(cornerRadius: 6))
-            VStack(alignment: .leading, spacing: 0) {
-                Text(verbatim: preview.title.resolved).font(.itmo(.labelLarge, emphasized: true)).lineLimit(1)
-                if let text = preview.text {
-                    Text(verbatim: text.resolved).font(.itmo(.bodySmall)).foregroundStyle(.secondary).lineLimit(1)
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(10)
-        .background(Color(.tertiarySystemGroupedBackground), in: .rect(cornerRadius: 14))
-        .padding(.leading, NotificationSettingsContent.inset)
-        .padding(.trailing, ItmoKit.padding)
-        .padding(.bottom, 12)
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("notifications.preview")
-    }
 }

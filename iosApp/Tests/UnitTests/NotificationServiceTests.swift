@@ -191,6 +191,25 @@ final class NotificationServiceTests: XCTestCase {
         XCTAssertTrue(transport.requests.isEmpty)
     }
 
+    /// A type turned off in the app shows nothing; a sport push still books and leaves its result for the bell.
+    func testATypeTurnedOffInTheAppIsDroppedButSportStillBooks() async throws {
+        var session = Self.signedIn
+        session.disabledPushes = ["sport", "friends", "connections"]
+        for name in ["FRIENDSHIP_EVENT_PAYLOAD", "DEVICE_CONNECTED_PAYLOAD", "SPORT_AGENT_BOOKED_PAYLOAD"] {
+            let shown = await handler(session: session).handle(try push(name))
+            XCTAssertTrue(shown.title.isEmpty && shown.body.isEmpty, name)
+        }
+        transport.answers[Self.signUp] = .reply(200, try fixture("lessons", "json"))
+        var recorded: [ITMOWidgets.SportSignNotice] = []
+        var sport = handler(session: session)
+        sport.record = { recorded.append($0) }
+
+        let shown = await sport.handle(try push("SPORT_FREE_SIGN_LESSONS_PAYLOAD"))
+
+        XCTAssertTrue(shown.title.isEmpty && shown.body.isEmpty)
+        XCTAssertEqual(recorded.map(\.booked), [true])
+    }
+
     func testAnEndedLessonIsNotBooked() async throws {
         let later = Self.now.addingTimeInterval(7 * 86_400)
         let shown = await handler(now: later).handle(try push("SPORT_AUTO_SIGN_LESSONS_PAYLOAD"))

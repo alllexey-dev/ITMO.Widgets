@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -330,6 +331,10 @@ internal class FakeSettingsRepository(
     override suspend fun setQrTileAdded(added: Boolean) {
         qrTileAddedRequests += added
         qrTileAdded.value = added
+    }
+
+    override suspend fun setPushEnabled(channel: String, enabled: Boolean) {
+        local.update { it.copy(disabledPushes = if (enabled) it.disabledPushes - channel else it.disabledPushes + channel) }
     }
 
     override suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec) {

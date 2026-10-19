@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.push.FcmDecoder
 import dev.alllexey.itmowidgets.client.push.SportAgentBookedPayload
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
+import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmPayloadHandler
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -11,13 +12,14 @@ import kotlinx.serialization.json.JsonElement
 
 /** The user's agent booked a lesson: nothing to book here, only the `sport` notification that says so. */
 class SportAgentBookedPushHandler(
-    private val notifier: AppNotifier,
     private val services: CustomServicesRepository,
     private val diagnostics: AppDiagnostics,
 ) : FcmPayloadHandler {
     override val type: String = SportAgentBookedPayload.TYPE
 
-    override suspend fun handle(payload: JsonElement) {
+    override val channel: String = AppNotificationChannels.SPORT
+
+    override suspend fun handle(payload: JsonElement, notifier: AppNotifier) {
         if (!services.isEnabled()) return
         val booked = try {
             FcmDecoder.sportAgentBooked(payload)

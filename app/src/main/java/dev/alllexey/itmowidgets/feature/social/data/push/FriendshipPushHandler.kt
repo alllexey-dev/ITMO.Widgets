@@ -18,14 +18,15 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.JsonElement
 
 class FriendshipPushHandler(
-    private val notifier: AppNotifier,
     private val social: SocialRepository,
     private val services: CustomServicesRepository,
     private val diagnostics: AppDiagnostics
 ) : FcmPayloadHandler {
     override val type: String = FriendshipEventPayload.TYPE
 
-    override suspend fun handle(payload: JsonElement) {
+    override val channel: String = AppNotificationChannels.FRIENDS
+
+    override suspend fun handle(payload: JsonElement, notifier: AppNotifier) {
         if (!services.isEnabled()) return
         val event = try {
             FcmDecoder.friendshipEvent(payload)
