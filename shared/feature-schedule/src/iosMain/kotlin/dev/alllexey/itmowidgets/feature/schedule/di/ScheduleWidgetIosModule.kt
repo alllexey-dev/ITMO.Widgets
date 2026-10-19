@@ -55,6 +55,7 @@ val scheduleWidgetIosModule = module {
             timeProvider = get(),
             clock = get(),
             log = get(),
+            texts = get(),
             palette = { get<AppearancePreferences>().observeWidgetTheme().first()?.widgetPalette() },
         ).also { writer ->
             writer.launchIn(CoroutineScope(SupervisorJob() + get<AppDispatchers>().main), triggers())

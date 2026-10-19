@@ -82,7 +82,7 @@ stored as one `ThemeSpec` (accent, custom colour, palette style, contrast,
 black background). `resolveColorScheme(spec, dark, wallpaper)` in
 `designsystem/theme/ThemeSchemes.kt` is the one way from it to a scheme:
 `ItmoTheme` without a `colorSource` reads `AppColorSource.current`, which the
-app hosts feed from `AppearancePreferences.observeTheme()` at start, and the
+Android app feeds from `AppearancePreferences.observeTheme()` at start, and the
 widgets call the same function with `wallpaperPalette(context)` (null below
 Android 12).
 

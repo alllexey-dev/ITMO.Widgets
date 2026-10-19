@@ -15,7 +15,7 @@ struct ITMOWidgetsApp: App {
     @State private var session: ShellSession
 
     init() {
-        IosStrings.shared.installAppLocale()
+        AppLocale.shared.install()
         #if DEBUG
         if CommandLine.arguments.contains(Self.uiTestsArgument) {
             AppPlatform.removeWebsiteData = { $0() }

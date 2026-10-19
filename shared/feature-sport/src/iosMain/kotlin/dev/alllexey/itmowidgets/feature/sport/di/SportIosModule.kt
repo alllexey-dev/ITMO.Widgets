@@ -26,7 +26,7 @@ val sportIosModule = module {
     single<SportApi> { get<BackendClient>().sport }
     single<SportLessonTemplateProvider> { NoSportLessonTemplates }
     single<SportScoreOverrideSource> { SportScoreOverrideSource { null } }
-    single { SportShares(get(), get(), get()) }
+    single { SportShares(get(), get(), get(), get()) }
     // The notification service's queue results reach the bell through the App Group; sign-out drops the rest.
     single { AppGroupSportResultInbox(get<AppGroupDirectory>(), get()) }
     single<SportResultInbox> { get<AppGroupSportResultInbox>() }

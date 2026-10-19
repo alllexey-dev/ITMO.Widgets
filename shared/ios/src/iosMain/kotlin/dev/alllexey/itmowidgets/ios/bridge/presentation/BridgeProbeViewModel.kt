@@ -13,8 +13,8 @@ import kotlinx.coroutines.launch
 
 /**
  * A ViewModel on the screen contract (`uiState`, `events`) that `ITMOWidgetsTests/BridgeTests` drives through the
- * Swift adapter, as `IosStrings.compositionProbe` serves `StringsTests`; no screen uses it. [onCleared] gets whether
- * the `viewModelScope` was already cancelled when `onCleared` ran.
+ * Swift adapter; no screen uses it. [onCleared] gets whether the `viewModelScope` was already cancelled when
+ * `onCleared` ran.
  */
 class BridgeProbeViewModel(private val onCleared: (scopeCancelled: Boolean) -> Unit) : ViewModel() {
 

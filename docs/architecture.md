@@ -279,9 +279,12 @@ notifications, the tile), with frozen keys in `scripts/strings-frozen-keys.txt`.
 - Android Views, widgets and notifications resolve `UiText` with
   `resolve(context)` through the generated key -> `R` table
   (`ExportedStringIds`), Swift with `UiText.resolved` from the `.xcstrings`
-  tables, iOS Kotlin outside Compose through the `UiTextResolver` port.
+  tables, and iOS Kotlin through the graph's `UiTextResolver`, which Swift
+  implements over the same tables (`IosPlatform.resolveText`). Nothing on iOS
+  reads a CMP resource ([ADR 0035](decisions/0035-ios-without-compose.md)).
 - `:shared:core` and the `data`, `domain` and `presentation` packages import no
-  CMP resource, `Res` or Compose resolver (`UiTextRulesTest`).
+  CMP resource, `Res` or Compose resolver, and iOS code outside the design
+  system imports no Compose at all (`UiTextRulesTest`, `KmpRulesTest`).
 
 The `itmowidgets.strings` plugin exports what Android `res` still needs, and
 `./gradlew :app:exportAppleStrings` writes the `.xcstrings` tables and

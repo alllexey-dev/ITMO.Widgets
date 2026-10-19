@@ -37,9 +37,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.InMemorySecureStore
+import dev.alllexey.itmowidgets.core.testing.KeyTextResolver
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
-import dev.alllexey.itmowidgets.core.text.UiTextResolver
-import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.work.AppRefreshScheduler
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.RefreshStep
@@ -308,7 +307,7 @@ class RecordbookIosModuleTest {
         // The app graph's notifier, refresh task and step log are `iosBackgroundModule`'s; this graph posts
         // and schedules nothing.
         single<AppNotifier> { SilentNotifier }
-        single { IosAppNotifier(SilentCenter, get(), get(), UiTextResolver { it.resolve() }) }
+        single { IosAppNotifier(SilentCenter, get(), get(), KeyTextResolver) }
         single { AppRefreshScheduler({ _, _ -> }, Clock.System, get()) }
         single<RefreshStepLog> { NoStepLog }
         single<AppDirectories> {

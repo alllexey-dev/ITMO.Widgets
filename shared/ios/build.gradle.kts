@@ -1,12 +1,10 @@
 // The iOS umbrella: the static framework `Shared` that the Xcode project links, with SKIE's Swift layer;
 // linking needs Xcode, compiling the klibs does not. Xcode builds it through the app target's
 // Run Script (`embedAndSignAppleFrameworkForXcode`, iosApp/project.yml); see docs/ios.md.
-// The Compose plugins copy every module's `composeResources` into the app bundle during that task;
-// without them CMP finds no string on iOS.
+// No Compose plugin: iOS draws no Compose and reads text from the app's string tables (ADR 0035), so no CMP resources
+// are packed into the bundle. The feature modules still bring Compose code along until their screens leave commonMain.
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
-    id("org.jetbrains.compose")
-    id("org.jetbrains.kotlin.plugin.compose")
     // Sealed classes as Swift enums (`onEnum(of:)`), suspend as `async`, Flow as `AsyncSequence`.
     alias(libs.plugins.skie)
 }
@@ -50,8 +48,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":shared:core"))
+            // The widget palettes of the gallery's samples (`widgetPalette`).
             implementation(project(":shared:designsystem"))
-            implementation(project(":shared:compose-strings"))
             implementation(project(":shared:backend-client"))
             api(project(":shared:feature-qr"))
             api(project(":shared:feature-home"))
@@ -64,16 +62,8 @@ kotlin {
             api(project(":shared:feature-resources"))
             api(project(":shared:feature-reviews"))
             api(project(":shared:feature-account"))
-            // The composition probe of IosStrings.
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.ui)
             // The Swift bridge: the ViewModelStore each SwiftUI screen owns (bridge/ScreenViewModelStore.kt).
             implementation(libs.jetbrains.lifecycle.viewmodel)
-        }
-        iosMain.dependencies {
-            // Compose avatars need a network fetcher too; Darwin comes from core. Photos use public URLs,
-            // never the authenticated MyITMO/Backend clients, just as Android's Coil OkHttp loader does.
-            implementation(libs.coil.network.ktor3)
         }
         // The background runner's tests: kotlin-test, coroutines-test and FakeClock.
         iosTest.dependencies {
@@ -87,9 +77,4 @@ skie {
     analytics {
         disableUpload.set(true)
     }
-}
-
-// The module has no resources of its own; the plugin only packs those of its dependencies.
-compose.resources {
-    generateResClass = org.jetbrains.compose.resources.ResourcesExtension.ResourceClassGeneration.Never
 }

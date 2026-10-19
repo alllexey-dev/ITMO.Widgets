@@ -28,9 +28,9 @@ import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
+import dev.alllexey.itmowidgets.core.testing.KeyTextResolver
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.core.text.UiTextResolver
-import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
 import dev.alllexey.itmowidgets.testkit.bodyText
@@ -294,7 +294,7 @@ class AccountIosModuleTest {
         single<AppDispatchers> { AppDispatchers(Dispatchers.Default, Dispatchers.Default, Dispatchers.Default) }
         single<AppLog> { log }
         // The app binds it in iosBackgroundModule, which needs the system notification centre.
-        single { UiTextResolver { it.resolve() } }
+        single<UiTextResolver> { KeyTextResolver }
     }
 
     private fun graph(vararg modules: Module): Koin = koinApplication {

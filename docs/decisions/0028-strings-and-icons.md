@@ -1,5 +1,8 @@
 # 0028 One Russian string catalog generated outward; Material Symbols Rounded with an SF Symbol registry
 
+**Amended by [0035](0035-ios-without-compose.md) (proposed):** CMP `Res` serves Compose on Android only; iOS resolves
+`UiText` from the `.xcstrings` tables, Kotlin included.
+
 **Decision (2026-10-03).** Strings have one source, Android-syntax `strings_<owner>.xml` files in Russian, generated outward:
 - **Source.** `strings_<owner>.xml` in the owning module's `src/commonMain/composeResources/values/`;
   `strings_platform.xml` lives in `:shared:core`, Android-only files in `app/src/main/res/values/`.

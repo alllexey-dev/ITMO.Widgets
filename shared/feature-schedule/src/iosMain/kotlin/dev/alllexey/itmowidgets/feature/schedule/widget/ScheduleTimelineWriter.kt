@@ -5,8 +5,8 @@ import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.AppGroupWidgetRefresh
 import dev.alllexey.itmowidgets.core.storage.SnapshotFile
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.core.text.buildingShortTitle
-import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.text.roomShortTitle
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetTimelineLoadResult
@@ -63,7 +63,8 @@ class ScheduleTimelineTriggers(
  * only picks the entry of the moment (docs/ios.md, Data sharing).
  *
  * The rooms and buildings in the file are the short titles Android's widget shows (`roomShortTitle`,
- * `buildingShortTitle`): the reader would need the catalog's Russian building names to shorten them. Everything else is the provider's data and keys.
+ * `buildingShortTitle`), resolved by [texts]: the reader would need the catalog's Russian building names to shorten
+ * them. Everything else is the provider's data and keys.
  * An unavailable schedule keeps the previous file, as Android keeps its last snapshot. Times come from the academic
  * clock (the timeline's end) and the wall [clock] (how recently a write started). Each write carries the [palette] of
  * that moment, the app's colours while the widgets follow the theme.
@@ -75,6 +76,7 @@ class ScheduleTimelineWriter(
     private val timeProvider: AcademicTimeProvider,
     private val clock: Clock,
     private val log: AppLog,
+    private val texts: UiTextResolver,
     private val palette: suspend () -> WidgetPalette? = { null },
 ) : AppGroupWidgetRefresh {
 
@@ -141,7 +143,7 @@ class ScheduleTimelineWriter(
 
     private suspend fun write(timeline: ScheduleWidgetTimeline) {
         try {
-            writer.write(FILE, timeline.withShortLocations().copy(palette = palette()), KINDS)
+            writer.write(FILE, timeline.withShortLocations(texts).copy(palette = palette()), KINDS)
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
@@ -184,18 +186,21 @@ class ScheduleTimelineWriter(
  * The timeline with the short room and building titles Android's widget shows (`roomShortTitle`,
  * `buildingShortTitle`), as the writer stores it; the widgets gallery's samples go through it too.
  */
-suspend fun ScheduleWidgetTimeline.withShortLocations(): ScheduleWidgetTimeline =
-    copy(entries = entries.map { entry -> entry.copy(snapshot = entry.snapshot.withShortLocations()) })
+suspend fun ScheduleWidgetTimeline.withShortLocations(texts: UiTextResolver): ScheduleWidgetTimeline =
+    copy(entries = entries.map { entry -> entry.copy(snapshot = entry.snapshot.withShortLocations(texts)) })
 
-private suspend fun ScheduleWidgetSnapshot.withShortLocations(): ScheduleWidgetSnapshot = copy(
-    next = next.copy(lesson = next.lesson?.withShortLocations(), rest = next.rest.map { it.withShortLocations() }),
-    day = day.copy(lessons = day.lessons.map { it.withShortLocations() }),
-    officialFallback = officialFallback?.withShortLocations(),
+private suspend fun ScheduleWidgetSnapshot.withShortLocations(texts: UiTextResolver): ScheduleWidgetSnapshot = copy(
+    next = next.copy(
+        lesson = next.lesson?.withShortLocations(texts),
+        rest = next.rest.map { it.withShortLocations(texts) },
+    ),
+    day = day.copy(lessons = day.lessons.map { it.withShortLocations(texts) }),
+    officialFallback = officialFallback?.withShortLocations(texts),
 )
 
-private suspend fun WidgetLesson.withShortLocations() = copy(
-    room = room?.let { roomShortTitle(it).resolve() },
-    building = building?.let { buildingShortTitle(it, BUILDING_MAX_LENGTH).resolve() },
+private suspend fun WidgetLesson.withShortLocations(texts: UiTextResolver) = copy(
+    room = room?.let { texts.resolve(roomShortTitle(it)) },
+    building = building?.let { texts.resolve(buildingShortTitle(it, BUILDING_MAX_LENGTH)) },
 )
 
 /** As Android's `ScheduleWidgetRenderer`. */
