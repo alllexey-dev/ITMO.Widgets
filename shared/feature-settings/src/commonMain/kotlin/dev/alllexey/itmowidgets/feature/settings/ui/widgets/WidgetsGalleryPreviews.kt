@@ -3,6 +3,8 @@ package dev.alllexey.itmowidgets.feature.settings.ui.widgets
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,15 +26,15 @@ import dev.alllexey.itmowidgets.feature.settings.ui.preview.SettingsPreviewData
 /** A block of about the size the real widget takes in its card. */
 @Composable
 internal fun WidgetPlaceholder(settings: WidgetPreviewSettings, modifier: Modifier) {
-    val height = when (settings) {
+    val size = when (settings) {
         is WidgetPreviewSettings.Schedule -> when (settings.format) {
-            ScheduleWidgetFormat.COMPACT -> 180.dp
-            ScheduleWidgetFormat.FULL -> 330.dp
-            ScheduleWidgetFormat.LIST -> 250.dp
+            ScheduleWidgetFormat.COMPACT -> modifier.height(180.dp)
+            ScheduleWidgetFormat.FULL -> modifier.height(330.dp)
+            ScheduleWidgetFormat.LIST -> modifier.height(250.dp)
         }
-        is WidgetPreviewSettings.Sport, is WidgetPreviewSettings.Qr -> 150.dp
+        is WidgetPreviewSettings.Sport, is WidgetPreviewSettings.Qr -> modifier.wrapContentWidth().size(150.dp)
     }
-    Box(modifier.height(height).background(ItmoTheme.colorScheme.surfaceContainerHighest, ItmoTheme.shapes.cardContent))
+    Box(size.background(ItmoTheme.colorScheme.surfaceContainerHighest, ItmoTheme.shapes.cardContent))
 }
 
 internal class WidgetsGalleryCardsPreview {

@@ -86,8 +86,8 @@ object WidgetsGalleryTags {
 data class WidgetsGalleryActions(val onAdd: (WidgetFormat) -> Unit = {})
 
 /**
- * `Виджеты` (spec C4): a card per format with the real widget drawn by the host through [widgetPreview] on a
- * wallpaper, `Добавить` or `на экране`, the format's settings in a sheet with the preview again (applied at once to
+ * `Виджеты` (spec C4): a card per format, across the screen, with the real widget drawn by the host through
+ * [widgetPreview] on a wallpaper, `Добавить` or `на экране`, the format's settings in a sheet with the preview again (applied at once to
  * every widget of the format), then the gallery's own rows. Stateless but for which sheet is open.
  */
 @Composable
@@ -118,13 +118,7 @@ fun WidgetsGalleryScreen(
                 .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
             verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
         ) {
-            val (wide, narrow) = gallery.cards.partition { it.format in WIDE }
-            wide.forEach { card -> GalleryCard(card, galleryActions, widgetPreview, onSettings = { sheet = card.format }, wide = true) }
-            Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content)) {
-                narrow.forEach { card ->
-                    GalleryCard(card, galleryActions, widgetPreview, onSettings = { sheet = card.format }, wide = false, Modifier.weight(1f))
-                }
-            }
+            gallery.cards.forEach { card -> GalleryCard(card, galleryActions, widgetPreview, onSettings = { sheet = card.format }) }
             state.sections.forEach { section -> Section(section, actions) }
         }
     }
@@ -140,38 +134,39 @@ private fun GalleryCard(
     actions: WidgetsGalleryActions,
     widgetPreview: @Composable (WidgetPreviewSettings, Modifier) -> Unit,
     onSettings: () -> Unit,
-    wide: Boolean,
-    modifier: Modifier = Modifier,
 ) {
-    ItmoCard(modifier.testTag(WidgetsGalleryTags.card(card.format))) {
+    ItmoCard(Modifier.testTag(WidgetsGalleryTags.card(card.format))) {
         Wallpaper { widgetPreview(card.preview, Modifier.fillMaxWidth()) }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).padding(start = ItmoTheme.spacing.related)) {
-                // The pill wraps under a long title rather than squeezing it.
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related),
-                    itemVerticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(card.title.asString(), style = ItmoTheme.typography.titleMedium, color = ItmoTheme.colorScheme.onSurface)
-                    if (card.beta) {
-                        StatusPill(
-                            UiText.Res(SettingsStrings.settings_widget_beta).asString(),
-                            Modifier.testTag(WidgetsGalleryTags.beta(card.format)),
-                            tone = Tone.Tertiary,
-                        )
-                    }
+        // The name and what it shows take the card's whole width; the buttons go under them.
+        Column(Modifier.padding(horizontal = ItmoTheme.spacing.related)) {
+            // The pill wraps under a long title rather than squeezing it.
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(card.title.asString(), style = ItmoTheme.typography.titleMedium, color = ItmoTheme.colorScheme.onSurface)
+                if (card.beta) {
+                    StatusPill(
+                        UiText.Res(SettingsStrings.settings_widget_beta).asString(),
+                        Modifier.testTag(WidgetsGalleryTags.beta(card.format)),
+                        tone = Tone.Tertiary,
+                    )
                 }
-                Text(card.description.asString(), style = ItmoTheme.typography.bodySmall, color = ItmoTheme.colorScheme.onSurfaceVariant)
             }
-            if (wide) CardAction(card, actions)
-            if (card.settings.isNotEmpty()) {
-                val label = UiText.Res(SettingsStrings.settings_widget_settings).asString()
-                IconButton(onClick = onSettings, modifier = Modifier.testTag(WidgetsGalleryTags.settings(card.format)).semantics { contentDescription = label }) {
-                    Icon(painterResource(Res.drawable.ic_tune), contentDescription = null, tint = ItmoTheme.colorScheme.onSurfaceVariant)
+            Text(card.description.asString(), style = ItmoTheme.typography.bodySmall, color = ItmoTheme.colorScheme.onSurfaceVariant)
+        }
+        if (card.action != WidgetCardAction.NONE || card.settings.isNotEmpty()) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                CardAction(card, actions)
+                Spacer(Modifier.weight(1f))
+                if (card.settings.isNotEmpty()) {
+                    val label = UiText.Res(SettingsStrings.settings_widget_settings).asString()
+                    IconButton(onClick = onSettings, modifier = Modifier.testTag(WidgetsGalleryTags.settings(card.format)).semantics { contentDescription = label }) {
+                        Icon(painterResource(Res.drawable.ic_tune), contentDescription = null, tint = ItmoTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }
-        if (!wide) CardAction(card, actions)
     }
 }
 
@@ -319,6 +314,3 @@ private fun ChoiceRow(item: SettingItem.Choice, actions: SettingsActions, modifi
 }
 
 private const val SEGMENTS = 4
-
-/** The formats drawn across the screen; the others share a row. */
-private val WIDE = setOf(WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.LIST)

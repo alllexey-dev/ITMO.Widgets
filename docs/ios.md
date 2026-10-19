@@ -248,7 +248,7 @@ The widget extension reads App Group files on each timeline request and makes no
   `Button(intent: RevealQrIntent())` that shows the code for 30 s. Options come from qr-pass-v1.json.
 - Next-lesson widget (`NextLessonWidget`, kind `.widget.single-lesson`): small, medium (two more lessons on the
   right), and on the Lock Screen the line beside the date, the rectangle and the countdown ring. The day widget
-  (`DayWidget`, large only) draws the day to scale (`DayAxis`: linear time, every lesson at least one readable row),
+  (`DayWidget`, large only) draws the day to scale (`DayAxis`: linear time, every lesson at least one readable row, an hour at most 36 pt so a short day stays compact at the top),
   gaps, and the now line (kind `.widget.day-timeline`). The classic list (`ClassicListWidget`, kind
   `.widget.day-schedule`, medium and large) draws the same day content as rows: the header, the lessons that fit (done
   ones leave first) and the end. All three read schedule-timeline-v2.json in `Extensions/Widgets/Schedule/`: Swift picks the entry
