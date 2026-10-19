@@ -12,7 +12,7 @@ class AndroidPlatformCapabilitiesTest {
         val flags = PlatformCapabilities::class.java.declaredFields
             .filter { it.type == Boolean::class.javaPrimitiveType && it.name !in setOf("wallpaperColors", "lockScreenWidgets") }
 
-        assertEquals(10, flags.size)
+        assertEquals(11, flags.size)
         flags.forEach { flag ->
             flag.isAccessible = true
             assertTrue(flag.name, flag.getBoolean(AndroidPlatformCapabilities))
