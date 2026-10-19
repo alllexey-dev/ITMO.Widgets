@@ -299,9 +299,13 @@ Debug and `minifiedSmoke` builds call `https://dev.widgets.alllexey.dev`,
 release builds `https://widgets.alllexey.dev`. On iOS the Backend origin is
 `BACKEND_BASE_URL` in `iosApp/Config/Base.xcconfig` (dev for Debug,
 production for Release). iOS has no build variants; `IosClientVersion` reads
-the channel from the installed bundle for `X-App-Version`: `dev` for a debug
-binary, `sideload` with an embedded provisioning profile (Xcode, a free Apple
-ID, AltStore), `testflight` with a sandbox receipt, else `appstore`.
+the channel from the installed bundle for `X-App-Version` and `X-Client`: `dev`
+for a debug binary, `sideload` with an embedded provisioning profile (Xcode, a
+free Apple ID, AltStore), `testflight` with a sandbox receipt, else `appstore`.
+Both apps also send `X-Client` (ADR 0034) with the build identity
+([building](building.md#build-identity)), the OS version and a random
+install id kept in `app_preferences` (`InstallIdPreferences`) and replaced on
+every session change ([contract](../shared/backend-client/CONTRACT.md#request-headers)).
 
 ## Enforced rules
 

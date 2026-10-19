@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.client.support
 
 import dev.alllexey.itmowidgets.client.AccessTokenSource
 import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.ClientHeader
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.http.BackendHttp
 import dev.alllexey.itmowidgets.client.http.BackendRoute
@@ -23,15 +24,16 @@ class MockBackend(
     tokens: AccessTokenSource = AccessTokenSource { null },
     baseUrl: String = TEST_BASE_URL,
     version: ClientVersion? = null,
+    client: ClientHeader? = null,
     private val handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData = {
         ok("""{"success":true}""")
     },
 ) {
     val engine = MockEngine { request -> handler(request) }
 
-    internal val http = BackendHttp(baseUrl, tokens, engine, version)
+    internal val http = BackendHttp(baseUrl, tokens, engine, version, client)
 
-    val client = BackendClient(baseUrl, tokens, engine, version)
+    val client = BackendClient(baseUrl, tokens, engine, version, client)
 
     val requests: List<HttpRequestData> get() = engine.requestHistory
 

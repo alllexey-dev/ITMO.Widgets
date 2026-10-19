@@ -50,6 +50,7 @@ import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.FileCrossProcessLock
+import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.IosAppDirectories
 import dev.alllexey.itmowidgets.core.storage.KeychainSecureStore
@@ -92,8 +93,9 @@ import org.koin.dsl.module
  *
  * [backendOrigin] is the build's Backend, from the app's Info.plist ([BackendOrigin]), and the site the share links
  * name, as Android's `WIDGETS_BASE_URL` is both; [appVersion] its marketing version ([AppBundleVersion]);
- * [clientVersion] the build every Backend request names in `X-App-Version` ([IosClientVersion]); [academicDate] the
- * academic date a Debug build's launch argument pins ([LaunchAcademicDate]), null for the real one.
+ * [clientVersion] the build every Backend request names in `X-App-Version` ([IosClientVersion]; `X-Client` comes
+ * from the same bundle with [InstallIdPreferences]); [academicDate] the academic date a Debug build's launch argument
+ * pins ([LaunchAcademicDate]), null for the real one.
  */
 fun iosCoreModule(
     host: IosCoreHost,
@@ -149,6 +151,7 @@ fun iosCoreModule(
     singleOf(::SportSignSelectorPreferences)
     singleOf(::MarkSourcePreferences)
     singleOf(::PushCategoryPreferences)
+    singleOf(::InstallIdPreferences)
     single { UtilityStorage(get(), appVersion) }
     singleOf(::IosBackendGate) { bind<BackendGate>() }
 
@@ -167,7 +170,14 @@ fun iosCoreModule(
         )
     }
     single<BackendClient> {
-        BackendClient(backendOrigin, get<MyItmoClient>().tokens.asBackendTokenSource(), get(), clientVersion)
+        val installIds = get<InstallIdPreferences>()
+        BackendClient(
+            backendOrigin,
+            get<MyItmoClient>().tokens.asBackendTokenSource(),
+            get(),
+            clientVersion,
+            IosClientVersion.headerFromMainBundle(installIds::installId)
+        )
     }
     single<UsersApi> { get<BackendClient>().users }
     single<PairingApi> { get<BackendClient>().pairing }

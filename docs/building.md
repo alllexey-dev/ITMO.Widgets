@@ -79,9 +79,10 @@ they only label.
   `archive.sh` also stamps as the iOS `CFBundleVersion`. It is the same in
   every clone, shallow or a fork's; Xcode builds keep `1`.
 - **Statistics.** The app sends these with its Backend calls in `X-Client`
-  ([ADR 0034](decisions/0034-client-stats.md)). The
-  header's `channel` is the distribution (`github`, `play`, `sideload`, ...);
-  the build channel above is a separate field.
+  ([ADR 0034](decisions/0034-client-stats.md)). An `official` build sends its
+  distribution (`github`, `play`, `appstore`, ...) as the header's `channel`, a
+  `custom` one sends `custom`; `source` and `commit` go as built (an empty
+  commit is left out), so Backend counts forks and self-built apps apart.
 
 ## Workflows in a fork
 

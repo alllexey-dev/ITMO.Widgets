@@ -126,6 +126,7 @@ send them.
 |---|---|---|
 | `Authorization` | `Bearer <access token>`, absent without a token | `AccessTokenSource`, asked per request |
 | `X-App-Version` | `<versionName> (<build>); <platform>; <distribution>`, absent when `version` is `null` | `ClientVersion` |
+| `X-Client` | `kind=...; version=...; build=...; channel=...; source=...; commit=...; base=...; os=...; install=...`, absent when `client` is `null` | `ClientHeader` |
 
 `X-App-Version` names the build only, in printable ASCII: Android sends
 `<versionName> (<versionCode>); android; github|play` (`NetworkModule.provideClientVersion`), iOS
@@ -133,6 +134,16 @@ send them.
 binary). No user, device or OS data. Backend ignores unknown headers; BK-VER1 reads it and records the build of a
 device exactly on `POST /api/device/register-device`, so both apps register again once the build changes
 (`DefaultFcmTokenSync` on Android, `PushDeviceRegistration` on iOS).
+
+`X-Client` names the client for Backend's client statistics (ADR 0034): `key=value` pairs joined by `; ` in the
+order above, each value reduced to `[A-Za-z0-9._/+-]` and 64 characters, a pair with an empty value left out, the
+whole header at most 512 characters. `kind` is `android` or `ios`; `version` and `build` as in `X-App-Version`; `channel` the distribution
+(`custom` for an unofficial build); `source` and `commit` the build identity (`BuildIdentity`: iOS reads the
+Info.plist keys `BuildChannel`, `BuildSource`, `BuildCommit`, Android the matching `BuildConfig` fields once the build
+scripts add them; an empty value is left out); `base` is not sent, as `version` already is the upstream version; `os` the Android API level or the iOS major version; `install` a random UUID per install
+(`InstallIdPreferences` of `:shared:core`, asked per request, new after every session change). Android builds it in
+`NetworkModule.clientHeader`, iOS in `IosClientVersion.headerFromMainBundle`, the iOS notification service in
+`PushHandler.clientHeader` with the install id of session-v1.json. Both headers are sent during the transition.
 
 ## Engines and iOS
 

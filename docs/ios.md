@@ -53,7 +53,7 @@ Each bundle runs in its own process; they share only the App Group container and
 | `ITMOWidgetsNotificationService` | none | the sport booking of a push and its text; Swift micro-client for MyITMO and Backend |
 
 - Only the app has DataStore and a Koin graph. An extension that needs a fact reads a versioned JSON file the app
-  wrote; session-v1.json carries the session state and the demo flag, never a token.
+  wrote; session-v1.json carries the session state, the demo flag and the `X-Client` install id, never a token.
 - The widget extension has about 30 MB, which the Kotlin runtime alone would use up, so it links no Kotlin. The
   notification service stays Swift-only for the same reason.
 - Extensions compute no academic time: the app writes timelines with their instants and WidgetKit picks the entry.
@@ -292,7 +292,8 @@ calendar sync), keeps Android's periods in
   cold-start tap waits for the shell.
 - Notification service (Swift micro-client). `PushHandler` drops pushes for another ISU, signed out, the demo or a
   type switched off in the app (a sport push still books first); shows friendship pushes as Backend sent them; books sport pushes through `SportPushBooker` on MyITMO and reports
-  the outcome to Backend. `MyItmoAccess` refreshes the token under the `myitmo-refresh` lock. Tests replay the Kotlin
+  the outcome to Backend with the app's `X-App-Version` and `X-Client` (the install id from session-v1.json).
+  `MyItmoAccess` refreshes the token under the `myitmo-refresh` lock. Tests replay the Kotlin
   golden fixtures (`NotificationServiceTests`), since `simctl push` never runs an extension.
 
 ## Degradations

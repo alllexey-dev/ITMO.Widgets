@@ -131,6 +131,8 @@ struct SportPushCalls {
     let transport: PushTransport
     let backend: URL?
     let appVersion: String
+    /// The `X-Client` value, read per call: the install id is the session's.
+    let client: () -> String
 
     static let myItmo = URL(string: "https://my.itmo.ru")!
 
@@ -154,6 +156,7 @@ struct SportPushCalls {
         )
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue(appVersion, forHTTPHeaderField: "X-App-Version")
+        request.setValue(client(), forHTTPHeaderField: "X-Client")
         _ = try? await transport.send(request)
     }
 }
