@@ -34,12 +34,14 @@ internal object IosSessionLifecycleEffects : SessionLifecycleEffects {
  * extensions learn of the demo only from this file. A sign-out needs no write: the App Group cleaner removes the
  * file, and a missing file means signed out. [alertsAllowed] is the last notification settings answer the app read
  * (`IosPushDevice`, on every return to the foreground); [servicesEnabled] the services opt-in, which the notification
- * service checks before it books (it opens no DataStore).
+ * service checks before it books (it opens no DataStore); [installId] the `X-Client` install id of a real session
+ * (`InstallIdPreferences`), which the notification service sends too.
  */
 internal class SessionSnapshotSync(
     private val session: SessionRepository,
     private val alertsAllowed: Flow<Boolean>,
     private val servicesEnabled: Flow<Boolean>,
+    private val installId: suspend () -> String?,
     private val writer: SessionSnapshotWriter,
     private val log: AppLog,
 ) {
@@ -47,7 +49,13 @@ internal class SessionSnapshotSync(
     fun launchIn(scope: CoroutineScope): Job =
         combine(session.state, alertsAllowed, servicesEnabled) { state, alerts, services ->
             (state as? SessionState.SignedIn)?.let {
-                SessionSnapshot(isu = it.user?.isu, demo = it.demo, alertsAllowed = alerts, servicesEnabled = services)
+                SessionSnapshot(
+                    isu = it.user?.isu,
+                    demo = it.demo,
+                    alertsAllowed = alerts,
+                    servicesEnabled = services,
+                    installId = if (it.demo) null else installId()
+                )
             }
         }
             // Distinct over every state, so signing in again after a sign-out writes the removed file again.

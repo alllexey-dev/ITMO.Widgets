@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.session.IdTokenCurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
+import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import kotlinx.coroutines.CoroutineScope
@@ -44,6 +45,8 @@ val accountIosModule = module {
         SessionDataCleaners { koin.getAll<SessionDataCleaner>() }
     }
     single<SessionLifecycleEffects> { IosSessionLifecycleEffects }
+    // Not in iosCoreModule: IosCoreGraph (hosted SessionTests) would open a second DataStore over app_preferences.
+    single<SessionDataCleaner>(named("install-id")) { get<InstallIdPreferences>() }
     single { IosPushDevice.fromMainBundle() }
     singleOf(::PushRegistrationPreferences)
     single {
@@ -77,6 +80,7 @@ val accountIosModule = module {
             get(),
             get<IosPushDevice>().observeAlertsAllowed(),
             get<ServicesOptInPreferences>().observeCustomServicesEnabled(),
+            get<InstallIdPreferences>()::installId,
             get(),
             get()
         ).also { sync ->

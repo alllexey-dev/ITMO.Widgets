@@ -87,7 +87,8 @@ extension PushHandler {
         let calls = SportPushCalls(
             transport: transport,
             backend: (bundle.object(forInfoDictionaryKey: "BackendBaseURL") as? String).flatMap(URL.init(string:)),
-            appVersion: clientVersion(bundle)
+            appVersion: clientVersion(bundle),
+            client: { clientHeader(bundle, installId: SessionFile.read(fromContainer: container)?.installId) }
         )
         let inbox = SportResultInbox(container: container)
         return PushHandler(
@@ -105,6 +106,37 @@ extension PushHandler {
             return value.isEmpty ? "unknown" : value
         }
         return "\(part("CFBundleShortVersionString")) (\(part("CFBundleVersion"))); ios; \(distribution(bundle))"
+    }
+
+    /// `IosClientVersion.headerFromMainBundle`'s `X-Client` (ADR 0034): `kind=ios; version=<version>; build=<build>;
+    /// channel=<distribution>; os=<iOS major>; install=<id>`. [installId] is the app's, from session-v1.json; without
+    /// it `install` is left out.
+    static func clientHeader(_ bundle: Bundle, installId: String?) -> String {
+        func info(_ key: String) -> String? { bundle.object(forInfoDictionaryKey: key) as? String }
+        // Build identity: plug in the Info.plist keys of ci/simple-builds here, as in IosClientVersion (channel
+        // `custom` for an unofficial build, else the distribution; source, commit and the upstream base version).
+        return formatClientHeader([
+            ("kind", "ios"),
+            ("version", info("CFBundleShortVersionString")),
+            ("build", info("CFBundleVersion")),
+            ("channel", distribution(bundle)),
+            ("os", String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion)),
+            ("install", installId),
+        ])
+    }
+
+    /// `ClientHeader.format`: `key=value` pairs joined by `; ` in their order; a value keeps only `[A-Za-z0-9._/+-]`
+    /// and 64 characters, an empty one leaves its key out, and a pair that would pass 512 characters is left out.
+    static func formatClientHeader(_ pairs: [(String, String?)]) -> String {
+        pairs.reduce(into: "") { header, pair in
+            let value = String((pair.1 ?? "").filter(isClientHeaderCharacter).prefix(64))
+            let next = header.isEmpty ? "\(pair.0)=\(value)" : "\(header); \(pair.0)=\(value)"
+            if !value.isEmpty && next.utf8.count <= 512 { header = next }
+        }
+    }
+
+    private static func isClientHeaderCharacter(_ char: Character) -> Bool {
+        char.isASCII && (char.isLetter || char.isNumber || "._/+-".contains(char))
     }
 
     /// `IosClientVersion.distribution`: the App Store and TestFlight strip the provisioning profile; TestFlight

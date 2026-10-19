@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
+import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
@@ -118,8 +119,10 @@ class AccountIosModuleTest {
 
         assertIs<SessionRepositoryImpl>(koin.get<SessionRepository>())
         assertIs<DefaultBackendIdentitySync>(koin.get<BackendIdentitySync>())
-        // The Keychain, the App Group container and WebKit's data; features loaded later add theirs.
-        assertEquals(3, koin.get<SessionDataCleaners>().current().size)
+        // The Keychain, the App Group container, WebKit's data and the X-Client install id; features loaded later add
+        // theirs.
+        assertEquals(4, koin.get<SessionDataCleaners>().current().size)
+        assertTrue(koin.get<SessionDataCleaners>().current().any { it === koin.get<InstallIdPreferences>() })
         // One push registration answers the session's token sync and device session.
         val registration = koin.get<PushDeviceRegistration>()
         assertSame<Any>(registration, koin.get<FcmTokenSync>())
@@ -194,7 +197,7 @@ class AccountIosModuleTest {
     ) {
         val session = FakeSessionRepository(SessionState.Initializing)
         val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = {}))
-        SessionSnapshotSync(session, MutableStateFlow(false), MutableStateFlow(false), writer, log)
+        SessionSnapshotSync(session, MutableStateFlow(false), MutableStateFlow(false), { INSTALL_ID }, writer, log)
             .launchIn(backgroundScope)
         assertNull(writer.read())
 
@@ -218,7 +221,9 @@ class AccountIosModuleTest {
 
         session.mutableState.value = SessionState.SignedIn(CurrentUser(isu = ISU, name = null, pictureUrl = null))
         assertEquals(
-            SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = false),
+            SessionSnapshot(
+                isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = false, installId = INSTALL_ID
+            ),
             writer.read()
         )
     }
@@ -229,7 +234,7 @@ class AccountIosModuleTest {
         val alerts = MutableStateFlow(false)
         val services = MutableStateFlow(false)
         val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = {}))
-        SessionSnapshotSync(session, alerts, services, writer, log).launchIn(backgroundScope)
+        SessionSnapshotSync(session, alerts, services, { INSTALL_ID }, writer, log).launchIn(backgroundScope)
 
         // Signed out: no file, whatever the answer.
         alerts.value = true
@@ -237,19 +242,25 @@ class AccountIosModuleTest {
 
         session.mutableState.value = SessionState.SignedIn(CurrentUser(isu = ISU, name = null, pictureUrl = null))
         assertEquals(
-            SessionSnapshot(isu = ISU, demo = false, alertsAllowed = true, servicesEnabled = false),
+            SessionSnapshot(
+                isu = ISU, demo = false, alertsAllowed = true, servicesEnabled = false, installId = INSTALL_ID
+            ),
             writer.read()
         )
 
         alerts.value = false
         assertEquals(
-            SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = false),
+            SessionSnapshot(
+                isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = false, installId = INSTALL_ID
+            ),
             writer.read()
         )
 
         services.value = true
         assertEquals(
-            SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = true),
+            SessionSnapshot(
+                isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = true, installId = INSTALL_ID
+            ),
             writer.read()
         )
     }
@@ -286,6 +297,7 @@ class AccountIosModuleTest {
     private companion object {
         const val ORIGIN = "https://dev.widgets.alllexey.dev"
         const val ISU = 123456
+        const val INSTALL_ID = "0b6c3c2e-5f1a-4d8e-9a7b-2c4d6e8f0a1b"
         val SAMPLE_UPDATE = AppUpdate(AppVersionName("2.3.0"), AppVersionName("2.4.0"), note = "", unsupported = false)
     }
 }

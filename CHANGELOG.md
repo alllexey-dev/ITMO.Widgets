@@ -10,6 +10,12 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Client statistics (2026-10-19)
+
+- Every Backend request also carries `X-Client` (ADR 0034): `kind`, version, build, channel, OS version and a random
+  install id, kept in the app's settings and replaced after sign-out. `X-App-Version` stays as it was. The iOS
+  notification service sends the same header with the app's install id.
+
 ### Campus map rooms (2026-10-19)
 
 - `201 (составное)` on Биржевая opens its own room on the campus map instead of room 201: the whole timetable text is

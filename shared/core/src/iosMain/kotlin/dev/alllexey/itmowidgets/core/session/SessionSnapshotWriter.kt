@@ -19,7 +19,9 @@ data class SessionSnapshot(
     /** Whether the user allows alert notifications. */
     val alertsAllowed: Boolean,
     /** The ITMO.Widgets services opt-in (`BackendGate`): the notification service books and settles only with it. */
-    val servicesEnabled: Boolean
+    val servicesEnabled: Boolean,
+    /** The `install` of `X-Client` (ADR 0034), so the notification service names the same install; null in the demo. */
+    val installId: String? = null
 )
 
 /** The only writer of [FILE]; the session's lifecycle effects call it on every session change. */

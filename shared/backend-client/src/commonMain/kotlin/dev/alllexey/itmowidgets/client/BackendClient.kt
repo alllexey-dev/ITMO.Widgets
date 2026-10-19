@@ -27,7 +27,8 @@ import io.ktor.client.engine.HttpClientEngine
  * [baseUrl] is the Backend origin (`https://widgets.alllexey.dev` or `https://dev.widgets.alllexey.dev`); route
  * paths are absolute, so a path in [baseUrl] is replaced, as in Retrofit. [tokens] is asked once per request.
  * [engine] belongs to the caller (OkHttp on Android, Darwin on iOS) and is not closed by the client. [version] is sent
- * with every request as `X-App-Version` ([ClientVersion]); `null` (tests, the default) sends no such header.
+ * with every request as `X-App-Version` ([ClientVersion]) and [client] as `X-Client` ([ClientHeader], ADR 0034);
+ * `null` (tests, the default) sends no such header.
  *
  * Every call fails only with [dev.alllexey.itmowidgets.client.error.BackendException] or a cancellation. The client
  * checks neither `DemoMode` nor the custom-services opt-in: its holders do.
@@ -37,8 +38,9 @@ class BackendClient(
     tokens: AccessTokenSource,
     engine: HttpClientEngine,
     version: ClientVersion? = null,
+    client: ClientHeader? = null,
 ) {
-    private val http = BackendHttp(baseUrl, tokens, engine, version)
+    private val http = BackendHttp(baseUrl, tokens, engine, version, client)
 
     val users: UsersApi = KtorUsersApi(http)
     val friends: FriendsApi = KtorFriendsApi(http)
