@@ -24,7 +24,7 @@ internal class LinkActionsSheetOthersSheetPreview {
     fun LinkActionsSheetContent() = ActionsPreview("others-sheet")
 }
 
-/** An own flow link: its score without arrows, then pin, edit and delete. */
+/** An own flow link: its score without thumbs, then pin, edit and delete. */
 internal class LinkActionsSheetOwnSharedPreview {
     @Preview(name = "own-shared")
     @Composable
@@ -45,7 +45,7 @@ internal class LinkActionsSheetOwnRejectedPreview {
     fun LinkActionsSheetContent() = ActionsPreview("own-rejected")
 }
 
-/** A vote restriction: another student's link keeps its score without arrows. */
+/** A vote restriction: another student's link keeps its score without thumbs. */
 internal class LinkActionsSheetRestrictedPreview {
     @Preview(name = "restricted")
     @Composable

@@ -51,7 +51,7 @@ class SubjectLinksLoaderTest {
         assertEquals(1, repository.refreshes)
     }
 
-    @Test fun `the arrow of the current vote takes it back`() = runTest {
+    @Test fun `the thumb of the current vote takes it back`() = runTest {
         val up = subjectLink("up", LinkCategory.NOTES, LinkVisibility.ALL, isMine = false, myVote = 1)
         loader.vote(scope, up, up = true)
         loader.vote(scope, up, up = false)

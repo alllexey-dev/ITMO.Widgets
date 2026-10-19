@@ -9,6 +9,17 @@ struct PushMessage {
 
     static let friendship = "FRIENDSHIP_EVENT_PAYLOAD"
     static let agentBooked = "SPORT_AGENT_BOOKED_PAYLOAD"
+    static let deviceConnected = "DEVICE_CONNECTED_PAYLOAD"
+
+    /// The category of the push, Android's channel id (`AppNotificationChannels`); the user's switch is stored by it.
+    var channel: String? {
+        switch type {
+        case Self.friendship: "friends"
+        case Self.deviceConnected: "connections"
+        case Self.agentBooked: "sport"
+        default: SportQueue(pushType: type) == nil ? nil : "sport"
+        }
+    }
 
     init?(userInfo: [AnyHashable: Any]) {
         guard let text = userInfo["data"] as? String,
@@ -120,6 +131,8 @@ struct SportPushCalls {
     let transport: PushTransport
     let backend: URL?
     let appVersion: String
+    /// The `X-Client` value, read per call: the install id is the session's.
+    let client: () -> String
 
     static let myItmo = URL(string: "https://my.itmo.ru")!
 
@@ -143,6 +156,7 @@ struct SportPushCalls {
         )
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue(appVersion, forHTTPHeaderField: "X-App-Version")
+        request.setValue(client(), forHTTPHeaderField: "X-Client")
         _ = try? await transport.send(request)
     }
 }

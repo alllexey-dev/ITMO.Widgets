@@ -190,8 +190,8 @@ background:
   heading keeps 12 dp to it.
 - Own and others' items share the row style; an own one is told by a small
   `моя` badge (`secondaryContainer`), never by a different surface or
-  outline. Others' links carry the compact vote pill `▲ N ▼`
-  (the kit's `VotePill`: a 32 dp pill inside 48 dp arrow targets).
+  outline. Others' links and reviews carry the one vote pill, like and dislike
+  thumbs around the score (`VotePill`: a 32 dp pill inside 48 dp targets).
 - Captions put a second fact on a second line or join facts with a comma; no
   « · ». The last row that leads further (`Все ссылки, N`, `Все пары, N`,
   `Добавить ссылку`) is the kit's `GroupActionRow` or, on the redesigned
@@ -270,6 +270,10 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
   the new data simply replaces the old. A skeleton is therefore never followed
   by an indicator. The schedule keeps its loaded range including
   pagination and replaces it with one snapshot; an error keeps the old data.
+- A value on screen that a slower source is about to replace (My ITMO's points
+  while the first BARS answer of the period runs) pulses like the skeleton in
+  place (`LoadingPulse`, iOS `itmoLoadingPulse`) and keeps its geometry, so the
+  answer changes the number without moving anything.
 - Card actions show local progress inside their button without changing its
   geometry and ignore a second tap.
 - Score rings and capacity bars are not loading indicators.
@@ -389,6 +393,7 @@ both platforms.
 | `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs: M3E's `ShortNavigationBar`, a label on every tab, the FILL 1 icon on the selected one | Not used: the SwiftUI shell's native tab bar |
 | `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | The action is a button capsule; loading is the large activity indicator |
 | `Skeleton` | First load without a cache, list or cards | Shapes in `systemFill`, cards with the inset group's corners; geometry and pulse stay |
+| `LoadingPulse` | A shown value that a slower source is about to replace | `itmoLoadingPulse(_:)`, the same pulse |
 | `AppRefreshBox` | Pull-to-refresh that the user asked for | Behaves as `UIRefreshControl`: the content follows the pull, the spinner's spokes above it, the refresh haptic at the threshold |
 | `ProgressButton` | A button with its own progress, same size, second tap ignored | A `UIButton` capsule: filled is prominent, tonal and outlined are bordered, text is plain; a press dims it |
 | `ItmoSwitch` | An on/off switch; with no callback it only shows the state and the row carries the toggle | A `UISwitch` in the accent with the toggle haptic |
@@ -396,11 +401,11 @@ both platforms.
 | `ButtonRow` | Two buttons side by side, stacked at full width when the labels do not fit | Its buttons take the `ProgressButton` capsules |
 | `Pill` | The `моя` badge, a count, a status in its tone over a 12 % wash | Capsules in the iOS type |
 | `ToneDot` | The review tone dot, an empty slot until the tone arrives | Same |
-| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise: surname and given name by `personInitials`, from ITMO.ID's name parts when the caller passes `initials` | Same; `ItmoAvatar` takes the initials from the shared `personInitials` or a model's `initials` |
+| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise: surname and given name by `personInitials`, from ITMO.ID's name parts when the caller passes `initials`; M3 Expressive's nine-sided cookie with the expressive switch, a circle otherwise | A circle; `ItmoAvatar` takes the initials from the shared `personInitials` or a model's `initials` |
 | `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
 | `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | A section header in `secondaryLabel` at UIKit's insets |
 | `GroupActionRow` | The last row of a group that leads further | A cell with the icon in the tint and the disclosure indicator |
-| `LinkRow`, `VotePill` | A link with its own badge or the vote pill | A cell; the vote buttons are 44 pt targets, the pill on `tertiarySystemFill` |
+| `LinkRow`, `VotePill` | A link with its own badge; the one vote pill of links and reviews: like and dislike thumbs around the score, the own vote filled and in `primary`, only the score when voting is not allowed | A cell; the vote buttons are 44 pt targets, the pill on `tertiarySystemFill` |
 | `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
 | `DetailsHeader` | The head of every details sheet | Title 2 semibold, secondary text and icons in `secondaryLabel`, the map button a tinted capsule |
 | `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | No handle (the host's grabber); the header is the sheet's navigation bar ([Platform styles](#platform-styles)) |
@@ -458,9 +463,10 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
 - Pushed screens cover the bar: back, a title, no navigation bar. The bar stays in place under them, so the
   predictive Back uncovers the root with its bar. The title and its subtitle flow as one paragraph
   (`ItmoDetailScreen`, 64 dp in one line) and a long title wraps in full, never truncated.
-- Sheets come in three sizes (`SheetPolicy.Height`): content height (`FIT_CONTENT`, the pass, the links, the lesson
-  sheet, the month sheet, the friend picker), 82 % of the window (`TALL`, the bell's sheet, the sport lesson sheet) or
-  the whole height below the status bar (`FULL`, no key uses it now); none goes under the status bar.
+- Sheets come in three sizes (`SheetPolicy.Height`): content height (`FIT_CONTENT`, the pass, the links, the month
+  sheet, the friend picker), 82 % of the window (`TALL`, the bell's sheet, the sport lesson sheet) or the whole height
+  below the status bar (`FULL`, the lesson sheet, so the friends arriving later never resize it); none goes under the
+  status bar.
 - Tabs switch by a tap on the bar only, with a fade through; Back is the platform's predictive Back
   ([Tab switching and Back](#tab-switching-and-back)).
 
@@ -488,14 +494,13 @@ screens that have not moved yet.
 | `ItmoCard`, `IconTile` | One topic per card (`cardContent`), a tonal card, the one hero (`cardHero`); an icon in a tone's tile |
 | `StatusPill`, `PillSpec` | `идёт`, `далее`, `изменена`, `отменена`, `очередь 2 из 5`, `записаны`, `онлайн`; `solid` for `идёт` |
 | `SegmentedChoice` | The one choice pattern for two to four options and in-screen tabs: connected toggle buttons, a check on the chosen one up to three options |
-| `ListGroup`, `ListRow`, `SwitchListRow`, `ListGroupNote` | Connected groups of rows: icon tile or avatar, title, subtitle, lines below it, count, value, accessory, chevron, destructive; a switch row; a caption |
+| `ListGroup`, `ListRow`, `SwitchListRow`, `PersonListRow`, `ListGroupNote` | Connected groups of rows: icon tile or avatar, title, subtitle, lines below it, count, value, accessory, chevron, destructive; a switch row; a person with a 40 dp avatar, the one row for people in every list; a caption |
 | `GateCard`, `ActionCard`, `LockNote`, `StaleContent` | Gated (what, why, one fix), worth doing, locked without a fix, old data dimmed under its date; empty and error stay `ContentState` |
 | `LessonView`, `LessonCard` | One lesson outside a day list: subject; `тип, преподаватель`; `аудитория, корпус` (none online); note; pills; friends; with `onClick` the card opens the lesson |
 | `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary` (one clock: it grows monotonically, so overlapping lessons get one `сейчас` marker), `Окно 2 ч 10 мин` rows, a change note and an `одновременно с «…»` note under a lesson; with `onLessonClick` each lesson is a target |
 | `toLessonView`, `toTimelineRows`, `lessonTypeAccent` | The shared lesson presentation (`core/lesson`) drawn by the kit: texts resolved, pills toned (`идёт` solid `Primary`, `далее` `Neutral`, `изменена` and `очередь` `Warning`, `отменена` `Error`, `записаны` `Success`, `онлайн` `Neutral` with the camera), lesson types coloured |
 | `SectionHeader`, `TextTile` | A section's title with a neutral count at the end; a short text (`+9`) in a tone's tile, the size of an `IconTile` |
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
-| `VotePill` | The votes of a link: like/dislike thumbs around the score, the viewer's own vote filled and in `primary`, only the score when voting is not allowed |
 | `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a bar (88 dp, down to 44 dp in a tight row; the text never wraps) and `22 из 24` in a tone |
 | `WeekStrip`, `WeekStripDay` | Past weekday/date labels are dimmed on both platforms; today and the selected day (including a past selection) keep full emphasis. One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on a `primary` indicator that slides on the scheme's default spatial spring while the colours crossfade (a week gaining or losing the choice fades it in place; snaps under reduced motion); a pager of these pages by weeks |
 
@@ -544,8 +549,8 @@ What adapts under `Ios`:
   the M3E look is Android's only.
 
 What stays the same: content visuals are one drawing on both platforms (the
-score ring, the grade scale, the timeline marker, the avatar and the hero
-avatar mask without the expressive shape, the steps indicator's geometry,
+score ring, the grade scale, the timeline marker, the avatar without the
+expressive cookie, the steps indicator's geometry,
 Material Symbols icons, the lesson-type accents and the extended colours);
 only the chrome around them follows the style. Text, icons and behaviour of a
 screen do not change between styles.
@@ -601,8 +606,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
 - Sheets. A SwiftUI `.sheet` with the grabber, an inline title and the close
   button; content scrolls. Three heights (`ItmoSheetHeight`): the content's
   (short content is never cut), 0.82 of the screen draggable to full, or full
-  below the status bar; never under it. A Compose sheet's content is hosted in
-  a SwiftUI `.sheet`, never a Compose `ModalBottomSheet`.
+  below the status bar; never under it. A form (an editor, a report) is a
+  `NavigationStack` with a `Form`, cancel and the action in the toolbar.
 - Layout. Side margin `ItmoKit.margin` (16), `ItmoKit.gap` between cards,
   `ItmoSectionHeader` before a section (closer on a sheet), at most one hero
   card (`ItmoCard(tone: .primary, hero: true)`), sets of rows in an
@@ -639,8 +644,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
 - Icons: SF Symbols through `AppSymbol` (generated from `docs/design/icons.tsv`)
   on SwiftUI and system surfaces; Material Symbols Rounded in Compose
   ([ADR 0028](decisions/0028-strings-and-icons.md)).
-- Chrome rule: a Compose route draws its own top bar and hides the navigation
-  bar (edge swipe back stays on); a SwiftUI screen keeps the native bar.
+- Chrome: a tab root draws the static root header, a pushed screen keeps the
+  native bar with the edge swipe back.
 - Tabs switch by the native tab bar only, no swipe.
 
 Details: [iOS app](ios.md#design-system).
@@ -772,7 +777,7 @@ in [Shared components](#shared-components).
   quiet BARS row; `RecordbookSourcesSheetContent` on `SheetScaffold`.
 - Subject page: `RecordbookSubjectScreen` (`ui/subject/`) on `ItmoDetailScreen`: the tabs as `SegmentedChoice`, the
   hero card with the kit's `GradeScale` and the connected sheet, checkpoint groups of `ListGroup` rows with a thin bar,
-  teacher rows with an `Avatar`, link rows with the kit's `VotePill`, the gates as `GateCard`.
+  teacher rows with an `Avatar`, link rows with `VotePill`, the gates as `GateCard`.
 - The «Мои баллы» sheet: `SheetScoresSheet` of `:shared:feature-recordbook`
   (`ui/sheets/SheetScoresSheet.kt`) on the kit's `SheetScaffold` (handle, title,
   subject, one bounded area of at least 288 dp for loading, failures and the

@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.platform.AppForeground
 import dev.alllexey.itmowidgets.core.platform.FileSecureStore
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.platform.ProcessAppForeground
+import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipher
@@ -20,9 +21,11 @@ import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.BellPreferences
+import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.MyItmoStorage
 import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.RetiredPreferenceKeys
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
@@ -40,6 +43,7 @@ import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.binds
 import org.koin.dsl.module
 
@@ -70,6 +74,9 @@ val storageModule = module {
     singleOf(::DeviceHintPreferences)
     singleOf(::AppearancePreferences)
     singleOf(::DemoPreferences)
+    singleOf(::PushCategoryPreferences)
+    singleOf(::InstallIdPreferences)
+    single<SessionDataCleaner>(named("install-id")) { get<InstallIdPreferences>() }
     single { UtilityStorage(dataStore = get(), appVersionName = androidContext().getString(R.string.app_version)) }
 
     single<SecureStore> { FileSecureStore(get<AppDirectories>().noBackup, get()) }

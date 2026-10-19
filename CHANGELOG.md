@@ -20,15 +20,66 @@ new iOS app.
   and coworkings have different colours, the route has a casing, `Показать корпус целиком` under the floors, and on
   iOS the map is full screen (no tab bar, pass accessory or demo banner).
 
+### Recordbook polish (2026-10-19)
+
+- The BARS offer and notices keep the title at full width with the button under it, no more words broken into a
+  narrow column; Зачётка's numbers pulse until the first BARS answer comes; the subject page's tabs turn with a
+  horizontal swipe, on Android and iOS. A subject row puts its number under the name when a word would not fit beside
+  it.
+
+### Lesson sheet people and avatars (2026-10-19)
+
+- Lesson sheet: the action tiles no longer jump in after it opens (`Друзья` keeps its place, disabled while the
+  friends load or when nobody is there), `Друзья` scrolls to the list with its bottom margin, the sheet's colour runs
+  under the navigation bar, people use the friends list's compact row everywhere, Android avatars are M3 Expressive
+  cookies (iOS keeps circles), and the sport catalog's friend avatars are no longer squashed.
+- The subject page's teachers use the same person row as the rest of the app (40 dp avatar, a cookie on Android).
+
+### iOS native screens (2026-10-19)
+
+- On iOS the last Compose screens are native SwiftUI: all links of a subject, a link's actions, the link editor and the link report, the review editor and another user's sport; the Compose host (`ComposeHost`, the `.compose` routes and `shared/ios` `screens/`) is gone.
+
+### Builds outside the official pipeline (2026-10-19)
+
+- Builds name their origin: `BUILD_CHANNEL`, `BUILD_SOURCE` and `BUILD_COMMIT` in Android's `BuildConfig`,
+  `BuildChannel`, `BuildSource` and `BuildCommit` in the iOS Info.plist. `official` only with the official signing,
+  `custom` otherwise ([building](docs/building.md#build-identity)).
+- The iOS build number from `archive.sh` is Android's `versionCode` instead of the commit count, so a fork's merge
+  commits and shallow clones no longer change it.
+- `dist.yml` builds a self-signed release APK and an unsigned `.ipa` on demand, with no secrets, in this repository
+  or a fork, and attaches the `.ipa` to every published release. `./gradlew :app:assembleGithubRelease
+  -Pitmo.selfSigned=true` gives an installable APK locally.
+- Pushes and scheduled runs of the upstream workflows build nothing in a fork.
+
+### Notification settings (2026-10-19)
+
+- «Уведомления» gives every type its own switch, the pushes included (`Спорт`, `Друзья`, `Новые устройства`): the
+  device drops a switched-off push (`FcmPayloadDispatcher`, the iOS notification service; a sport push still books);
+  the sample notifications and the explanatory notes are gone; a system block shows once, as one card on top.
+
+### Votes (2026-10-19)
+
+- Teacher reviews vote with like and dislike thumbs instead of arrows, as links do: Android has one `VotePill` for links and reviews (the subject page's `Материалы` takes it too), iOS already used `ItmoVotePill` everywhere; `arrow_drop_up` is gone.
+
 ### Спорт (2026-10-19)
 
 - Спорт: `Секции` read at a glance (icon lines, status pills, a short note), `Сделать секцией` only in a booked lesson's sheet, the `Доступные` filter is back, and `Моё` / `Запись` switch by a swipe too (Android and iOS).
+
+### Client statistics (2026-10-19)
+
+- Every Backend request also carries `X-Client` (ADR 0034): `kind`, version, build, channel, OS version and a random
+  install id, kept in the app's settings and replaced after sign-out. Android and iOS add their build identity: an official build's distribution as the channel, `custom` otherwise, with `source` and `commit`. `X-App-Version` stays as it was. The iOS
+  notification service sends the same header with the app's install id.
 
 ### Campus map rooms (2026-10-19)
 
 - `201 (составное)` on Биржевая opens its own room on the campus map instead of room 201: the whole timetable text is
   matched first. `RoomMatcherParityTest` checks the matcher on every room of Backend's synced lessons against
   itmo-map-web's `rooms.js`.
+
+### Widget polish (2026-10-19)
+
+- `Виджеты` shows every widget whole and in proportion (drawn at its launcher size, shrunk to the card), one card per row with the name and the buttons under it; `Расписание на день` keeps a short day compact at the top (an hour at most 32 dp, 36 pt on iOS), and the `сейчас` line reaches into the current lesson up to its text (never through it), where the elapsed shade, inset inside the block, ends at it, on both platforms; the lesson's colour bar is a little shorter, off the block's top and bottom edges.
 
 ### Widgets (2026-10-18)
 

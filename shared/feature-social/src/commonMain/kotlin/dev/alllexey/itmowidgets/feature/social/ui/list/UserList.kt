@@ -11,14 +11,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.personInitials
-import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
-import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.PersonListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.UserAction
@@ -43,11 +41,12 @@ object UserListTestTags {
 fun PersonRow(row: UserRowUi, onOpen: (UserRowUi) -> Unit, onAction: (UserRowUi, UserAction) -> Unit) {
     val name = row.displayName.asString()
     val actions = listOfNotNull(row.primary, row.secondary)
-    ListRow(
+    PersonListRow(
         title = name,
+        pictureUrl = row.pictureUrl,
         modifier = Modifier.testTag(UserListTestTags.row(row.isu)),
+        initials = personInitials(name, row.familyName, row.givenName),
         subtitle = listOfNotNull(row.subtitle.asString(), row.status?.asString()).joinToString("\n"),
-        leading = { Avatar(name, row.pictureUrl, size = AvatarSize, initials = personInitials(name, row.familyName, row.givenName)) },
         accessory = actions.singleOrNull()?.let { action ->
             {
                 TextButton(
@@ -149,6 +148,3 @@ fun UserAction.label(): UiText = UiText.Res(
         UserAction.INVITE -> SocialStrings.user_action_invite
     },
 )
-
-/** The avatar of a list row (`ListGroup`'s 40 dp leading). */
-private val AvatarSize = 40.dp

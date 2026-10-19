@@ -138,7 +138,7 @@ subject page ([subject page](subject-page.md)) say the tone in words instead (`T
   (`core/presentation/StableOrder`): a vote answer or an editor update changes
   scores in place, a new review follows the shown ones; a new screen or retry
   takes Backend's order again.
-- Vote arrows only with `canVote`; tapping the current vote takes it back. One
+- Vote thumbs only with `canVote`; tapping the current vote takes it back. One
   vote or deletion at a time; a failure (for example `AppError.Restricted`)
   shows a snackbar and keeps the section.
 - `Пожаловаться` only on another user's own review with `canReport` that the
@@ -178,10 +178,10 @@ affect the order.
 The iOS app ([iOS app](../ios.md)) loads `reviewsModule` with
 `reviewsIosModule` and turns `PlatformCapabilities.reviews` on. What differs:
 
-- The editor is a full-height SwiftUI form sheet hosting `ReviewEditorSheet`
-  (`reviewEditorViewController` in `shared/ios` `screens/ReviewsScreens.kt`;
-  `iosApp/Sources/Features/Reviews/ReviewEditorSheet.swift`); a failed save shows
-  as a banner.
+- The editor is a full-height SwiftUI form sheet over `ReviewEditorViewModel`
+  (`iosApp/Sources/Features/Reviews/ReviewEditorSheet.swift`): a drag does not
+  close it, the close button asks before unsaved changes are dropped (an alert);
+  a failed save shows as a banner.
 - The report (`AppRoutes.ReportReview`) is a SwiftUI form sheet over `ReportReviewViewModel`
   (`iosApp/Sources/Features/Reviews/ReportReviewSheet.swift`); a failure shows under the comment.
 - The demo shows `DemoReviews` and refuses every change

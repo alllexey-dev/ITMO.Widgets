@@ -18,7 +18,7 @@ import org.koin.compose.viewmodel.koinViewModel
  * The Me tab with its Koin ViewModel, which refreshes the social summary on its first show (a return from a pushed
  * screen does not: the screens there fold their changes into the repository); sign-out goes to the ViewModel; a
  * project link no app could open shows `link_open_failed`. [actions] carries the host's navigation, sharing and
- * links. Android hosts it in the Compose shell's Me tab, iOS in a `ComposeUIViewController`.
+ * links. Android hosts it in the Compose shell's Me tab.
  */
 @Composable
 fun MeRoute(actions: MeActions, showDebugTools: Boolean, viewModel: MeViewModel = koinViewModel()) {

@@ -9,6 +9,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.work.WorkerParameters
 import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.client.AccessTokenSource
+import dev.alllexey.itmowidgets.client.BuildIdentity
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import java.io.File
 import kotlinx.coroutines.CoroutineDispatcher
@@ -49,6 +50,7 @@ internal object KoinGraphCheck {
         String::class,
         MyItmoConfiguration::class,
         AccessTokenSource::class,
+        BuildIdentity::class,
     )
 
     /**

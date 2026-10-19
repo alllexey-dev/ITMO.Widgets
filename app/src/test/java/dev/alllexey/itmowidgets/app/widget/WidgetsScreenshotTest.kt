@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.app.widget
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.util.SizeF
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.RemoteViews
@@ -25,8 +26,10 @@ import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrColorResolver
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewMoment
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPreferences
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
+import dev.alllexey.itmowidgets.feature.schedule.ui.widget.DayWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.NextLessonWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleSettingsPreview
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSampleState
@@ -37,6 +40,8 @@ import dev.alllexey.itmowidgets.testkit.screenshot.ShotsRun
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import kotlinx.datetime.UtcOffset
+import kotlinx.datetime.asTimeZone
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
@@ -67,6 +72,7 @@ class WidgetsScreenshotTest(
         Day("day", 320, 330),
         DayMorning("day-morning", 320, 330),
         DayEvening("day-evening", 320, 330),
+        DayShort("day-short", 320, 330),
         List("list", 320, 250),
         ListEvening("list-evening", 320, 250),
         SportSmall("sport-small", 170, 170),
@@ -151,6 +157,7 @@ class WidgetsScreenshotTest(
                 Case.Day -> schedule(ScheduleWidgetFormat.FULL, SchedulePreviewMoment.LESSON)
                 Case.DayMorning -> schedule(ScheduleWidgetFormat.FULL, SchedulePreviewMoment.MORNING)
                 Case.DayEvening -> schedule(ScheduleWidgetFormat.FULL, SchedulePreviewMoment.EVENING)
+                Case.DayShort -> DayWidgetRenderer.layout(context, shortDay(context), theme?.widgetPalette(context), SizeF(320f, 330f), widgetId = null)
                 Case.SportSmall -> sport(false, SportWidgetSampleState.QUEUE)
                 Case.SportQueue -> sport(true, SportWidgetSampleState.QUEUE)
                 Case.SportBooked -> sport(true, SportWidgetSampleState.BOOKED)
@@ -158,6 +165,14 @@ class WidgetsScreenshotTest(
                 Case.List, Case.ListEvening -> error("The classic list is a collection")
                 Case.Qr -> error("The QR widget is a bitmap")
             }
+        }
+
+        /** The sample Monday (UTC+3) with only its second and third lessons, at 12:22 inside the third: too short to fill the widget. */
+        private fun shortDay(context: Context): ScheduleWidgetSnapshot {
+            val (today, tomorrow) = scenario.days(ScheduleSettingsPreview.labels(context))
+            val days = listOf(today.copy(lessons = today.lessons.subList(1, 3)), tomorrow)
+            val instant = scenario.instant(SchedulePreviewMoment.LESSON)
+            return ScheduleWidgetSelector().select(days, instant, UtcOffset(hours = 3).asTimeZone(), ScheduleWidgetPreferences(ScheduleWidgetSettings())).snapshot
         }
 
         /** [view] laid out at [widthDp] x [heightDp] and drawn. */

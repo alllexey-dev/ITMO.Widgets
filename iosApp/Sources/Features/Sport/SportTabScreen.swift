@@ -739,20 +739,3 @@ extension View {
         }
     }
 }
-
-/// Another user's sport (`AppRoutes.UserSport`, from a profile): the Compose route (`userSportViewController`),
-/// read-only.
-struct UserSportScreen: View {
-    let isu: Int32
-    let name: String
-    let givenName: String?
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        ComposeHost { [isu, name, givenName, dismiss] in
-            userSportViewController(isu: isu, name: name, givenName: givenName, onBack: { dismiss() })
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("sport.user")
-    }
-}

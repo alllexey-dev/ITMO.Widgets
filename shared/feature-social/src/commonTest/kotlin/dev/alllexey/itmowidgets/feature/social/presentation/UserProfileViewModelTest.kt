@@ -986,7 +986,7 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun anArrowVotesTheArrowOfTheCurrentVoteTakesItBackAndTheOtherArrowSwitches() = runTest(main.dispatcher) {
+    fun aThumbVotesTheThumbOfTheCurrentVoteTakesItBackAndTheOtherThumbSwitches() = runTest(main.dispatcher) {
         val voted = teacherReviews(5, listOf(communityReview("r1").copy(score = 1, myVote = 1)))
         val reviews = FakeTeacherReviewsRepository().apply {
             results = mapOf(5 to AppResult.Success(teacherReviews(5, listOf(communityReview("r1")))))

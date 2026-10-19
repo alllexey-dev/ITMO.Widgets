@@ -13,6 +13,12 @@ struct SessionFile: Equatable, Decodable {
     /// The ITMO.Widgets services opt-in (`BackendGate`): the notification service books and settles only with it.
     /// A file without the key (an app that has not run since the update) reads as off.
     var servicesEnabled = false
+    /// The push channels the user turned off in the app (`PushCategoryPreferences`); the notification service drops
+    /// their pushes. A file without the key reads as none.
+    var disabledPushes: [String] = []
+    /// The app's `X-Client` install id (ADR 0034), which the notification service sends too; nil in the demo and in a
+    /// file written before it was kept.
+    var installId: String?
 
     /// The file name in the App Group container.
     static let fileName = AppGroupSnapshot.fileName("session", version: version)
@@ -28,7 +34,7 @@ struct SessionFile: Equatable, Decodable {
 
 extension SessionFile {
     private enum CodingKeys: String, CodingKey {
-        case isu, demo, alertsAllowed, servicesEnabled
+        case isu, demo, alertsAllowed, servicesEnabled, disabledPushes, installId
     }
 
     init(from decoder: Decoder) throws {
@@ -37,5 +43,7 @@ extension SessionFile {
         demo = try values.decode(Bool.self, forKey: .demo)
         alertsAllowed = try values.decode(Bool.self, forKey: .alertsAllowed)
         servicesEnabled = try values.decodeIfPresent(Bool.self, forKey: .servicesEnabled) ?? false
+        disabledPushes = try values.decodeIfPresent([String].self, forKey: .disabledPushes) ?? []
+        installId = try values.decodeIfPresent(String.self, forKey: .installId)
     }
 }

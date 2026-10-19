@@ -24,12 +24,13 @@ class SessionSnapshotWriterTest {
     @Test
     fun writesSessionV1AsTheExtensionsReadIt() {
         writer.write(
-            SessionSnapshot(isu = 123456, demo = false, alertsAllowed = true, servicesEnabled = true),
+            SessionSnapshot(isu = 123456, demo = false, alertsAllowed = true, servicesEnabled = true, installId = "id-1"),
             reloadKinds = listOf("kind")
         )
 
         assertEquals(
-            """{"version":1,"value":{"isu":123456,"demo":false,"alertsAllowed":true,"servicesEnabled":true}}""",
+            """{"version":1,"value":{"isu":123456,"demo":false,"alertsAllowed":true,"servicesEnabled":true,""" +
+                """"installId":"id-1"}}""",
             FileSystem.SYSTEM.read(directory.file("session-v1.json")) { readUtf8() }
         )
         assertEquals(listOf("kind"), reloaded)

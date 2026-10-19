@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
-import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
 import dev.alllexey.itmowidgets.designsystem.kit.ActionCard
@@ -21,6 +20,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.PersonListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectBinding
@@ -62,11 +62,11 @@ internal fun LazyListScope.lessonsTab(lessons: SubjectLessons, actions: Recordbo
             ListGroup {
                 lessons.teachers.forEachIndexed { index, teacher ->
                     item {
-                        ListRow(
-                            title = teacher.name,
-                            modifier = Modifier.testTag(SubjectTestTags.teacher(index)),
+                        PersonListRow(
+                            teacher.name,
+                            pictureUrl = null,
+                            Modifier.testTag(SubjectTestTags.teacher(index)),
                             subtitle = teacher.detail?.asString(),
-                            leading = { Avatar(teacher.name, pictureUrl = null) },
                             chevron = teacher.isu != null,
                             onClick = teacher.isu?.let { isu -> { actions.onOpenTeacher(isu) } },
                         )

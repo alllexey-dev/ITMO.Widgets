@@ -34,8 +34,8 @@ import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupIte
 import dev.alllexey.itmowidgets.designsystem.components.rows.LinkRow
 import dev.alllexey.itmowidgets.designsystem.components.rows.Vote
 import dev.alllexey.itmowidgets.designsystem.components.rows.VoteLabels
-import dev.alllexey.itmowidgets.designsystem.components.rows.VoteIcons
 import dev.alllexey.itmowidgets.designsystem.components.rows.VotePill
+import dev.alllexey.itmowidgets.designsystem.components.rows.voteOf
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
@@ -73,7 +73,7 @@ class SubjectLinksActions(
     val onOpen: (SubjectLink) -> Unit = {},
     /** A long press: the link's actions sheet. */
     val onLinkActions: (SubjectLink) -> Unit = {},
-    /** `up` is the up arrow; tapping the arrow of the current vote takes it back upstream. */
+    /** `up` is the like thumb; tapping the thumb of the current vote takes it back upstream. */
     val onVote: (link: SubjectLink, up: Boolean) -> Unit = { _, _ -> },
     val onAdd: () -> Unit = {},
     val onRetry: () -> Unit = {},
@@ -126,7 +126,7 @@ fun SubjectLinksSheetRoute(
 /**
  * All links of one subject period (`Все ссылки`): the subject under the title, then categories in declaration order,
  * chats and links of past years, each a heading over one connected group, and the add button pinned under the list.
- * Own links say `моя`, others carry the vote pill, without arrows when voting is restricted or the app has no
+ * Own links say `моя`, others carry the vote pill, without thumbs when voting is restricted or the app has no
  * connection. The list is keyed by link id in the view model's stable order, so a vote changes a pill in place. The
  * first load shows placeholder rows; a failed one the error with a retry; a period without links the empty state.
  */
@@ -233,10 +233,8 @@ private fun LinkItem(row: LinkListRow.Item, actions: SubjectLinksActions) {
         longClickLabel = stringResource(CoreRes.string.links_actions),
         votes = if (link.isMine) null else {
             {
-                VotePill(
-                    icons = VoteIcons.Thumbs,
-                    score = link.score,
-                    myVote = link.myVote.toVote(),
+                VotePill(                    score = link.score,
+                    myVote = voteOf(link.myVote),
                     scoreDescription = stringResource(CoreRes.string.links_score, link.score),
                     onVote = if (row.canVote) { vote -> actions.onVote(link, vote == Vote.Up) } else null,
                     labels = VoteLabels(
@@ -247,13 +245,6 @@ private fun LinkItem(row: LinkListRow.Item, actions: SubjectLinksActions) {
             }
         },
     )
-}
-
-/** A viewer's vote of +1, -1 or 0 as the pill's selected arrow. */
-internal fun Int.toVote(): Vote? = when {
-    this > 0 -> Vote.Up
-    this < 0 -> Vote.Down
-    else -> null
 }
 
 /** The 256 dp skeleton of three list rows. */

@@ -169,8 +169,7 @@ allow it.
   `SpoilerCropActivity` remain separate activities (`app/shell/ActivityRoutes.kt`).
 - **iOS.** `iosApp/Sources/App/Router/AppRouter.swift` keeps a SwiftUI
   `NavigationStack` per tab and the sheets; `Routes+<Area>.swift` map each
-  shared key to a target (a Compose screen through `ComposeHost`, a SwiftUI
-  screen or a sheet). URLs and App Intents arrive through `RouteURL.swift`
+  shared key to a target (a SwiftUI screen, a sheet or a tab). URLs and App Intents arrive through `RouteURL.swift`
   and `RouteInbox.swift`.
 
 ## Time
@@ -300,9 +299,13 @@ Debug and `minifiedSmoke` builds call `https://dev.widgets.alllexey.dev`,
 release builds `https://widgets.alllexey.dev`. On iOS the Backend origin is
 `BACKEND_BASE_URL` in `iosApp/Config/Base.xcconfig` (dev for Debug,
 production for Release). iOS has no build variants; `IosClientVersion` reads
-the channel from the installed bundle for `X-App-Version`: `dev` for a debug
-binary, `sideload` with an embedded provisioning profile (Xcode, a free Apple
-ID, AltStore), `testflight` with a sandbox receipt, else `appstore`.
+the channel from the installed bundle for `X-App-Version` and `X-Client`: `dev`
+for a debug binary, `sideload` with an embedded provisioning profile (Xcode, a
+free Apple ID, AltStore), `testflight` with a sandbox receipt, else `appstore`.
+Both apps also send `X-Client` (ADR 0034) with the build identity
+([building](building.md#build-identity)), the OS version and a random
+install id kept in `app_preferences` (`InstallIdPreferences`) and replaced on
+every session change ([contract](../shared/backend-client/CONTRACT.md#request-headers)).
 
 ## Enforced rules
 

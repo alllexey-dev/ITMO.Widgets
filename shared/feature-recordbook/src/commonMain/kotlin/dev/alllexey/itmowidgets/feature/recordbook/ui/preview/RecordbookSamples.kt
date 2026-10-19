@@ -105,19 +105,20 @@ object RecordbookSamples {
     private val sport = RecordbookSportState.Content("Осень 2026/2027", SportScoreSummary(15, 15), at("2026-12-25"), current = true)
     private val sheets = mapOf(5L to RecordbookSheetTotal("41,5", at("2026-09-07", "16:30")))
 
-    /** The list at [moment] (`mid`, `session`) with BARS `on`, `off` or `expired`, as the design lab's axes. */
+    /** The list at [moment] (`mid`, `session`) with BARS `on`, `off`, `loading` (the first answer runs) or `expired`, as the design lab's axes. */
     fun list(moment: String = "mid", bars: String = "on", sources: Long? = null): RecordbookUiState {
         val today = if (moment == "session") LocalDate(2027, 1, 12) else LocalDate(2026, 9, 7)
         val official = if (moment == "session") session else midTerm
         val journals = if (moment == "session") emptyList() else midTermBars
         val barsData = when (bars) {
             "off" -> RecordbookBarsData.Off
+            "loading" -> RecordbookBarsData.Pending
             "expired" -> RecordbookBarsData.Expired(journals, at("2026-09-04", "11:05"))
             else -> RecordbookBarsData.Applied(journals, at("2026-09-07", "09:40"))
         }
         val attention = when {
             moment == "session" -> mapOf(3L to RecordbookAttentionReason.Failed)
-            bars == "off" -> emptyMap()
+            bars == "off" || bars == "loading" -> emptyMap()
             else -> mapOf(1L to RecordbookAttentionReason.BelowMinimum("Контрольная работа 1"))
         }
         val content = RecordbookPresenter.content(

@@ -35,9 +35,9 @@ struct ShellDestination: Hashable {
 
     var route: any AppRoute { key.route }
 
-    /// Who draws the top bar (the chrome rule, `docs/ios.md` Shell).
-    var chrome: ShellChrome {
-        Routes.target(for: route).chrome ?? .native
+    /// A `RouteTarget.fullScreen` screen: the shell hides the tab bar, the pass accessory and the demo banner under it.
+    var isFullScreen: Bool {
+        if case .fullScreen = Routes.target(for: route) { true } else { false }
     }
 }
 
@@ -46,8 +46,7 @@ enum ShellSheet: Hashable, Identifiable {
     case linkUnavailable
     /// The web sign-in; `code` is a Universal Link's, checked as soon as the sheet opens.
     case webLogin(code: String?)
-    /// A feature's sheet key whose `RouteTarget` is `.composeSheet` (Compose content in a SwiftUI sheet) or
-    /// `.swiftUISheet`.
+    /// A feature's sheet key whose `RouteTarget` is `.swiftUISheet`.
     case route(ShellDestination)
 
     /// Also the sheet's accessibility identifier, `shell.sheet.<id>`, for the shell's own sheets; a route's content
@@ -109,9 +108,10 @@ final class AppRouter {
         paths[tab] = path
     }
 
-    /// Whether `tab` shows a full-screen route on top (`ShellChrome.fullScreen`): the shell drops its bottom chrome.
+    /// Whether `tab` shows a full-screen route on top (`ShellDestination.isFullScreen`): the shell drops its bottom
+    /// chrome.
     func isFullScreen(_ tab: ShellTab) -> Bool {
-        path(of: tab).last?.chrome == .fullScreen
+        path(of: tab).last?.isFullScreen == true
     }
 
     // MARK: Entry routes
@@ -253,7 +253,7 @@ final class AppRouter {
         switch Routes.target(for: route) {
         case let .tab(tab):
             return select(tab) ? .opened : .ignored
-        case .compose, .swiftUI, .fullScreen:
+        case .swiftUI, .fullScreen:
             sheet = nil
             paths[selectedTab, default: []].append(ShellDestination(route))
             return .opened
@@ -261,7 +261,7 @@ final class AppRouter {
             guard sheet == nil else { return .ignored }
             sheet = next
             return .opened
-        case .composeSheet, .swiftUISheet:
+        case .swiftUISheet:
             guard sheet == nil else { return .ignored }
             sheet = .route(ShellDestination(route))
             return .opened

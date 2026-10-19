@@ -27,7 +27,9 @@ data class LocalSettings(
     val theme: ThemeSpec = ThemeSpec(),
     /** «Виджеты в цвет темы»: the widgets draw with [theme]'s scheme instead of their own colours. */
     val widgetsFollowTheme: Boolean = false,
-    val homePassVisible: Boolean = true
+    val homePassVisible: Boolean = true,
+    /** The push channels whose notifications the user turned off in the app. */
+    val disabledPushes: Set<String> = emptySet()
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -76,6 +78,9 @@ interface SettingsRepository {
     suspend fun setBackgroundWorkHintShown()
 
     suspend fun setQrTileAdded(added: Boolean)
+
+    /** The app's switch of one push category (a push channel id). */
+    suspend fun setPushEnabled(channel: String, enabled: Boolean)
 
     /** Changes the stored appearance from its current value in one write. */
     suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec)

@@ -9,8 +9,8 @@ import XCTest
 @MainActor
 final class SettingsTests: XCTestCase {
     func testSettingsAndDiagnosticsAreSwiftUIScreensAndTheDebugToolsStayOnAndroid() {
-        XCTAssertEqual(Routes.target(for: AppRoutes.Settings(page: "SCHEDULE")).chrome, .native)
-        XCTAssertEqual(Routes.target(for: AppRoutes.Diagnostics.shared).chrome, .native)
+        XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Settings(page: "SCHEDULE")))
+        XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Diagnostics.shared))
         guard case .notOnIOS = Routes.target(for: AppRoutes.DebugTools.shared) else {
             return XCTFail("the debug tools have no iOS screen")
         }
@@ -32,7 +32,7 @@ final class SettingsTests: XCTestCase {
 
     func testTheConnectionAndNotificationPagesAreScreensOfTheirOwn() {
         for page in Self.ownScreens {
-            XCTAssertEqual(Routes.target(for: AppRoutes.Settings(page: page.name)).chrome, .native)
+            XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Settings(page: page.name)), page.name)
         }
         let connection = ObservableViewModel(ConnectionViewModel.self, state: \.uiState)
         XCTAssertNotNil(connection.state)
@@ -81,6 +81,11 @@ final class SettingsTests: XCTestCase {
 
     /// The pages with view models of their own; `SettingsViewModel` builds none of them.
     private static let ownScreens: Set<SettingsPage> = [.services, .privacy, .notifications]
+
+    private static func isSwiftUIScreen(_ route: any AppRoute) -> Bool {
+        if case .swiftUI = Routes.target(for: route) { return true }
+        return false
+    }
 
     private func settingsModel(page: String) -> ObservableViewModel<SettingsViewModel, SettingsUiState> {
         ObservableViewModel(state: \.uiState) { store in

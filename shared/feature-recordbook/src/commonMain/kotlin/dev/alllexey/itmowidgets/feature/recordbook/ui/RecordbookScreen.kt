@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,10 +32,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
@@ -43,11 +46,11 @@ import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
+import dev.alllexey.itmowidgets.designsystem.components.state.LoadingPulse
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoRootScreen
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
-import dev.alllexey.itmowidgets.designsystem.kit.ListRow
 import dev.alllexey.itmowidgets.designsystem.kit.PointsMeter
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.SportRing
@@ -80,6 +83,7 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_connec
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_expired
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_failed
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_hide
+import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_loading
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_offer
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_bars_sign_in
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_empty_description
@@ -90,6 +94,17 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_score_pendi
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_session_title
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_sources_action
 import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_subject_new
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.designsystem.kit.IconTile
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
@@ -269,16 +284,13 @@ internal fun BarsNotice(notice: RecordbookBarsNotice, onSignIn: () -> Unit, onRe
     val expired = notice is RecordbookBarsNotice.Expired
     ListGroup(Modifier.testTag(RecordbookTestTags.BARS_NOTICE)) {
         item {
-            ListRow(
+            BarsRow(
                 title = stringResource(if (expired) Res.string.recordbook_bars_expired else Res.string.recordbook_bars_failed),
                 subtitle = (notice as? RecordbookBarsNotice.Failed)?.error?.toUiText()?.asString(),
                 icon = painterResource(if (expired) KitRes.drawable.ic_history else KitRes.drawable.ic_error),
                 iconTone = Tone.Warning,
-                accessory = {
-                    TextButton(onClick = if (expired) onSignIn else onRetry) {
-                        Text(stringResource(if (expired) Res.string.recordbook_bars_sign_in else CoreRes.string.common_retry))
-                    }
-                },
+                action = stringResource(if (expired) Res.string.recordbook_bars_sign_in else CoreRes.string.common_retry),
+                onAction = if (expired) onSignIn else onRetry,
             )
         }
     }
@@ -290,34 +302,86 @@ private fun BarsOffer(actions: RecordbookActions) {
     ListGroup(Modifier.testTag(RecordbookTestTags.BARS_OFFER)) { item { BarsOfferRow(actions.onBarsSignIn, actions.onHideOffer) } }
 }
 
-/** `Контрольные и минимумы из БАРС` with `Подключить`; with [onHide] also the cross. */
+/** `Контрольные и минимумы из БАРС` over `Подключить`; with [onHide] also the cross. */
 @Composable
 internal fun BarsOfferRow(onConnect: () -> Unit, onHide: (() -> Unit)? = null) {
-    ListRow(
+    BarsRow(
         title = stringResource(Res.string.recordbook_bars_offer),
         icon = painterResource(KitRes.drawable.ic_assignment),
         iconTone = Tone.Neutral,
-        accessory = {
-            TextButton(onClick = onConnect) { Text(stringResource(Res.string.recordbook_bars_connect)) }
-            if (onHide != null) {
-                IconButton(onClick = onHide) {
-                    Icon(
-                        painterResource(KitRes.drawable.ic_close),
-                        contentDescription = stringResource(Res.string.recordbook_bars_hide),
-                        tint = ItmoTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        },
+        action = stringResource(Res.string.recordbook_bars_connect),
+        onAction = onConnect,
+        onHide = onHide,
     )
 }
 
-/** A subject: name and reason or kind on the left, the new-mark dot, the number over its source, the chevron. */
+/**
+ * A BARS row of a group: the icon tile, the [title] and [subtitle] over the [action] text button, the cross at the top
+ * end with [onHide]. The text takes the whole width but the cross and the button sits under it, so a narrow phone or a
+ * large font never squeezes the title into a column that breaks inside words.
+ */
 @Composable
-private fun RecordRow(row: RecordbookRow, actions: RecordbookActions) {
+private fun BarsRow(
+    title: String,
+    icon: Painter,
+    iconTone: Tone,
+    action: String,
+    onAction: () -> Unit,
+    subtitle: String? = null,
+    onHide: (() -> Unit)? = null,
+) {
     Row(
         Modifier
             .fillMaxWidth()
+            .padding(start = ItmoTheme.spacing.cardPadding, end = if (onHide != null) ItmoTheme.spacing.related else ItmoTheme.spacing.cardPadding)
+            .padding(top = ItmoTheme.spacing.content, bottom = ItmoTheme.spacing.related),
+        horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+    ) {
+        IconTile(icon, iconTone)
+        Column(Modifier.weight(1f).padding(top = ItmoTheme.spacing.compact)) {
+            Text(title, style = ItmoTheme.typography.bodyLarge)
+            if (subtitle != null) {
+                Text(subtitle, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+            }
+            // The label lines up with the title; the button keeps its touch area around it.
+            TextButton(onClick = onAction, Modifier.offset(x = -ButtonDefaults.TextButtonContentPadding.calculateStartPadding(LayoutDirection.Ltr))) {
+                Text(action)
+            }
+        }
+        if (onHide != null) {
+            // Centred on the icon tile: the touch target is taller than the tile.
+            IconButton(onClick = onHide, Modifier.offset(y = (IconTileHeight - ItmoTheme.spacing.touchTarget) / 2)) {
+                Icon(
+                    painterResource(KitRes.drawable.ic_close),
+                    contentDescription = stringResource(Res.string.recordbook_bars_hide),
+                    tint = ItmoTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+/** The kit's row icon tile. */
+private val IconTileHeight = 40.dp
+
+/**
+ * A subject: name and reason or kind on the left, the new-mark dot, the number over its source, the chevron. The number
+ * moves under the name when beside it a word would not fit, so a narrow phone or a large font never breaks a word.
+ */
+@Composable
+private fun RecordRow(row: RecordbookRow, actions: RecordbookActions) {
+    val meta = row.meta.asString()
+    val nameStyle = ItmoTheme.typography.titleMedium
+    val metaStyle = ItmoTheme.typography.bodyMedium
+    val measurer = rememberTextMeasurer()
+    val longestWord = remember(row.name, meta, nameStyle, metaStyle, measurer) {
+        maxOf(measurer.longestWord(row.name, nameStyle), measurer.longestWord(meta, metaStyle))
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            // A number BARS brings may need another line; the row grows smoothly instead of jumping.
+            .animateContentSize()
             .clickable { actions.onOpen(row.target) }
             .heightIn(min = ItmoTheme.spacing.touchTarget)
             .padding(start = ItmoTheme.spacing.cardPadding, end = ItmoTheme.spacing.content)
@@ -326,10 +390,25 @@ private fun RecordRow(row: RecordbookRow, actions: RecordbookActions) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
-            Text(row.name, style = ItmoTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(row.meta.asString(), style = ItmoTheme.typography.bodyMedium, color = row.metaTone.kit().ink())
-        }
+        NameAndValue(
+            name = {
+                Column(verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
+                    Text(row.name, style = nameStyle, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(meta, style = metaStyle, color = row.metaTone.kit().ink())
+                }
+            },
+            value = { RecordValue(row, actions) },
+            longestWord = longestWord,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(painterResource(KitRes.drawable.ic_chevron_right), contentDescription = null, tint = ItmoTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** The new-mark dot and the number over its source, pulsing while BARS has not answered yet. */
+@Composable
+private fun RecordValue(row: RecordbookRow, actions: RecordbookActions) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content)) {
         if (row.unread) {
             val label = stringResource(Res.string.recordbook_subject_new)
             Box(
@@ -342,16 +421,56 @@ private fun RecordRow(row: RecordbookRow, actions: RecordbookActions) {
             )
         }
         val source = row.source.asString()
-        ValueWithSource(
-            source = source,
-            modifier = Modifier.testTag(RecordbookTestTags.source(row.id)),
-            stale = row.stale,
-            onSourceClick = if (row.hasSources) ({ actions.onOpenSources(row.id) }) else null,
-            sourceLabel = stringResource(Res.string.recordbook_sources_action, source),
-        ) { RowValue(row.value) }
-        Icon(painterResource(KitRes.drawable.ic_chevron_right), contentDescription = null, tint = ItmoTheme.colorScheme.onSurfaceVariant)
+        val loading = stringResource(Res.string.recordbook_bars_loading)
+        LoadingPulse(row.pending, if (row.pending) Modifier.semantics { stateDescription = loading } else Modifier) {
+            ValueWithSource(
+                source = source,
+                modifier = Modifier.testTag(RecordbookTestTags.source(row.id)),
+                stale = row.stale,
+                onSourceClick = if (row.hasSources) ({ actions.onOpenSources(row.id) }) else null,
+                sourceLabel = stringResource(Res.string.recordbook_sources_action, source),
+            ) { RowValue(row.value) }
+        }
     }
 }
+
+/**
+ * [name] beside [value] (both centred) while [longestWord] px still fits beside it; otherwise [value] under [name] at
+ * the end, and [name] takes the whole width.
+ */
+@Composable
+private fun NameAndValue(
+    name: @Composable () -> Unit,
+    value: @Composable () -> Unit,
+    longestWord: Int,
+    modifier: Modifier = Modifier,
+) {
+    val gap = ItmoTheme.spacing.content
+    Layout(contents = listOf(name, value), modifier) { (names, values), constraints ->
+        val gapPx = gap.roundToPx()
+        val width = constraints.maxWidth
+        val shown = values.single().measure(Constraints(maxWidth = width))
+        val beside = width - shown.width - gapPx
+        if (beside >= longestWord) {
+            val text = names.single().measure(Constraints(maxWidth = beside))
+            val height = maxOf(text.height, shown.height)
+            layout(width, height) {
+                text.place(0, (height - text.height) / 2)
+                shown.place(width - shown.width, (height - shown.height) / 2)
+            }
+        } else {
+            val text = names.single().measure(Constraints(maxWidth = width))
+            layout(width, text.height + gapPx + shown.height) {
+                text.place(0, 0)
+                shown.place(width - shown.width, text.height + gapPx)
+            }
+        }
+    }
+}
+
+/** The widest single word of [text] in [style], in px. */
+private fun TextMeasurer.longestWord(text: String, style: TextStyle): Int =
+    text.split(' ').maxOfOrNull { measure(it, style, softWrap = false, maxLines = 1).size.width } ?: 0
 
 @Composable
 internal fun RowValue(value: RecordbookValue) {

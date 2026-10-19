@@ -7,8 +7,8 @@ import XCTest
 /// The shell in all four appearances, drawn in a window with its system chrome: the glass tab bar with the pass
 /// accessory on today only, the static root header (title and subtitle with the bell in one row),
 /// a pushed screen that keeps the tab bar, the three sheet heights, the signed-out gate and the damaged-link sheet.
-/// The tab roots are kit fixtures: the roots of the app are still Compose screens a snapshot misses (Metal), checked
-/// by the UITests (`ShellUITests` and the tab classes); Сегодня has its own (`TodaySnapshotTests`).
+/// The tab roots are kit fixtures; the app's roots have snapshot tests of their own (`TodaySnapshotTests` and the tab
+/// classes).
 @MainActor
 final class ShellSnapshotTests: XCTestCase {
     func testTodayTab() {

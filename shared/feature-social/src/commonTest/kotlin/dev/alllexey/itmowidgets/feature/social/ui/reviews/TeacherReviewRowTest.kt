@@ -33,7 +33,7 @@ import dev.alllexey.itmowidgets.feature.social.ui.reviews.ReviewPreviewFixtures 
 class TeacherReviewRowTest {
 
     @Test
-    fun voteArrowsAre48DpTargetsAndReportTheirArrow() = runComposeUiTest {
+    fun voteThumbsAre48DpTargetsAndReportTheirThumb() = runComposeUiTest {
         val votes = mutableListOf<Pair<String, Boolean>>()
         setContent { Row(F.named, actions = TeacherReviewActions(onVote = { id, up -> votes += id to up })) }
 
@@ -61,7 +61,7 @@ class TeacherReviewRowTest {
     }
 
     @Test
-    fun aVoteInFlightDisablesTheArrowsAndTheMenu() = runComposeUiTest {
+    fun aVoteInFlightDisablesTheThumbsAndTheMenu() = runComposeUiTest {
         val votes = mutableListOf<Pair<String, Boolean>>()
         setContent { Row(F.anonymous, busy = true, actions = TeacherReviewActions(onVote = { id, up -> votes += id to up })) }
 

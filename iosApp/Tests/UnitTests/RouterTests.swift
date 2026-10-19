@@ -256,7 +256,6 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.open(profile.route), .opened)
 
         XCTAssertEqual(router.path(of: .sport), [profile])
-        XCTAssertEqual(router.path(of: .sport).first?.chrome, .native)
         XCTAssertNil(router.sheet, "a screen closes the sheet it was opened from")
     }
 
@@ -268,7 +267,7 @@ final class RouterTests: XCTestCase {
 
         XCTAssertEqual(router.open(map), .opened)
 
-        XCTAssertEqual(router.path(of: .today).last?.chrome, .fullScreen)
+        XCTAssertTrue(router.path(of: .today).last?.isFullScreen == true)
         XCTAssertTrue(router.isFullScreen(.today))
         XCTAssertFalse(router.isFullScreen(.schedule))
         router.setPath([], of: .today)
@@ -506,17 +505,15 @@ final class RouterTests: XCTestCase {
 
     /// `RouteTarget` without its view factories.
     private enum TargetKind: Equatable {
-        case tab(ShellTab), gate, compose, swiftUI, fullScreen, sheet(ShellSheet), composeSheet, swiftUISheet, notOnIOS
+        case tab(ShellTab), gate, swiftUI, fullScreen, sheet(ShellSheet), swiftUISheet, notOnIOS
 
         init(_ target: RouteTarget) {
             switch target {
             case let .tab(tab): self = .tab(tab)
             case .gate: self = .gate
-            case .compose: self = .compose
             case .swiftUI: self = .swiftUI
             case .fullScreen: self = .fullScreen
             case let .sheet(sheet): self = .sheet(sheet)
-            case .composeSheet: self = .composeSheet
             case .swiftUISheet: self = .swiftUISheet
             case .notOnIOS: self = .notOnIOS
             }
@@ -558,7 +555,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.UserFriends(isu: 100_001, name: ""), .swiftUI),
             (AppRoutes.UserProfile(isu: 100_001), .swiftUI),
             (AppRoutes.UserSchedule(isu: 100_001, name: ""), .swiftUI),
-            (AppRoutes.UserSport(isu: 100_001, name: "", givenName: nil), .compose),
+            (AppRoutes.UserSport(isu: 100_001, name: "", givenName: nil), .swiftUI),
             (AppRoutes.SportPoints.shared, .swiftUI),
             (AppRoutes.Bell.shared, .swiftUISheet),
             (AppRoutes.QrPass.shared, .swiftUISheet),
@@ -568,16 +565,16 @@ final class RouterTests: XCTestCase {
             (AppRoutes.SheetScores(args: scores), .swiftUISheet),
             (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),
             (AppRoutes.Connections.shared, .swiftUI),
-            (AppRoutes.ReviewEditor(args: teacher), .composeSheet),
-            (AppRoutes.SubjectLinks(args: links), .composeSheet),
-            (AppRoutes.LinkEditor(args: links, linkId: nil), .composeSheet),
+            (AppRoutes.ReviewEditor(args: teacher), .swiftUISheet),
+            (AppRoutes.SubjectLinks(args: links), .swiftUISheet),
+            (AppRoutes.LinkEditor(args: links, linkId: nil), .swiftUISheet),
             (AppRoutes.IcsExport.shared, .notOnIOS),
-            (AppRoutes.LinkActions(args: links, linkId: "link-1"), .composeSheet),
+            (AppRoutes.LinkActions(args: links, linkId: "link-1"), .swiftUISheet),
             (AppRoutes.LessonDetails(args: lesson), .swiftUISheet),
             (AppRoutes.PendingSportDetails(args: pendingSport), .swiftUISheet),
             (AppRoutes.CampusMap(args: CampusMapArgs(lesson: lesson, route: true)), .fullScreen),
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .swiftUISheet),
-            // The link report is a Compose dialog inside the sheet that asks for it.
+            // The link report is a form sheet over the actions sheet that asks for it.
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),
             (AppRoutes.LinkUnavailable.shared, .sheet(.linkUnavailable)),
             (AppRoutes.CancelBookingConfirm(lessonId: 42), .notOnIOS),

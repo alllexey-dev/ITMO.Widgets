@@ -178,3 +178,32 @@ struct ItmoStale<Content: View>: View {
         }
     }
 }
+
+extension View {
+    /// A shown value that a slower source is about to replace (My ITMO's points while BARS answers) pulses like a
+    /// skeleton in place while `active`, and VoiceOver hears `label` as its value; still under Reduce Motion. The
+    /// geometry never changes, so the answer moves nothing.
+    func itmoLoadingPulse(_ active: Bool, label: String) -> some View {
+        modifier(ItmoLoadingPulse(active: active, label: label))
+    }
+}
+
+private struct ItmoLoadingPulse: ViewModifier {
+    let active: Bool
+    let label: String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        if !active {
+            content
+        } else if reduceMotion {
+            content.accessibilityValue(Text(verbatim: label))
+        } else {
+            content
+                .phaseAnimator([1, ItmoMotion.pulseMinAlpha]) { view, opacity in view.opacity(opacity) } animation: { _ in
+                    .easeInOut(duration: ItmoMotion.pulse)
+                }
+                .accessibilityValue(Text(verbatim: label))
+        }
+    }
+}

@@ -25,7 +25,7 @@ class FriendshipPushHandlerTest {
         for (event in FriendshipEvent.entries) {
             val fixture = Fixture()
             fixture.loaded = true
-            fixture.handler.handle(payload(event.name))
+            fixture.handler.handle(payload(event.name), fixture.notifier)
             val notification = fixture.notifier.shown.single()
             assertEquals(AppNotificationChannels.FRIENDS, notification.channel)
             assertEquals(100001, notification.id)
@@ -42,18 +42,18 @@ class FriendshipPushHandlerTest {
 
     @Test fun `blank name falls back to the isu`() = runTest {
         val fixture = Fixture()
-        fixture.handler.handle(payload("REQUEST_ACCEPTED", name = "   "))
+        fixture.handler.handle(payload("REQUEST_ACCEPTED", name = "   "), fixture.notifier)
         assertEquals(listOf("100001"), (fixture.notifier.shown.single().text as UiText.Res).arguments)
     }
 
     @Test fun `cold repository is not refreshed while loaded repository refreshes without notification permission`() = runTest {
         val fixture = Fixture()
-        fixture.handler.handle(payload("REQUEST_RECEIVED"))
+        fixture.handler.handle(payload("REQUEST_RECEIVED"), fixture.notifier)
         assertEquals(1, fixture.notifier.shown.size)
         assertEquals(0, fixture.refreshes)
         fixture.loaded = true
         fixture.notifier.fail = true
-        fixture.handler.handle(payload("REQUEST_ACCEPTED"))
+        fixture.handler.handle(payload("REQUEST_ACCEPTED"), fixture.notifier)
         assertEquals(1, fixture.refreshes)
         assertEquals(listOf("WARNING:FriendshipPush:Friendship push operation failed"), fixture.diagnostics.messages)
     }
@@ -61,7 +61,7 @@ class FriendshipPushHandlerTest {
     @Test fun `unknown event is dropped with a warning`() = runTest {
         val fixture = Fixture()
         fixture.loaded = true
-        fixture.handler.handle(payload("UNKNOWN"))
+        fixture.handler.handle(payload("UNKNOWN"), fixture.notifier)
         assertNothingHappened(fixture)
         assertEquals(listOf(INVALID), fixture.diagnostics.messages)
     }
@@ -78,7 +78,7 @@ class FriendshipPushHandlerTest {
             valid.replace("\"occurredAt\":\"2026-10-05T12:00+03:00\"", "\"occurredAt\":null"),
             valid.replace("\"canViewFriends\":true", "\"canViewFriends\":null"),
         )
-        for (wire in malformed) fixture.handler.handle(Json.parseToJsonElement(wire))
+        for (wire in malformed) fixture.handler.handle(Json.parseToJsonElement(wire), fixture.notifier)
         assertNothingHappened(fixture)
         assertEquals(List(malformed.size) { INVALID }, fixture.diagnostics.messages)
         assertTrue(fixture.diagnostics.entries.value.all { it.stackTrace == null })
@@ -87,8 +87,8 @@ class FriendshipPushHandlerTest {
     @Test fun `non-positive isu is dropped`() = runTest {
         val fixture = Fixture()
         fixture.loaded = true
-        fixture.handler.handle(payload("REQUEST_RECEIVED", isu = 0))
-        fixture.handler.handle(payload("REQUEST_ACCEPTED", isu = -5))
+        fixture.handler.handle(payload("REQUEST_RECEIVED", isu = 0), fixture.notifier)
+        fixture.handler.handle(payload("REQUEST_ACCEPTED", isu = -5), fixture.notifier)
         assertNothingHappened(fixture)
     }
 
@@ -96,8 +96,8 @@ class FriendshipPushHandlerTest {
         val fixture = Fixture()
         fixture.loaded = true
         fixture.enabled = false
-        fixture.handler.handle(payload("REQUEST_ACCEPTED"))
-        fixture.handler.handle(payload("UNKNOWN"))
+        fixture.handler.handle(payload("REQUEST_ACCEPTED"), fixture.notifier)
+        fixture.handler.handle(payload("UNKNOWN"), fixture.notifier)
         assertNothingHappened(fixture)
         assertTrue(fixture.diagnostics.messages.isEmpty())
     }
@@ -152,7 +152,7 @@ class FriendshipPushHandlerTest {
             override suspend fun isEnabled() = enabled
             override suspend fun setEnabled(enabled: Boolean) { this@Fixture.enabled = enabled }
         }
-        val handler = FriendshipPushHandler(notifier, social, services, diagnostics)
+        val handler = FriendshipPushHandler(social, services, diagnostics)
     }
 
     private companion object {

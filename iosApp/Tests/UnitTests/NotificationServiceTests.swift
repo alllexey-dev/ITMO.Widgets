@@ -118,6 +118,44 @@ final class NotificationServiceTests: XCTestCase {
         }
     }
 
+    /// ADR 0034: Backend's settle names the client in `X-Client` next to `X-App-Version`; MyITMO gets neither.
+    func testBackendCallsCarryTheClientHeader() async throws {
+        transport.answers[Self.signUp] = .reply(200, try fixture("lessons", "json"))
+
+        _ = await handler().handle(try push("SPORT_FREE_SIGN_LESSONS_PAYLOAD"))
+
+        XCTAssertFalse(transport.clients.isEmpty)
+        XCTAssertEqual(transport.clients.filter { $0.service == "backend" }.map { $0.value }, [Self.client])
+        XCTAssertTrue(transport.clients.filter { $0.service != "backend" }.allSatisfy { $0.value == nil })
+    }
+
+    /// `ClientHeader.format` of the shared client: order, sanitizing, omission and the 512 cap.
+    func testTheClientHeaderIsFormattedAsKotlinFormatsIt() {
+        let install = "0b6c3c2e-5f1a-4d8e-9a7b-2c4d6e8f0a1b"
+        XCTAssertEqual(
+            PushHandler.formatClientHeader([
+                ("kind", "ios"), ("version", "2.3.0 \u{3b2};"), ("build", ""), ("channel", "testflight"),
+                ("source", nil), ("commit", String(repeating: "a", count: 100)), ("os", "26"), ("install", install),
+            ]),
+            "kind=ios; version=2.3.0; channel=testflight; commit=\(String(repeating: "a", count: 64)); os=26; "
+                + "install=\(install)"
+        )
+
+        let long = String(repeating: "x", count: 64)
+        var pairs: [(String, String?)] = [("kind", "ios"), ("version", "2.3.0")]
+        pairs += (1...6).map { index -> (String, String?) in ("k\(index)", long) }
+        // 437 characters so far; this pair would make 515, the install id after it still fits (483).
+        pairs += [("overflowing", long), ("install", install)]
+        let header = PushHandler.formatClientHeader(pairs)
+        XCTAssertLessThanOrEqual(header.utf8.count, 512)
+        XCTAssertFalse(header.contains("overflowing"))
+        XCTAssertTrue(header.hasSuffix("; k6=\(long); install=\(install)"))
+
+        let live = PushHandler.clientHeader(.main, installId: install)
+        XCTAssertTrue(live.hasPrefix("kind=ios; version="), live)
+        XCTAssertTrue(live.hasSuffix("; install=\(install)"), live)
+    }
+
     /// The file the app's `AppGroupSportResultInbox` reads: the shared `SportResult`, moved in place whole.
     func testTheInboxLeavesTheSharedSportResult() throws {
         let container = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -189,6 +227,25 @@ final class NotificationServiceTests: XCTestCase {
         let shown = await handler(session: session).handle(try push("SPORT_FREE_SIGN_LESSONS_PAYLOAD"))
         XCTAssertTrue(shown.title.isEmpty && shown.body.isEmpty)
         XCTAssertTrue(transport.requests.isEmpty)
+    }
+
+    /// A type turned off in the app shows nothing; a sport push still books and leaves its result for the bell.
+    func testATypeTurnedOffInTheAppIsDroppedButSportStillBooks() async throws {
+        var session = Self.signedIn
+        session.disabledPushes = ["sport", "friends", "connections"]
+        for name in ["FRIENDSHIP_EVENT_PAYLOAD", "DEVICE_CONNECTED_PAYLOAD", "SPORT_AGENT_BOOKED_PAYLOAD"] {
+            let shown = await handler(session: session).handle(try push(name))
+            XCTAssertTrue(shown.title.isEmpty && shown.body.isEmpty, name)
+        }
+        transport.answers[Self.signUp] = .reply(200, try fixture("lessons", "json"))
+        var recorded: [ITMOWidgets.SportSignNotice] = []
+        var sport = handler(session: session)
+        sport.record = { recorded.append($0) }
+
+        let shown = await sport.handle(try push("SPORT_FREE_SIGN_LESSONS_PAYLOAD"))
+
+        XCTAssertTrue(shown.title.isEmpty && shown.body.isEmpty)
+        XCTAssertEqual(recorded.map(\.booked), [true])
     }
 
     func testAnEndedLessonIsNotBooked() async throws {
@@ -320,6 +377,7 @@ final class NotificationServiceTests: XCTestCase {
     private static let tokenRefresh = "itmoid POST /auth/realms/itmo/protocol/openid-connect/token"
 
     private static let signedIn = SessionFile(isu: recipient, demo: false, alertsAllowed: true, servicesEnabled: true)
+    private static let client = "kind=ios; version=2.3.0; build=1; channel=dev; os=26"
 
     private var lockFile: URL { container.appendingPathComponent("locks/myitmo-refresh.lock") }
 
@@ -341,7 +399,10 @@ final class NotificationServiceTests: XCTestCase {
     }
 
     private func calls() -> SportPushCalls {
-        SportPushCalls(transport: transport, backend: Self.backend, appVersion: "2.3.0 (1); ios; dev")
+        SportPushCalls(
+            transport: transport, backend: Self.backend, appVersion: "2.3.0 (1); ios; dev",
+            client: { Self.client }
+        )
     }
 
     private func handler(
@@ -402,6 +463,7 @@ private final class FakeTransport: PushTransport {
     var answers: [String: Answer] = [:]
     private(set) var requests: [String] = []
     private(set) var bodies: [String] = []
+    private(set) var clients: [(service: String, value: String?)] = []
 
     func send(_ request: URLRequest) async throws -> (status: Int, body: Data) {
         let service = switch request.url?.host {
@@ -413,6 +475,7 @@ private final class FakeTransport: PushTransport {
         let body = request.httpBody.map { String(decoding: $0, as: UTF8.self) }
         requests.append(service == "my" ? "\(key) \(body ?? "")" : key)
         bodies.append(body ?? "")
+        clients.append((service, request.value(forHTTPHeaderField: "X-Client")))
         switch answers[key] ?? .reply(200, Data("{}".utf8)) {
         case let .reply(status, data): return (status, data)
         case .network: throw URLError(.notConnectedToInternet)

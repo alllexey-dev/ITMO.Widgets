@@ -111,6 +111,7 @@ object DayWidgetRenderer {
             axisEnd = day.axisEnd,
             height = height,
             minLesson = MIN_LESSON_DP * scale,
+            maxPerMinute = MAX_HOUR_DP * scale / MINUTES_PER_HOUR,
         )
         val now = day.now
         for (hour in (day.axisStart / MINUTES_PER_HOUR + 1)..(day.axisEnd / MINUTES_PER_HOUR)) {
@@ -134,8 +135,9 @@ object DayWidgetRenderer {
             place(pill, R.id.gap_root, top, bottom - top, start = AXIS_WIDTH_DP)
             views.addView(R.id.day_canvas, pill)
         }
-        val line = now?.let { RemoteViews(context.packageName, R.layout.widget_day_now) }
-        if (line != null && now != null) {
+        if (now != null) {
+            // The line runs under the lessons; the current one draws its part only up to its text (lesson_now).
+            val line = RemoteViews(context.packageName, R.layout.widget_day_now)
             colors.tint(line, R.id.now_line, R.color.widget_primary)
             place(line, R.id.now_root, layout.y(now) - NOW_HEIGHT_DP / 2, null)
             line.setViewVisibility(R.id.now_chip_background, View.GONE)
@@ -144,19 +146,25 @@ object DayWidgetRenderer {
         }
         day.lessons.forEachIndexed { index, lesson ->
             val (top, blockHeight) = layout.lesson(index)
-            val row = lessonRow(context, colors, texts, lesson, scale, widgetId, index, heightDp = blockHeight - BLOCK_GAP_DP)
-            place(row, R.id.lesson_root, top, blockHeight - BLOCK_GAP_DP, start = AXIS_WIDTH_DP)
+            val rowHeight = blockHeight - BLOCK_GAP_DP
+            val row = lessonRow(context, colors, texts, lesson, scale, widgetId, index, heightDp = rowHeight)
+            place(row, R.id.lesson_root, top, rowHeight, start = AXIS_WIDTH_DP)
             if (lesson.state == WidgetLessonState.NOW && now != null) {
-                val elapsed = (layout.y(now) - top).coerceIn(0f, blockHeight - BLOCK_GAP_DP)
+                val lineY = (layout.y(now) - top).coerceIn(0f, rowHeight)
+                // The elapsed part sits inside the block, inset from its edges, down to the line.
                 row.setViewVisibility(R.id.lesson_elapsed, View.VISIBLE)
-                row.setViewLayoutHeight(R.id.lesson_elapsed, elapsed, TypedValue.COMPLEX_UNIT_DIP)
+                row.setViewLayoutHeight(R.id.lesson_elapsed, (lineY - ELAPSED_INSET_DP).coerceAtLeast(0f), TypedValue.COMPLEX_UNIT_DIP)
                 colors.tint(row, R.id.lesson_elapsed, R.color.widget_primary)
                 row.setInt(R.id.lesson_elapsed, "setImageAlpha", ELAPSED_ALPHA)
+                row.setViewVisibility(R.id.lesson_now, View.VISIBLE)
+                val lineTop = (lineY - NOW_LINE_DP / 2).coerceIn(0f, (rowHeight - NOW_LINE_DP).coerceAtLeast(0f))
+                row.setViewLayoutMargin(R.id.lesson_now, RemoteViews.MARGIN_TOP, lineTop, TypedValue.COMPLEX_UNIT_DIP)
+                colors.tint(row, R.id.lesson_now, R.color.widget_primary)
             }
             views.addView(R.id.day_canvas, row)
         }
-        if (line != null && now != null) {
-            // The chip again on top of the lessons, the line itself stays under them.
+        if (now != null) {
+            // The line's time on top of everything.
             val chip = RemoteViews(context.packageName, R.layout.widget_day_now)
             chip.setViewVisibility(R.id.now_line, View.GONE)
             chip.setTextViewText(R.id.now_chip, "%02d:%02d".format(now / MINUTES_PER_HOUR, now % MINUTES_PER_HOUR))
@@ -243,13 +251,17 @@ object DayWidgetRenderer {
     private const val CHROME_HEIGHT_DP = 80f
     private const val AXIS_WIDTH_DP = 32f
     private const val MIN_LESSON_DP = 22f
+    /** The most an hour takes: a day of one or two lessons stays compact at the top. */
+    private const val MAX_HOUR_DP = 32f
+    private const val ELAPSED_INSET_DP = 3f
     private const val TWO_LINES_DP = 34f
     private const val MIN_GAP_DP = 20f
     private const val BLOCK_GAP_DP = 3f
     private const val HOUR_HEIGHT_DP = 14f
     private const val NOW_HEIGHT_DP = 18f
+    private const val NOW_LINE_DP = 2f
     private const val DONE_ALPHA = 0.5f
-    private const val ELAPSED_ALPHA = 40
+    private const val ELAPSED_ALPHA = 64
     private const val TITLE_SP = 16f
     private const val SUBTITLE_SP = 12f
     private const val SUBJECT_SP = 13f

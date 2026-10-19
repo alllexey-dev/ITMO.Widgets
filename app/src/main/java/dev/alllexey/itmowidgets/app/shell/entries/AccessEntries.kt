@@ -1,8 +1,5 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
-import android.content.Context
-import android.content.Intent
-import android.provider.Settings
 import android.view.View
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,6 +29,7 @@ import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.ProjectLinks
+import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.platform.PlatformActions
 import dev.alllexey.itmowidgets.core.ui.messageRes
 import dev.alllexey.itmowidgets.core.ui.permission.RequestNotificationPermission
@@ -45,7 +43,6 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.connection.Connect
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsViewModel
-import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.PushKind
 import dev.alllexey.itmowidgets.feature.settings.ui.connection.ConnectionActions
 import dev.alllexey.itmowidgets.feature.settings.ui.connection.ConnectionScreen
 import dev.alllexey.itmowidgets.feature.settings.ui.notifications.NotificationSettingsActions
@@ -112,8 +109,8 @@ internal fun NotificationSettingsEntry(key: AppRoutes.Settings, navigator: Nav3A
         val manager = NotificationManagerCompat.from(context)
         viewModel.onPermissionChanged(manager.areNotificationsEnabled())
         viewModel.onChannelsChanged(
-            PushKind.entries.associate { kind ->
-                kind.channel to (manager.getNotificationChannelCompat(kind.channel)?.importance != NotificationManagerCompat.IMPORTANCE_NONE)
+            AppNotificationChannels.ALL.associateWith { channel ->
+                manager.getNotificationChannelCompat(channel)?.importance != NotificationManagerCompat.IMPORTANCE_NONE
             },
         )
     }
@@ -133,7 +130,6 @@ internal fun NotificationSettingsEntry(key: AppRoutes.Settings, navigator: Nav3A
                 when (event) {
                     NotificationSettingsEvent.RequestPermission -> context.requestNotifications(permission)
                     NotificationSettingsEvent.OpenSystemSettings -> context.openAppNotificationSettings()
-                    is NotificationSettingsEvent.OpenChannelSettings -> context.openChannelSettings(event.channel)
                     NotificationSettingsEvent.OpenConnection -> navigator.open(AppRoutes.Settings(SettingsPage.SERVICES.name))
                     NotificationSettingsEvent.ShowBackgroundWorkHint -> hint = true
                     NotificationSettingsEvent.OpenBackgroundWorkSettings -> activity?.openBackgroundWorkSettings()
@@ -149,7 +145,8 @@ internal fun NotificationSettingsEntry(key: AppRoutes.Settings, navigator: Nav3A
             onMarks = viewModel::setMarks,
             onMarkSource = viewModel::setMarkSource,
             onScheduleChanges = viewModel::setScheduleChanges,
-            onPush = viewModel::openPush,
+            onPush = viewModel::setPush,
+            onConnection = viewModel::openConnection,
             onRequestPermission = viewModel::requestPermission,
             onSystemSettings = viewModel::openSystemSettings,
             onBackgroundWork = viewModel::openBackgroundWorkSettings,
@@ -161,15 +158,6 @@ internal fun NotificationSettingsEntry(key: AppRoutes.Settings, navigator: Nav3A
         )
     }
     NotificationSettingsScreen(state, actions, hintShown = hint)
-}
-
-/** The system page of one channel, where its sound and visibility live. */
-private fun Context.openChannelSettings(channel: String) {
-    startActivity(
-        Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
-            .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-            .putExtra(Settings.EXTRA_CHANNEL_ID, channel),
-    )
 }
 
 private fun openLink(platform: PlatformActions, anchor: View, url: String) {

@@ -20,6 +20,8 @@ env:
 
 jobs:
   ios-nightly:
+    # Scheduled runs only upstream: a fork that enables its schedules builds nothing.
+    if: github.event_name != 'schedule' || github.repository == 'alllexey-dev/ITMO.Widgets'
     runs-on: xcode-27
     timeout-minutes: 150
     strategy:
@@ -139,7 +141,7 @@ jobs:
   # A failed nightly opens or updates an issue; the next passing one closes it.
   nightly-issue:
     needs: [ios-nightly]
-    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    if: ${{ !cancelled() && github.event_name == 'schedule' && github.repository == 'alllexey-dev/ITMO.Widgets' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

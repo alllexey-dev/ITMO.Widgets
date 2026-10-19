@@ -33,7 +33,10 @@ env:
 jobs:
   # PR: the merge commit against its first parent (the base head).
   plan:
-    if: github.event.action != 'labeled' || github.event.label.name == 'full-ci'
+    # A fork's pushes (its sync with upstream) run nothing there; its manual runs and PRs still do.
+    if: >-
+      (github.event_name != 'push' || github.repository == 'alllexey-dev/ITMO.Widgets') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'full-ci')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:

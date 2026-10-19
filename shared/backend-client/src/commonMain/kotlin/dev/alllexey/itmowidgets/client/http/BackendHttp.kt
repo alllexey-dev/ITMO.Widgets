@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.client.http
 
 import dev.alllexey.itmowidgets.client.AccessTokenSource
+import dev.alllexey.itmowidgets.client.ClientHeader
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.json.BackendJson
@@ -28,13 +29,15 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * The HTTP core every `Ktor<Area>Api` calls. It owns the status-first decoding: a non-2xx status becomes a typed
  * [BackendException] before the body is decoded, so an HTML 502 or an empty 401 never crashes the decoder. Every
- * request carries [version] as [ClientVersion.HEADER] when the holder gave one.
+ * request carries [version] as [ClientVersion.HEADER] and [clientHeader] as [ClientHeader.HEADER] when the holder
+ * gave them.
  */
 internal class BackendHttp(
     baseUrl: String,
     private val tokens: AccessTokenSource,
     engine: HttpClientEngine,
     private val version: ClientVersion?,
+    private val clientHeader: ClientHeader?,
 ) {
     private val origin = URLBuilder(baseUrl).build()
 
@@ -55,13 +58,14 @@ internal class BackendHttp(
     /** The 2xx body text; any other status is thrown as its [BackendException]. */
     private suspend fun send(route: BackendRoute): String {
         val token = transport { tokens.accessToken() }?.trim()?.takeIf(String::isNotEmpty)
-        val response = transport { execute(route, token) }
+        val clientValue = clientHeader?.value()
+        val response = transport { execute(route, token, clientValue) }
         val text = transport { response.bodyAsText() }
         if (!response.status.isSuccess()) throw statusException(response.status.value, errorCode(text))
         return text
     }
 
-    private suspend fun execute(route: BackendRoute, token: String?): HttpResponse =
+    private suspend fun execute(route: BackendRoute, token: String?, clientValue: String?): HttpResponse =
         try {
             client.request {
                 method = route.method
@@ -73,6 +77,7 @@ internal class BackendHttp(
                 }
                 if (token != null) header(HttpHeaders.Authorization, "Bearer $token")
                 if (version != null) header(ClientVersion.HEADER, version.headerValue)
+                if (clientValue != null) header(ClientHeader.HEADER, clientValue)
                 route.body?.let {
                     contentType(ContentType.Application.Json)
                     setBody(it.value, it.type)

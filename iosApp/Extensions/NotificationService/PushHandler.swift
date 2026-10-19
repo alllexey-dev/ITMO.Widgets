@@ -14,6 +14,8 @@ import UserNotifications
 ///   `notification_sport_success` or `_failure` over Android's text; a failure before MyITMO's answer keeps Backend's
 ///   "a place is free"; a full lesson, or nothing left to book, is dropped, as Android shows nothing. Every booking
 ///   and refusal is also left for the bell in the App Group.
+/// - A type the user turned off in the app (`disabledPushes` of session-v1.json): dropped; a sport push still books
+///   and leaves its result for the bell.
 struct PushHandler {
     let session: () -> SessionFile?
     let booker: SportPushBooker
@@ -25,13 +27,16 @@ struct PushHandler {
         guard let session = session(), !session.demo, let isu = session.isu, isu == message.recipientIsu else {
             return Self.dropped
         }
-        if message.type == PushMessage.friendship { return content }
-        if message.type == PushMessage.agentBooked { return Self.agentBooked(content, payload: message.payload) }
-        guard let queue = SportQueue(pushType: message.type) else { return content }
+        let muted = message.channel.map(session.disabledPushes.contains) ?? false
+        guard let queue = SportQueue(pushType: message.type) else {
+            if muted { return Self.dropped }
+            return message.type == PushMessage.agentBooked ? Self.agentBooked(content, payload: message.payload) : content
+        }
         guard session.servicesEnabled else { return Self.dropped }
 
         let booking = await booker.book(queue, payload: message.payload)
         booking.notices.forEach(record)
+        if muted { return Self.dropped }
         if let notice = booking.notices.first { return Self.rewritten(content, with: notice) }
         return booking.retryLater ? content : Self.dropped
     }
@@ -87,7 +92,8 @@ extension PushHandler {
         let calls = SportPushCalls(
             transport: transport,
             backend: (bundle.object(forInfoDictionaryKey: "BackendBaseURL") as? String).flatMap(URL.init(string:)),
-            appVersion: clientVersion(bundle)
+            appVersion: clientVersion(bundle),
+            client: { clientHeader(bundle, installId: SessionFile.read(fromContainer: container)?.installId) }
         )
         let inbox = SportResultInbox(container: container)
         return PushHandler(
@@ -105,6 +111,39 @@ extension PushHandler {
             return value.isEmpty ? "unknown" : value
         }
         return "\(part("CFBundleShortVersionString")) (\(part("CFBundleVersion"))); ios; \(distribution(bundle))"
+    }
+
+    /// `IosClientVersion.headerFromMainBundle`'s `X-Client` (ADR 0034): `kind=ios; version=<version>; build=<build>;
+    /// channel=<distribution>; os=<iOS major>; install=<id>`. [installId] is the app's, from session-v1.json; without
+    /// it `install` is left out.
+    static func clientHeader(_ bundle: Bundle, installId: String?) -> String {
+        func info(_ key: String) -> String? { bundle.object(forInfoDictionaryKey: key) as? String }
+        // `IosClientVersion.buildIdentity`: `BuildChannel` custom or the distribution, `BuildSource` and `BuildCommit`
+        // as they are; absent keys read as official and unknown.
+        return formatClientHeader([
+            ("kind", "ios"),
+            ("version", info("CFBundleShortVersionString")),
+            ("build", info("CFBundleVersion")),
+            ("channel", info("BuildChannel") == "custom" ? "custom" : distribution(bundle)),
+            ("source", info("BuildSource")),
+            ("commit", info("BuildCommit")),
+            ("os", String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion)),
+            ("install", installId),
+        ])
+    }
+
+    /// `ClientHeader.format`: `key=value` pairs joined by `; ` in their order; a value keeps only `[A-Za-z0-9._/+-]`
+    /// and 64 characters, an empty one leaves its key out, and a pair that would pass 512 characters is left out.
+    static func formatClientHeader(_ pairs: [(String, String?)]) -> String {
+        pairs.reduce(into: "") { header, pair in
+            let value = String((pair.1 ?? "").filter(isClientHeaderCharacter).prefix(64))
+            let next = header.isEmpty ? "\(pair.0)=\(value)" : "\(header); \(pair.0)=\(value)"
+            if !value.isEmpty && next.utf8.count <= 512 { header = next }
+        }
+    }
+
+    private static func isClientHeaderCharacter(_ char: Character) -> Bool {
+        char.isASCII && (char.isLetter || char.isNumber || "._/+-".contains(char))
     }
 
     /// `IosClientVersion.distribution`: the App Store and TestFlight strip the provisioning profile; TestFlight

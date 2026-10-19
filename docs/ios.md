@@ -6,11 +6,9 @@ service extension. The app is a SwiftUI shell with five tabs (recordbook, schedu
 (sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in),
 Сегодня with the bell's sheet, the pass sheet, the schedule with its sheets (the lesson sheet, the month sheet, the
 friend picker), the recordbook, the subject page with `Мои баллы`, the sport tab with its sections and `Откуда баллы`, the profile tab,
-Друзья, the person card with the review report and another user's friends are SwiftUI over shared ViewModels; the
-other content screens (another user's sport, the review editor, links) are still shared Compose
-Multiplatform screens hosted through
-`ComposeUIViewController`. They move to
-SwiftUI screen by screen ([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
+Друзья, the person card with the review report and editor, another user's friends and sport, and the subject links
+sheets are SwiftUI over shared ViewModels: no iOS route hosts a Compose Multiplatform screen
+([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
 
 ## Prerequisites
 
@@ -55,7 +53,7 @@ Each bundle runs in its own process; they share only the App Group container and
 | `ITMOWidgetsNotificationService` | none | the sport booking of a push and its text; Swift micro-client for MyITMO and Backend |
 
 - Only the app has DataStore and a Koin graph. An extension that needs a fact reads a versioned JSON file the app
-  wrote; session-v1.json carries the session state and the demo flag, never a token.
+  wrote; session-v1.json carries the session state, the demo flag and the `X-Client` install id, never a token.
 - The widget extension has about 30 MB, which the Kotlin runtime alone would use up, so it links no Kotlin. The
   notification service stays Swift-only for the same reason.
 - Extensions compute no academic time: the app writes timelines with their instants and WidgetKit picks the entry.
@@ -71,7 +69,7 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   today, sport, profile), with its names and icons; a tab shows only while `PlatformCapabilities` offers its
   feature. `ShellTab`'s raw values are the frozen route ids, so today is `home` and profile is `me`. Tabs switch by
   the tab bar only, no swipe ([Tab switching](design.md#tab-switching-and-back)); a pushed screen keeps the bar,
-  except a `RouteTarget.fullScreen` route (the campus map): while it is on top, `ShellChrome.fullScreen` hides the tab
+  except a `RouteTarget.fullScreen` route (the campus map): while it is on top, `ShellView` hides the tab
   bar and the shell leaves out the pass accessory and the demo banner (`AppRouter.isFullScreen`).
 - Pass accessory. While today is selected, `tabViewBottomAccessory` shows `QR-пропуск` (`ShellPassAccessory`), which
   opens the pass sheet (`AppRoutes.QrPass`), the same sheet widgets, the Control and shortcuts open. `QrPassSheet`
@@ -85,8 +83,8 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   `Features/Home/`) has it with today's academic date and the bell (`ItmoBellButton` with the count of unseen events,
   today only) over `TodayContent` (`TodayViewModel`: the hero, the day as `ItmoLessonTimeline` from the shared
   `LessonTimelines` rows, `Support/LessonUi+Kit.swift`, the things to do); the bell opens `BellSheet`, a tall
-  `ItmoSheet` over `BellViewModel` ([the bell](features/home.md#the-bell)). The other roots are still Compose screens
-  with their own top bar.
+  `ItmoSheet` over `BellViewModel` ([the bell](features/home.md#the-bell)). The schedule, sport and profile roots
+  have the same header.
 - Stacks and sheets. Each tab has one `NavigationStack` whose path `AppRouter` holds. One router sheet shows at a
   time; `replaceSheet(with:)` swaps it. Sheets take one of three heights (`ItmoSheet`, `ItmoSheetHeight`): the
   content's, 0.82 of the screen, or full; none goes under the status bar.
@@ -95,7 +93,7 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   on screen; a tap opens an `AppRoute` key with `AppRouter.open(_:)`. Results return through `open(_:onResult:)` and
   `deliver(_:from:)`.
 - Route map. `Routes.target(for:)` switches over `RouteFeature` and delegates to the feature's `Routes+<Feature>.swift`,
-  which returns `.swiftUI` (native bar), `.compose` (the route draws its own bar), `.sheet`, `.swiftUISheet`, `.composeSheet`, a tab,
+  which returns `.swiftUI` (pushed under the native bar), `.sheet`, `.swiftUISheet`, a tab,
   the gate or `.notOnIOS`. `RouterTests` fails for a key no feature claims.
 - Debug launch arguments replace Android's debug tools: `-itmoDemo`, `-itmoSignedOut`, `-itmoShellSession <state>`,
   `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoWebLoginFixture`, `-itmoBarsLogin`,
@@ -138,12 +136,6 @@ Swift reaches Kotlin through `Shared` and SKIE (`shared/ios/build.gradle.kts`): 
   wait runs in its own task: SwiftUI cancels the refresh action once the state it shows changes. The root header sets
   the inline title mode on its hidden bar, since with the default large title SwiftUI moves the scroll view's refresh
   control into the hidden bar and nothing is drawn (`RefreshUITests`).
-- Compose screens. Only `shared/ios` builds a `ComposeUIViewController`, through `screenController { }` in
-  `screens/ScreenControllers.kt`, which wraps `ItmoTheme` and `LocalPlatformActions`; each feature has
-  `screens/<Feature>Screens.kt` with the factories Swift calls. `ComposeHost { factory() }`
-  (`Sources/Bridge/ComposeHost.swift`) makes the controller once and ignores the safe area; the factory pads
-  `WindowInsets.safeDrawing`. A Compose sheet is hosted inside a SwiftUI `.sheet`, never a Compose
-  `ModalBottomSheet`. A SwiftUI `safeAreaInset` never reaches a hosted controller.
 - `UiText` resolves in Swift with `text.resolved` (`Sources/Support/UiText+Resolve.swift`), icons with
   `AppIcon.symbol` and `AppSymbol.image`.
 
@@ -159,8 +151,8 @@ records and shares the journal.
 
 The `SERVICES` and `PRIVACY` keys open `ConnectionDataScreen` (`Features/Connection/`, over `ConnectionViewModel`,
 with `ServicesConsentSheet`, which the first-run flow shares) and `NOTIFICATIONS` opens `NotificationSettingsScreen`
-(over `NotificationSettingsViewModel`; iOS has no switch per push type, so those rows open the app's notification
-settings). Both report the system state as `SettingsScreen` does. The connected devices (`ConnectionsScreen`) and the
+(over `NotificationSettingsViewModel`; the push switches reach the notification service as `disabledPushes` of
+session-v1.json). Both report the system state as `SettingsScreen` does. The connected devices (`ConnectionsScreen`) and the
 pairing sheet (`WebLoginSheet`) are drawn on the kit; their logic is the shared one.
 
 ## Strings and icons
@@ -222,7 +214,8 @@ each bundle's Info.plist (`AppGroupID`, `KeychainGroup`) and entitlements; code 
 Builds are unsigned by default, which is all the simulator and CI need. The ignored
 `iosApp/Config/Signing.local.xcconfig` (included by `Base.xcconfig`) sets `DEVELOPMENT_TEAM`,
 `ITMO_CODE_SIGN_IDENTITY = Apple Development` and `ITMO_ENTITLEMENTS_VARIANT = .signed`, which switches every target to
-its `.signed` entitlements, the only place for push and associated domains. No team ID is committed.
+its `.signed` entitlements, the only place for push and associated domains. No team ID is committed. The owner's copy
+also sets `ITMO_BUILD_CHANNEL = official` ([build identity](building.md#build-identity)); nobody else sets it.
 
 ## Data sharing
 
@@ -257,7 +250,7 @@ The widget extension reads App Group files on each timeline request and makes no
   `Button(intent: RevealQrIntent())` that shows the code for 30 s. Options come from qr-pass-v1.json.
 - Next-lesson widget (`NextLessonWidget`, kind `.widget.single-lesson`): small, medium (two more lessons on the
   right), and on the Lock Screen the line beside the date, the rectangle and the countdown ring. The day widget
-  (`DayWidget`, large only) draws the day to scale (`DayAxis`: linear time, every lesson at least one readable row),
+  (`DayWidget`, large only) draws the day to scale (`DayAxis`: linear time, every lesson at least one readable row, an hour at most 36 pt so a short day stays compact at the top),
   gaps, and the now line (kind `.widget.day-timeline`). The classic list (`ClassicListWidget`, kind
   `.widget.day-schedule`, medium and large) draws the same day content as rows: the header, the lessons that fit (done
   ones leave first) and the end. All three read schedule-timeline-v2.json in `Extensions/Widgets/Schedule/`: Swift picks the entry
@@ -299,9 +292,10 @@ calendar sync), keeps Android's periods in
   the notification settings into session-v1.json.
 - Taps. `NotificationTaps` reads the route from `userInfo` (`NotificationTapRoutes`) and hands it to the router, so a
   cold-start tap waits for the shell.
-- Notification service (Swift micro-client). `PushHandler` drops pushes for another ISU, signed out or the demo;
-  shows friendship pushes as Backend sent them; books sport pushes through `SportPushBooker` on MyITMO and reports
-  the outcome to Backend. `MyItmoAccess` refreshes the token under the `myitmo-refresh` lock. Tests replay the Kotlin
+- Notification service (Swift micro-client). `PushHandler` drops pushes for another ISU, signed out, the demo or a
+  type switched off in the app (a sport push still books first); shows friendship pushes as Backend sent them; books sport pushes through `SportPushBooker` on MyITMO and reports
+  the outcome to Backend with the app's `X-App-Version` and `X-Client` (the install id from session-v1.json).
+  `MyItmoAccess` refreshes the token under the `myitmo-refresh` lock. Tests replay the Kotlin
   golden fixtures (`NotificationServiceTests`), since `simctl push` never runs an extension.
 
 ## Degradations
@@ -347,7 +341,9 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
   pushes to `master` that change `shared/` (see [testing.md](testing.md#ci)); `ios-nightly.yml` runs every module's
   `kn` tests and all `UITests`.
 - Release builds: `scripts/ios/archive.sh --unsigned` (an `.ipa` for self-signing) or `--signed [--upload]` with
-  `Signing.local.xcconfig`. The build number is `git rev-list --count HEAD`. Uploads are manual steps.
+  `Signing.local.xcconfig`. The build number is Android's `versionCode` from `app/build.gradle.kts`, and the build identity
+  (`BuildChannel`, `BuildSource`, `BuildCommit`) is in [building](building.md#build-identity). Uploads are manual
+  steps; `dist.yml` builds the unsigned `.ipa` on demand and attaches it to every published release.
 
 ## Visual verification
 
@@ -370,6 +366,7 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
 
 [ADR 0031](decisions/0031-swiftui-ios-screens.md): every iOS screen becomes native SwiftUI over a shared,
 Compose-free view model. A route moves in one change: the SwiftUI screen in `Sources/Features/<Feature>/`, its
-snapshot tests, the `.swiftUI` target in `Routes+<Feature>.swift`, and the deletion of its Compose factory in
-`shared/ios/.../screens/` and its `ComposeHost` wrapper. How: [Adding a SwiftUI screen](recipes/ios-host.md). Open
+snapshot tests and the `.swiftUI` target in `Routes+<Feature>.swift`. Every route has moved; the Compose hosts
+(`ComposeHost`, the `.compose` targets, the `shared/ios` screen factories) are gone. How:
+[Adding a SwiftUI screen](recipes/ios-host.md). Open
 questions (minimum iOS version, how view models reach Swift, screen order) are listed in the ADR.
