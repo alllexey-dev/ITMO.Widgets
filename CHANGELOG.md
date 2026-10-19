@@ -14,6 +14,16 @@ new iOS app.
 
 - On iOS the last Compose screens are native SwiftUI: all links of a subject, a link's actions, the link editor and the link report, the review editor and another user's sport; the Compose host (`ComposeHost`, the `.compose` routes and `shared/ios` `screens/`) is gone.
 
+### Спорт (2026-10-19)
+
+- Спорт: `Секции` read at a glance (icon lines, status pills, a short note), `Сделать секцией` only in a booked lesson's sheet, the `Доступные` filter is back, and `Моё` / `Запись` switch by a swipe too (Android and iOS).
+
+### Campus map rooms (2026-10-19)
+
+- `201 (составное)` on Биржевая opens its own room on the campus map instead of room 201: the whole timetable text is
+  matched first. `RoomMatcherParityTest` checks the matcher on every room of Backend's synced lessons against
+  itmo-map-web's `rooms.js`.
+
 ### Widgets (2026-10-18)
 
 - The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in
