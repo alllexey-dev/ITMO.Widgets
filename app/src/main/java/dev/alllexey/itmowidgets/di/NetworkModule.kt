@@ -78,7 +78,21 @@ internal fun clientHeader(installIds: InstallIdPreferences): ClientHeader = Clie
     installId = installIds::installId
 )
 
-// Build identity: once ci/simple-builds is on master, channel = "custom" when BuildConfig.BUILD_CHANNEL is "custom",
-// else the flavor; source = BuildConfig.BUILD_SOURCE; commit = BuildConfig.BUILD_COMMIT (empty in debug: left out).
-// No base: VERSION_NAME already is the upstream version.
-internal fun buildIdentity(): BuildIdentity = BuildIdentity(channel = BuildConfig.FLAVOR)
+/**
+ * The build identity of docs/building.md in `X-Client`: the flavor (`github`, `play`) as the channel of an official
+ * build, `custom` for any other; the building repository or `local`; the commit, left out when empty (debug builds).
+ * No base: VERSION_NAME already is the upstream version.
+ */
+internal fun buildIdentity(
+    flavor: String = BuildConfig.FLAVOR,
+    buildChannel: String = BuildConfig.BUILD_CHANNEL,
+    source: String = BuildConfig.BUILD_SOURCE,
+    commit: String = BuildConfig.BUILD_COMMIT,
+): BuildIdentity = BuildIdentity(
+    channel = if (buildChannel == OFFICIAL_BUILD) flavor else CUSTOM_CHANNEL,
+    source = source.ifEmpty { null },
+    commit = commit.ifEmpty { null },
+)
+
+private const val OFFICIAL_BUILD = "official"
+private const val CUSTOM_CHANNEL = "custom"

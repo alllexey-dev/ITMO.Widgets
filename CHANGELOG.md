@@ -39,7 +39,7 @@ new iOS app.
 ### Client statistics (2026-10-19)
 
 - Every Backend request also carries `X-Client` (ADR 0034): `kind`, version, build, channel, OS version and a random
-  install id, kept in the app's settings and replaced after sign-out. `X-App-Version` stays as it was. The iOS
+  install id, kept in the app's settings and replaced after sign-out. Android and iOS add their build identity: an official build's distribution as the channel, `custom` otherwise, with `source` and `commit`. `X-App-Version` stays as it was. The iOS
   notification service sends the same header with the app's install id.
 
 ### Campus map rooms (2026-10-19)
