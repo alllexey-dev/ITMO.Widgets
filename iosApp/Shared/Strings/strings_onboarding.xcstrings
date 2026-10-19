@@ -20,7 +20,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Пары на 4 недели вперёд в обычном календаре. Изменения обновятся сами."
+            "value" : "Пары в календаре телефона"
           }
         }
       }
@@ -32,7 +32,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Календарь телефона"
+            "value" : "Календарь"
           }
         }
       }
@@ -56,7 +56,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Подключено к ITMO.Widgets"
+            "value" : "Подключено"
           }
         }
       }
@@ -68,67 +68,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Что хранит сервер и кто что видит"
-          }
-        }
-      }
-    },
-    "onboarding_connection_friends" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Друзья"
-          }
-        }
-      }
-    },
-    "onboarding_connection_friends_text" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Их пары и где они сейчас"
-          }
-        }
-      }
-    },
-    "onboarding_connection_later_note" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Включить можно и позже: Профиль, «Подключение и данные»."
-          }
-        }
-      }
-    },
-    "onboarding_connection_links" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ссылки к предметам"
-          }
-        }
-      }
-    },
-    "onboarding_connection_links_text" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Общие ссылки и чаты группы"
+            "value" : "Что хранит сервер"
           }
         }
       }
@@ -145,30 +85,6 @@
         }
       }
     },
-    "onboarding_connection_queue" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Очередь на спорт"
-          }
-        }
-      }
-    },
-    "onboarding_connection_queue_text" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Место займётся само, когда освободится"
-          }
-        }
-      }
-    },
     "onboarding_connection_text" : {
       "comment" : "Generated from strings_onboarding.xml",
       "extractionState" : "manual",
@@ -176,7 +92,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Это работает через сервер ITMO.Widgets — его держат студенты, не ИТМО. Всё остальное работает и без него."
+            "value" : "Друзья и очередь на спорт работают через сервер ITMO.Widgets, остальное — без него."
           }
         }
       }
@@ -201,6 +117,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Готово"
+          }
+        }
+      }
+    },
+    "onboarding_me_isu" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИСУ %1$lld"
           }
         }
       }
@@ -248,7 +176,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Перенос пары, новые баллы, место в очереди. Какие именно — выберете потом на странице «Уведомления»."
+            "value" : "Переносы пар, баллы, очередь"
           }
         }
       }
@@ -277,18 +205,6 @@
         }
       }
     },
-    "onboarding_permissions_text" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Каждое — по желанию и по одному. Передумать можно в настройках телефона."
-          }
-        }
-      }
-    },
     "onboarding_permissions_title" : {
       "comment" : "Generated from strings_onboarding.xml",
       "extractionState" : "manual",
@@ -301,18 +217,6 @@
         }
       }
     },
-    "onboarding_permissions_widgets" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Виджеты можно добавить позже: Профиль, «Виджеты»."
-          }
-        }
-      }
-    },
     "onboarding_step_progress" : {
       "comment" : "Generated from strings_onboarding.xml",
       "extractionState" : "manual",
@@ -321,186 +225,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld из %2$lld"
-          }
-        }
-      }
-    },
-    "onboarding_value_more" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "И ещё"
-          }
-        }
-      }
-    },
-    "onboarding_value_next" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Далее"
-          }
-        }
-      }
-    },
-    "onboarding_value_now" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сейчас"
-          }
-        }
-      }
-    },
-    "onboarding_value_pass" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пропуск"
-          }
-        }
-      }
-    },
-    "onboarding_value_pass_text" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Кнопка на «Сегодня» и виджет"
-          }
-        }
-      }
-    },
-    "onboarding_value_scores" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Баллы с источником"
-          }
-        }
-      }
-    },
-    "onboarding_value_scores_text" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "У каждого числа подписано: My ITMO, БАРС или таблица"
-          }
-        }
-      }
-    },
-    "onboarding_value_sport" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Спорт"
-          }
-        }
-      }
-    },
-    "onboarding_value_sport_score" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld из 100"
-          }
-        }
-      }
-    },
-    "onboarding_value_sport_text" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Баллы, запись и очередь на занятия"
-          }
-        }
-      }
-    },
-    "onboarding_value_text" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ваши пары, баллы и спорт из My ITMO и БАРС — не пример."
-          }
-        }
-      }
-    },
-    "onboarding_value_title" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Всё уже на месте"
-          }
-        }
-      }
-    },
-    "onboarding_value_tomorrow" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Завтра"
-          }
-        }
-      }
-    },
-    "onboarding_value_widgets" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Виджеты"
-          }
-        }
-      }
-    },
-    "onboarding_value_widgets_text" : {
-      "comment" : "Generated from strings_onboarding.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пара и день на главном экране"
           }
         }
       }

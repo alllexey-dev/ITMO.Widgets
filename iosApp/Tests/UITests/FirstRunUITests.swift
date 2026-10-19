@@ -1,6 +1,6 @@
 import XCTest
 
-/// The first-run flow on the shared session walks its three steps, asks iOS for notifications with the permission's
+/// The first-run flow on the shared session walks its two steps, asks iOS for notifications with the permission's
 /// own button and finishes on the connection step (the demo keeps the connection on).
 /// The dialog comes only while the permission is not determined, so this class must be the first to ask in a run:
 /// test classes run in alphabetical order, and it sorts before `NotificationTapUITests` (`NotificationDialog`).
@@ -21,12 +21,9 @@ final class FirstRunUITests: XCTestCase {
         XCTAssertFalse(back.exists && back.isEnabled, "the first step has nowhere to go back to")
 
         let next = element(app, "onboarding.next")
-        XCTAssertTrue(element(app, "onboarding.step.value").waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(next.waitUntilDrawn(timeout: stepTimeout), "the footer button is drawn")
-        attachScreenshot(named: "value")
-        next.tap()
-
         XCTAssertTrue(element(app, "onboarding.step.permissions").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(next.waitUntilDrawn(timeout: stepTimeout), "the footer button is drawn")
+        XCTAssertTrue(element(app, "onboarding.me").waitForExistence(timeout: stepTimeout), "the card of who signed in")
         let ask = element(app, "onboarding.notifications.button")
         XCTAssertTrue(ask.exists, "answered before: on a fresh install this test asks first")
         XCTAssertTrue(ask.waitUntilDrawn(timeout: stepTimeout), "the permission's own button is drawn")
