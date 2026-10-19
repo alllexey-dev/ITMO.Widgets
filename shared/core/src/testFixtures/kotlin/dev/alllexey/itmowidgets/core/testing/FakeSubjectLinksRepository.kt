@@ -46,6 +46,7 @@ internal class FakeSubjectLinksRepository : SubjectLinksRepository {
     val actions = mutableListOf<String>()
     var result: AppResult<Unit> = AppResult.Success(Unit)
     var refreshResult: AppResult<Unit> = AppResult.Success(Unit)
+    var onRefresh: () -> Unit = {}
     var gate: suspend () -> Unit = {}
     var refreshes = 0
     var restrictionRefreshes = 0
@@ -53,7 +54,7 @@ internal class FakeSubjectLinksRepository : SubjectLinksRepository {
 
     override fun observe(scope: ResourceScope) = state
     override fun peek(scope: ResourceScope) = (state.value as? SubjectLinksState.Content)?.snapshot
-    override suspend fun refresh(scope: ResourceScope): AppResult<Unit> { refreshes++; return refreshResult }
+    override suspend fun refresh(scope: ResourceScope): AppResult<Unit> { refreshes++; onRefresh(); return refreshResult }
     override suspend fun save(
         scope: ResourceScope,
         id: String,

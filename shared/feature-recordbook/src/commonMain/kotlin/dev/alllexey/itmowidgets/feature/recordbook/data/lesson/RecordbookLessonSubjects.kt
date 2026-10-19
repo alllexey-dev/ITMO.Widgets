@@ -27,9 +27,9 @@ import kotlinx.datetime.LocalDate
  * subject of that name not bound elsewhere), and the number of its links.
  *
  * Cheap and possibly stale on purpose (docs/features/schedule.md): the record book is the repository's memory cache,
- * asked from My ITMO only while the process has none; the links are the ones stored on the device as of the subject
- * page's last refresh, never refreshed here, and none without the connection, where `Материалы` shows its gate. This
- * class never calls Backend; the demo session gets the demo record book and links.
+ * asked from My ITMO only while the process has none; the links are the ones stored on the device, fetched once
+ * through [SubjectLinksRepository.refresh] only for a subject the device has never loaded, and none without the
+ * connection, where `Материалы` shows its gate. The demo session gets the demo record book and links.
  */
 class RecordbookLessonSubjects(
     private val repository: RecordbookRepository,
@@ -83,7 +83,9 @@ class RecordbookLessonSubjects(
     private suspend fun linkCount(subject: RecordbookSubject, half: StudyHalf): Int {
         if (!backendGate.isConnected()) return 0
         val scope = ResourceScope(subject.disciplineId, subject.name, half.periodKey)
-        val state = links.observe(scope).first { it !is SubjectLinksState.Loading }
+        // A subject never loaded on the device stays Loading until someone refreshes it, so fetch it here once.
+        val state = links.observe(scope).first().takeUnless { it is SubjectLinksState.Loading }
+            ?: links.refresh(scope).let { links.observe(scope).first() }
         val snapshot = (state as? SubjectLinksState.Content)?.snapshot ?: return 0
         return (snapshot.mine + snapshot.shared).distinctBy { it.id }.size
     }
