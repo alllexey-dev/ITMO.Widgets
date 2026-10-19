@@ -24,11 +24,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.shortPersonName
-import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupItem
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.rows.Vote
@@ -36,14 +36,14 @@ import dev.alllexey.itmowidgets.designsystem.components.rows.VotePill
 import dev.alllexey.itmowidgets.designsystem.components.rows.voteOf
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.displayName
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_anonymous
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_report
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_score
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_source
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_source_default
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_verified
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_anonymous
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_report
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_score
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_source
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_source_default
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_verified
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes

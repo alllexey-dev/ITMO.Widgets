@@ -13,10 +13,10 @@ still resolves current study groups in `UserData`, see
 
 ## Modules and routes
 
-- Domain, presentation, data and Compose screens of `feature/social` live in `:shared:feature-social` `commonMain`
-  (no Android types); the Koin module `socialModule` (`SocialModule.kt`) declares the singles and the ViewModels
-  (`viewModelOf`), and binds `FriendRepositoryImpl` as the core `FriendRepository` the schedule's friend picker and
-  sport read.
+- Domain, presentation and data of `feature/social` live in `:shared:feature-social` `commonMain` (no Android types),
+  the Compose screens in `androidMain` (`feature/social/ui`); the Koin module `socialModule` (`SocialModule.kt`)
+  declares the singles and the ViewModels (`viewModelOf`), and binds `FriendRepositoryImpl` as the core
+  `FriendRepository` the schedule's friend picker and sport read.
 - Android: `shell/entries/SocialEntries.kt` registers `AppRoutes.Friends`
   (`FriendsRoute`, with the search), `AppRoutes.UserFriends` (`UserFriendsRoute`), `AppRoutes.UserProfile`
   (`UserProfileRoute`); the friend picker is the schedule's ([friend picker](friend-selector.md)). Entries perform the platform effects:

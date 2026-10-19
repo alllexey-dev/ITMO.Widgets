@@ -11,23 +11,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.designsystem.components.buttons.Pill
-import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupItem
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.rows.VotePill
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.shared.feature.social.Res
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_anonymous_mine
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_delete
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_edit
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_mine_badge
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_named_mine
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_reason
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_score
-import dev.alllexey.itmowidgets.shared.feature.social.teacher_review_verified_mine
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_anonymous_mine
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_delete
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_edit
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_mine_badge
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_named_mine
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_reason
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_score
+import dev.alllexey.itmowidgets.shared.compose.strings.teacher_review_verified_mine
 import org.jetbrains.compose.resources.stringResource
 
 /**

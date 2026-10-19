@@ -40,8 +40,8 @@ import dev.alllexey.itmowidgets.feature.social.presentation.PeopleSearchResults
 import dev.alllexey.itmowidgets.feature.social.presentation.UserAction
 import dev.alllexey.itmowidgets.feature.social.presentation.UserRowUi
 import dev.alllexey.itmowidgets.feature.social.ui.list.UserListTestTags
-import dev.alllexey.itmowidgets.feature.social.ui.text
 import dev.alllexey.itmowidgets.feature.social.ui.list.personGroup
+import dev.alllexey.itmowidgets.feature.social.ui.text
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
