@@ -33,23 +33,22 @@ import dev.alllexey.itmowidgets.feature.sport.ui.DayLabel
 import dev.alllexey.itmowidgets.designsystem.kit.LessonCard
 import dev.alllexey.itmowidgets.designsystem.kit.toLessonView
 import kotlinx.datetime.toLocalDateTime
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_back
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.compose.strings.user_profile_hidden
 import dev.alllexey.itmowidgets.shared.compose.strings.user_profile_sport_title
+import dev.alllexey.itmowidgets.shared.compose.strings.user_sport_empty_description
+import dev.alllexey.itmowidgets.shared.compose.strings.user_sport_empty_title
+import dev.alllexey.itmowidgets.shared.compose.strings.user_sport_hidden_title
+import dev.alllexey.itmowidgets.shared.compose.strings.user_sport_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_exercise
 import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
-import dev.alllexey.itmowidgets.shared.feature.sport.Res
-import dev.alllexey.itmowidgets.shared.feature.sport.user_sport_empty_description
-import dev.alllexey.itmowidgets.shared.feature.sport.user_sport_empty_title
-import dev.alllexey.itmowidgets.shared.feature.sport.user_sport_hidden_title
-import dev.alllexey.itmowidgets.shared.feature.sport.user_sport_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What another user's sport asks of its host: back, the user's pull, a retry after an error, a building's map. */
@@ -91,14 +90,14 @@ fun UserSportScreen(
     ) {
         AppTopBar(
             title = if (givenName.isBlank()) {
-                stringResource(CoreRes.string.user_profile_sport_title)
+                stringResource(Res.string.user_profile_sport_title)
             } else {
                 stringResource(Res.string.user_sport_title, givenName)
             },
             navigation = {
                 AppTopBarAction(
                     painterResource(KitRes.drawable.ic_arrow_back),
-                    stringResource(CoreRes.string.common_back),
+                    stringResource(Res.string.common_back),
                     onClick = actions.onBack,
                 )
             },
@@ -113,16 +112,16 @@ fun UserSportScreen(
                 UserSportState(
                     painterResource(KitRes.drawable.ic_lock),
                     stringResource(Res.string.user_sport_hidden_title),
-                    stringResource(CoreRes.string.user_profile_hidden),
+                    stringResource(Res.string.user_profile_hidden),
                     body,
                 )
             } else {
                 UserSportState(
                     painterResource(KitRes.drawable.ic_error),
-                    stringResource(CoreRes.string.common_load_error_title),
+                    stringResource(Res.string.common_load_error_title),
                     state.error.toUiText().asString(),
                     body,
-                    ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
+                    ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
                 )
             }
             is UserSportUiState.Content -> if (state.bookings.isEmpty()) {
