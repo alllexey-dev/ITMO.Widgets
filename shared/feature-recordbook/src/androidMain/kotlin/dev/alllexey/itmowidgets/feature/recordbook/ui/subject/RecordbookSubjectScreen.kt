@@ -44,19 +44,18 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectMaterials
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTab
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_back
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_refresh_error
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_link_add
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_scores_title
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_tab_lessons
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_tab_materials
 import dev.alllexey.itmowidgets.shared.designsystem.ic_add
-import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_back
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_refresh_error
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_link_add
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_scores_title
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_tab_lessons
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_tab_materials
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [RecordbookSubjectScreen]. */
@@ -141,10 +140,10 @@ fun RecordbookSubjectScreen(
                 is RecordbookSubjectUiState.Failed -> AppRefreshBox(state.retrying, actions.onRetry, Modifier.fillMaxSize()) {
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                         ContentState(
-                            title = stringResource(CoreRes.string.common_load_error_title),
+                            title = stringResource(Res.string.common_load_error_title),
                             modifier = Modifier.testTag(SubjectTestTags.ERROR),
                             description = state.error.toUiText().asString(),
-                            action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
+                            action = ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
                         )
                     }
                 }

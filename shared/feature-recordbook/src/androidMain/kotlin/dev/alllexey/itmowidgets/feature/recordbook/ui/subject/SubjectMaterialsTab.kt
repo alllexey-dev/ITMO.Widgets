@@ -39,27 +39,26 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLinkRow
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectMaterials
 import dev.alllexey.itmowidgets.feature.recordbook.ui.kit
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.links_all_count
 import dev.alllexey.itmowidgets.shared.compose.strings.links_score
 import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_down
 import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_up
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_connect
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_link_add
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_link_mine
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_link_more
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_materials_chats
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_materials_empty_text
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_materials_empty_title
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_materials_off_text
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_materials_off_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_link
-import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
-import dev.alllexey.itmowidgets.shared.feature.recordbook.links_all_count
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_connect
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_link_add
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_link_mine
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_link_more
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_materials_chats
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_materials_empty_text
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_materials_empty_title
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_materials_off_text
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_materials_off_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** `Материалы`: chats, links by category with their votes, own links with their review state; a gate without the connection. */
@@ -78,10 +77,10 @@ internal fun LazyListScope.materialsTab(materials: SubjectMaterials, actions: Re
         SubjectMaterials.Loading -> item(key = "materials-loading") { ContentStateLoading(size = ContentStateSize.Compact) }
         is SubjectMaterials.Failed -> item(key = "materials-error") {
             ContentState(
-                title = stringResource(CoreRes.string.common_load_error_title),
+                title = stringResource(Res.string.common_load_error_title),
                 size = ContentStateSize.Compact,
                 description = materials.error.toUiText().asString(),
-                action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRefresh),
+                action = ContentStateAction(stringResource(Res.string.common_retry), actions.onRefresh),
             )
         }
         is SubjectMaterials.Empty -> item(key = "materials-empty") {
@@ -165,11 +164,11 @@ private fun LinkRow(row: SubjectLinkRow, args: SubjectLinksArgs, actions: Record
             VotePill(
                 score = score,
                 myVote = voteOf(row.myVote),
-                scoreDescription = stringResource(CoreRes.string.links_score, score),
+                scoreDescription = stringResource(Res.string.links_score, score),
                 onVote = if (row.canVote) { vote -> actions.onVote(row.id, vote == Vote.Up) } else null,
                 labels = VoteLabels(
-                    up = stringResource(CoreRes.string.links_vote_up),
-                    down = stringResource(CoreRes.string.links_vote_down),
+                    up = stringResource(Res.string.links_vote_up),
+                    down = stringResource(Res.string.links_vote_down),
                 ),
             )
         }

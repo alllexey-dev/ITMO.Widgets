@@ -28,19 +28,18 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSource
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSourceRow
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSources
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.common_got_it
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_score_pending
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_sources_open
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_sources_shown
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_sources_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_assignment
 import dev.alllexey.itmowidgets.shared.designsystem.ic_school
 import dev.alllexey.itmowidgets.shared.designsystem.ic_table
-import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_score_pending
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_sources_open
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_sources_shown
-import dev.alllexey.itmowidgets.shared.feature.recordbook.recordbook_sources_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of the sources sheet. */
@@ -84,7 +83,7 @@ fun RecordbookSourcesSheetContent(
     SheetScaffold(
         title = stringResource(Res.string.recordbook_sources_title),
         modifier = modifier.testTag(RecordbookSourcesTags.SHEET),
-        close = SheetClose(stringResource(CoreRes.string.common_close), onClose),
+        close = SheetClose(stringResource(Res.string.common_close), onClose),
     ) {
         Column(
             Modifier.padding(horizontal = ItmoTheme.spacing.section),
@@ -105,7 +104,7 @@ fun RecordbookSourcesSheetContent(
                     Text(stringResource(Res.string.recordbook_sources_open))
                 }
                 Button(onClick = onClose, modifier = Modifier.weight(1f)) {
-                    Text(stringResource(CoreRes.string.common_got_it))
+                    Text(stringResource(Res.string.common_got_it))
                 }
             }
         }

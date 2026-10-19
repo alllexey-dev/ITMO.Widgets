@@ -27,29 +27,28 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectBinding
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonList
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessons
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectReviews
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_binding_ambiguous
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_binding_confirm
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_binding_proposal
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_binding_reject
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_connect
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_lessons_all
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_lessons_none
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_lessons_title
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_lessons_unmatched
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_reviews_few_text
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_reviews_few_title
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_reviews_off_text
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_reviews_off_title
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_reviews_write
+import dev.alllexey.itmowidgets.shared.compose.strings.subject_teachers_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_note
-import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_binding_ambiguous
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_binding_confirm
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_binding_proposal
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_binding_reject
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_connect
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_lessons_all
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_lessons_none
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_lessons_title
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_lessons_unmatched
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_reviews_few_text
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_reviews_few_title
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_reviews_off_text
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_reviews_off_title
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_reviews_write
-import dev.alllexey.itmowidgets.shared.feature.recordbook.subject_teachers_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 
@@ -109,9 +108,9 @@ private fun LazyListScope.lessonList(list: SubjectLessonList, actions: Recordboo
             ListGroup {
                 item {
                     ListRow(
-                        title = stringResource(CoreRes.string.common_load_error_title),
+                        title = stringResource(Res.string.common_load_error_title),
                         subtitle = list.error.toUiText().asString(),
-                        accessory = { TextButton(onClick = actions.onRetryLessons) { Text(stringResource(CoreRes.string.common_retry)) } },
+                        accessory = { TextButton(onClick = actions.onRetryLessons) { Text(stringResource(Res.string.common_retry)) } },
                     )
                 }
             }

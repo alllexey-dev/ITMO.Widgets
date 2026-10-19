@@ -2,7 +2,7 @@
 
 Product behaviour: [Как это работает: оценки](../how-it-works/grades.md).
 
-`feature/recordbook` (`:shared:feature-recordbook`, Compose Multiplatform) shows official grades from
+`feature/recordbook` (`:shared:feature-recordbook`, Compose UI in `androidMain`) shows official grades from
 MyITMO, optionally overlaid with BARS, and links PE to the sport score. Grades never reach Backend and
 the feature works without `Подключение к ITMO.Widgets`; only the subject page's links go through
 `core/resources` ([resources](resources.md)). Related docs: [subject page](subject-page.md),

@@ -4,14 +4,14 @@ import androidx.compose.runtime.Composable
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetHeaders
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.columnName
-import dev.alllexey.itmowidgets.shared.feature.recordbook.Res
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_caption
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_closed
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_column
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_column_not_found
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_offline
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_row_not_found
-import dev.alllexey.itmowidgets.shared.feature.recordbook.sheet_scores_too_large
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_caption
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_closed
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_column
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_column_not_found
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_offline
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_row_not_found
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_too_large
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
