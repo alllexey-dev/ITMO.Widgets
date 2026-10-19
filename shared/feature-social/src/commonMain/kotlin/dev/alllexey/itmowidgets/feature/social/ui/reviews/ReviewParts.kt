@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
-import dev.alllexey.itmowidgets.designsystem.components.rows.Vote
 import dev.alllexey.itmowidgets.designsystem.components.rows.VoteLabels
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
@@ -45,8 +44,8 @@ import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
- * What the review rows report, in `UserProfileViewModel`'s terms. [onVote] names the arrow that was tapped (`up`);
- * tapping the arrow of the current vote takes it back upstream. [onEdit] and [onDelete] belong to the viewer's own
+ * What the review rows report, in `UserProfileViewModel`'s terms. [onVote] names the thumb that was tapped (`up`);
+ * tapping the thumb of the current vote takes it back upstream. [onEdit] and [onDelete] belong to the viewer's own
  * review.
  */
 class TeacherReviewActions(
@@ -68,13 +67,6 @@ object TeacherReviewTestTags {
     const val SUMMARY = "teacher_summary"
     const val SUMMARY_TOGGLE = "teacher_summary_toggle"
     const val SUMMARY_SCALES = "teacher_summary_scales"
-}
-
-/** Backend's -1, 0 or 1 as the pill's vote. */
-internal fun voteOf(myVote: Int): Vote? = when {
-    myVote > 0 -> Vote.Up
-    myVote < 0 -> Vote.Down
-    else -> null
 }
 
 @Composable
