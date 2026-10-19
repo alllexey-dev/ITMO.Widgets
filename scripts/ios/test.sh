@@ -20,7 +20,7 @@
 # - Snapshots (swift-snapshot-testing): the test process gets SNAPSHOT_TESTING_RECORD (all with --record, never
 #   with --ci, else unset: the library records a missing reference and fails the test) and SNAPSHOT_ARTIFACTS =
 #   iosApp/build/snapshot-artifacts (failure images, emptied before each run) through xcodebuild's TEST_RUNNER_ prefix.
-# - kn: Gradle on the same simulator.
+# - kn: Gradle on the same simulator, with --continue: a failing module does not hide the rest.
 # - sim: the simulator scripts/ios/screenshots.sh drives between runs; prints only the UDID on stdout.
 # - --ci: CI=true; deletes the simulator at the end.
 # - The last line of a finished run is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha7>[+dirty]`.
@@ -253,7 +253,7 @@ allprojects {
 }
 EOF
   note "./gradlew ${tasks[*]}"
-  ./gradlew --init-script "$init" "${tasks[@]}"
+  ./gradlew --continue --init-script "$init" "${tasks[@]}"
 }
 
 case "$mode" in

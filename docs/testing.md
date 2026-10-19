@@ -205,7 +205,7 @@ runs (`scripts/ci-plan.sh --self-test` lists the cases).
 
 | Workflow | When | What |
 |---|---|---|
-| `android-ci.yml` | every PR into `master`, when an Android input changed | `:app:testGithubDebugUnitTest`, Konsist, the build-logic tests and `:app:assembleGithubDebug`; the shared host tests; the screenshot tests of the changed modules (all of them in 3 shards when `designsystem`, `core`, `testing` or the build changed); `verifyIosKlibs`. `verify.sh checks` runs on every PR, docs-only included |
+| `android-ci.yml` | every PR into `master`, when an Android input changed | `:app:testGithubDebugUnitTest`, Konsist, the build-logic tests and `:app:assembleGithubDebug`; the shared host tests; the screenshot tests of the changed modules (all of them in 3 shards when `designsystem`, `core`, `testing` or the build changed); `verifyIosKlibs` (the iOS main and test klibs; the iOS tests themselves run only in `ios-nightly`). `verify.sh checks` runs on every PR, docs-only included |
 | `android-ci.yml` | pushes to `master` and PRs labelled `full-ci` that change an Android input; every manual run | `verifyFull` (both flavours, `lintGithubDebug`, `lintPlayDebug`) and every screenshot module in 3 shards; these runs write the build caches PRs read |
 | `ios.yml` | PRs that change `iosApp/`, `scripts/ios/`, an iOS source set or the build; pushes to `master` that also change any `shared/` module; on demand, label `full-ci` | `scripts/ios/test.sh --ci` on the `xcode-27` runner with the pinned Xcode and XcodeGen |
 | `android-ui.yml` | nightly, on demand, label `full-ci` | `verify.sh ui all` in 6 shards on an emulator without a cutout, `ShellSuite` in 2 shards with a tall cutout |
