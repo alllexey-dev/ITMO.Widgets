@@ -68,7 +68,8 @@ over the footprint, corridors and walls lighter, the kinds keep their hue at a d
 SDKs' `setFilter` takes only those) and replaces the campus app's SF Pro Text Semibold with Noto Sans Bold, the
 closest weight among the mirror's open fonts: SF Pro may not be redistributed, and MapLibre draws Latin and Cyrillic
 only from glyph files (`localIdeographFontFamily` covers CJK only), so iOS cannot use the system font either. The 36
-icons are bundled (`composeResources/files/map_sprites`, 144 KB; iOS references the same folder) and added at a pixel
+icons are bundled (`composeResources/files/map_sprites`, 144 KB; iOS references the same folder; `coworking`,
+`library` and `studoffice` recoloured from the campus app's orange to the teal of their rooms) and added at a pixel
 ratio of 3. Floors and the selected room switch by the filters `CampusMapStyle.filters` returns. The map shows no
 caption, MapLibre logo or attribution button; the plans' source and the licences are in Settings, `Лицензии`.
 
