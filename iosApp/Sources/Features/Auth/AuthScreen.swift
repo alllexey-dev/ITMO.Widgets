@@ -223,7 +223,7 @@ struct AuthOtherWaysSheet: View {
     }
 }
 
-/// The shared `auth_logo`, bundled by path from `:shared:feature-account`'s `composeResources/drawable` (`project.yml`,
+/// The shared `auth_logo`, bundled by path from `:shared:feature-account`'s Android `res/drawable` (`project.yml`,
 /// no copy).
 private struct AuthLogo: View {
     private static let image = Bundle.main.path(forResource: "auth_logo", ofType: "webp")

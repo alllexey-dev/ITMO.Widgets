@@ -45,7 +45,7 @@ targets:
       - path: ../app/src/main/assets/token_refresh_interceptor.js
         buildPhase: resources
       # The sign-in screen's logo: the shared module's drawable by path, never a copy.
-      - path: ../shared/feature-account/src/commonMain/composeResources/drawable/auth_logo.webp
+      - path: ../shared/feature-account/src/androidMain/res/drawable/auth_logo.webp
         buildPhase: resources
       # The known ITMO buildings of the lesson sheet's map: Android's raw resource by path, never a copy.
       - path: ../app/src/main/res/raw/itmo_buildings.json
