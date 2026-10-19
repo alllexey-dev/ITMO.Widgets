@@ -18,11 +18,13 @@ sealed interface SportCommon {
     val signEntry: SportQueueEntry?
     val friendsBookings: List<FriendSportBooking>
 
-    fun extractBuildingAddress(): String? {
-        val regex = Regex(
-            """([А-Яа-яЁё0-9\-\s.]+?,?\s*(?:д\.?|дом)?\s*\d+[А-Яа-яA-Za-z0-9/\-]*\s*(?:к\.?\s*\d+)?)"""
-        )
-        val result = regex.find(roomName)?.groupValues?.get(1)
-        return result
-    }
+    fun extractBuildingAddress(): String? = buildingAddressOf(roomName)
+}
+
+/** The building's address in MyITMO's room text of a sport lesson: `Кронверкский пр., 49` of `Кронверкский пр., 49, спортивный зал`. */
+fun buildingAddressOf(roomName: String): String? {
+    val regex = Regex(
+        """([А-Яа-яЁё0-9\-\s.]+?,?\s*(?:д\.?|дом)?\s*\d+[А-Яа-яA-Za-z0-9/\-]*\s*(?:к\.?\s*\d+)?)"""
+    )
+    return regex.find(roomName)?.groupValues?.get(1)
 }

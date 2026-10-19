@@ -30,9 +30,10 @@ object RoomMatcher {
         return null
     }
 
+    // The whole text first: `201 (составное)` is another ISU room than `201`, and the plan spells it out in full.
     private fun keys(room: String): List<String> {
-        val inside = PARENTHESIS.find(room) ?: return listOf(normalize(room)).filter(String::isNotEmpty)
-        return listOf(inside.groupValues[1], room.substring(0, inside.range.first)).map(::normalize).filter(String::isNotEmpty)
+        val inside = PARENTHESIS.find(room)?.let { listOf(it.groupValues[1], room.substring(0, it.range.first)) }.orEmpty()
+        return (listOf(room) + inside).map(::normalize).filter(String::isNotEmpty)
     }
 
     private fun normalize(text: String): String =

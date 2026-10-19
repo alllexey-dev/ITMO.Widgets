@@ -20,7 +20,6 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportCommonDet
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetPresenter
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportLessonSheetUi
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsState
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingAction
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.sportDayLabel
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toDetailsArgs
@@ -41,7 +40,7 @@ import kotlinx.datetime.toLocalDateTime
 /**
  * `Моё` on both platforms over [SportBookingsHolder], which Сегодня and the schedule share: the score, the bookings and
  * queues that are still ahead, and the cancellation a lesson sheet asked for, confirmed first; and over
- * [SportSectionsHolder], which every lesson sheet shares: `Сделать секцией` on booked lessons and the user's sections.
+ * [SportSectionsHolder], which every lesson sheet shares: `Сделать секцией` in a booked lesson's sheet and the user's sections.
  */
 class SportMyViewModel(
     sportBookingRepository: SportBookingRepository,
@@ -70,7 +69,7 @@ class SportMyViewModel(
     ) { score, body, sections, cancel ->
         SportMyUiState(
             score = score.valueOrNull()?.let { SportScoreUi.of(it.summary) },
-            body = body.withSections(sections),
+            body = body,
             sections = SportSectionsPresenter.cards(sections, time.today(), time.timeZone),
             cancel = cancel,
         )
@@ -184,18 +183,4 @@ class SportMyViewModel(
         return SportMyBody.Content(days, refreshing = byUser, partialError = errors.isNotEmpty()).also { lastBody = it }
     }
 
-    /** The booked lessons' `Сделать секцией`, from the shared slots. */
-    private fun SportMyBody.withSections(state: SportSectionsState): SportMyBody {
-        if (this !is SportMyBody.Content) return this
-        val booked = bookings.filter { it.signed }.mapTo(mutableSetOf()) { it.lessonId }
-        return copy(
-            days = days.map { day ->
-                day.copy(
-                    bookings = day.bookings.map { item ->
-                        item.copy(section = if (item.lessonId in booked) SportSectionsPresenter.toggle(state, item.lessonId) else null)
-                    },
-                )
-            },
-        )
-    }
 }
