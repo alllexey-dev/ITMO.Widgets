@@ -144,10 +144,11 @@ final class NotificationServiceTests: XCTestCase {
         let long = String(repeating: "x", count: 64)
         var pairs: [(String, String?)] = [("kind", "ios"), ("version", "2.3.0")]
         pairs += (1...6).map { index -> (String, String?) in ("k\(index)", long) }
-        pairs += [("toolong", long), ("install", install)]
+        // 437 characters so far; this pair would make 515, the install id after it still fits (483).
+        pairs += [("overflowing", long), ("install", install)]
         let header = PushHandler.formatClientHeader(pairs)
         XCTAssertLessThanOrEqual(header.utf8.count, 512)
-        XCTAssertFalse(header.contains("toolong"))
+        XCTAssertFalse(header.contains("overflowing"))
         XCTAssertTrue(header.hasSuffix("; k6=\(long); install=\(install)"))
 
         let live = PushHandler.clientHeader(.main, installId: install)
