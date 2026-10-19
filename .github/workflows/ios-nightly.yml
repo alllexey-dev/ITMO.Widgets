@@ -106,7 +106,8 @@ jobs:
           done
           exit 1
 
-      # Every module under shared/ that applies the itmowidgets.testing convention (the umbrella `ios` has no tests).
+      # kn without modules: every module with an iOS target, the umbrella `ios` included; Android-only modules have no
+      # iosSimulatorArm64Test.
       - name: test.sh --ci ${{ matrix.suite }}
         env:
           CI: "true"
@@ -115,12 +116,7 @@ jobs:
         run: |
           echo "org.gradle.workers.max=1" >> "$GRADLE_USER_HOME/gradle.properties"
           if [ "$SUITE" = kn ]; then
-            modules=()
-            for file in shared/*/build.gradle.kts; do
-              grep -q 'id("itmowidgets.testing")' "$file" && modules+=("$(basename "$(dirname "$file")")")
-            done
-            echo "modules: ${modules[*]}"
-            scripts/ios/test.sh --ci kn "${modules[@]}"
+            scripts/ios/test.sh --ci kn
           else
             scripts/ios/test.sh --ci ui
           fi

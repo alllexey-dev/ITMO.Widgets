@@ -133,11 +133,12 @@ final class SportUITests: XCTestCase {
         XCTAssertTrue(list.waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "my-ax1")
 
-        // The page scrolls: `Секции` near its end come clear of the demo banner and the tab bar.
-        let sections = element(app, "sport.sections")
-        for _ in 0..<12 where !sections.isHittable { list.swipeUp() }
+        // The page scrolls: its last line, the sections' note, comes clear of the demo banner and the tab bar.
+        // (A heading above it can scroll past under the `Моё`/`Запись` choice, which stays put.)
+        let end = element(app, "sport.sections.note")
+        for _ in 0..<12 where !end.isHittable { list.swipeUp() }
         attachScreenshot(named: "my-ax1-end")
-        XCTAssertTrue(sections.isHittable, "the end of «Моё» is reachable at AX1")
+        XCTAssertTrue(end.isHittable, "the end of «Моё» is reachable at AX1")
     }
 
     // MARK: Helpers

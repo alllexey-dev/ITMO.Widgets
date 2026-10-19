@@ -288,6 +288,7 @@ struct SportMyPart: View {
                 SportSectionGroup(section: section, actions: actions)
             }
             ItmoGroupNote(text: AppStrings.string("sport_section_note"))
+                .accessibilityIdentifier("sport.sections.note")
         }
     }
 }

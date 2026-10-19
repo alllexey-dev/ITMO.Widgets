@@ -1,10 +1,10 @@
 import XCTest
 
 /// Pull to refresh on SwiftUI roots of the demo session (`Спорт` `Моё` and `Сегодня`): the spinner is drawn under
-/// the root header and stays while the refresh runs. `-itmoSlowRefresh` (`PullRefresh.slowArgument`) keeps it five
-/// seconds over the demo's instant refresh. XCUITest lists no element for the system refresh control, so the test
-/// reads the pixels under the header a few seconds into the refresh: drawn, and not the resting screen; then the
-/// content comes back in place.
+/// the root header (on `Спорт`, under the `Моё`/`Запись` choice that stays above the swipeable parts) and stays while
+/// the refresh runs. `-itmoSlowRefresh` (`PullRefresh.slowArgument`) keeps it five seconds over the demo's instant
+/// refresh. XCUITest lists no element for the system refresh control, so the test reads the pixels under the header
+/// a few seconds into the refresh: drawn, and not the resting screen; then the content comes back in place.
 final class RefreshUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
@@ -14,7 +14,7 @@ final class RefreshUITests: XCTestCase {
     }
 
     func testSportMineShowsTheSpinnerUnderTheHeader() {
-        assertPullShowsTheSpinner(tab: "sport", content: "sport.tabs")
+        assertPullShowsTheSpinner(tab: "sport", content: "sport.score", under: "sport.tabs")
     }
 
     func testTodayShowsTheSpinnerUnderTheHeader() {
@@ -23,14 +23,16 @@ final class RefreshUITests: XCTestCase {
 
     // MARK: Helpers
 
-    private func assertPullShowsTheSpinner(tab: String, content identifier: String) {
+    private func assertPullShowsTheSpinner(
+        tab: String, content identifier: String, under top: String = "kit.rootHeader"
+    ) {
         let app = XCUIApplication.itmo(arguments: ["-itmoSlowRefresh"])
         app.launch()
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: rootTimeout))
         app.selectTab(tab)
         let root = app.descendants(matching: .any)["shell.root.\(tab)"].firstMatch
         XCTAssertTrue(root.waitForExistence(timeout: stepTimeout))
-        let header = root.descendants(matching: .any)["kit.rootHeader"].firstMatch
+        let header = root.descendants(matching: .any)[top].firstMatch
         let content = root.descendants(matching: .any)[identifier].firstMatch
         XCTAssertTrue(content.waitForExistence(timeout: stepTimeout))
         let restingTop = content.frame.minY
