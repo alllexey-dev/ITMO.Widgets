@@ -9,8 +9,12 @@
 # - Sources scripts/ios/env.sh first, runs xcodegen and `xcodebuild archive` of the ITMOWidgets scheme, Release,
 #   generic/platform=iOS (the Run Script builds the iosArm64 Kotlin framework). DerivedData stays in
 #   iosApp/build/DerivedData.
-# - CURRENT_PROJECT_VERSION = `git rev-list --count HEAD` of the archived commit, monotonic along master; MARKETING_VERSION comes from Base.xcconfig (2.3.0). --signed and --upload refuse a dirty tree; an
-#   --unsigned build of a dirty tree gets `-dirty` in its file name.
+# - CURRENT_PROJECT_VERSION = the commit time of the archived commit in Unix seconds: monotonic along master, the same
+#   for one commit in every clone, shallow or a fork's; MARKETING_VERSION comes from Base.xcconfig (2.3.0). The build
+#   identity (docs/building.md): BuildSource is $GITHUB_REPOSITORY on GitHub Actions, else `local`; BuildCommit the
+#   commit; BuildChannel `custom` for --unsigned, else whatever Signing.local.xcconfig sets (`custom` by default).
+#   --signed and --upload refuse a dirty tree; an --unsigned build of a dirty tree gets `-dirty` in its file name
+#   and its BuildCommit.
 # - --unsigned: `CODE_SIGNING_ALLOWED=NO`, which leaves the bundles without entitlements. The NSE is
 #   removed (a free team has no push, and it would cost a third App ID), the expanded unsigned entitlements of the
 #   widget and the app are applied with an ad-hoc `codesign -s -` (widget first, then the app), so AltStore and
@@ -68,8 +72,9 @@ source "$script_dir/env.sh"
 
 # ---- version -------------------------------------------------------------------------------------------------
 
-sha=$(git rev-parse --short=7 HEAD 2> /dev/null) || refuse "not a git checkout"
-build=$(git rev-list --count HEAD) || refuse "cannot count the commits of HEAD"
+sha=$(git rev-parse --short=12 HEAD 2> /dev/null) || refuse "not a git checkout"
+build=$(git log -1 --format=%ct HEAD) || refuse "cannot read the commit time of HEAD"
+source_repo=${GITHUB_REPOSITORY:-local}
 dirty=""
 if [ -n "$(git status --porcelain --untracked-files=no 2> /dev/null)" ]; then
   [ "$mode" = unsigned ] || refuse "the tree has uncommitted changes; a signed build is always a commit"
@@ -105,6 +110,8 @@ xcode_archive() { # extra xcodebuild arguments
     -archivePath "$archive" \
     "$@" \
     CURRENT_PROJECT_VERSION="$build" \
+    ITMO_BUILD_SOURCE="$source_repo" \
+    ITMO_BUILD_COMMIT="$sha$dirty" \
     archive
 }
 
@@ -125,7 +132,8 @@ def strings(value):
         for v in value:
             yield from strings(v)
 bad = [s for s in strings(info) if "$(" in s]
-keys = ["CFBundleIdentifier", "CFBundleShortVersionString", "CFBundleVersion", "AppGroupID", "KeychainGroup"]
+keys = ["CFBundleIdentifier", "CFBundleShortVersionString", "CFBundleVersion", "BuildChannel", "BuildSource",
+        "BuildCommit", "AppGroupID", "KeychainGroup"]
 print(f"  {label}: " + ", ".join(f"{k}={info[k]}" for k in keys if k in info))
 problems = []
 if bad:
@@ -274,7 +282,7 @@ PY
 
 case "$mode" in
   unsigned)
-    xcode_archive CODE_SIGNING_ALLOWED=NO || fail "xcodebuild archive failed"
+    xcode_archive CODE_SIGNING_ALLOWED=NO ITMO_BUILD_CHANNEL=custom || fail "xcodebuild archive failed"
     package_unsigned || fail "packaging the unsigned .ipa failed"
     ;;
   signed)

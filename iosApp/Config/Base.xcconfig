@@ -20,6 +20,13 @@ APP_STORE_ID =
 
 MARKETING_VERSION = 2.3.0
 CURRENT_PROJECT_VERSION = 1
+// Build identity, BuildChannel, BuildSource and BuildCommit in the app's and the notification service's Info.plist
+// (docs/building.md). `custom` unless the owner's Signing.local.xcconfig sets ITMO_BUILD_CHANNEL = official;
+// archive.sh fills the build number, the source and the commit.
+ITMO_BUILD_CHANNEL = custom
+ITMO_BUILD_SOURCE = local
+ITMO_BUILD_COMMIT =
+
 // iOS 26.1: the first release with `tabViewBottomAccessory(isEnabled:)` (ADR 0031, amended 2026-10-13).
 IPHONEOS_DEPLOYMENT_TARGET = 26.1
 TARGETED_DEVICE_FAMILY = 1

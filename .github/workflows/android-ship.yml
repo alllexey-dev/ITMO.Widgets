@@ -34,7 +34,10 @@ env:
 
 jobs:
   stage:
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci')
+    # Scheduled runs only upstream: a fork that enables its schedules builds nothing.
+    if: >-
+      (github.event_name != 'schedule' || github.repository == 'alllexey-dev/ITMO.Widgets') &&
+      (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci'))
     name: ship ${{ matrix.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -250,7 +253,7 @@ jobs:
   # A failed nightly opens or updates an issue; the next passing one closes it.
   nightly-issue:
     needs: [android-ship]
-    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    if: ${{ !cancelled() && github.event_name == 'schedule' && github.repository == 'alllexey-dev/ITMO.Widgets' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
