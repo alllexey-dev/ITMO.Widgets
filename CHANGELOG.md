@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### iOS native screens (2026-10-19)
+
+- On iOS the last Compose screens are native SwiftUI: all links of a subject, a link's actions, the link editor and the link report, the review editor and another user's sport; the Compose host (`ComposeHost`, the `.compose` routes and `shared/ios` `screens/`) is gone.
+
 ### Builds outside the official pipeline (2026-10-19)
 
 - Builds name their origin: `BUILD_CHANNEL`, `BUILD_SOURCE` and `BUILD_COMMIT` in Android's `BuildConfig`,

@@ -178,10 +178,10 @@ affect the order.
 The iOS app ([iOS app](../ios.md)) loads `reviewsModule` with
 `reviewsIosModule` and turns `PlatformCapabilities.reviews` on. What differs:
 
-- The editor is a full-height SwiftUI form sheet hosting `ReviewEditorSheet`
-  (`reviewEditorViewController` in `shared/ios` `screens/ReviewsScreens.kt`;
-  `iosApp/Sources/Features/Reviews/ReviewEditorSheet.swift`); a failed save shows
-  as a banner.
+- The editor is a full-height SwiftUI form sheet over `ReviewEditorViewModel`
+  (`iosApp/Sources/Features/Reviews/ReviewEditorSheet.swift`): a drag does not
+  close it, the close button asks before unsaved changes are dropped (an alert);
+  a failed save shows as a banner.
 - The report (`AppRoutes.ReportReview`) is a SwiftUI form sheet over `ReportReviewViewModel`
   (`iosApp/Sources/Features/Reviews/ReportReviewSheet.swift`); a failure shows under the comment.
 - The demo shows `DemoReviews` and refuses every change

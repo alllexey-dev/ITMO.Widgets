@@ -6,11 +6,9 @@ service extension. The app is a SwiftUI shell with five tabs (recordbook, schedu
 (sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in),
 Сегодня with the bell's sheet, the pass sheet, the schedule with its sheets (the lesson sheet, the month sheet, the
 friend picker), the recordbook, the subject page with `Мои баллы`, the sport tab with its sections and `Откуда баллы`, the profile tab,
-Друзья, the person card with the review report and another user's friends are SwiftUI over shared ViewModels; the
-other content screens (another user's sport, the review editor, links) are still shared Compose
-Multiplatform screens hosted through
-`ComposeUIViewController`. They move to
-SwiftUI screen by screen ([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
+Друзья, the person card with the review report and editor, another user's friends and sport, and the subject links
+sheets are SwiftUI over shared ViewModels: no iOS route hosts a Compose Multiplatform screen
+([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
 
 ## Prerequisites
 
@@ -83,8 +81,8 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   `Features/Home/`) has it with today's academic date and the bell (`ItmoBellButton` with the count of unseen events,
   today only) over `TodayContent` (`TodayViewModel`: the hero, the day as `ItmoLessonTimeline` from the shared
   `LessonTimelines` rows, `Support/LessonUi+Kit.swift`, the things to do); the bell opens `BellSheet`, a tall
-  `ItmoSheet` over `BellViewModel` ([the bell](features/home.md#the-bell)). The other roots are still Compose screens
-  with their own top bar.
+  `ItmoSheet` over `BellViewModel` ([the bell](features/home.md#the-bell)). The schedule, sport and profile roots
+  have the same header.
 - Stacks and sheets. Each tab has one `NavigationStack` whose path `AppRouter` holds. One router sheet shows at a
   time; `replaceSheet(with:)` swaps it. Sheets take one of three heights (`ItmoSheet`, `ItmoSheetHeight`): the
   content's, 0.82 of the screen, or full; none goes under the status bar.
@@ -93,7 +91,7 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   on screen; a tap opens an `AppRoute` key with `AppRouter.open(_:)`. Results return through `open(_:onResult:)` and
   `deliver(_:from:)`.
 - Route map. `Routes.target(for:)` switches over `RouteFeature` and delegates to the feature's `Routes+<Feature>.swift`,
-  which returns `.swiftUI` (native bar), `.compose` (the route draws its own bar), `.sheet`, `.swiftUISheet`, `.composeSheet`, a tab,
+  which returns `.swiftUI` (pushed under the native bar), `.sheet`, `.swiftUISheet`, a tab,
   the gate or `.notOnIOS`. `RouterTests` fails for a key no feature claims.
 - Debug launch arguments replace Android's debug tools: `-itmoDemo`, `-itmoSignedOut`, `-itmoShellSession <state>`,
   `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoWebLoginFixture`, `-itmoBarsLogin`,
@@ -136,12 +134,6 @@ Swift reaches Kotlin through `Shared` and SKIE (`shared/ios/build.gradle.kts`): 
   wait runs in its own task: SwiftUI cancels the refresh action once the state it shows changes. The root header sets
   the inline title mode on its hidden bar, since with the default large title SwiftUI moves the scroll view's refresh
   control into the hidden bar and nothing is drawn (`RefreshUITests`).
-- Compose screens. Only `shared/ios` builds a `ComposeUIViewController`, through `screenController { }` in
-  `screens/ScreenControllers.kt`, which wraps `ItmoTheme` and `LocalPlatformActions`; each feature has
-  `screens/<Feature>Screens.kt` with the factories Swift calls. `ComposeHost { factory() }`
-  (`Sources/Bridge/ComposeHost.swift`) makes the controller once and ignores the safe area; the factory pads
-  `WindowInsets.safeDrawing`. A Compose sheet is hosted inside a SwiftUI `.sheet`, never a Compose
-  `ModalBottomSheet`. A SwiftUI `safeAreaInset` never reaches a hosted controller.
 - `UiText` resolves in Swift with `text.resolved` (`Sources/Support/UiText+Resolve.swift`), icons with
   `AppIcon.symbol` and `AppSymbol.image`.
 
@@ -371,6 +363,7 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
 
 [ADR 0031](decisions/0031-swiftui-ios-screens.md): every iOS screen becomes native SwiftUI over a shared,
 Compose-free view model. A route moves in one change: the SwiftUI screen in `Sources/Features/<Feature>/`, its
-snapshot tests, the `.swiftUI` target in `Routes+<Feature>.swift`, and the deletion of its Compose factory in
-`shared/ios/.../screens/` and its `ComposeHost` wrapper. How: [Adding a SwiftUI screen](recipes/ios-host.md). Open
+snapshot tests and the `.swiftUI` target in `Routes+<Feature>.swift`. Every route has moved; the Compose hosts
+(`ComposeHost`, the `.compose` targets, the `shared/ios` screen factories) are gone. How:
+[Adding a SwiftUI screen](recipes/ios-host.md). Open
 questions (minimum iOS version, how view models reach Swift, screen order) are listed in the ADR.
