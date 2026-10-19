@@ -111,7 +111,7 @@ scripts/ios/test.sh --only ITMOWidgetsTests/RouterTests        # one class
 scripts/ios/test.sh --record --only SnapshotTests/SampleSnapshotTests  # re-record snapshot references
 scripts/ios/test.sh ui                                         # all UITests (slower)
 scripts/ios/test.sh ui SmokeUITests                            # some UITests classes
-scripts/ios/test.sh kn core feature-schedule                   # Kotlin iosSimulatorArm64Test of shared modules
+scripts/ios/test.sh kn core feature-schedule                   # Kotlin iosSimulatorArm64Test of shared modules (all without names)
 scripts/ios/screenshots.sh                                     # review screenshots in light and dark, nothing compared
 scripts/ios/test.sh --cleanup                                  # delete this checkout's simulator
 ```
@@ -205,13 +205,13 @@ runs (`scripts/ci-plan.sh --self-test` lists the cases).
 
 | Workflow | When | What |
 |---|---|---|
-| `android-ci.yml` | every PR into `master`, when an Android input changed | `:app:testGithubDebugUnitTest`, Konsist, the build-logic tests and `:app:assembleGithubDebug`; the shared host tests; the screenshot tests of the changed modules (all of them in 3 shards when `designsystem`, `core`, `testing` or the build changed); `verifyIosKlibs`. `verify.sh checks` runs on every PR, docs-only included |
+| `android-ci.yml` | every PR into `master`, when an Android input changed | `:app:testGithubDebugUnitTest`, Konsist, the build-logic tests and `:app:assembleGithubDebug`; the shared host tests; the screenshot tests of the changed modules (all of them in 3 shards when `designsystem`, `core`, `testing` or the build changed); `verifyIosKlibs` (the iOS main and test klibs; the iOS tests themselves run only in `ios-nightly`). `verify.sh checks` runs on every PR, docs-only included |
 | `android-ci.yml` | pushes to `master` and PRs labelled `full-ci` that change an Android input; every manual run | `verifyFull` (both flavours, `lintGithubDebug`, `lintPlayDebug`) and every screenshot module in 3 shards; these runs write the build caches PRs read |
 | `ios.yml` | PRs that change `iosApp/`, `scripts/ios/`, an iOS source set or the build; pushes to `master` that also change any `shared/` module; on demand, label `full-ci` | `scripts/ios/test.sh --ci` on the `xcode-27` runner with the pinned Xcode and XcodeGen |
 | `android-ui.yml` | nightly, on demand, label `full-ci` | `verify.sh ui all` in 6 shards on an emulator without a cutout, `ShellSuite` in 2 shards with a tall cutout |
 | `android-ship.yml` | nightly, on demand, label `full-ci` | Release checks without the key: `scripts/ship-check.sh` stages version, unsigned release builds with `check-play-policy.sh`, the upgrade from v2.2 and the shrunk builds on an emulator |
 | `android-nightly.yml` | nightly, on demand | The platform list on a Gradle Managed Device, `NavigationBenchmark` on an emulator, the advisory `buildHealth` report |
-| `ios-nightly.yml` | nightly, on demand | `test.sh --ci kn` over every shared module and all `UITests` |
+| `ios-nightly.yml` | nightly, on demand | `test.sh --ci kn` (every module with an iOS target) and all `UITests` |
 | `dist.yml` | on demand; published releases | Builds without the key ([building](building.md)): the self-signed `githubRelease` APK (on demand only) and `archive.sh --unsigned`, whose `.ipa` a release gets attached |
 
 - **The full suite on a PR.** Add the label `full-ci` to a risky PR (build

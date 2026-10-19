@@ -81,10 +81,12 @@ open class KmpLibraryConventionPlugin : Plugin<Project> {
         }
 
         verifyQuickDependsOn { it == "testAndroidHostTest" || it == "compileCommonMainKotlinMetadata" }
-        // The root verifyIosKlibs: the module's iOS klib, nothing for an Android-only module.
+        // The root verifyIosKlibs: the module's iOS main and test klibs, nothing for an Android-only module.
         tasks.register(IOS_KLIB_TASK) {
             group = "verification"
-            dependsOn(tasks.named { it == "compileKotlinIosSimulatorArm64" })
+            dependsOn(
+                tasks.named { it == "compileKotlinIosSimulatorArm64" || it == "compileTestKotlinIosSimulatorArm64" },
+            )
         }
         Unit
     }

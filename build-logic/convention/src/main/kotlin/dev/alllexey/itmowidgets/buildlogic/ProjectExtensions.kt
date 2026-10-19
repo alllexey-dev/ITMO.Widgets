@@ -16,7 +16,7 @@ internal const val BASE_PACKAGE = "dev.alllexey.itmowidgets"
 /** The per-module lifecycle task the root `verifyQuick` aggregates; module checks attach here. */
 internal const val VERIFY_QUICK_TASK = "itmoVerifyQuick"
 
-/** The per-module task the root `verifyIosKlibs` aggregates: the iosSimulatorArm64 klib where the module has one. */
+/** The per-module task the root `verifyIosKlibs` aggregates: the iosSimulatorArm64 main and test klibs, if any. */
 internal const val IOS_KLIB_TASK = "itmoIosKlib"
 
 /**

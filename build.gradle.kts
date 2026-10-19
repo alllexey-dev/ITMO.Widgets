@@ -60,9 +60,10 @@ tasks.register("verifyFull") {
     dependsOn(verifyQuick, ":app:lintPlayDebug")
 }
 
-// Compile-only: linking a framework or running iosSimulatorArm64Test needs Xcode.
+// Compile-only: linking a framework or running iosSimulatorArm64Test needs Xcode. Each module's itmoIosKlib includes
+// its test klib, which keeps iosTest from rotting on PRs; only ios-nightly runs those tests.
 tasks.register("verifyIosKlibs") {
     group = "verification"
-    description = "iosSimulatorArm64 klibs of every shared module (needs no Xcode; runs on Linux x86_64 too)."
+    description = "iosSimulatorArm64 main and test klibs of every shared module (no Xcode; runs on Linux x86_64 too)."
     dependsOn(conventionPaths.filter { it != ":app" }.map { "$it:itmoIosKlib" } + ":shared:ios:compileKotlinIosSimulatorArm64")
 }
