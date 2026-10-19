@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportScore
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDate
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDateState
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportPlace
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionSlot
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.presentation.FakeSportBookingRepository
@@ -132,18 +133,17 @@ class SportMyViewModelTest {
         val viewModel = viewModel()
         advanceUntilIdle()
 
-        val offer = viewModel.content().days.single().bookings.single().section!!
+        val offer = viewModel.sectionToggle(7)!!
         assertFalse(offer.on)
         assertTrue(offer.enabled)
         assertEquals(UiText.Res(SportStrings.sport_section_make), offer.label)
         assertEquals(UiText.Res(SportStrings.sport_section_chosen, listOf(4)), offer.detail)
-        assertEquals(offer, viewModel.sectionToggle(7), "the sheet shows the same switch")
 
         viewModel.toggleSection(7)
         advanceUntilIdle()
 
         assertEquals(listOf("create 7"), sections.requests)
-        val on = viewModel.content().days.single().bookings.single().section!!
+        val on = viewModel.sectionToggle(7)!!
         assertTrue(on.on)
         assertEquals(UiText.Res(SportStrings.sport_section_place, listOf(5, 5)), on.detail)
         assertEquals(UiText.Res(SportStrings.sport_section_made), viewModel.events.first())
@@ -160,12 +160,10 @@ class SportMyViewModelTest {
         val viewModel = viewModel()
         advanceUntilIdle()
 
-        val days = viewModel.content().days
-        val full = days[0].bookings.single().section!!
+        val full = viewModel.sectionToggle(7)!!
         assertFalse(full.enabled)
         assertEquals(UiText.Res(SportStrings.sport_section_full), full.detail)
-        assertNull(days[1].bookings.single().section, "a queue is no booking")
-        assertNull(viewModel.sectionToggle(8))
+        assertNull(viewModel.sectionToggle(8), "a queue is no booking")
 
         viewModel.toggleSection(7)
         advanceUntilIdle()
@@ -174,7 +172,7 @@ class SportMyViewModelTest {
 
     @Test
     fun aSectionListsItsSlotPlaceAndDatesEachWithItsSwitch() = runTest(main.dispatcher) {
-        val lesson = sections.queueLesson(7)
+        val lesson = sections.queueLesson(7).copy(roomName = "Кронверкский пр., 49, спортивный зал")
         val dates = listOf(SportSectionDateState.QUEUED, SportSectionDateState.LIMIT, null).mapIndexed { index, state ->
             val shift = 14.days * (index + 1)
             SportSectionDate(lesson.start + shift, lesson.end + shift, state, 21L.takeIf { state == SportSectionDateState.QUEUED })
@@ -187,13 +185,15 @@ class SportMyViewModelTest {
         val card = viewModel.uiState.value.sections.single()
         assertEquals("Волейбол", card.title)
         assertEquals(UiText.Res(SportStrings.sport_section_slot, listOf("Среда", "18:30")), card.slot)
-        assertEquals("${shortPersonName("Тихонова Марина Юрьевна")}, спортивный зал", card.venue)
-        assertEquals(UiText.Res(SportStrings.sport_section_place, listOf(3, 7)), card.place)
+        assertEquals(shortPersonName("Тихонова Марина Юрьевна"), card.teacher)
+        assertEquals(SportPlace("спортивный зал", "Кронверкский пр., 49").short(), card.place, "the hall, then the building's short name")
+        assertEquals(UiText.Res(SportStrings.sport_section_place, listOf(3, 7)), card.position)
         assertEquals(
-            listOf(SportStrings.sport_section_date_queued, SportStrings.sport_section_date_limit, SportStrings.sport_section_date_waiting)
+            listOf(SportStrings.sport_queue_pill, SportStrings.sport_section_date_limit, SportStrings.sport_section_date_waiting)
                 .map { UiText.Res(it) },
             card.dates.map { it.status },
         )
+        assertEquals(listOf(SportSectionDateState.QUEUED, SportSectionDateState.LIMIT, null), card.dates.map { it.state })
         assertEquals(listOf(true, false, true), card.dates.map { it.on })
         assertEquals(listOf(true, false, true), card.dates.map { it.enabled }, "the limit skipped the second date")
 
@@ -221,7 +221,7 @@ class SportMyViewModelTest {
         val viewModel = viewModel()
         advanceUntilIdle()
         assertEquals(
-            UiText.Res(SportStrings.sport_section_date_queued_position, listOf(1, 3)),
+            UiText.Res(SportStrings.sport_queue_position, listOf(1, 3)),
             viewModel.uiState.value.sections.single().dates.single().status,
         )
 
@@ -233,7 +233,7 @@ class SportMyViewModelTest {
         sections.sections.value = LoadState.Content(listOf(section(2, 4)))
         advanceUntilIdle()
         assertEquals(
-            UiText.Res(SportStrings.sport_section_date_queued_position, listOf(2, 4)),
+            UiText.Res(SportStrings.sport_queue_position, listOf(2, 4)),
             viewModel.uiState.value.sections.single().dates.single().status,
         )
     }
@@ -250,7 +250,7 @@ class SportMyViewModelTest {
         advanceUntilIdle()
 
         assertEquals(AppError.CustomServicesDisabled.toUiText(), viewModel.events.first())
-        assertFalse(viewModel.content().days.single().bookings.single().section!!.on)
+        assertFalse(viewModel.sectionToggle(7)!!.on)
     }
 
     @Test

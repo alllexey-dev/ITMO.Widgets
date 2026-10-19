@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportCommon
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLessonKind
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
+import dev.alllexey.itmowidgets.feature.sport.domain.model.buildingAddressOf
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -77,9 +78,12 @@ data class SportPlace(val room: String?, val building: String?) {
     }
 }
 
-fun SportCommon.place(): SportPlace {
+fun SportCommon.place(): SportPlace = sportPlace(roomName)
+
+/** [roomName] split into the hall and the building's address, as [SportCommon.place]. */
+fun sportPlace(roomName: String): SportPlace {
     val raw = roomName.trim()
-    val address = extractBuildingAddress()?.trim()?.takeIf { it.isNotEmpty() && raw.startsWith(it) }
+    val address = buildingAddressOf(roomName)?.trim()?.takeIf { it.isNotEmpty() && raw.startsWith(it) }
         ?: return SportPlace(raw.takeIf(String::isNotEmpty), null)
     val room = raw.removePrefix(address).trim().trimStart(',').trim()
     return SportPlace(room.takeIf(String::isNotEmpty), address)
