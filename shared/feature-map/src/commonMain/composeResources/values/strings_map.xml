@@ -4,6 +4,7 @@
     <string name="map_floor">%1$d этаж</string>
     <string name="map_floor_short">%1$d</string>
     <string name="map_floors">Этажи</string>
+    <string name="map_fit_building">Показать корпус целиком</string>
     <string name="map_room_fallback">Помещение</string>
     <string name="map_room_missing">Аудитории %1$s нет на плане</string>
     <string name="map_room_approximate">%1$s нет на плане, показана %2$s</string>

@@ -35,7 +35,7 @@ sealed interface CampusMapUiState {
 /**
  * What the platform map view draws: the [tilesPath] of the building's MBTiles on [level] with [selectedRoomId]
  * highlighted, the [route] and [selection] GeoJSON (`CampusMapLayers`), and where the camera goes: the route step's [frame] (west, south, east, north), else
- * the [focus] point, else the building's [bounds].
+ * the [focus] point, else the building's [bounds]; each new [fit] (`Показать корпус целиком`) frames the bounds again.
  */
 data class MapScene(
     val buildingId: Int,
@@ -49,6 +49,7 @@ data class MapScene(
     val selectedRoomId: Long?,
     val focus: MapPoint?,
     val frame: List<Double>? = null,
+    val fit: Int = 0,
 )
 
 /** A building of the switcher: the directory's short [label]. */

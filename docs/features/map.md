@@ -15,9 +15,11 @@ the data decision [ADR 0033](../decisions/0033-campus-map-mirror.md).
   the search on top, under them the building pill (a menu of the buildings) and the place chips with the plan's own
   icons, the floors on the right edge, and one compact card at the bottom (the room, the route or the results). No
   compass: the plan turns with the building's bearing. Opening a result or picking a route end puts the keyboard
-  away. On iOS the map has the system bar with an inline title and hides the tab bar.
-- Room card: the kind's icon, the number, `Аудитория · 4 этаж` (what the room is, as itmo-map-web names the plan's
-  subclass, then the floor; search results add the name and, in other buildings, the building), `Сюда` and `Отсюда`. A near match says
+  away. On iOS the map is a full-screen route (`RouteTarget.fullScreen`): the system bar with an inline title, and no
+  tab bar, pass accessory or demo banner.
+- Room card: the kind's icon, the number, `Аудитория · 4 этаж` (under a bare number what the room is, as
+  itmo-map-web names the plan's subclass, else the room's own name: `Столовая · 1 этаж`; then the floor, and in
+  search results from other buildings the building), `Сюда` and `Отсюда`. A near match says
   `1224в нет на плане, показана 1224`; a room not on the plan says `Аудитории 9999 нет на плане` and the plan opens
   on the entrance floor.
 - Route card: `А` and `Б` in one line with the swap, then the step: its icon, `Шаг 2 из 4 · Подъём`, the instruction,
@@ -29,7 +31,9 @@ the data decision [ADR 0033](../decisions/0033-campus-map-mirror.md).
   it. The ends may be in two buildings: the walk to the exit, `По городу` (an icon opens the system map app at the
   target building), the walk from the target entrance.
 - Browse: the search over the shown building, then `В других корпусах`; the place chips (`Туалеты`, `Еда`,
-  `Коворкинги`, ...) show only what the building has; a tap on the plan selects the room under it.
+  `Коворкинги`, ...) show only what the building has, and a chip moves the plan to the closest floor that has the
+  place and to its first room there; a tap on the plan selects the room under it. Under the floors, `Показать корпус
+  целиком` (itmo-map-web's) frames the whole building again.
 - Loading: while a building's files or a route are on their way the plan stays and `Загружаем план...` shows over it;
   the native view shows a spinner until its style has loaded. Decoding, hashing, the style JSON, the icons and the
   router run off the main thread.
@@ -56,7 +60,9 @@ The style is ITMO's own: the campus app's style JSON (as itmo-map-web serves it)
 `presentation/ItmoStyle.kt`, so the plan looks like the official app and map.alllexey.dev: its room and corridor
 fills, walls with the 3D extrusion from zoom 19, the room labels and the POI and room-kind icons, the route (solid
 current part, dashed other parts, faded on other floors, `A` and `Б` ends) and the selected room's highlight from
-itmo-map-web. In the dark theme the same layers take dark twins of every colour (`CampusMapStyle.DARK_COLORS`): rooms
+itmo-map-web. Three changes to it: canteens and food keep the orange while coworkings, the library and the student
+office turn teal (the template fills them all orange, so food and coworkings looked alike), and the route is 3 px wide
+over a casing (white, dark in the dark theme) on the shown floor. In the dark theme the same layers take dark twins of every colour (`CampusMapStyle.DARK_COLORS`): rooms
 over the footprint, corridors and walls lighter, the kinds keep their hue at a dark tone, the route a lighter blue.
 `CampusMapStyle` points it at the local MBTiles file, turns its legacy filters into expressions (the
 SDKs' `setFilter` takes only those) and replaces the campus app's SF Pro Text Semibold with Noto Sans Bold, the

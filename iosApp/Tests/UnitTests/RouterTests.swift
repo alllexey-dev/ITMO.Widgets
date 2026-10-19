@@ -260,6 +260,21 @@ final class RouterTests: XCTestCase {
         XCTAssertNil(router.sheet, "a screen closes the sheet it was opened from")
     }
 
+    /// The campus map takes the whole screen: the shell drops the pass accessory and the demo banner under it.
+    func testTheCampusMapIsFullScreenWhileOnTop() {
+        let router = readyRouter()
+        router.selectedTab = .today
+        let map = AppRoutes.CampusMap(args: CampusMapArgs(lesson: nil, route: false))
+
+        XCTAssertEqual(router.open(map), .opened)
+
+        XCTAssertEqual(router.path(of: .today).last?.chrome, .fullScreen)
+        XCTAssertTrue(router.isFullScreen(.today))
+        XCTAssertFalse(router.isFullScreen(.schedule))
+        router.setPath([], of: .today)
+        XCTAssertFalse(router.isFullScreen(.today))
+    }
+
     func testTabRootSelectsItsTab() {
         let router = readyRouter()
 
@@ -491,7 +506,7 @@ final class RouterTests: XCTestCase {
 
     /// `RouteTarget` without its view factories.
     private enum TargetKind: Equatable {
-        case tab(ShellTab), gate, compose, swiftUI, sheet(ShellSheet), composeSheet, swiftUISheet, notOnIOS
+        case tab(ShellTab), gate, compose, swiftUI, fullScreen, sheet(ShellSheet), composeSheet, swiftUISheet, notOnIOS
 
         init(_ target: RouteTarget) {
             switch target {
@@ -499,6 +514,7 @@ final class RouterTests: XCTestCase {
             case .gate: self = .gate
             case .compose: self = .compose
             case .swiftUI: self = .swiftUI
+            case .fullScreen: self = .fullScreen
             case let .sheet(sheet): self = .sheet(sheet)
             case .composeSheet: self = .composeSheet
             case .swiftUISheet: self = .swiftUISheet
@@ -559,7 +575,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.LinkActions(args: links, linkId: "link-1"), .composeSheet),
             (AppRoutes.LessonDetails(args: lesson), .swiftUISheet),
             (AppRoutes.PendingSportDetails(args: pendingSport), .swiftUISheet),
-            (AppRoutes.CampusMap(args: CampusMapArgs(lesson: lesson, route: true)), .swiftUI),
+            (AppRoutes.CampusMap(args: CampusMapArgs(lesson: lesson, route: true)), .fullScreen),
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .swiftUISheet),
             // The link report is a Compose dialog inside the sheet that asks for it.
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),

@@ -109,6 +109,11 @@ final class AppRouter {
         paths[tab] = path
     }
 
+    /// Whether `tab` shows a full-screen route on top (`ShellChrome.fullScreen`): the shell drops its bottom chrome.
+    func isFullScreen(_ tab: ShellTab) -> Bool {
+        path(of: tab).last?.chrome == .fullScreen
+    }
+
     // MARK: Entry routes
 
     /// Queues an entry route; a newer one replaces a waiting one. Returns `false` for a tab the shell does not show.
@@ -248,7 +253,7 @@ final class AppRouter {
         switch Routes.target(for: route) {
         case let .tab(tab):
             return select(tab) ? .opened : .ignored
-        case .compose, .swiftUI:
+        case .compose, .swiftUI, .fullScreen:
             sheet = nil
             paths[selectedTab, default: []].append(ShellDestination(route))
             return .opened

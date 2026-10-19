@@ -135,6 +135,14 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
         current.getSourceAs<GeoJsonSource>(CampusMapStyle.ROUTE_SOURCE)?.setGeoJson(scene.route)
         current.getSourceAs<GeoJsonSource>(CampusMapStyle.SELECTION_SOURCE)?.setGeoJson(scene.selection)
     }
+    LaunchedEffect(map, scene.fit) {
+        val loaded = map ?: return@LaunchedEffect
+        if (scene.fit == 0) return@LaunchedEffect
+        val (west, south, east, north) = scene.bounds
+        loaded.getCameraForLatLngBounds(LatLngBounds.from(north, east, south, west), IntArray(4) { PADDING }, scene.bearing, 0.0)?.let {
+            loaded.animateCamera(CameraUpdateFactory.newCameraPosition(it), ANIMATION_MS)
+        }
+    }
     LaunchedEffect(map, scene.frame) {
         val loaded = map ?: return@LaunchedEffect
         val (west, south, east, north) = scene.frame ?: return@LaunchedEffect

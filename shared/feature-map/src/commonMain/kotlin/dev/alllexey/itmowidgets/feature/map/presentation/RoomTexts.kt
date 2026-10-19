@@ -19,12 +19,13 @@ internal object RoomTexts {
     fun floor(level: Int): UiText = UiText.Res(MapStrings.map_floor, listOf(level + 1))
 
     /**
-     * «Аудитория · Lemon Classroom · 4 этаж» as itmo-map-web: what it is when the title is the number, the name when the
-     * title is the number, the floor and the [building] when given.
+     * «Аудитория · 4 этаж», «Lemon Classroom · 4 этаж» as itmo-map-web: under a number, the room's own name, else what
+     * it is; then the floor and the [building] when given.
      */
     fun subtitle(room: MapRoom, building: String? = null): UiText {
         val name = room.name?.trim()?.takeIf { it.isNotEmpty() && room.number != null && !sameText(it, room.number) }
-        val kind = kind(room)?.takeIf { room.number != null }
+        // A name of its own says what the room is («Столовая», «Lemon Classroom»): the kind only for a bare number.
+        val kind = kind(room)?.takeIf { room.number != null && name == null }
         val parts = listOfNotNull(kind, name?.let(UiText::Dynamic), floor(room.level), building?.let(UiText::Dynamic))
         return UiText.Joined(parts, " · ")
     }

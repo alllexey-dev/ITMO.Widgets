@@ -43,6 +43,7 @@ struct IndoorMapView: UIViewRepresentable {
         private var framed: [KotlinDouble]?
         /// Another building's style is loading: its camera is set again once it has loaded.
         private var fitPending = false
+        private var fitted: Int32 = 0
 
         func apply(_ scene: MapScene, dark: Bool, to view: MLNMapView) {
             self.scene = scene
@@ -62,6 +63,11 @@ struct IndoorMapView: UIViewRepresentable {
                 }
             }
             if let style { update(style) }
+            if scene.fit != fitted {
+                fitted = scene.fit
+                focused = nil
+                fit(scene, in: view, animated: true)
+            }
             moveCamera(scene, in: view)
         }
 
@@ -117,7 +123,7 @@ struct IndoorMapView: UIViewRepresentable {
             tap(id.map { KotlinLong(value: $0) })
         }
 
-        private func fit(_ scene: MapScene, in view: MLNMapView) {
+        private func fit(_ scene: MapScene, in view: MLNMapView, animated: Bool = false) {
             let bounds = scene.bounds.map { $0.doubleValue }
             guard bounds.count == 4 else { return }
             let box = MLNCoordinateBounds(
@@ -126,7 +132,7 @@ struct IndoorMapView: UIViewRepresentable {
             )
             let camera = view.cameraThatFitsCoordinateBounds(box, edgePadding: UIEdgeInsets(top: 48, left: 48, bottom: 48, right: 48))
             camera.heading = scene.bearing
-            view.setCamera(camera, animated: false)
+            view.setCamera(camera, animated: animated)
         }
 
         private func update(_ style: MLNStyle) {

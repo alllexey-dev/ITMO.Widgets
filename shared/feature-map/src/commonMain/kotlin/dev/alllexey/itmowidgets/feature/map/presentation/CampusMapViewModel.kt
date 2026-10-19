@@ -40,6 +40,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.serialization.json.Json
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -103,9 +104,25 @@ class CampusMapViewModel(
         }
     }
 
+    /**
+     * A place chip, again to clear it. The plan goes to the closest floor that has the place and to its first room
+     * there, so the floor shown is never one without it.
+     */
     fun selectPlace(place: Place?) = model.update { state ->
-        state.copy(place = place.takeIf { it != state.place }, query = "", trip = state.trip.takeIf { state.picking != null })
+        val chosen = place.takeIf { it != state.place }
+        val nearest = chosen?.let { p -> state.plan?.rooms?.filter(p::matches) }.orEmpty()
+            .minWithOrNull(compareBy<MapRoom>({ abs(it.level - state.level) }, { it.level }))
+        state.copy(
+            place = chosen,
+            query = "",
+            trip = state.trip.takeIf { state.picking != null },
+            level = nearest?.level ?: state.level,
+            focus = nearest?.point ?: state.focus,
+        )
     }
+
+    /** «Показать корпус целиком»: the camera back to the whole building. */
+    fun fitBuilding() = model.update { it.copy(focus = null, fit = it.fit + 1) }
 
     fun openResult(result: SearchResult) = launchLoad {
         model.value.picking?.let { end ->
@@ -333,6 +350,7 @@ class CampusMapViewModel(
                 selection = CampusMapGeoJson.selection(selected),
                 selectedRoomId = selected?.id,
                 focus = state.focus,
+                fit = state.fit,
                 frame = step?.part?.let { part ->
                     val nodes = listOf(part.edges.first().from) + part.edges.map { it.to }
                     listOf(nodes.minOf { it.longitude }, nodes.minOf { it.latitude }, nodes.maxOf { it.longitude }, nodes.maxOf { it.latitude })
@@ -425,6 +443,7 @@ class CampusMapViewModel(
         val place: Place? = null,
         val allRooms: Map<Int, List<MapRoom>>? = null,
         val focus: MapPoint? = null,
+        val fit: Int = 0,
         val failure: AppError? = null,
         val noPlan: CampusMapUiState.NoPlan? = null,
     )

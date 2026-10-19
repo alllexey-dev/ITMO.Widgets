@@ -127,7 +127,7 @@ final class AccountTests: XCTestCase {
 
     /// `RouteTarget` without its view factories.
     private enum TargetKind: Equatable {
-        case tab(ShellTab), gate, compose, swiftUI, sheet(ShellSheet), composeSheet, swiftUISheet, notOnIOS
+        case tab(ShellTab), gate, compose, swiftUI, fullScreen, sheet(ShellSheet), composeSheet, swiftUISheet, notOnIOS
 
         init(_ target: RouteTarget) {
             switch target {
@@ -135,6 +135,7 @@ final class AccountTests: XCTestCase {
             case .gate: self = .gate
             case .compose: self = .compose
             case .swiftUI: self = .swiftUI
+            case .fullScreen: self = .fullScreen
             case let .sheet(sheet): self = .sheet(sheet)
             case .composeSheet: self = .composeSheet
             case .swiftUISheet: self = .swiftUISheet

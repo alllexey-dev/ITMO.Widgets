@@ -49,7 +49,7 @@ struct ShellView: View {
         case .onboarding:
             OnboardingScreen(finished: session.onboardingFinished)
         case let .tabs(demo):
-            ShellTabs(selection: $router.selectedTab, showPass: showPass, openPass: { router.open(AppRoutes.QrPass.shared) }) { tab in
+            ShellTabs(selection: $router.selectedTab, showPass: showPass && !router.isFullScreen(router.selectedTab), openPass: { router.open(AppRoutes.QrPass.shared) }) { tab in
                 ShellStack(
                     tab: tab,
                     router: router,
@@ -96,7 +96,7 @@ struct ShellStack: View {
             }
             // SwiftUI screens open further routes and leave the stack through the router (settings).
             .environment(router)
-            if isDemo {
+            if isDemo, !router.isFullScreen(tab) {
                 ItmoDemoBanner(signIn: leaveDemo)
             }
         }

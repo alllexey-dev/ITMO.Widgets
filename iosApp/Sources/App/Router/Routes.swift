@@ -12,6 +12,9 @@ enum RouteTarget {
     case compose(@MainActor () -> AnyView)
     /// A SwiftUI screen pushed on the selected tab's stack, under the stack's navigation bar (`ShellChrome.native`).
     case swiftUI(@MainActor () -> AnyView)
+    /// A SwiftUI screen pushed like `swiftUI` that takes the whole screen: the stack's navigation bar stays, the tab
+    /// bar, the pass accessory and the demo banner go while it is on top (`ShellChrome.fullScreen`; the campus map).
+    case fullScreen(@MainActor () -> AnyView)
     /// A sheet above the shell.
     case sheet(ShellSheet)
     /// A Compose sheet's content from its `screens/<Feature>Screens.kt` factory in a SwiftUI sheet above the shell
@@ -28,6 +31,7 @@ enum RouteTarget {
         switch self {
         case .compose: .compose
         case .swiftUI: .native
+        case .fullScreen: .fullScreen
         case .tab, .gate, .sheet, .composeSheet, .swiftUISheet, .notOnIOS: nil
         }
     }
@@ -62,7 +66,7 @@ enum Routes {
     @ViewBuilder
     static func view(for destination: ShellDestination) -> some View {
         switch target(for: destination.route) {
-        case let .compose(make), let .swiftUI(make): make()
+        case let .compose(make), let .swiftUI(make), let .fullScreen(make): make()
         case .tab, .gate, .sheet, .composeSheet, .swiftUISheet, .notOnIOS: EmptyView()
         }
     }
@@ -73,7 +77,7 @@ enum Routes {
     static func sheetView(for destination: ShellDestination) -> some View {
         switch target(for: destination.route) {
         case let .composeSheet(make), let .swiftUISheet(make): make()
-        case .tab, .gate, .compose, .swiftUI, .sheet, .notOnIOS: EmptyView()
+        case .tab, .gate, .compose, .swiftUI, .fullScreen, .sheet, .notOnIOS: EmptyView()
         }
     }
 

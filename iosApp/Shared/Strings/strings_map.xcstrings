@@ -25,6 +25,18 @@
         }
       }
     },
+    "map_fit_building" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать корпус целиком"
+          }
+        }
+      }
+    },
     "map_floor" : {
       "comment" : "Generated from strings_map.xml",
       "extractionState" : "manual",

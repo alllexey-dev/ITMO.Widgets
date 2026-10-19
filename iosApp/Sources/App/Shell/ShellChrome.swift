@@ -5,9 +5,12 @@ import UIKit
 ///
 /// - `compose`: a CMP route draws its own top bar, so the SwiftUI bar is hidden.
 /// - `native`: a SwiftUI screen uses the navigation bar of its stack.
+/// - `fullScreen`: a SwiftUI screen under the stack's navigation bar with nothing at the bottom: no tab bar here, and
+///   the shell leaves out the pass accessory and the demo banner (`AppRouter.isFullScreen`).
 enum ShellChrome {
     case compose
     case native
+    case fullScreen
 }
 
 extension View {
@@ -21,6 +24,8 @@ extension View {
                 .background(InteractivePopRestorer().frame(width: 0, height: 0).accessibilityHidden(true))
         case .native:
             self
+        case .fullScreen:
+            toolbar(.hidden, for: .tabBar)
         }
     }
 }

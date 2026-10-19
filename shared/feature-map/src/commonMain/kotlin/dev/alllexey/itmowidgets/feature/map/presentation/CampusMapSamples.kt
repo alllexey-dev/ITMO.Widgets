@@ -94,7 +94,7 @@ object CampusMapSamples {
             places = places,
             results = listOf(
                 SearchResult(13, 18, UiText.Dynamic("1404"), subtitle(UiText.Res(MapStrings.map_kind_education), UiText.Res(MapStrings.map_floor, listOf(4))), "auditory"),
-                SearchResult(13, 262, UiText.Dynamic("1419"), subtitle(UiText.Res(MapStrings.map_kind_coworking), UiText.Dynamic("Lemon Classroom"), UiText.Res(MapStrings.map_floor, listOf(4))), "coworking"),
+                SearchResult(13, 262, UiText.Dynamic("1419"), subtitle(UiText.Dynamic("Lemon Classroom"), UiText.Res(MapStrings.map_floor, listOf(4))), "coworking"),
             ) + (1405..1410).map { number ->
                 // More rows than the sheet holds: it stops at its height and scrolls.
                 SearchResult(13, number.toLong(), UiText.Dynamic("$number"), subtitle(UiText.Res(MapStrings.map_kind_education), UiText.Res(MapStrings.map_floor, listOf(4))), "auditory")

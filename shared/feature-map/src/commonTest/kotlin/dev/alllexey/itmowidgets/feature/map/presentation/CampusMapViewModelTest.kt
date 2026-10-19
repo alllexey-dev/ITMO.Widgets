@@ -204,6 +204,30 @@ class CampusMapViewModelTest {
     }
 
     @Test
+    fun aPlaceChipGoesToTheClosestFloorThatHasThePlace() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"))
+        collect(vm)
+        assertEquals(3, plan(vm).map.level)
+
+        vm.selectPlace(Place.RESTROOMS)
+
+        assertEquals(0, plan(vm).map.level)
+        assertEquals(MapPoint(30.3093, 59.9563), plan(vm).map.focus)
+    }
+
+    @Test
+    fun fittingTheBuildingDropsTheFocus() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"))
+        collect(vm)
+        assertNotNull(plan(vm).map.focus)
+
+        vm.fitBuilding()
+
+        assertNull(plan(vm).map.focus)
+        assertEquals(1, plan(vm).map.fit)
+    }
+
+    @Test
     fun noMirrorIsAnError() = runTest(main.dispatcher) {
         val vm = CampusMapViewModel(SavedStateHandle(), FakeRepository(offline = true), DIRECTORY, gateway(), dispatchers())
         collect(vm)

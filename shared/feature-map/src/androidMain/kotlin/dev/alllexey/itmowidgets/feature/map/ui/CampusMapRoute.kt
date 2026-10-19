@@ -27,6 +27,7 @@ fun CampusMapRoute(viewModel: CampusMapViewModel, onBack: () -> Unit, modifier: 
             onRouteFrom = viewModel::routeFrom,
             onPick = viewModel::pick,
             onSwap = viewModel::swap,
+            onFitBuilding = viewModel::fitBuilding,
             onStep = viewModel::step,
             onCloseTrip = viewModel::closeTrip,
             onCloseRoom = viewModel::closeRoom,

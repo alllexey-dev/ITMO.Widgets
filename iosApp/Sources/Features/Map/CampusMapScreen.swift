@@ -32,6 +32,7 @@ struct CampusMapScreen: View {
                 routeFrom: { viewModel.routeFrom() },
                 pick: { viewModel.pick(end: $0) },
                 swap: { viewModel.swap() },
+                fitBuilding: { viewModel.fitBuilding() },
                 step: { viewModel.step(index: $0) },
                 closeTrip: { viewModel.closeTrip() },
                 closeRoom: { viewModel.closeRoom() },
@@ -50,12 +51,11 @@ struct CampusMapScreen: View {
 }
 
 extension View {
-    /// The map's chrome: the system bar with the back button and an inline title, no tab bar or pass accessory, so the
-    /// plan takes the screen (docs/features/map.md, a full screen pushed over the tabs).
+    /// The map's bar: the system bar with the back button and an inline title. The shell drops the tab bar, the pass
+    /// accessory and the demo banner for it (`RouteTarget.fullScreen`).
     func campusMapChrome() -> some View {
         navigationTitle(Text(verbatim: AppStrings.string("map_title")))
             .toolbarTitleDisplayMode(.inline)
-            .toolbar(.hidden, for: .tabBar)
     }
 }
 
@@ -71,6 +71,7 @@ struct CampusMapContentActions {
     var routeFrom: () -> Void = {}
     var pick: (RouteEnd?) -> Void = { _ in }
     var swap: () -> Void = {}
+    var fitBuilding: () -> Void = {}
     var step: (Int32) -> Void = { _ in }
     var closeTrip: () -> Void = {}
     var closeRoom: () -> Void = {}
@@ -113,6 +114,9 @@ private struct PlanView<Map: View>: View {
     let actions: CampusMapContentActions
     let map: (MapScene) -> Map
     @FocusState private var searchFocused: Bool
+    /// The text the field showed when the map ended the search: UIKit writes it back when the field loses focus, and
+    /// that write is not the user's.
+    @State private var staleQuery: String?
 
     var body: some View {
         map(plan.map)
@@ -123,16 +127,34 @@ private struct PlanView<Map: View>: View {
             }
             .safeAreaInset(edge: .bottom) { bottom }
             // Picking a route end starts in the search, as itmo-map-web's from/to search.
-            .onChange(of: plan.trip?.picking) { _, picking in searchFocused = picking != nil }
+            .onChange(of: plan.trip?.picking) { _, picking in
+                if picking != nil { searchFocused = true } else { endSearch() }
+            }
+            .onChange(of: searchFocused) { _, focused in
+                if focused { staleQuery = nil }
+            }
     }
 
     private var picking: RouteEnd? { plan.trip?.picking }
+
+    /// An opened result or a picked route end ends the search: the keyboard goes away.
+    private func endSearch() {
+        guard searchFocused else { return }
+        staleQuery = plan.search.query
+        searchFocused = false
+    }
 
     private var top: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.compact) {
             ItmoSearchField(
                 placeholder: AppStrings.string(searchPlaceholder),
-                query: Binding(get: { plan.search.query }, set: { actions.search($0) }),
+                query: Binding(get: { plan.search.query }, set: { query in
+                    if query == staleQuery {
+                        staleQuery = nil
+                    } else {
+                        actions.search(query)
+                    }
+                }),
                 clearLabel: AppStrings.string("map_close")
             )
             .focused($searchFocused)
@@ -145,9 +167,12 @@ private struct PlanView<Map: View>: View {
             }
             // The results cover the edge, so the floors return with the plan; a route end can be tapped on any floor.
             if !plan.search.active || plan.trip != nil {
-                HStack {
+                HStack(alignment: .top) {
                     Spacer(minLength: 0)
-                    floors
+                    VStack(spacing: ItmoSpacing.compact) {
+                        floors
+                        fitButton
+                    }
                 }
                 .padding(.trailing, ItmoSpacing.compact)
             }
@@ -212,6 +237,20 @@ private struct PlanView<Map: View>: View {
             .accessibilityLabel(Text(verbatim: "\(AppStrings.string("map_buildings")): \(current.label)"))
             .accessibilityIdentifier("map.building")
         }
+    }
+
+    /// itmo-map-web's "show the whole building" under the floors: the camera back to the whole building.
+    private var fitButton: some View {
+        Button(action: actions.fitBuilding) {
+            AppSymbol.fitScreen.image
+                .frame(width: 44, height: 44)
+                .background(ItmoColor.surface, in: Circle())
+                .contentShape(Circle())
+                .mapChrome()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(AppStrings.string("map_fit_building"))
+        .accessibilityIdentifier("map.fit")
     }
 
     private var loading: some View {
@@ -329,7 +368,9 @@ private struct PlanView<Map: View>: View {
         sheet {
             HStack(spacing: ItmoSpacing.related) {
                 endpoint(.from, text: trip.from, trip: trip)
-                Button { actions.swap() } label: { AppSymbol.swapVert.image.rotationEffect(.degrees(90)).frame(width: 44, height: 44) }
+                Button { actions.swap() } label: {
+                    AppSymbol.swapVert.image.rotationEffect(.degrees(90)).frame(width: 44, height: 44).contentShape(Rectangle())
+                }
                     .buttonStyle(.plain)
                     .disabled(trip.to == nil)
                     .accessibilityLabel(AppStrings.string("map_route_swap"))
@@ -448,8 +489,7 @@ private struct PlanView<Map: View>: View {
 
     private func resultRow(_ result: SearchResult) -> some View {
         Button {
-            // An opened result ends the search: the keyboard goes away.
-            searchFocused = false
+            endSearch()
             actions.result(result)
         } label: {
             HStack(spacing: ItmoSpacing.content) {
@@ -469,14 +509,14 @@ private struct PlanView<Map: View>: View {
     }
 
     private func iconButton(_ symbol: AppSymbol, label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) { symbol.image.frame(width: 44, height: 44) }
+        Button(action: action) { symbol.image.frame(width: 44, height: 44).contentShape(Rectangle()) }
             .buttonStyle(.plain)
             .foregroundStyle(ItmoColor.primary)
             .accessibilityLabel(AppStrings.string(label))
     }
 
     private func closeButton(_ action: @escaping () -> Void) -> some View {
-        Button(action: action) { AppSymbol.close.image.frame(width: 44, height: 44) }
+        Button(action: action) { AppSymbol.close.image.frame(width: 44, height: 44).contentShape(Rectangle()) }
             .buttonStyle(.plain)
             .accessibilityLabel(AppStrings.string("map_close"))
             .accessibilityIdentifier("map.close")

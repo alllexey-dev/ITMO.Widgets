@@ -89,6 +89,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_directions
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_expand_more
+import dev.alllexey.itmowidgets.shared.designsystem.ic_fit_screen
 import dev.alllexey.itmowidgets.shared.designsystem.ic_location_on
 import dev.alllexey.itmowidgets.shared.designsystem.ic_map
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
@@ -96,6 +97,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_swap_vert
 import dev.alllexey.itmowidgets.shared.feature.map.Res
 import dev.alllexey.itmowidgets.shared.feature.map.map_buildings
 import dev.alllexey.itmowidgets.shared.feature.map.map_close
+import dev.alllexey.itmowidgets.shared.feature.map.map_fit_building
 import dev.alllexey.itmowidgets.shared.feature.map.map_floors
 import dev.alllexey.itmowidgets.shared.feature.map.map_loading
 import dev.alllexey.itmowidgets.shared.feature.map.map_no_plan_title
@@ -133,6 +135,7 @@ data class CampusMapActions(
     val onRouteFrom: () -> Unit = {},
     val onPick: (RouteEnd?) -> Unit = {},
     val onSwap: () -> Unit = {},
+    val onFitBuilding: () -> Unit = {},
     val onStep: (Int) -> Unit = {},
     val onCloseTrip: () -> Unit = {},
     val onCloseRoom: () -> Unit = {},
@@ -231,6 +234,7 @@ private fun PlanContent(state: CampusMapUiState.Plan, actions: CampusMapActions,
             // The results cover the edge, so the floors return with the plan; a route end can be tapped on any floor.
             if (!state.search.active || trip != null) {
                 Floors(state.levels, actions.onLevel, Modifier.align(Alignment.End).padding(end = spacing.compact))
+                FitButton(actions.onFitBuilding, Modifier.align(Alignment.End).padding(end = spacing.compact))
             }
         }
         if (state.loading) Loading(Modifier.align(Alignment.Center))
@@ -339,6 +343,16 @@ private fun MapChip(
             leading()
             Text(label, style = ItmoTheme.typography.labelLarge, maxLines = 1)
             trailing?.invoke()
+        }
+    }
+}
+
+/** itmo-map-web's «Показать корпус целиком» under the floors: the camera back to the whole building. */
+@Composable
+private fun FitButton(onFit: () -> Unit, modifier: Modifier) {
+    Surface(modifier, shape = CircleShape, color = ItmoTheme.colorScheme.surfaceContainerHigh, shadowElevation = ChromeElevation) {
+        IconButton(onClick = onFit) {
+            Icon(painterResource(KitRes.drawable.ic_fit_screen), stringResource(Res.string.map_fit_building))
         }
     }
 }
