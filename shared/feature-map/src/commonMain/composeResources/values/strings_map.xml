@@ -8,10 +8,13 @@
     <string name="map_room_fallback">Помещение</string>
     <string name="map_room_missing">Аудитории %1$s нет на плане</string>
     <string name="map_room_approximate">%1$s нет на плане, показана %2$s</string>
-    <string name="map_route">Маршрут</string>
+    <string name="map_route_here">Сюда</string>
+    <string name="map_route_from_here">Отсюда</string>
     <string name="map_open_in_maps">Открыть в Картах</string>
     <string name="map_no_plan_title">У корпуса нет плана</string>
     <string name="map_close">Закрыть</string>
+    <string name="map_buildings">Корпус</string>
+    <string name="map_loading">Загружаем план…</string>
 
     <!-- Search and places -->
     <string name="map_search_hint">Аудитория или место</string>
@@ -29,8 +32,14 @@
     <string name="map_place_atm">Банкоматы</string>
 
     <!-- The route -->
-    <string name="map_route_from_entrance">От входа</string>
-    <string name="map_route_from_room">От %1$s</string>
+    <string name="map_route_entrance">Вход</string>
+    <string name="map_route_badge_from">А</string>
+    <string name="map_route_badge_to">Б</string>
+    <string name="map_route_pick_from">Откуда</string>
+    <string name="map_route_pick_to">Куда</string>
+    <string name="map_route_pick_hint">Найдите место или нажмите на него на плане</string>
+    <string name="map_route_swap">Поменять местами</string>
+    <string name="map_route_not_found">Путь по плану не найден</string>
     <string name="map_route_step">Шаг %1$d из %2$d</string>
     <string name="map_route_previous">Назад</string>
     <string name="map_route_next">Дальше</string>

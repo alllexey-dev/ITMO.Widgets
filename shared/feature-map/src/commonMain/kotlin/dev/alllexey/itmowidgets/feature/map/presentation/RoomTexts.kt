@@ -10,6 +10,9 @@ internal object RoomTexts {
         ?: Place.of(room)?.text
         ?: UiText.Res(MapStrings.map_room_fallback)
 
+    /** The map sprite of the room's kind, as itmo-map-web picks it; `default` for a kind without one. */
+    fun icon(room: MapRoom): String = SPRITES[room.kind] ?: Place.of(room)?.icon ?: "default"
+
     fun floor(level: Int): UiText = UiText.Res(MapStrings.map_floor, listOf(level + 1))
 
     /** «1 этаж, Lemon Classroom»: the floor and the name when the title is the number. */
@@ -24,6 +27,13 @@ internal object RoomTexts {
         ?: name?.trim()?.takeIf(String::isNotEmpty)
 
     private fun sameText(a: String, b: String) = a.replace(MARK, "").trim().equals(b.replace(MARK, "").trim(), ignoreCase = true)
+
+    private val SPRITES = mapOf(
+        "education" to "auditory", "office" to "office", "meetingroom" to "meetingroom", "conferenceroom" to "conferenceroom",
+        "museum" to "museum", "fitnessroom" to "gym", "lockerroom.female" to "lockerroom.female",
+        "lockerroom.male" to "lockerroom.male", "stairs" to "stairs", "restroom.male" to "amenity.restroom.male",
+        "restroom.female" to "amenity.restroom.female", "first_aid_kit" to "healthcare", "bicycle_parking" to "parking.bike",
+    )
 
     private val MARK = Regex("""\s*\((присв|усл)\)\s*$""")
 }

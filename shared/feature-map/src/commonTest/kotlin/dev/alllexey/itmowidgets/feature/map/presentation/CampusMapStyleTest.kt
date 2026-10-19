@@ -49,6 +49,18 @@ class CampusMapStyleTest {
     }
 
     @Test
+    fun theDarkStyleKeepsNoLightColourAndChangesNothingElse() {
+        val dark = Json.parseToJsonElement(CampusMapStyle.json(scene, dark = true)).jsonObject
+        val text = dark.toString()
+
+        CampusMapStyle.DARK_COLORS.keys.forEach { light -> assertTrue("\"$light\"" !in text, light) }
+        val darkLayers = dark.getValue("layers").jsonArray.map { it.jsonObject }
+        assertEquals(layers.map { it["id"] to it["filter"] }, darkLayers.map { it["id"] to it["filter"] })
+        val background = darkLayers.first().getValue("paint").jsonObject.getValue("background-color").jsonPrimitive.content
+        assertEquals("rgba(22, 24, 27, 1)", background)
+    }
+
+    @Test
     fun noRouteAndNoSelectionAreEmptyCollections() {
         assertEquals(0, Json.parseToJsonElement(CampusMapGeoJson.selection(null)).jsonObject.getValue("features").jsonArray.size)
         assertEquals(CampusMapGeoJson.EMPTY, CampusMapGeoJson.route(null, 0, null))

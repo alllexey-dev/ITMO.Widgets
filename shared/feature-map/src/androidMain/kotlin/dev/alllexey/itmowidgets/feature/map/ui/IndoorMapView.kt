@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.DisplayMetrics
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -12,15 +15,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.map.presentation.CampusMapStyle
 import dev.alllexey.itmowidgets.feature.map.presentation.MapScene
 import dev.alllexey.itmowidgets.shared.feature.map.Res
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -37,8 +45,10 @@ import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonSource
 
 /**
- * The native plan (MapLibre Android) of [scene]: the style is loaded once per building and theme, the floor switches
- * by the shared layer filters, the route and the selection replace their GeoJSON, and a tap reports the room under it.
+ * The native plan (MapLibre Android) of [scene]: the style is loaded once per building and theme (the dark plan in a
+ * dark app theme), the floor switches by the shared layer filters, the route and the selection replace their GeoJSON,
+ * and a tap reports the room under it. The style and the icons are built off the main thread; a spinner shows until
+ * the style has loaded.
  */
 @SuppressLint("ClickableViewAccessibility")
 @Composable
@@ -51,7 +61,9 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
     var style by remember { mutableStateOf<Style?>(null) }
     var sprites by remember { mutableStateOf<Map<String, Bitmap>?>(null) }
+    var framed by remember { mutableStateOf<String?>(null) }
     val tap by rememberUpdatedState(onRoomTap)
+    val dark = ItmoTheme.colorScheme.background.luminance() < HALF
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     DisposableEffect(lifecycle, mapView) {
@@ -89,12 +101,16 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
             map = loaded
         }
     }
-    LaunchedEffect(map, sprites, scene.tilesPath) {
+    LaunchedEffect(map, sprites, scene.tilesPath, dark) {
         val loaded = map ?: return@LaunchedEffect
         val icons = sprites ?: return@LaunchedEffect
         style = null
-        val builder = icons.entries.fold(Style.Builder().fromJson(CampusMapStyle.json(scene))) { b, (name, icon) -> b.withImage(name, icon) }
+        val json = withContext(Dispatchers.Default) { CampusMapStyle.json(scene, dark) }
+        val builder = icons.entries.fold(Style.Builder().fromJson(json)) { b, (name, icon) -> b.withImage(name, icon) }
         loaded.setStyle(builder) { style = it }
+        // A theme switch keeps the camera; only another building is framed anew.
+        if (framed == scene.tilesPath) return@LaunchedEffect
+        framed = scene.tilesPath
         val (west, south, east, north) = scene.bounds
         val bounds = LatLngBounds.from(north, east, south, west)
         loaded.setLatLngBoundsForCameraTarget(bounds)
@@ -135,18 +151,22 @@ fun IndoorMapView(scene: MapScene, onRoomTap: (Long?) -> Unit, modifier: Modifie
             .build()
         loaded.animateCamera(CameraUpdateFactory.newCameraPosition(camera), ANIMATION_MS)
     }
-    AndroidView(factory = { mapView }, modifier = modifier)
+    Box(modifier) {
+        AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
+        if (style == null) CircularProgressIndicator(Modifier.align(Alignment.Center))
+    }
 }
 
 /**
  * The campus app's icons from the module's resources, at its pixel ratio of 3 (the bitmap's density says it); 36
- * PNGs of 72 px, which the resource reader loads off the main thread.
+ * PNGs of 72 px, read and decoded off the main thread.
  */
-private suspend fun loadSprites(): Map<String, Bitmap> =
+private suspend fun loadSprites(): Map<String, Bitmap> = withContext(Dispatchers.Default) {
     CampusMapStyle.SPRITES.associateWith { name ->
         val bytes = Res.readBytes("files/map_sprites/$name.png")
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size).apply { density = DisplayMetrics.DENSITY_DEFAULT * CampusMapStyle.SPRITE_PIXEL_RATIO }
     }
+}
 
 private operator fun List<Double>.component1() = this[0]
 private operator fun List<Double>.component2() = this[1]
@@ -160,3 +180,4 @@ private const val PADDING = 96
 private const val FRAME_PADDING = 220
 private const val MAX_FRAME_ZOOM = 20.0
 private const val ANIMATION_MS = 400
+private const val HALF = 0.5f

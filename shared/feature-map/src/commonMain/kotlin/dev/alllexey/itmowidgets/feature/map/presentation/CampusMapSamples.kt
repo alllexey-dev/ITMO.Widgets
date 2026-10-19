@@ -37,7 +37,7 @@ object CampusMapSamples {
             title = UiText.Dynamic("2403"),
             subtitle = UiText.Res(MapStrings.map_room_on_floor, listOf(UiText.Res(MapStrings.map_floor, listOf(4)), "Кронверкский пр., 49")),
             note = null,
-            destination = kronva,
+            icon = "auditory",
         ),
         trip = null,
         search = idle,
@@ -55,7 +55,8 @@ object CampusMapSamples {
         room = null,
         levels = levels.map { it.copy(onRoute = it.level == 0 || it.level == 3) },
         trip = TripView(
-            from = UiText.Res(MapStrings.map_route_from_room, listOf(UiText.Dynamic("1124"))),
+            from = UiText.Dynamic("1124"),
+            to = UiText.Dynamic("2403"),
             steps = listOf(
                 step(TripStepKind.FLOOR, UiText.Res(MapStrings.map_step_floor_title, listOf(1)), UiText.Res(MapStrings.map_step_floor_to_entrance, listOf(1)), 1),
                 TripStep(
@@ -74,17 +75,29 @@ object CampusMapSamples {
 
     val City = Route.copy(trip = Route.trip!!.copy(current = 1))
 
+    /** «Отсюда» from 2403: where to is picked by the search, the entrances offered first. */
+    val Pick = Route.copy(
+        trip = TripView(from = UiText.Dynamic("2403"), to = null, steps = emptyList(), current = 0, picking = RouteEnd.TO),
+        search = idle.copy(
+            picking = RouteEnd.TO,
+            results = listOf(SearchResult(13, 469, UiText.Res(MapStrings.map_place_entrances), UiText.Res(MapStrings.map_floor, listOf(1)), "entrance")),
+        ),
+    )
+
+    /** Another building on its way: the shown plan stays under the spinner. */
+    val Switching = Room.copy(room = null, loading = true)
+
     val Search = Room.copy(
         room = null,
         search = SearchView(
             query = "14",
             places = places,
             results = listOf(
-                SearchResult(13, 18, UiText.Dynamic("1404"), UiText.Res(MapStrings.map_floor, listOf(4))),
-                SearchResult(13, 262, UiText.Dynamic("1419"), UiText.Joined(listOf(UiText.Res(MapStrings.map_floor, listOf(4)), UiText.Dynamic("Lemon Classroom")), ", ")),
+                SearchResult(13, 18, UiText.Dynamic("1404"), UiText.Res(MapStrings.map_floor, listOf(4)), "auditory"),
+                SearchResult(13, 262, UiText.Dynamic("1419"), UiText.Joined(listOf(UiText.Res(MapStrings.map_floor, listOf(4)), UiText.Dynamic("Lemon Classroom")), ", "), "coworking"),
             ),
             elsewhere = listOf(
-                SearchResult(273, 1, UiText.Dynamic("1410"), UiText.Joined(listOf(UiText.Res(MapStrings.map_floor, listOf(1)), UiText.Dynamic("ул. Ломоносова, 9")), ", ")),
+                SearchResult(273, 1, UiText.Dynamic("1410"), UiText.Joined(listOf(UiText.Res(MapStrings.map_floor, listOf(1)), UiText.Dynamic("ул. Ломоносова, 9")), ", "), "auditory"),
             ),
         ),
     )

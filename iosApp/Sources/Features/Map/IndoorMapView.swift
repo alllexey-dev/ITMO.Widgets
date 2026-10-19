@@ -3,11 +3,12 @@ import Shared
 import SwiftUI
 
 /// The native plan (MapLibre iOS) of a `MapScene`: the shared style is written to a file and loaded once per building
-/// and appearance, the floor switches by the shared layer filters, the route and the selection replace their GeoJSON,
-/// and a tap reports the plan room under it.
+/// and appearance (the dark plan in dark mode), the floor switches by the shared layer filters, the route and the
+/// selection replace their GeoJSON, and a tap reports the plan room under it.
 struct IndoorMapView: UIViewRepresentable {
     let scene: MapScene
     let tap: (KotlinLong?) -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -27,7 +28,7 @@ struct IndoorMapView: UIViewRepresentable {
 
     func updateUIView(_ view: MLNMapView, context: Context) {
         context.coordinator.tap = tap
-        context.coordinator.apply(scene, to: view)
+        context.coordinator.apply(scene, dark: colorScheme == .dark, to: view)
     }
 
     @MainActor
@@ -39,16 +40,19 @@ struct IndoorMapView: UIViewRepresentable {
         private var focused: MapPoint?
         private var framed: [KotlinDouble]?
 
-        func apply(_ scene: MapScene, to view: MLNMapView) {
+        func apply(_ scene: MapScene, dark: Bool, to view: MLNMapView) {
             self.scene = scene
-            let key = scene.tilesPath
+            let key = "\(scene.tilesPath)|\(dark)"
             if key != styleKey {
+                let building = styleKey?.hasPrefix("\(scene.tilesPath)|") != true
                 styleKey = key
                 style = nil
-                let url = FileManager.default.temporaryDirectory.appendingPathComponent("campus-map-\(scene.buildingId).json")
-                try? CampusMapStyle.shared.json(scene: scene).write(to: url, atomically: true, encoding: .utf8)
+                let url = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("campus-map-\(scene.buildingId)\(dark ? "-dark" : "").json")
+                try? CampusMapStyle.shared.json(scene: scene, dark: dark).write(to: url, atomically: true, encoding: .utf8)
                 view.styleURL = url
-                fit(scene, in: view)
+                // A theme switch keeps the camera; only another building is framed anew.
+                if building { fit(scene, in: view) }
             }
             if let style { update(style) }
             if let frame = scene.frame, frame != framed, frame.count == 4 {

@@ -45,17 +45,25 @@ object CampusMapStyle {
         "area_name_auditory", "area_name_public", "poi",
     )
 
-    /** The style of [scene]'s building on its level with its selected room. */
-    fun json(scene: MapScene): String {
+    /** The style of [scene]'s building on its level with its selected room; [dark] follows the app's dark theme. */
+    fun json(scene: MapScene, dark: Boolean = false): String {
         val template = Json.parseToJsonElement(ITMO_STYLE).jsonObject
         val filters = filters(scene.level, scene.selectedRoomId)
+        val layers = JsonArray(layers().map { layer -> layer.styled(filters[layer.id]) })
         return JsonObject(
             template + mapOf(
                 "glyphs" to JsonPrimitive(scene.glyphsUrl),
                 "sources" to sources(scene),
-                "layers" to JsonArray(layers().map { layer -> layer.styled(filters[layer.id]) }),
+                "layers" to if (dark) layers.darkened() as JsonArray else layers,
             ),
         ).toString()
+    }
+
+    /** [this] with every colour of the light template swapped for its [DARK_COLORS] twin. */
+    private fun JsonElement.darkened(): JsonElement = when (this) {
+        is JsonArray -> JsonArray(map { it.darkened() })
+        is JsonObject -> JsonObject(mapValues { (_, value) -> value.darkened() })
+        is JsonPrimitive -> if (isString) DARK_COLORS[content]?.let(::JsonPrimitive) ?: this else this
     }
 
     /** Layer id to its filter on [level] with [selectedRoomId], as MapLibre expression JSON. */
@@ -155,6 +163,31 @@ object CampusMapStyle {
     private const val WALLS_LAYER = "borders"
     private const val NO_ROOM = "-1"
     private const val ACCENT = "#1846C7"
+
+    /**
+     * The dark map: every colour of the light template (and [ACCENT]) to its dark twin. Rooms sit above the
+     * footprint, corridors above rooms and walls above both, as in the light plan; the kinds keep their hue (toilets
+     * purple, food and coworking orange, services blue, halls yellow, sport red) at a dark tone that the light labels
+     * read on. The route and the selection take a lighter blue that stands out on the dark plan.
+     */
+    internal val DARK_COLORS: Map<String, String> = mapOf(
+        "rgba(230, 233, 235, 1)" to "rgba(22, 24, 27, 1)",
+        "rgba(210, 213, 215, 1)" to "rgba(32, 35, 39, 1)",
+        "rgba(233, 247, 232, 1)" to "rgba(28, 44, 32, 1)",
+        "rgba(255, 255, 255, 1)" to "rgba(58, 63, 70, 1)",
+        "rgba(244, 244, 245, 1)" to "rgba(44, 48, 54, 1)",
+        "rgba(246, 229, 255, 1)" to "rgba(72, 50, 94, 1)",
+        "rgba(255, 240, 229, 1)" to "rgba(94, 62, 34, 1)",
+        "rgba(229, 244, 255, 1)" to "rgba(32, 62, 90, 1)",
+        "rgba(255, 248, 229, 1)" to "rgba(86, 74, 34, 1)",
+        "rgba(255, 229, 230, 1)" to "rgba(92, 40, 46, 1)",
+        "rgba(183, 196, 204, 1)" to "rgba(104, 116, 128, 1)",
+        "rgba(96, 96, 96, 1)" to "rgba(214, 218, 224, 1)",
+        "hsla(0, 0%, 100%, 0.75)" to "rgba(22, 24, 27, 0.8)",
+        ACCENT to "#7C9CFF",
+        "rgba(24, 70, 199, 0.25)" to "rgba(124, 156, 255, 0.3)",
+        "#FFFFFF" to "#0E1A45",
+    )
 
     /** The closest weight to the campus app's SF Pro Text Semibold among the mirror's open fonts (no SF Pro). */
     private const val FONT = "Noto Sans Bold"

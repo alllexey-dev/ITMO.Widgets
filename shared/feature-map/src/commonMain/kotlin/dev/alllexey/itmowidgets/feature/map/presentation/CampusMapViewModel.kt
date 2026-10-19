@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.map.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.location.MapDestination
@@ -24,6 +25,7 @@ import dev.alllexey.itmowidgets.feature.map.domain.trip.PlanPlace
 import dev.alllexey.itmowidgets.feature.map.domain.trip.TripPlanner
 import dev.alllexey.itmowidgets.feature.map.domain.trip.TripStart
 import dev.alllexey.itmowidgets.shared.feature.map.MapStrings
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,6 +35,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -42,19 +45,23 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * The campus map (docs/features/map.md): opened with a lesson (`ARG`, [CampusMapArgs]) it shows that lesson's room,
  * and with `route` the «Маршрут» to it from the day's previous in-person lesson or the entrance; without one it
- * opens the first building to browse. Search runs over the shown building, then over the others.
+ * opens the first building to browse. Search runs over the shown building, then over the others. A route goes
+ * between any two rooms, in one building or two: «Сюда» and «Отсюда» on a room, then either end is picked again by
+ * the search or a tap on the plan. Routing runs on [AppDispatchers.default]; a building or a route on its way sets
+ * [CampusMapUiState.Plan.loading].
  */
 class CampusMapViewModel(
     savedStateHandle: SavedStateHandle,
     private val repository: CampusMapRepository,
     private val directory: BuildingDirectory,
     private val days: DayLessonsGateway,
+    private val dispatchers: AppDispatchers,
 ) : ViewModel() {
 
     private val args: CampusMapArgs = savedStateHandle.get<String>(ARG)?.let(::decode) ?: CampusMapArgs()
     private val resolver = PlanBuildingResolver(directory)
     private val model = MutableStateFlow(Model())
-    private var loading: Job? = null
+    private var work: Job? = null
 
     val uiState: StateFlow<CampusMapUiState> = model.map(::present)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), CampusMapUiState.Loading)
@@ -72,14 +79,19 @@ class CampusMapViewModel(
 
     fun selectLevel(level: Int) = model.update { it.copy(level = level, focus = null) }
 
-    /** A tap on the plan: the room under it, or nothing to clear the card. */
-    fun selectRoom(roomId: Long?) = model.update { state ->
+    /** A tap on the plan: the room under it, or nothing to clear the card; while picking a route end, that end. */
+    fun selectRoom(roomId: Long?) {
+        val state = model.value
         val room = roomId?.let { id -> state.plan?.plan?.room(id) }
-        state.copy(selected = room?.id, approximate = state.approximate.takeIf { room?.id == state.target?.room?.id }, focus = null)
+        val end = state.picking
+        if (end != null && room != null) return launchLoad { assign(end, PlanPlace(room.buildingId, room)) }
+        model.update { current ->
+            current.copy(selected = room?.id, approximate = current.approximate.takeIf { room?.id == current.target?.room?.id }, focus = null)
+        }
     }
 
     fun search(query: String) {
-        model.update { it.copy(query = query, place = null, trip = null) }
+        model.update { it.copy(query = query, place = null, trip = it.trip.takeIf { _ -> it.picking != null }) }
         if (query.isNotBlank() && model.value.allRooms == null) {
             viewModelScope.launch {
                 val rooms = repository.allRooms()
@@ -88,16 +100,45 @@ class CampusMapViewModel(
         }
     }
 
-    fun selectPlace(place: Place?) = model.update { state -> state.copy(place = place.takeIf { it != state.place }, query = "", trip = null) }
+    fun selectPlace(place: Place?) = model.update { state ->
+        state.copy(place = place.takeIf { it != state.place }, query = "", trip = state.trip.takeIf { state.picking != null })
+    }
 
     fun openResult(result: SearchResult) = launchLoad {
+        model.value.picking?.let { end ->
+            val room = loadPlan(result.buildingId)?.plan?.room(result.roomId) ?: return@launchLoad
+            return@launchLoad assign(end, PlanPlace(result.buildingId, room))
+        }
         if (model.value.plan?.building?.id != result.buildingId) show(result.buildingId, room = null)
         val room = model.value.plan?.plan?.room(result.roomId) ?: return@launchLoad
         model.update { it.copy(selected = room.id, level = room.level, focus = room.point, query = "", place = null) }
     }
 
-    /** «Маршрут» to the selected room: from the previous lesson for the lesson's own room, else from the entrance. */
+    /** «Сюда» to the selected room: from the previous lesson for the lesson's own room, else from the entrance. */
     fun route() = launchLoad { routeNow() }
+
+    /** «Отсюда»: the route from the selected room; where to is picked next. */
+    fun routeFrom() {
+        val state = model.value
+        val room = state.selected?.let { id -> state.plan?.plan?.room(id) } ?: return
+        model.update { it.copy(trip = Trip(TripStart.Room(PlanPlace(room.buildingId, room)), to = null), picking = RouteEnd.TO, query = "", place = null) }
+    }
+
+    /** Picks [end] of the route anew by the search or a tap on the plan; the same end again, or null, stops picking. */
+    fun pick(end: RouteEnd?) = model.update { state ->
+        state.copy(picking = end.takeIf { state.trip != null && it != state.picking }, query = "", place = null)
+    }
+
+    /** Swaps А and Б; the entrance a route starts at becomes its end. */
+    fun swap() = launchLoad {
+        val trip = model.value.trip ?: return@launchLoad
+        val to = when (val from = trip.from) {
+            is TripStart.Room -> from.place
+            is TripStart.Building -> entrance(from.buildingId)
+            null -> trip.to?.let { entrance(it.buildingId) }
+        }
+        planTrip(trip.to?.let(TripStart::Room), to)
+    }
 
     fun step(index: Int) = launchLoad { stepNow(index) }
 
@@ -106,15 +147,36 @@ class CampusMapViewModel(
         val plan = state.plan ?: return
         val room = plan.plan.room(state.selected ?: return) ?: return
         val start = if (room.id == state.target?.room?.id) previousStart(plan.building.id) else null
-        val from = start?.let { fromText(it) } ?: UiText.Res(MapStrings.map_route_from_entrance)
-        val plans = HashMap<Int, LoadedPlan>().apply { put(plan.building.id, plan) }
-        (start as? TripStart.Room)?.let { s -> loadPlan(s.buildingId)?.let { plans[s.buildingId] = it } }
-        val legs = TripPlanner.plan(start, PlanPlace(plan.building.id, room)) { id -> plans[id]?.plan }
+        planTrip(start, PlanPlace(plan.building.id, room))
+    }
+
+    private suspend fun assign(end: RouteEnd, place: PlanPlace) {
+        val trip = model.value.trip ?: return
+        when (end) {
+            RouteEnd.FROM -> planTrip(TripStart.Room(place), trip.to)
+            RouteEnd.TO -> planTrip(trip.from, place)
+        }
+    }
+
+    /** The route from [from] (null: the target building's entrance) to [to]; without [to], picking it comes next. */
+    private suspend fun planTrip(from: TripStart?, to: PlanPlace?) {
+        if (to == null) {
+            model.update { it.copy(trip = Trip(from, null), picking = RouteEnd.TO, query = "", place = null) }
+            return
+        }
+        model.update { it.copy(loading = true) }
+        val plans = HashMap<Int, LoadedPlan>()
+        loadPlan(to.buildingId)?.let { plans[to.buildingId] = it }
+        (from as? TripStart.Room)?.let { start -> loadPlan(start.buildingId)?.let { plans[start.buildingId] = it } }
+        // Dijkstra over a building's thousands of points, up to nine times for a room without a way in.
+        val legs = withContext(dispatchers.default) { TripPlanner.plan(from, to) { id -> plans[id]?.plan } }
         val steps = TripSteps.of(legs, ::label, ::destination)
-        if (steps.isEmpty()) return
-        model.update { it.copy(trip = Trip(from, steps, plans), query = "", place = null) }
+        model.update { it.copy(trip = Trip(from, to, steps, plans), picking = null, query = "", place = null) }
         stepNow(0)
     }
+
+    private suspend fun entrance(buildingId: Int): PlanPlace? =
+        loadPlan(buildingId)?.plan?.entrance?.let { PlanPlace(buildingId, it) }
 
     private suspend fun stepNow(index: Int) {
         val trip = model.value.trip ?: return
@@ -136,7 +198,7 @@ class CampusMapViewModel(
         }
     }
 
-    fun closeTrip() = model.update { it.copy(trip = null) }
+    fun closeTrip() = model.update { it.copy(trip = null, picking = null) }
 
     fun closeRoom() = model.update { it.copy(selected = null, approximate = null) }
 
@@ -182,7 +244,14 @@ class CampusMapViewModel(
         }
     }
 
-    private suspend fun loadPlan(buildingId: Int): LoadedPlan? = when (val result = repository.plan(buildingId)) {
+    private suspend fun loadPlan(buildingId: Int): LoadedPlan? {
+        model.value.plan?.takeIf { it.building.id == buildingId }?.let { return it }
+        model.value.trip?.plans?.get(buildingId)?.let { return it }
+        model.update { it.copy(loading = true) }
+        return fetchPlan(buildingId)
+    }
+
+    private suspend fun fetchPlan(buildingId: Int): LoadedPlan? = when (val result = repository.plan(buildingId)) {
         is AppResult.Success -> result.value
         is AppResult.Failure -> {
             // Over a shown plan a failed switch keeps the plan; without one the screen shows the error.
@@ -217,14 +286,19 @@ class CampusMapViewModel(
             .maxByOrNull { it.end }
     }
 
-    private fun fromText(start: TripStart): UiText = when (start) {
-        is TripStart.Room -> UiText.Res(MapStrings.map_route_from_room, listOf(RoomTexts.title(start.place.room)))
-        is TripStart.Building -> UiText.Res(MapStrings.map_route_from_room, listOf(label(start.buildingId)))
+    private fun fromText(start: TripStart?): UiText = when (start) {
+        is TripStart.Room -> RoomTexts.title(start.place.room)
+        is TripStart.Building -> UiText.Dynamic(label(start.buildingId))
+        null -> UiText.Res(MapStrings.map_route_entrance)
     }
 
+    /** Runs [block] instead of the previous load; when it ends, the spinner goes unless a newer load has started. */
     private fun launchLoad(block: suspend () -> Unit) {
-        loading?.cancel()
-        loading = viewModelScope.launch { block() }
+        work?.cancel()
+        val job = viewModelScope.launch(start = CoroutineStart.LAZY) { block() }
+        work = job
+        job.invokeOnCompletion { if (work === job) model.update { it.copy(loading = false) } }
+        job.start()
     }
 
     private fun label(buildingId: Int): String = directory.all.firstOrNull { it.planBuildingId == buildingId }?.label
@@ -268,11 +342,21 @@ class CampusMapViewModel(
                 LevelChip(level, UiText.Res(MapStrings.map_floor_short, listOf(level + 1)), level == state.level, level in routeLevels(state, building.id))
             },
             room = selected?.takeIf { state.trip == null }?.let { room -> roomCard(room, state) },
-            trip = state.trip?.let { TripView(it.from, it.steps.map(PlannedStep::view), it.current) },
+            trip = state.trip?.let { trip ->
+                TripView(
+                    from = fromText(trip.from),
+                    to = trip.to?.let { RoomTexts.title(it.room) },
+                    steps = trip.steps.map(PlannedStep::view),
+                    current = trip.current,
+                    picking = state.picking,
+                    notFound = trip.to != null && trip.steps.isEmpty(),
+                )
+            },
             search = search(state, plan),
             notice = state.target?.takeIf { it.room == null && state.trip == null }?.let {
                 UiText.Res(MapStrings.map_room_missing, listOf(it.text))
             },
+            loading = state.loading,
         )
     }
 
@@ -289,7 +373,7 @@ class CampusMapViewModel(
         note = state.approximate?.takeIf { it.room.id == room.id }?.let {
             UiText.Res(MapStrings.map_room_approximate, listOf(state.target?.text.orEmpty(), RoomTexts.title(room)))
         },
-        destination = destination(room.buildingId),
+        icon = RoomTexts.icon(room),
     )
 
     private fun search(state: Model, plan: LoadedPlan): SearchView {
@@ -297,14 +381,16 @@ class CampusMapViewModel(
         val chips = present.map { PlaceChip(it, it.text, it == state.place) }
         val results = when {
             state.place != null -> RoomSearch.ofPlace(state.place, plan.rooms)
+            // Picking a route end before typing: the building's entrances, as itmo-map-web offers them.
+            state.picking != null && state.query.isBlank() -> RoomSearch.ofPlace(Place.ENTRANCES, plan.rooms)
             else -> RoomSearch.search(state.query, plan.rooms)
-        }.take(MAX_RESULTS).map { SearchResult(it.buildingId, it.id, RoomTexts.title(it), RoomTexts.subtitle(it)) }
+        }.take(MAX_RESULTS).map { SearchResult(it.buildingId, it.id, RoomTexts.title(it), RoomTexts.subtitle(it), RoomTexts.icon(it)) }
         val elsewhere = if (state.query.isBlank()) emptyList() else state.allRooms.orEmpty()
             .filterKeys { it != plan.building.id }
             .flatMap { (id, rooms) -> RoomSearch.search(state.query, rooms).map { it to id } }
             .take(MAX_RESULTS)
-            .map { (room, id) -> SearchResult(id, room.id, RoomTexts.title(room), RoomTexts.subtitle(room, label(id))) }
-        return SearchView(state.query, chips, results, elsewhere)
+            .map { (room, id) -> SearchResult(id, room.id, RoomTexts.title(room), RoomTexts.subtitle(room, label(id)), RoomTexts.icon(room)) }
+        return SearchView(state.query, chips, results, elsewhere, state.picking)
     }
 
     private val MapRoom.point: MapPoint get() = MapPoint(longitude, latitude)
@@ -312,7 +398,14 @@ class CampusMapViewModel(
     /** The lesson room as typed in the timetable and the plan room it matched, if any. */
     private data class Target(val text: String, val room: MapRoom?)
 
-    private data class Trip(val from: UiText, val steps: List<PlannedStep>, val plans: Map<Int, LoadedPlan>, val current: Int = 0)
+    /** A route from [from] (null: the target building's entrance) to [to] (null until picked). */
+    private data class Trip(
+        val from: TripStart?,
+        val to: PlanPlace?,
+        val steps: List<PlannedStep> = emptyList(),
+        val plans: Map<Int, LoadedPlan> = emptyMap(),
+        val current: Int = 0,
+    )
 
     private data class Model(
         val catalog: MapCatalog? = null,
@@ -322,6 +415,8 @@ class CampusMapViewModel(
         val target: Target? = null,
         val approximate: RoomMatch? = null,
         val trip: Trip? = null,
+        val picking: RouteEnd? = null,
+        val loading: Boolean = false,
         val query: String = "",
         val place: Place? = null,
         val allRooms: Map<Int, List<MapRoom>>? = null,

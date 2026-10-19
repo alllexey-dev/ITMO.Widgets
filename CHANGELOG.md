@@ -10,6 +10,13 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Campus map polish (2026-10-19)
+
+- The map's chrome is compact and opaque over the plan: a building pill and place chips with the plan's icons, room
+  and route cards with icons, `Сюда` and `Отсюда` instead of `Маршрут` and `Открыть в Картах`; a route goes between
+  any two rooms (either end picked by the search or a tap on the plan, swapped with one tap); the plan is dark in the
+  dark theme; a building or a route on its way shows `Загружаем план...` and routing runs off the main thread.
+
 ### Widgets (2026-10-18)
 
 - The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in
