@@ -19,7 +19,9 @@ data class SessionSnapshot(
     /** Whether the user allows alert notifications. */
     val alertsAllowed: Boolean,
     /** The ITMO.Widgets services opt-in (`BackendGate`): the notification service books and settles only with it. */
-    val servicesEnabled: Boolean
+    val servicesEnabled: Boolean,
+    /** The push channels the user turned off in the app (`PushCategoryPreferences`): the notification service drops them. */
+    val disabledPushes: List<String> = emptyList(),
 )
 
 /** The only writer of [FILE]; the session's lifecycle effects call it on every session change. */

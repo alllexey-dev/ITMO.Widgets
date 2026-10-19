@@ -163,6 +163,19 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
+    fun everyPushStartsOnAndATypeTurnedOffIsStoredByItsChannel() = runTest {
+        val fixture = createRepository()
+        assertTrue(fixture.repository.observeLocalSettings().first().disabledPushes.isEmpty())
+
+        fixture.repository.setPushEnabled("friends", false)
+
+        assertEquals(LocalSettings(disabledPushes = setOf("friends")), fixture.repository.observeLocalSettings().first())
+        assertFalse(fixture.stores.pushCategories.isEnabled("friends"))
+        fixture.repository.setPushEnabled("friends", true)
+        assertTrue(fixture.repository.observeLocalSettings().first().disabledPushes.isEmpty())
+    }
+
+    @Test
     fun markSwitchesDefaultToMyItmoOnAndBarsUndecidedAndFollowTheStoredValues() = runTest {
         val fixture = createRepository()
         val defaults = fixture.repository.observeLocalSettings().first()
@@ -440,6 +453,7 @@ class SettingsRepositoryImplTest {
                 stores.markSources,
                 stores.deviceHints,
                 stores.appearance,
+                stores.pushCategories,
                 StoredOptInGate(stores.servicesOptIn, demo),
                 backend.client.users,
                 demo,

@@ -5,14 +5,13 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The notifications page at the design lab's axes, as Android's `NotificationSettingsScreen` references: allowed
-/// (iOS has no switch per push type), denied by the system with the gate, and not connected with Background App
-/// Refresh off. `NotificationSettingsContent` is rendered from `NotificationSettingsSamples` under the pushed header.
+/// with one push type off, denied by the system with the gate, and not connected with Background App Refresh off. `NotificationSettingsContent` is rendered from `NotificationSettingsSamples` under the pushed header.
 @MainActor
 final class NotificationSettingsSnapshotTests: XCTestCase {
     private let samples = NotificationSettingsSamples.shared
 
     func testAllowed() {
-        assertPushed(samples.state(state: "ios"), named: "on")
+        assertPushed(samples.state(state: "on"), named: "on")
     }
 
     func testDeniedInTheSystem() {

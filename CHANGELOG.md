@@ -10,6 +10,12 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Notification settings (2026-10-19)
+
+- «Уведомления» gives every type its own switch, the pushes included (`Спорт`, `Друзья`, `Новые устройства`): the
+  device drops a switched-off push (`FcmPayloadDispatcher`, the iOS notification service; a sport push still books);
+  the sample notifications and the explanatory notes are gone; a system block shows once, as one card on top.
+
 ### Widgets (2026-10-18)
 
 - The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in

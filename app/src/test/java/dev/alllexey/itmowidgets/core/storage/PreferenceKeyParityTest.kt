@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.core.storage
 
+import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.recordbook.BarsLoginPrompt
 import dev.alllexey.itmowidgets.core.settings.CompactScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.FullScheduleWidgetSettings
@@ -18,14 +19,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 51 key names
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 54 key names
  * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The four
  * `push_registered_*` keys are written only by iOS, whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 51 key names, each declared once`() {
+    fun `the app preferences keep their 54 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules.
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -36,11 +37,11 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(51, declared.map { it.name }.toSet().size)
+        assertEquals(54, declared.map { it.name }.toSet().size)
     }
 
     @Test
-    fun `the 35 settings keys read their released defaults from an empty file`() = runTest {
+    fun `the 38 settings keys read their released defaults from an empty file`() = runTest {
         val stores = PreferenceStores()
 
         assertFalse(stores.servicesOptIn.getCustomServicesEnabled())
@@ -79,6 +80,8 @@ class PreferenceKeyParityTest {
         assertFalse(stores.demoPreferences.getDemoActive())
         assertEquals(ThemeSpec(), stores.appearance.observeTheme().first())
         assertFalse(stores.appearance.observeWidgetsFollowTheme().first())
+        for (channel in AppNotificationChannels.PUSHES) assertTrue(stores.pushCategories.isEnabled(channel))
+        assertTrue(stores.pushCategories.observeDisabled().first().isEmpty())
     }
 
     private data class Key(val file: String, val type: String, val name: String)
@@ -126,6 +129,9 @@ class PreferenceKeyParityTest {
             Key("DeviceHintPreferences.kt", "boolean", "background_work_hint_shown"),
             Key("DeviceHintPreferences.kt", "boolean", "qr_tile_added"),
             Key("DemoPreferences.kt", "boolean", "demo_active"),
+            Key("PushCategoryPreferences.kt", "boolean", "sport_notifications_enabled"),
+            Key("PushCategoryPreferences.kt", "boolean", "friends_notifications_enabled"),
+            Key("PushCategoryPreferences.kt", "boolean", "connections_notifications_enabled"),
             Key("AppearancePreferences.kt", "string", "app_accent_color"),
             Key("AppearancePreferences.kt", "int", "app_accent_custom"),
             Key("AppearancePreferences.kt", "string", "app_theme_style"),

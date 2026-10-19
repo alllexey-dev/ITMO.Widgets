@@ -194,7 +194,7 @@ class AccountIosModuleTest {
     ) {
         val session = FakeSessionRepository(SessionState.Initializing)
         val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = {}))
-        SessionSnapshotSync(session, MutableStateFlow(false), MutableStateFlow(false), writer, log)
+        SessionSnapshotSync(session, MutableStateFlow(false), MutableStateFlow(false), MutableStateFlow(emptySet()), writer, log)
             .launchIn(backgroundScope)
         assertNull(writer.read())
 
@@ -224,12 +224,13 @@ class AccountIosModuleTest {
     }
 
     @Test
-    fun theSessionSnapshotFollowsTheAlertsAnswerAndTheServicesOptIn() = runTest(UnconfinedTestDispatcher()) {
+    fun theSessionSnapshotFollowsTheAlertsAnswerTheServicesOptInAndThePushSwitches() = runTest(UnconfinedTestDispatcher()) {
         val session = FakeSessionRepository(SessionState.Initializing)
         val alerts = MutableStateFlow(false)
         val services = MutableStateFlow(false)
+        val disabled = MutableStateFlow(emptySet<String>())
         val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = {}))
-        SessionSnapshotSync(session, alerts, services, writer, log).launchIn(backgroundScope)
+        SessionSnapshotSync(session, alerts, services, disabled, writer, log).launchIn(backgroundScope)
 
         // Signed out: no file, whatever the answer.
         alerts.value = true
@@ -250,6 +251,18 @@ class AccountIosModuleTest {
         services.value = true
         assertEquals(
             SessionSnapshot(isu = ISU, demo = false, alertsAllowed = false, servicesEnabled = true),
+            writer.read()
+        )
+
+        disabled.value = setOf("sport", "friends")
+        assertEquals(
+            SessionSnapshot(
+                isu = ISU,
+                demo = false,
+                alertsAllowed = false,
+                servicesEnabled = true,
+                disabledPushes = listOf("friends", "sport"),
+            ),
             writer.read()
         )
     }
