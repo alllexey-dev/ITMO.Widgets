@@ -45,25 +45,24 @@ import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.home.presentation.BellRow
 import dev.alllexey.itmowidgets.feature.home.presentation.BellUiState
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.bell_accept
+import dev.alllexey.itmowidgets.shared.compose.strings.bell_decline
+import dev.alllexey.itmowidgets.shared.compose.strings.bell_earlier
+import dev.alllexey.itmowidgets.shared.compose.strings.bell_empty_text
+import dev.alllexey.itmowidgets.shared.compose.strings.bell_new
+import dev.alllexey.itmowidgets.shared.compose.strings.bell_nothing_new
+import dev.alllexey.itmowidgets.shared.compose.strings.bell_settings
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.today_notifications
-import dev.alllexey.itmowidgets.shared.feature.home.Res
-import dev.alllexey.itmowidgets.shared.feature.home.bell_accept
-import dev.alllexey.itmowidgets.shared.feature.home.bell_decline
-import dev.alllexey.itmowidgets.shared.feature.home.bell_earlier
-import dev.alllexey.itmowidgets.shared.feature.home.bell_empty_text
-import dev.alllexey.itmowidgets.shared.feature.home.bell_new
-import dev.alllexey.itmowidgets.shared.feature.home.bell_nothing_new
-import dev.alllexey.itmowidgets.shared.feature.home.bell_settings
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_calendar
 import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [BellSheetContent]. */
 object BellTestTags {
@@ -95,9 +94,9 @@ data class BellActions(
 @Composable
 fun BellSheetContent(state: BellUiState, actions: BellActions, modifier: Modifier = Modifier) {
     SheetScaffold(
-        title = stringResource(CoreRes.string.today_notifications),
+        title = stringResource(Res.string.today_notifications),
         modifier = modifier,
-        close = SheetClose(stringResource(CoreRes.string.common_close), actions.onClose),
+        close = SheetClose(stringResource(Res.string.common_close), actions.onClose),
     ) {
         Column(
             Modifier

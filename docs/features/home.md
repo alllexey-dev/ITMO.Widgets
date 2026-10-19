@@ -60,7 +60,7 @@ The bell opens its sheet over it. The spec is the design lab's
   switch or a sheet closing over Сегодня does not. Only a pull shows the
   indicator. The header (`TodayHeaderViewModel`) re-reads the date and asks
   the bell's sources when it is created and on each return.
-- `TodayRoute` / `TodayScreen` are Compose in `commonMain`; on Android
+- `TodayRoute` / `TodayScreen` are Android-only Compose in `androidMain`;
   `HomeTabRoot` (`app/shell/entries/HomeEntries.kt`) keeps the ViewModel and
   turns lessons, `Войти` and the todo routes into navigation.
 

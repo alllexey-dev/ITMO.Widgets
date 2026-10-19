@@ -66,20 +66,20 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.FeedRow
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedBody
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedPresenter
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedUiState
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_back
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_friends_action
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_month_action
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_return_to_mine
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_today
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_today_pill
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_upward
 import dev.alllexey.itmowidgets.shared.designsystem.ic_event_available
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_undo
 import dev.alllexey.itmowidgets.shared.designsystem.ic_weekend
-import dev.alllexey.itmowidgets.shared.feature.schedule.Res
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_friends_action
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_month_action
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_return_to_mine
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_today
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_today_pill
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -88,7 +88,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [ScheduleFeedScreen]. */
@@ -151,7 +150,7 @@ fun ScheduleFeedScreen(
         ItmoDetailScreen(
             title = title,
             onBack = onBack,
-            backLabel = stringResource(CoreRes.string.common_back),
+            backLabel = stringResource(Res.string.common_back),
             modifier = modifier,
             subtitle = subtitle,
             floatingActionButton = { Fabs(state, actions) },
@@ -232,10 +231,10 @@ private fun Body(
                 is ScheduleFeedBody.Failed -> AppRefreshBox(state.refreshing, actions.onRetry, Modifier.fillMaxSize()) {
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                         ContentState(
-                            title = stringResource(CoreRes.string.common_load_error_title),
+                            title = stringResource(Res.string.common_load_error_title),
                             modifier = Modifier.testTag(ScheduleFeedTestTags.ERROR),
                             description = body.error.toUiText().asString(),
-                            action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
+                            action = ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
                         )
                     }
                 }
