@@ -1,16 +1,14 @@
-package dev.alllexey.itmowidgets.designsystem.locale
+package dev.alllexey.itmowidgets.core.platform
 
 import platform.Foundation.NSArgumentDomain
 import platform.Foundation.NSUserDefaults
 
 /**
- * The iOS side of the Russian app locale (:app's `AppLocale` is the Android side).
- *
- * Compose Multiplatform picks plural rules from `NSLocale.preferredLanguages`: the composable resolvers through
- * Compose's `Locale.current`, `getString`/`getPluralString` through the system resource environment. On an English
- * iPhone that gives "5 пары". [install] puts [LANGUAGE] first in `AppleLanguages` for this process, which both read
- * at once (the CMP docs' app-locale pattern), so it must run in `App.init`, before the first composition or
- * suspend resolver. SwiftUI and the extensions need no override: the bundle has only the `ru` localization.
+ * The iOS side of the Russian app locale (:app's `AppLocale` is the Android side): puts [LANGUAGE] first in
+ * `AppleLanguages` for this process, so whatever reads the preferred languages (Foundation and SwiftUI formatting on
+ * the current locale, system controls) is Russian on any device, as Android's per-app locale makes it. Text needs no
+ * override: every bundle has only the `ru` localization and Kotlin resolves through the Swift tables (ADR 0035).
+ * `App.init` calls [install] first, before the Kotlin graph starts.
  */
 object AppLocale {
 

@@ -25,6 +25,17 @@ class KmpRulesTest {
         }
     }
 
+    @Test
+    fun `ios code outside the Compose kit imports no Compose`() {
+        // iOS draws no Compose (ADR 0031) and reads text from the app's string tables (ADR 0035). The design system's
+        // and the test kit's iOS actuals go with the Compose kit once it leaves commonMain.
+        iosFiles().assertFalse { file -> file.imports.any { import -> COMPOSE.any(import.name::startsWith) } }
+    }
+
+    private fun iosFiles(): List<KoFileDeclaration> = productionFiles
+        .filter { it.isIosOutsideComposeKit() }
+        .requireAtLeast(MIN_IOS_SOURCE_FILES, "iosMain files outside the Compose kit")
+
     private fun kmpFiles(): List<KoFileDeclaration> = productionFiles
         .filter { KMP_SOURCE_SET.containsMatchIn(it.projectPath) }
         .requireAtLeast(MIN_KMP_SOURCE_FILES, "commonMain and iosMain files")
@@ -34,6 +45,11 @@ class KmpRulesTest {
         val KMP_SOURCE_SET = Regex("""/src/(common|ios\w*)Main/""")
 
         val PLATFORM_ONLY = listOf("android.", "java.", "javax.")
+
+        /** Compose UI and resources, Coil's Compose layer. */
+        val COMPOSE = listOf("androidx.compose.", "org.jetbrains.compose.", "coil3.compose")
+
+        const val MIN_IOS_SOURCE_FILES = 100
 
         /** The androidx artifacts that publish common and iOS variants. */
         val multiplatformAndroidx = listOf(

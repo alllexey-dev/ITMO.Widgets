@@ -45,6 +45,9 @@ little once the view model is platform-neutral.
 `:shared:compose-strings` compiles a copy of every catalog for Compose and the
 feature modules keep CMP for their screens, so strings sit twice in the app.
 
+**Amended by [0035](0035-ios-without-compose.md) (proposed, 2026-10-19).** How `:shared:compose-strings` and the
+feature modules' CMP leave iOS: iOS Kotlin resolves `UiText` through Swift's tables, screens move to `androidMain`.
+
 **Amended (2026-10-13).** The minimum iOS is 26.1 for every target (app, widgets,
 notification service), set by the owner for the UX overhaul: screens use Liquid
 Glass, `.glass`/`.glassProminent` buttons and the tab bar accessory directly, with

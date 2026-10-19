@@ -35,6 +35,7 @@ val sportWidgetIosModule = module {
             writer = AppGroupSnapshotWriter(get(), get(), SportWidgetTimelineJson.json),
             timeProvider = get(),
             log = get(),
+            texts = get(),
             palette = { get<AppearancePreferences>().observeWidgetTheme().first()?.widgetPalette() },
         ).also { writer ->
             writer.launchIn(

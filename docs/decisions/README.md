@@ -40,3 +40,4 @@ and keep their numbers.
 - [0032 The most current score source with a value wins](0032-score-source-priority.md) - accepted
 - [0033 Campus plans come from a static mirror, outside the Backend opt-in](0033-campus-map-mirror.md) - accepted
 - [0034 One client header and one activity table for client statistics](0034-client-stats.md) - accepted
+- [0035 The iOS framework links no Compose](0035-ios-without-compose.md) - proposed

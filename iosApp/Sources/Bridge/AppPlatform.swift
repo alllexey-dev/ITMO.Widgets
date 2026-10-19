@@ -4,8 +4,9 @@ import WebKit
 import WidgetKit
 
 /// The app's `IosPlatform`: what the Kotlin graph needs from UIKit, WidgetKit and WebKit, the BARS
-/// session's cookies and hidden view included, and pairing's CryptoKit HPKE and LocalAuthentication.
-/// `App.init` passes it to `startKoinIos`; Kotlin calls it on the main thread.
+/// session's cookies and hidden view included, pairing's CryptoKit HPKE and LocalAuthentication, and the catalog
+/// text from the bundle's string tables. `App.init` passes it to `startKoinIos`; Kotlin calls it on the main thread,
+/// except `resolveText`, which any thread may call.
 final class AppPlatform: NSObject, IosPlatform {
     func reload(kind: String) {
         WidgetCenter.shared.reloadTimelines(ofKind: kind)
@@ -59,5 +60,9 @@ final class AppPlatform: NSObject, IosPlatform {
 
     func unlockDevice(reason: String, completion: @escaping (KotlinBoolean) -> Void) {
         DeviceUnlocker.unlock(reason: reason) { completion(KotlinBoolean(bool: $0)) }
+    }
+
+    func resolveText(text: UiText) -> String {
+        text.resolved
     }
 }

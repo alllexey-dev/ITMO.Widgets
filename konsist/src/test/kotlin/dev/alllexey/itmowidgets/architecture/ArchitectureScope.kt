@@ -38,6 +38,16 @@ internal fun <T> List<T>.requireAtLeast(floor: Int, what: String): List<T> = als
 
 internal fun <T> List<T>.requireNonEmpty(what: String): List<T> = requireAtLeast(1, what)
 
+/**
+ * A file of an `iosMain` or per-target `ios*Main` set outside the design system and the test kit, whose iOS actuals
+ * belong to the Compose kit and leave with it (ADR 0035).
+ */
+internal fun KoFileDeclaration.isIosOutsideComposeKit(): Boolean =
+    IOS_SOURCE_SET.containsMatchIn(projectPath) && COMPOSE_KIT_MODULES.none(projectPath::startsWith)
+
+private val IOS_SOURCE_SET = Regex("""/src/ios\w*Main/""")
+private val COMPOSE_KIT_MODULES = listOf("/shared/designsystem/", "/shared/testing/")
+
 internal const val APP_MODULE = "app"
 
 /** This module: it holds the rules, and its own sources are never in scope. */

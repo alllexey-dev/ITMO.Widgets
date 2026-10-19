@@ -21,8 +21,8 @@ import platform.Foundation.NSUserDefaults
  * The background side of the app process, beside [iosCoreModule]: one [IosAppNotifier] over
  * `UNUserNotificationCenter` as the graph's [AppNotifier], the one app refresh task's [AppRefreshScheduler], and the
  * background runner's [RefreshStepLog] in `NSUserDefaults`; the notifier and the log are sign-out cleaners. [texts]
- * is the catalog's resolver (`:shared:compose-strings`, which core cannot depend on), bound for every iOS text
- * outside Compose. Kept out of [iosCoreModule] because the system centre and scheduler exist only in the app, not in a
+ * is the bundle's string tables through Swift (`IosPlatform.resolveText`, ADR 0035), bound for every Kotlin text of
+ * the app process. Kept out of [iosCoreModule] because the system centre and scheduler exist only in the app, not in a
  * test binary.
  */
 fun iosBackgroundModule(texts: UiTextResolver): Module = module {

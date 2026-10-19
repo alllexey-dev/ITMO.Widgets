@@ -8,7 +8,7 @@ import org.junit.Test
 /**
  * Common code names text through `UiText.Res`/`UiText.Plural` and icons through `AppIcon`, never an Android `R` id
  * (ADR 0028). Outside Compose UI a text is a catalog key of the generated `<Area>Strings`/`<Area>Plurals`, never a CMP
- * resource (ADR 0031).
+ * resource (ADR 0031); iOS code resolves it through the app's string tables (ADR 0035).
  */
 class UiTextRulesTest {
 
@@ -20,11 +20,11 @@ class UiTextRulesTest {
     }
 
     @Test
-    fun `core and non-UI code import no Compose resources and no Compose resolver`() {
+    fun `core, ios and non-UI code import no Compose resources and no Compose resolver`() {
         // The CMP Res, its accessors and the resolvers live in :shared:compose-strings and the screens; core, data,
-        // domain and presentation stay compilable for SwiftUI without them.
+        // domain, presentation and iOS code stay compilable for SwiftUI without them.
         val violations = productionFiles
-            .filter { it.projectPath.startsWith(CORE_MODULE) || it.isNonUi() }
+            .filter { it.projectPath.startsWith(CORE_MODULE) || it.isNonUi() || it.isIosOutsideComposeKit() }
             .requireAtLeast(MIN_NON_UI_FILES, "core and non-UI files")
             .associate { file -> file.qualifiedKey to file.imports.map { it.name }.filter(::isComposeText) }
             .filterValues { it.isNotEmpty() }

@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.KeyTextResolver
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetTimelineLoadResult
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.DayWidgetContent
@@ -21,6 +22,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetContentKind
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetLesson
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.WidgetLessonState
 import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import kotlin.random.Random
 import kotlin.test.AfterTest
@@ -61,6 +63,7 @@ class ScheduleTimelineWriterTest {
         timeProvider = FixedAcademicTime(),
         clock = clock,
         log = log,
+        texts = KeyTextResolver,
         palette = { palette },
     )
 
@@ -79,9 +82,9 @@ class ScheduleTimelineWriterTest {
         writer.publish()
 
         val written = Json.parseToJsonElement(FileSystem.SYSTEM.read(directory.file(FILE_NAME)) { readUtf8() })
-        val value = Json.parseToJsonElement(ScheduleWidgetTimelineJson.encode(fixture.withShortLocations()))
+        val value = Json.parseToJsonElement(ScheduleWidgetTimelineJson.encode(fixture.withShortLocations(KeyTextResolver)))
         assertEquals(JsonObject(mapOf("version" to JsonPrimitive(2), "value" to value)), written)
-        assertEquals("Кронва", read().entries.first().snapshot.next.lesson?.building)
+        assertEquals(CoreStrings.schedule_building_kronva, read().entries.first().snapshot.next.lesson?.building)
         assertEquals(listOf(SINGLE_LESSON_KIND, DAY_SCHEDULE_KIND, DAY_TIMELINE_KIND), reloads)
     }
 
@@ -150,7 +153,7 @@ class ScheduleTimelineWriterTest {
         writer.requestWrite()
 
         assertEquals(5, source.untils.size)
-        assertEquals(5 * 2, reloads.size)
+        assertEquals(5 * ScheduleTimelineWriter.KINDS.size, reloads.size)
     }
 
     @Test

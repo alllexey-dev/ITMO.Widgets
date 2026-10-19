@@ -5,8 +5,8 @@ import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.AppGroupWidgetRefresh
 import dev.alllexey.itmowidgets.core.storage.SnapshotFile
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.core.text.buildingShortTitle
-import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetKind
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimeline
@@ -49,8 +49,8 @@ class SportWidgetTriggers(
 /**
  * Keeps [FILE] in the App Group container on the sport widget's timeline (`SportWidgetTimeline`, from now to
  * [DAYS] days ahead: the bookings' days change at midnights) and reloads [KIND] after each write; the widget extension
- * only picks the entry of the moment (docs/ios.md, Data sharing). Buildings are the short titles (`Ломо`), the
- * [palette] is the app's colours of that moment while the widgets follow the theme.
+ * only picks the entry of the moment (docs/ios.md, Data sharing). Buildings are the short titles (`Ломо`) from
+ * [texts], the [palette] is the app's colours of that moment while the widgets follow the theme.
  *
  * A failed load, and a timeline that only says the score failed, keep the previous file: the last score stays on the
  * home screen as the schedule's last timeline does. Sign-out removes the file with the App Group's other snapshots and
@@ -61,6 +61,7 @@ class SportWidgetWriter(
     private val writer: AppGroupSnapshotWriter,
     private val timeProvider: AcademicTimeProvider,
     private val log: AppLog,
+    private val texts: UiTextResolver,
     private val palette: suspend () -> WidgetPalette? = { null },
 ) : AppGroupWidgetRefresh {
 
@@ -87,7 +88,7 @@ class SportWidgetWriter(
             return@withLock
         }
         try {
-            writer.write(FILE, timeline.withShortBuildings().copy(palette = palette()), listOf(KIND))
+            writer.write(FILE, timeline.withShortBuildings(texts).copy(palette = palette()), listOf(KIND))
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
@@ -127,12 +128,12 @@ class SportWidgetWriter(
 }
 
 /** The timeline with MyITMO's addresses as the short building titles the widget shows (`Ломо`). */
-suspend fun SportWidgetTimeline.withShortBuildings(): SportWidgetTimeline = copy(
+suspend fun SportWidgetTimeline.withShortBuildings(texts: UiTextResolver): SportWidgetTimeline = copy(
     entries = entries.map { entry ->
         entry.copy(
             snapshot = entry.snapshot.copy(
                 items = entry.snapshot.items?.map { item ->
-                    item.copy(building = item.building?.let { buildingShortTitle(it, BUILDING_MAX_LENGTH).resolve() })
+                    item.copy(building = item.building?.let { texts.resolve(buildingShortTitle(it, BUILDING_MAX_LENGTH)) })
                 }
             )
         )

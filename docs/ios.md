@@ -36,7 +36,7 @@ A CI image with another Xcode presets the `ITMO_*` variables instead of editing 
 | `iosApp/Shared/` | sources of all three targets: generated string tables and `AppSymbol.swift`, brand symbol images, `WidgetSnapshots/` (App Group readers), `Intents/` |
 | `iosApp/Strings/` | `strings_ios*.xml`: copy only iOS shows (Android resource syntax, Russian) |
 | `iosApp/Tests/` | `UnitTests/` and `SnapshotTests/` (hosted in the app), `UITests/` (XCUITest) |
-| `shared/ios/` | the static framework `Shared` with SKIE: the Koin start, `IosPlatform`, the ViewModel store, the Compose screen factories |
+| `shared/ios/` | the static framework `Shared` with SKIE: the Koin start, `IosPlatform`, the ViewModel store, the widget gallery's samples |
 | `scripts/ios/` | `env.sh`, `test.sh`, `check-*.sh`, `gen-tokens.py`, `screenshots.sh`, `archive.sh` |
 
 Targets use directory globs: a new Swift file needs no `project.yml` edit. The app target also compiles the extension
@@ -118,13 +118,13 @@ Swift reaches Kotlin through `Shared` and SKIE (`shared/ios/build.gradle.kts`): 
 
 - Exports. `:shared:core`, `:shared:feature-account`, `:shared:feature-settings`, `:shared:feature-recordbook`,
   `:shared:feature-qr` and `:shared:feature-home` are exported, so their types keep their names in Swift. A feature whose ViewModel SwiftUI owns exports its module.
-- Koin. `App.init` calls `IosStrings.installAppLocale()`, then `startKoinIos(platform: AppPlatform())`: one graph
+- Koin. `App.init` calls `AppLocale.install()`, then `startKoinIos(platform: AppPlatform())`: one graph
   over `IosKoinModules.all(platform)`, `allowOverride(false)`. iOS bindings live in
   `shared/feature-<x>/src/iosMain/.../di/<Area>IosModule.kt`. Swift reads the graph with
   `IosKoin.shared.get(protocol:)` or `get(type:)`.
 - `IosPlatform` is the one Kotlin interface Swift implements (`Sources/Bridge/AppPlatform.swift`): WidgetKit reloads,
   the top view controller, WebKit clearing and cookies, the hidden BARS web view, pairing's CryptoKit HPKE and
-  LocalAuthentication (`PairingHost`).
+  LocalAuthentication (`PairingHost`), and `resolveText`, the catalog text from the string tables.
 - SwiftUI screens. `ObservableViewModel<Model, State>` (`Sources/Bridge/ObservableViewModel.swift`) is `@Observable`,
   owns a `ScreenViewModelStore`, resolves the ViewModel from Koin on first use, follows `uiState` with
   `.observing(model)` and delivers events with `.onEvents(of:_:perform:)`. Its `deinit` clears the store, which
@@ -161,8 +161,11 @@ The catalog is the Android resource files ([ADR 0028](decisions/0028-strings-and
   `strings_platform.xml` and `iosApp/Strings/strings_ios*.xml` go to `Localizable` (APNs resolves `loc-key` only
   there); `InfoPlist` and `AppShortcuts` rows come from `build-logic/strings/apple-tables.properties`. Commit the
   result; never edit a table by hand.
-- Every bundle has only the `ru` localization. Compose Multiplatform takes plural rules from the preferred languages,
-  so `installAppLocale()` puts `ru` first for the app process.
+- Every bundle has only the `ru` localization; `AppLocale.install()` still puts `ru` first in the app process's
+  preferred languages, so formatting on the current locale is Russian on any device.
+- Kotlin reads the same tables: the graph's `UiTextResolver` (notifications, the widget files, shares, the widget
+  gallery's samples) calls `IosPlatform.resolveText`, which is `text.resolved`. No CMP resource is packed into the app
+  ([ADR 0035](decisions/0035-ios-without-compose.md)); Kotlin/Native tests use `KeyTextResolver`, which gives keys.
 - Swift uses generated symbols: `Text(.StringsCommon.scheduleLessonCount(5))`; App Intents take a key literal.
 - Icons: `iosApp/Shared/Symbols/AppSymbol.swift` is generated from `docs/design/icons.tsv` and names an SF Symbol per
   row; `custom.*` names are symbol images in `Brands.xcassets`.

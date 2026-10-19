@@ -4,7 +4,7 @@ import dev.alllexey.itmowidgets.core.settings.QrWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetSettings
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.core.text.resolve
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.qr.widget.QrPassSnapshot
 import dev.alllexey.itmowidgets.feature.qr.widget.QrPassSnapshotWriter
@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimeline
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimelineEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimelineJson
 import dev.alllexey.itmowidgets.feature.sport.widget.withShortBuildings
+import dev.alllexey.itmowidgets.ios.di.IosKoin
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.schedule.ScheduleStrings
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
@@ -39,6 +40,7 @@ import kotlinx.serialization.json.put
  * The widgets gallery's live previews and the widget snapshot tests' samples: the App Group files the writers would
  * leave for the fixed sample (`SchedulePreviewScenario`, `SportWidgetSamples`, the demo pass) with the given settings
  * and widget theme, so Swift draws them with the very readers and views the widget extension uses. Never user data.
+ * Texts come from the started graph's `UiTextResolver`, the bundle's string tables.
  */
 object IosWidgetPreviews {
 
@@ -49,7 +51,7 @@ object IosWidgetPreviews {
 
     /** `schedule-timeline-v2.json` of the sample from [moment] to the end of the Tuesday with [settings] and [theme]. */
     suspend fun schedule(settings: ScheduleWidgetSettings, moment: SchedulePreviewMoment, theme: ThemeSpec?): String {
-        val timeline = scenario.timeline(settings, moment, scheduleLabels()).withShortLocations()
+        val timeline = scenario.timeline(settings, moment, scheduleLabels()).withShortLocations(texts())
             .copy(palette = theme?.widgetPalette())
         return envelope(ScheduleWidgetTimelineJson.VERSION, ScheduleWidgetTimeline.serializer(), timeline, ScheduleTimelineWriter.JSON)
     }
@@ -66,7 +68,7 @@ object IosWidgetPreviews {
             validUntil = (from + 1.days).toString(),
             entries = listOf(SportWidgetTimelineEntry(from.toString(), SportWidgetSamples.snapshot(state, labels))),
             palette = theme?.widgetPalette(),
-        ).withShortBuildings()
+        ).withShortBuildings(texts())
         return envelope(SportWidgetTimelineJson.VERSION, SportWidgetTimeline.serializer(), timeline, SportWidgetTimelineJson.json)
     }
 
@@ -95,7 +97,9 @@ object IosWidgetPreviews {
         teacher = text(ScheduleStrings.widget_preview_teacher),
     )
 
-    private suspend fun text(key: String): String = UiText.Res(key).resolve()
+    private suspend fun text(key: String): String = texts().resolve(UiText.Res(key))
+
+    private fun texts(): UiTextResolver = IosKoin.koin().get()
 
     /** `{"version": N, "value": ...}`, as `AppGroupSnapshotWriter` stores every App Group file. */
     private fun <T> envelope(version: Int, serializer: KSerializer<T>, value: T, json: Json): String =

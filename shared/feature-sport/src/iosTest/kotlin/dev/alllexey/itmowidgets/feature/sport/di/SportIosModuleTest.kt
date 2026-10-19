@@ -27,6 +27,8 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.KeyTextResolver
+import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportActionRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportBookings
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.UserSportRepository
@@ -41,6 +43,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.points.SportPointsVie
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsHolder
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.schedule.DayLessonsGateway
+import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
@@ -134,8 +137,8 @@ class SportIosModuleTest {
 
         val (title, lesson) = shared[0]
         val prediction = shared[1].second
-        assertEquals("Занятие по спорту в ITMO.Widgets", title)
-        assertTrue(lesson.startsWith("${item.sectionName}, "), lesson)
+        assertEquals(SportStrings.share_sport_title, title)
+        assertTrue(lesson.startsWith("${SportStrings.share_sport_text}: ${item.sectionName}, "), lesson)
         val lessonLink = lesson.substringAfterLast(' ')
         assertEquals("$ORIGIN/sport/${item.lessonId}", lessonLink)
         assertEquals(AppLink.SportLesson(item.lessonId), AppLinks.parse(lessonLink))
@@ -161,6 +164,8 @@ class SportIosModuleTest {
         single<ScheduleRefreshGateway> { NoScheduleRefresh }
         single<DayLessonsGateway> { NoTimetable }
         single<PlatformActions> { RecordingShares(shared) }
+        // The app binds it in iosBackgroundModule over the bundle's string tables, which a test binary lacks.
+        single<UiTextResolver> { KeyTextResolver }
     }
 
     /** A counting engine, directories and the App Group under the test's temporary directory, no main queue. */

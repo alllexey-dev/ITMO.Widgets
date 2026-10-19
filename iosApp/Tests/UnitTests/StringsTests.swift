@@ -3,11 +3,11 @@ import Shared
 import UIKit
 import XCTest
 
-/// The catalog on iOS: Russian text and Russian plural rules on an English simulator from the
-/// string tables (SwiftUI, extensions) and from Compose Multiplatform, and every icon of the registry.
+/// The catalog on iOS: Russian text and Russian plural rules on an English simulator from the string tables, which
+/// SwiftUI, the extensions and Kotlin (through `AppPlatform.resolveText`) all read, and every icon of the registry.
 ///
-/// The app process runs `IosStrings.installAppLocale()` in `App.init`; checks of the native path put English back
-/// first through `withEnglishLanguages`, as an extension process without Kotlin sees the device.
+/// The app process runs `AppLocale.install()` in `App.init`; checks of the native path put English back first through
+/// `withEnglishLanguages`, as an extension process without Kotlin sees the device.
 @MainActor
 final class StringsTests: XCTestCase {
     private let lessonCounts = [5: "5 пар", 21: "21 пара", 2: "2 пары", 11: "11 пар"]
@@ -57,19 +57,17 @@ final class StringsTests: XCTestCase {
         XCTAssertEqual(AppStrings.string("ios_control_qr_description"), "Открывает пропуск")
     }
 
-    func testArgumentsTakeStringsAndKotlinNumbers() throws {
-        let text = try XCTUnwrap(IosStrings.shared.coreString(key: "marks_subjects_more", arguments: ["Физика", 2]))
+    func testArgumentsTakeStringsAndKotlinNumbers() {
+        let text = UiTextRes(key: "marks_subjects_more", arguments: ["Физика", 2])
 
         XCTAssertEqual(text.resolved, "Физика и ещё\u{00A0}2")
     }
 
-    func testNestedUiTextResolvesFirstLikeKotlin() async throws {
-        let count = try XCTUnwrap(IosStrings.shared.corePlural(key: "schedule_lesson_count", count: 21))
-        let text = try XCTUnwrap(IosStrings.shared.coreString(key: "schedule_change_added", arguments: [count]))
+    func testNestedUiTextResolvesFirstLikeKotlin() {
+        let count = UiTextPlural(key: "schedule_lesson_count", count: 21, arguments: [21])
+        let text = UiTextRes(key: "schedule_change_added", arguments: [count])
 
         XCTAssertEqual(text.resolved, "Добавлена: 21 пара")
-        let kotlin = try await IosStrings.shared.resolve(text: text)
-        XCTAssertEqual(kotlin, text.resolved)
     }
 
     func testJoinedAndLowercaseFirstResolveLikeKotlin() {
@@ -79,31 +77,16 @@ final class StringsTests: XCTestCase {
         XCTAssertEqual(UiTextLowercaseFirst(text: UiTextDynamic(value: "Пара")).resolved, "пара")
     }
 
-    func testComposeSuspendResolverUsesRussianPluralRules() async throws {
-        for (count, expected) in lessonCounts {
-            let text = try XCTUnwrap(IosStrings.shared.corePlural(key: "schedule_lesson_count", count: Int32(count)))
-            let resolved = try await IosStrings.shared.resolve(text: text)
-            XCTAssertEqual(resolved, expected)
-        }
-    }
+    /// Kotlin's text outside the screens (notifications, widget files, shares) comes from the same tables.
+    func testKotlinResolverReadsTheStringTables() async throws {
+        let resolver = try XCTUnwrap(IosKoin.shared.get(protocol: UiTextResolver.self) as? UiTextResolver)
+        let text = UiTextRes(key: "schedule_change_added", arguments: [
+            UiTextPlural(key: "schedule_lesson_count", count: 5, arguments: [5]),
+        ])
 
-    func testCompositionUsesRussianPluralRules() async throws {
-        let text = try XCTUnwrap(IosStrings.shared.corePlural(key: "schedule_lesson_count", count: 5))
-        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
-        let resolved = expectation(description: "composition resolved the plural")
-        resolved.assertForOverFulfill = false
-        var values: [String] = []
-        let window = UIWindow(windowScene: scene)
-        window.rootViewController = IosStrings.shared.compositionProbe(text: text) { value in
-            values.append(value)
-            if !value.isEmpty { resolved.fulfill() }
-        }
-        window.makeKeyAndVisible()
-        defer { window.isHidden = true }
+        let resolved = try await resolver.resolve(text: text)
 
-        await fulfillment(of: [resolved], timeout: 10)
-
-        XCTAssertEqual(values.last, "5 пар")
+        XCTAssertEqual(resolved, "Добавлена: 5 пар")
     }
 
     func testEverySharedIconHasASymbol() {

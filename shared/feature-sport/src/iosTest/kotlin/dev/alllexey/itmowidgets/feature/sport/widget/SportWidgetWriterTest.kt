@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.testing.KeyTextResolver
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetKind
@@ -18,6 +19,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimeline
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimelineEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimelineJson
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import kotlin.random.Random
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -51,6 +53,7 @@ class SportWidgetWriterTest {
         // 12:00 in Moscow on 2026-10-07.
         timeProvider = FixedAcademicTime(),
         log = log,
+        texts = KeyTextResolver,
         palette = { palette },
     )
 
@@ -64,7 +67,10 @@ class SportWidgetWriterTest {
         val envelope = Json.parseToJsonElement(FileSystem.SYSTEM.read(directory.file("sport-widget-v1.json")) { readUtf8() })
         assertEquals(1, envelope.jsonObject.getValue("version").jsonPrimitive.int)
         val items = assertNotNull(read().entries.single().snapshot.items)
-        assertEquals(listOf("Ломо", "Кронва"), items.map { it.building })
+        assertEquals(
+            listOf(CoreStrings.schedule_building_lomo, CoreStrings.schedule_building_kronva),
+            items.map { it.building },
+        )
         assertEquals(listOf("dev.alllexey.itmowidgets.widget.sport"), reloads)
     }
 
