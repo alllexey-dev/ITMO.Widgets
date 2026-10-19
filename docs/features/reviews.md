@@ -26,8 +26,8 @@ defines the routes, limits, premoderation and the ISU check.
   `TeacherLevelsRepositoryImpl`, `TeacherLevelsFileStore`; Koin `reviewsModule`,
   one instance each, sign-out cleaners `reviews` and `teacher-levels`),
   `feature/reviews/presentation` (`ReviewEditorViewModel`,
-  `ReportReviewViewModel`) and `feature/reviews/ui` (`ReviewEditorSheet`,
-  `ReportReviewForm`).
+  `ReportReviewViewModel`); `androidMain`: `feature/reviews/ui`
+  (`ReviewEditorSheet`, `ReportReviewForm`).
 - Section rows and `TeacherSummaryCard` live in `:shared:feature-social`.
 - `ReviewsEntries.kt` (`:app`) registers `AppRoutes.ReviewEditor` (a sheet with
   `SheetPolicy.Dismissal.FORM`) and `AppRoutes.ReportReview` (a dialog), both

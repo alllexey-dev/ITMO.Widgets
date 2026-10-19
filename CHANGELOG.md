@@ -14,9 +14,12 @@ new iOS app.
 
 - On iOS «Уведомления» hides `Спорт`, `Друзья` and `Новые устройства` until the app holds Apple's notification filtering entitlement; every push shows, the stored switches stay.
 
-### iOS strings without Compose (2026-10-19)
+### iOS framework without Compose (2026-10-19)
 
 - On iOS, Kotlin text (notifications, widget files, shares, the widgets gallery) comes from the app's string tables through Swift, and the app no longer carries the Compose resources (ADR 0035, proposed).
+- The widgets' theme palette is built in `:shared:core` without Compose, so no iOS code reads the design system any more; the colours stay the same.
+- Every feature module keeps its Compose screens in `androidMain` (convention `itmowidgets.cmp.android`) and reads its strings from `:shared:compose-strings`; the screens look the same on Android, and their iOS code compiles no Compose. The campus map's icons are Android assets that the iOS bundle references by path.
+- The design system and the Compose strings are Android-only modules, the test kit's Compose helpers Android-only, and the shared route keys no longer extend Nav3's `NavKey`; the iOS framework links no Compose any more (release framework 231.8 -> 102.7 MB).
 
 ### Campus map polish (2026-10-19)
 

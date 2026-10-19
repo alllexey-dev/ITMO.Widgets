@@ -16,7 +16,7 @@ import dev.alllexey.itmowidgets.designsystem.components.groups.GroupActionRow
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
-import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
+import dev.alllexey.itmowidgets.core.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_add

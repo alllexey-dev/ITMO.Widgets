@@ -17,8 +17,6 @@ kotlin {
             api(libs.androidx.datastore.preferences.core)
             // JsonElement is the payload type of FcmPayloadHandler.
             api(libs.kotlinx.serialization.json)
-            // AppRoute extends NavKey; only the runtime publishes iOS klibs, navigation3-ui stays in :app.
-            api(libs.androidx.navigation3.runtime)
             // The MyItmoApi 2.x client, its storage and Ktor's engine type are in core's public signatures.
             api(libs.my.itmo.api.kmp)
             api(libs.ktor.client.core)
@@ -27,6 +25,8 @@ kotlin {
             api(project(":shared:backend-client"))
             // kotlinx.atomicfu.locks.SynchronizedObject of AtomicTextFile; library only, no plugin.
             implementation(libs.kotlinx.atomicfu)
+            // The widget palettes without Compose (ThemeSeeds.kt); the same version material-kolor builds on.
+            implementation(libs.material.color.utilities)
         }
         // The Darwin engine of every iOS Ktor client; the clients take the engine.
         iosMain.dependencies {

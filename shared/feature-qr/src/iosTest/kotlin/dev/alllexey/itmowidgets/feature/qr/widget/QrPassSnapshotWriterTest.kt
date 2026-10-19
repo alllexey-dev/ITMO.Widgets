@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.session.AppGroupSessionDataCleaner
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.settings.widgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
@@ -17,7 +18,6 @@ import dev.alllexey.itmowidgets.feature.qr.data.local.QrCodeLocalDataSourceImpl
 import dev.alllexey.itmowidgets.feature.qr.data.remote.QrCodeRemoteDataSource
 import dev.alllexey.itmowidgets.feature.qr.data.repository.QrCodeRepositoryImpl
 import dev.alllexey.itmowidgets.feature.qr.ui.rendering.QrCodeGenerator
-import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import kotlin.test.AfterTest
 import kotlin.test.Test

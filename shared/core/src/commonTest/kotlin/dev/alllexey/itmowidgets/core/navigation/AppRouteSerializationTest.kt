@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.core.navigation
 
-import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -26,14 +25,12 @@ class AppRouteSerializationTest {
         val registered = appRouteSerializersModule().subclassesOf(AppRoute::class)
 
         assertEquals(registered, RouteSamples.all.map { it::class }.toSet())
-        assertEquals(registered, appRouteSerializersModule().subclassesOf(NavKey::class))
     }
 
     @Test
-    fun everyKeyRoundTripsAsAnAppRouteAndAsANavKey() {
+    fun everyKeyRoundTripsAsAnAppRoute() {
         RouteSamples.all.forEach { route ->
             assertEquals(route, json.decodeFromString(APP_ROUTE, json.encodeToString(APP_ROUTE, route)), "$route")
-            assertEquals(route, json.decodeFromString(NAV_KEY, json.encodeToString(NAV_KEY, route)), "$route")
         }
     }
 
@@ -43,9 +40,9 @@ class AppRouteSerializationTest {
         val featureJson = Json { serializersModule = module }
         val route: AppRoute = FeatureSheet(7, replyTo = "my")
 
-        assertEquals(route, featureJson.decodeFromString(NAV_KEY, featureJson.encodeToString(NAV_KEY, route)))
-        assertTrue(FeatureSheet::class in module.subclassesOf(NavKey::class))
-        assertTrue(AppRoutes.QrPass::class in module.subclassesOf(NavKey::class))
+        assertEquals(route, featureJson.decodeFromString(APP_ROUTE, featureJson.encodeToString(APP_ROUTE, route)))
+        assertTrue(FeatureSheet::class in module.subclassesOf(AppRoute::class))
+        assertTrue(AppRoutes.QrPass::class in module.subclassesOf(AppRoute::class))
     }
 
     @Test
@@ -98,7 +95,6 @@ class AppRouteSerializationTest {
 
     private companion object {
         val APP_ROUTE = PolymorphicSerializer(AppRoute::class)
-        val NAV_KEY = PolymorphicSerializer(NavKey::class)
     }
 }
 

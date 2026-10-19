@@ -3,13 +3,13 @@ package dev.alllexey.itmowidgets.feature.sport.di
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.settings.widgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.AppGroupWidgetRefresh
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.RefreshStep
 import dev.alllexey.itmowidgets.core.work.RefreshStepKeys
-import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetTimelineJson
 import dev.alllexey.itmowidgets.feature.sport.widget.SportWidgetTriggers

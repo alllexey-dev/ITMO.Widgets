@@ -24,7 +24,7 @@ class UiTextRulesTest {
         // The CMP Res, its accessors and the resolvers live in :shared:compose-strings and the screens; core, data,
         // domain, presentation and iOS code stay compilable for SwiftUI without them.
         val violations = productionFiles
-            .filter { it.projectPath.startsWith(CORE_MODULE) || it.isNonUi() || it.isIosOutsideComposeKit() }
+            .filter { it.projectPath.startsWith(CORE_MODULE) || it.isNonUi() || it.isIos() }
             .requireAtLeast(MIN_NON_UI_FILES, "core and non-UI files")
             .associate { file -> file.qualifiedKey to file.imports.map { it.name }.filter(::isComposeText) }
             .filterValues { it.isNotEmpty() }

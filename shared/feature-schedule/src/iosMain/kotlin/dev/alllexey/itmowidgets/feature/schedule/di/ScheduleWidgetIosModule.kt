@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.schedule.ScheduleWidgetRefreshRequester
+import dev.alllexey.itmowidgets.core.settings.widgetPalette
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.AppGroupWidgetRefresh
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
@@ -12,7 +13,6 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.work.CheckOutcome
 import dev.alllexey.itmowidgets.core.work.RefreshStep
 import dev.alllexey.itmowidgets.core.work.RefreshStepKeys
-import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
 import dev.alllexey.itmowidgets.feature.schedule.widget.ScheduleTimelineTriggers

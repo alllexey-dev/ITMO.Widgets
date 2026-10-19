@@ -46,7 +46,7 @@ Add `--tests '*ScheduleRepositoryImplTest'` to run one class.
 
 ## Screenshot tests
 
-Each module renders every `@Preview` of its `commonMain` with Roborazzi on
+Each module renders every `@Preview` of its `androidMain` with Roborazzi on
 Robolectric: one line, `class <X>ScreenshotTest : PreviewScreenshotTest()`, in
 `androidHostTest`. Regular test runs exclude screenshot tests; they run only
 through `verify.sh shots`.

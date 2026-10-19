@@ -82,9 +82,11 @@ stored as one `ThemeSpec` (accent, custom colour, palette style, contrast,
 black background). `resolveColorScheme(spec, dark, wallpaper)` in
 `designsystem/theme/ThemeSchemes.kt` is the one way from it to a scheme:
 `ItmoTheme` without a `colorSource` reads `AppColorSource.current`, which the
-Android app feeds from `AppearancePreferences.observeTheme()` at start, and the
-widgets call the same function with `wallpaperPalette(context)` (null below
-Android 12).
+Android app feeds from `AppearancePreferences.observeTheme()` at start. The
+widgets take the same roles from core's `ThemeSpec.widgetPalette()` (the seeds
+live in `core/settings/ThemeSeeds.kt`), which builds the scheme without
+Compose; Android's `widgetPalette(context)` keeps the wallpaper's own scheme
+where the app does ([widgets](features/widgets.md#theme-colours)).
 
 - The seed: `Как обои` the wallpaper's (`system_accent1_500`, the brand blue
   without one), `Фирменный` the brand blue `#4984E2`, `Свой цвет` the user's,

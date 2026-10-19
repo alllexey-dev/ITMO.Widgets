@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.designsystem.components.groups.groupPreviewBackdrop
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
-import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
+import dev.alllexey.itmowidgets.core.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_content_copy

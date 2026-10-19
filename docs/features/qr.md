@@ -8,8 +8,8 @@ tile and the `qr_pass` launcher shortcut. The widget is in
 [Settings](../settings.md#qr-widget). The pass comes from MyItmoApi; there is
 no second API client.
 
-Domain, data, presentation and screen live in `:shared:feature-qr`
-`commonMain`; `QrModule.kt` registers `QrPassViewModel`. `:app` keeps the
+Domain, data and presentation live in `:shared:feature-qr` `commonMain`, the
+Compose sheet in `androidMain`; `QrModule.kt` registers `QrPassViewModel`. `:app` keeps the
 widget (`ui/widget`), bitmap rendering and cache (`ui/rendering`), the worker
 (`work`), `QrTileService`, `QrTileClick` and `QrTileController`.
 

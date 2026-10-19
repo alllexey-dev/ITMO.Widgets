@@ -14,7 +14,7 @@ import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
-import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
+import dev.alllexey.itmowidgets.core.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.designsystem.theme.ProvideItmoExpressive
 

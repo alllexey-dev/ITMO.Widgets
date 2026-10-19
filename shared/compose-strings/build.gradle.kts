@@ -1,8 +1,8 @@
-// The Compose side of the string catalog: a CMP copy of every module's composeResources strings, so one generated Res
-// maps every catalog key to its StringResource, and the UiText resolvers of Compose and suspend code over it. The
-// catalog files stay in their modules; until the screens leave commonMain the strings sit twice in the app.
+// The Compose side of the string catalog, Android only (ADR 0035): a CMP copy of every module's composeResources
+// strings, so one generated Res maps every catalog key to its StringResource, and the UiText resolvers of Compose and
+// suspend code over it. The catalog files stay in their modules, which compile no Res of their own.
 plugins {
-    id("itmowidgets.cmp.ui")
+    id("itmowidgets.cmp.kit")
     id("itmowidgets.testing")
 }
 

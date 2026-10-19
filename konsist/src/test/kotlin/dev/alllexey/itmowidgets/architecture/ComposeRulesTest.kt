@@ -30,7 +30,7 @@ class ComposeRulesTest {
 
     @Test
     fun `every public screen and sheet content has a preview in its module`() {
-        // The screenshot harness renders every commonMain @Preview, so a preview is also the screen's screenshot test.
+        // The screenshot harness renders every shared @Preview, so a preview is also the screen's screenshot test.
         val screens = statelessCandidates().filter { it.hasPublicOrDefaultModifier && SCREEN.matches(it.name) }
         if (sharedFeatureUiFiles().isNotEmpty()) screens.requireNonEmpty("public shared screens")
         if (screens.isEmpty()) return
@@ -111,7 +111,7 @@ class ComposeRulesTest {
 
         val STATELESS = Regex("""[A-Z]\w*(Screen|SheetContent|Dialog)""")
         val SCREEN = Regex("""[A-Z]\w*(Screen|SheetContent)""")
-        val SHARED_FEATURE_UI_FILE = Regex("""/shared/feature-[\w-]+/src/commonMain/.*/ui/[^/]+\.kt""")
+        val SHARED_FEATURE_UI_FILE = Regex("""/shared/feature-[\w-]+/src/androidMain/.*/ui/[^/]+\.kt""")
 
         /** `koinViewModel()`, `viewModel()` and their reified forms. */
         val VIEW_MODEL_LOOKUP = Regex("""\b(koinViewModel|viewModel)\s*[<(]""")
