@@ -15,6 +15,7 @@ new iOS app.
 - On iOS, Kotlin text (notifications, widget files, shares, the widgets gallery) comes from the app's string tables through Swift, and the app no longer carries the Compose resources (ADR 0035, proposed).
 - The widgets' theme palette is built in `:shared:core` without Compose, so no iOS code reads the design system any more; the colours stay the same.
 - `:shared:feature-qr` keeps its Compose UI in `androidMain` (convention `itmowidgets.cmp.android`), so its iOS code no longer compiles Compose; the pass sheet looks the same.
+- `:shared:feature-reviews` keeps its review editor and report dialog in `androidMain`, so its iOS code no longer compiles Compose; both look the same.
 
 ### Recordbook polish (2026-10-19)
 

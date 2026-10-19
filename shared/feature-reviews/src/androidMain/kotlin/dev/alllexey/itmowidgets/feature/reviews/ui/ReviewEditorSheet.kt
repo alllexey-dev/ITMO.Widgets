@@ -48,27 +48,26 @@ import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorUiState
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewFieldError
-import dev.alllexey.itmowidgets.shared.feature.reviews.Res
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_anonymous
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_anonymous_off
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_discard
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_discard_title
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_editor_close
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_editor_edit
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_editor_new
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_save
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_send
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_subject_hint
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_subject_too_long
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_text_hint
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_text_too_long
-import dev.alllexey.itmowidgets.shared.feature.reviews.review_text_too_short
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
+import dev.alllexey.itmowidgets.shared.compose.strings.review_anonymous
+import dev.alllexey.itmowidgets.shared.compose.strings.review_anonymous_off
+import dev.alllexey.itmowidgets.shared.compose.strings.review_discard
+import dev.alllexey.itmowidgets.shared.compose.strings.review_discard_title
+import dev.alllexey.itmowidgets.shared.compose.strings.review_editor_close
+import dev.alllexey.itmowidgets.shared.compose.strings.review_editor_edit
+import dev.alllexey.itmowidgets.shared.compose.strings.review_editor_new
+import dev.alllexey.itmowidgets.shared.compose.strings.review_save
+import dev.alllexey.itmowidgets.shared.compose.strings.review_send
+import dev.alllexey.itmowidgets.shared.compose.strings.review_subject_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.review_subject_too_long
+import dev.alllexey.itmowidgets.shared.compose.strings.review_text_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.review_text_too_long
+import dev.alllexey.itmowidgets.shared.compose.strings.review_text_too_short
+import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
-import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
-import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 
 /**
  * What the review editor asks of its host: the field changes and the send go to `ReviewEditorViewModel`; [onClose]
@@ -158,7 +157,7 @@ fun ReviewEditorSheet(
         ConfirmDialog(
             title = stringResource(Res.string.review_discard_title),
             confirmLabel = stringResource(Res.string.review_discard),
-            dismissLabel = stringResource(CoreRes.string.common_cancel),
+            dismissLabel = stringResource(Res.string.common_cancel),
             onConfirm = actions.onDiscard,
             onDismiss = actions.onKeepEditing,
         )
