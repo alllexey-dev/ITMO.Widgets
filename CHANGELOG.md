@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### iOS native screens (2026-10-19)
+
+- On iOS the last Compose screens are native SwiftUI: all links of a subject, a link's actions, the link editor and the link report, the review editor and another user's sport; the Compose host (`ComposeHost`, the `.compose` routes and `shared/ios` `screens/`) is gone.
+
 ### Widgets (2026-10-18)
 
 - The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in

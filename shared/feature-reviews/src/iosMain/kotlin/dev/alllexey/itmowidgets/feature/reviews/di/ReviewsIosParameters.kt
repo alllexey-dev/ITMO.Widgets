@@ -16,3 +16,13 @@ fun reportReviewParameters(args: TeacherReviewArgs, reviewId: String): List<Any>
         ),
     ),
 )
+
+/** The Koin parameters of the review editor's `ReviewEditorViewModel` (`AppRoutes.ReviewEditor`). */
+fun reviewEditorParameters(args: TeacherReviewArgs): List<Any> = listOf(
+    SavedStateHandle(
+        mapOf(
+            TeacherReviewArgs.TEACHER_ISU to args.teacherIsu,
+            TeacherReviewArgs.TEACHER_NAME to args.teacherName,
+        ),
+    ),
+)

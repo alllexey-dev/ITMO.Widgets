@@ -169,8 +169,7 @@ allow it.
   `SpoilerCropActivity` remain separate activities (`app/shell/ActivityRoutes.kt`).
 - **iOS.** `iosApp/Sources/App/Router/AppRouter.swift` keeps a SwiftUI
   `NavigationStack` per tab and the sheets; `Routes+<Area>.swift` map each
-  shared key to a target (a Compose screen through `ComposeHost`, a SwiftUI
-  screen or a sheet). URLs and App Intents arrive through `RouteURL.swift`
+  shared key to a target (a SwiftUI screen, a sheet or a tab). URLs and App Intents arrive through `RouteURL.swift`
   and `RouteInbox.swift`.
 
 ## Time

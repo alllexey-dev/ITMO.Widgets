@@ -10,7 +10,7 @@ import dev.alllexey.itmowidgets.feature.resources.presentation.LinkFieldError
  * references (a new link with its category guessed from the site and three nested flows, the own `own-scores` link,
  * no connection, an address that is not https) plus a title over the limit and a save in progress.
  */
-internal object LinkEditorSamples {
+object LinkEditorSamples {
     const val SHEET_URL = "https://docs.google.com/spreadsheets/d/1SyntheticSheetForVisualTests_0123456/edit"
     const val CHAT_URL = "https://t.me/synthetic_chat"
 

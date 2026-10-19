@@ -17,7 +17,7 @@ import org.koin.core.parameter.parametersOf
 /**
  * The ViewModels of one SwiftUI screen; Swift's `ObservableViewModel` owns one and clears it on deinit. A ViewModel
  * type is created once per store; [clear] runs each ViewModel's `onCleared` and cancels its `viewModelScope`, which
- * nothing else does on iOS. Compose screens never use it: a `ComposeUIViewController` brings its own store.
+ * nothing else does on iOS.
  */
 class ScreenViewModelStore : ViewModelStoreOwner {
 

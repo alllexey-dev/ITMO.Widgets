@@ -225,9 +225,9 @@ Android screenshots in `shared/feature-sport/screenshots/` from the previews
   from `SportMyViewModel.sectionToggle`. Sharing goes through `SportShares`, maps
   through `PlatformActions`. Koin modules `sportModule`, `sportIosModule` and
   social's `FriendRepository`. Tabs move by the native tab bar only.
-- `UserSportRoute` via `userSportViewController` (still a Compose host),
-  arguments from
-  `UserSportIosRoute`; sharing through `SportShares`, maps in Apple Maps.
+- `UserSportScreen` (another user's sport) is SwiftUI over `UserSportViewModel`,
+  pushed with the arguments of `userSportParameters`; the days come from
+  `userSportDays`, a card opens its building in Apple Maps.
 - `sportIosModule` binds `SportApi` from the one `BackendClient` and empty
   debug ports; loading `sportModule` also wires pending sport rows into the
   schedule and Сегодня, the queue results of the bell (`SportResultLog`, the JSON file sport_results.json in the no-backup directory, written by

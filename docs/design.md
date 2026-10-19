@@ -601,8 +601,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
 - Sheets. A SwiftUI `.sheet` with the grabber, an inline title and the close
   button; content scrolls. Three heights (`ItmoSheetHeight`): the content's
   (short content is never cut), 0.82 of the screen draggable to full, or full
-  below the status bar; never under it. A Compose sheet's content is hosted in
-  a SwiftUI `.sheet`, never a Compose `ModalBottomSheet`.
+  below the status bar; never under it. A form (an editor, a report) is a
+  `NavigationStack` with a `Form`, cancel and the action in the toolbar.
 - Layout. Side margin `ItmoKit.margin` (16), `ItmoKit.gap` between cards,
   `ItmoSectionHeader` before a section (closer on a sheet), at most one hero
   card (`ItmoCard(tone: .primary, hero: true)`), sets of rows in an
@@ -639,8 +639,8 @@ style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
 - Icons: SF Symbols through `AppSymbol` (generated from `docs/design/icons.tsv`)
   on SwiftUI and system surfaces; Material Symbols Rounded in Compose
   ([ADR 0028](decisions/0028-strings-and-icons.md)).
-- Chrome rule: a Compose route draws its own top bar and hides the navigation
-  bar (edge swipe back stays on); a SwiftUI screen keeps the native bar.
+- Chrome: a tab root draws the static root header, a pushed screen keeps the
+  native bar with the edge swipe back.
 - Tabs switch by the native tab bar only, no swipe.
 
 Details: [iOS app](ios.md#design-system).

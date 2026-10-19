@@ -22,7 +22,7 @@ import kotlin.time.Instant
  * category, chats, past years, own private, shared, pending and rejected links, three nested flows and another
  * student's Google Sheet.
  */
-internal object SubjectLinksSamples {
+object SubjectLinksSamples {
     val scope = ResourceScope(42L, "Математический анализ", "2026-1")
     private val past = scope.copy(periodKey = "2025-1")
     private val lectureFlow = LinkAudience(7101, "ФИЗ ПИИКТ 3", typeId = 1, depth = 1)
