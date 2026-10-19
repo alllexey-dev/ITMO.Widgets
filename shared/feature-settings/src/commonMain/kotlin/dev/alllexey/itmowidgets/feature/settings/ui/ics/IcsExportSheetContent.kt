@@ -29,7 +29,7 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ButtonRow
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
-import dev.alllexey.itmowidgets.designsystem.components.groups.GroupPosition
+import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupSurface
 import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupItem
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold

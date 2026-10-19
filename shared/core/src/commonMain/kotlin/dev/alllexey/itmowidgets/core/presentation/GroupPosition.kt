@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.designsystem.components.groups
+package dev.alllexey.itmowidgets.core.presentation
 
 /** Where a row stands in its connected group; the outer corners belong to the first and the last row. */
 enum class GroupPosition {

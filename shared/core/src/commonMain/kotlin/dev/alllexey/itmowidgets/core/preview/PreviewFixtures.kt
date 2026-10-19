@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.designsystem.preview
+package dev.alllexey.itmowidgets.core.preview
 
 /**
  * Synthetic preview data: long Russian names that push a layout to its limits at 1.3 and 320 dp. Only `@Preview`

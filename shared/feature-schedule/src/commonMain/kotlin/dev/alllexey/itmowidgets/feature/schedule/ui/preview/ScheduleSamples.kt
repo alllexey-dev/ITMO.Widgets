@@ -19,7 +19,7 @@ import dev.alllexey.itmowidgets.core.schedule.ROOM_BOOKING_TYPE_ID
 import dev.alllexey.itmowidgets.core.text.ScheduleChangeLine
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.personInitials
-import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
+import dev.alllexey.itmowidgets.core.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.FeedInput
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.FeedJump
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.FeedOwner

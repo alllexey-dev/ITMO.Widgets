@@ -8,7 +8,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
-import dev.alllexey.itmowidgets.designsystem.preview.PreviewFixtures
+import dev.alllexey.itmowidgets.core.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassCode
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassHolder

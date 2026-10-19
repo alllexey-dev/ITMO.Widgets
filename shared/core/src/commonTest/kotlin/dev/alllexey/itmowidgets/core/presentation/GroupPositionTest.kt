@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.designsystem.components.groups
+package dev.alllexey.itmowidgets.core.presentation
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
