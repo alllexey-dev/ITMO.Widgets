@@ -26,7 +26,7 @@ internal class SubjectLinksSheetContentPreview {
     fun SubjectLinksSheetContent() = LinksPreview(SubjectLinksSamples.content)
 }
 
-/** A vote restriction: others' links keep their score without the arrows. */
+/** A vote restriction: others' links keep their score without the thumbs. */
 internal class SubjectLinksSheetRestrictedPreview {
     @Preview(name = "restricted", heightDp = TALL_HEIGHT)
     @Composable

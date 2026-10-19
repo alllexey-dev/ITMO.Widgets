@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,12 +26,6 @@ import dev.alllexey.itmowidgets.designsystem.components.charts.ScoreRing
 import dev.alllexey.itmowidgets.designsystem.components.charts.ScoreRingSector
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.shared.designsystem.Res
-import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_down
-import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_down_filled
-import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_up
-import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_up_filled
-import org.jetbrains.compose.resources.painterResource
 
 /** The colour of text in [this] tone on a plain surface: a reason, a broken minimum, a bar. */
 @Composable
@@ -106,54 +98,6 @@ fun SportRing(text: String, visits: Float, bonus: Float, modifier: Modifier = Mo
     }
 }
 
-/**
- * The votes of a link: thumbs around [score] in a pill, the viewer's own vote ([myVote] 1 or -1) in `primary`. Without [enabled]
- * only the score shows. [upLabel] and [downLabel] are what TalkBack reads for the buttons.
- */
-@Composable
-fun VotePill(
-    score: Int,
-    myVote: Int,
-    upLabel: String,
-    downLabel: String,
-    onUp: () -> Unit,
-    onDown: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-) {
-    Row(
-        modifier.clip(ItmoTheme.shapes.full).background(Tone.Neutral.container()),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        VoteButton(
-            painterResource(if (myVote > 0) Res.drawable.ic_thumb_up_filled else Res.drawable.ic_thumb_up),
-            upLabel, myVote > 0, enabled, onUp,
-        )
-        Text(
-            score.toString(),
-            style = ItmoTheme.typography.labelLarge.tabular(),
-            color = if (myVote != 0) ItmoTheme.colorScheme.primary else ItmoTheme.colorScheme.onSurface,
-            modifier = if (enabled) Modifier else Modifier.padding(horizontal = ItmoTheme.spacing.content, vertical = ItmoTheme.spacing.related),
-        )
-        VoteButton(
-            painterResource(if (myVote < 0) Res.drawable.ic_thumb_down_filled else Res.drawable.ic_thumb_down),
-            downLabel, myVote < 0, enabled, onDown,
-        )
-    }
-}
-
-@Composable
-private fun VoteButton(icon: androidx.compose.ui.graphics.painter.Painter, label: String, chosen: Boolean, enabled: Boolean, onClick: () -> Unit) {
-    if (!enabled) return
-    IconButton(onClick = onClick, modifier = Modifier.size(VoteTarget)) {
-        Icon(
-            icon,
-            contentDescription = label,
-            tint = if (chosen) ItmoTheme.colorScheme.primary else ItmoTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
 /** Tabular figures: points line up in columns. */
 fun androidx.compose.ui.text.TextStyle.tabular() = copy(fontFeatureSettings = "tnum")
 
@@ -162,9 +106,8 @@ private val MeterWidth = 40.dp
 private val MeterHeight = 4.dp
 private val SportRingSize = 44.dp
 private val SportRingThickness = 4.dp
-private val VoteTarget = 40.dp
 
-/** A row's number column in every form, and the votes. */
+/** A row's number column in every form. */
 @Preview
 @Composable
 private fun ValueWithSourcePreview() = ItmoPreview {
@@ -178,11 +121,6 @@ private fun ValueWithSourcePreview() = ItmoPreview {
             ValueWithSource("БАРС, 4 сент.", stale = true) { PointsMeter("63,5", 0.635f, Tone.Warning) }
             ValueWithSource("My ITMO") { StatusPill("4C", tone = Tone.Success) }
             ValueWithSource("Спорт") { SportRing("30", 0.15f, 0.15f) }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content)) {
-            VotePill(12, 0, "Полезная ссылка", "Бесполезная ссылка", {}, {})
-            VotePill(8, 1, "Полезная ссылка", "Бесполезная ссылка", {}, {})
-            VotePill(3, 0, "Полезная ссылка", "Бесполезная ссылка", {}, {}, enabled = false)
         }
     }
 }

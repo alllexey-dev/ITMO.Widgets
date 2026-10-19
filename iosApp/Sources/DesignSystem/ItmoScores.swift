@@ -152,7 +152,7 @@ struct ItmoGradeScale: View {
     }
 }
 
-/// The votes of a link: thumbs around the score in a capsule, the viewer's own vote in the tint. Without `enabled` only the score.
+/// The votes of a link or a review: thumbs around the score in a capsule, the viewer's own vote in the tint. Without `enabled` only the score.
 struct ItmoVotePill: View {
     let score: Int
     let myVote: Int
