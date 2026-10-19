@@ -34,6 +34,11 @@ struct ShellDestination: Hashable {
     }
 
     var route: any AppRoute { key.route }
+
+    /// A `RouteTarget.fullScreen` screen: the shell hides the tab bar, the pass accessory and the demo banner under it.
+    var isFullScreen: Bool {
+        if case .fullScreen = Routes.target(for: route) { true } else { false }
+    }
 }
 
 /// A sheet above the shell.
@@ -101,6 +106,12 @@ final class AppRouter {
 
     func setPath(_ path: [ShellDestination], of tab: ShellTab) {
         paths[tab] = path
+    }
+
+    /// Whether `tab` shows a full-screen route on top (`ShellDestination.isFullScreen`): the shell drops its bottom
+    /// chrome.
+    func isFullScreen(_ tab: ShellTab) -> Bool {
+        path(of: tab).last?.isFullScreen == true
     }
 
     // MARK: Entry routes
@@ -242,7 +253,7 @@ final class AppRouter {
         switch Routes.target(for: route) {
         case let .tab(tab):
             return select(tab) ? .opened : .ignored
-        case .swiftUI:
+        case .swiftUI, .fullScreen:
             sheet = nil
             paths[selectedTab, default: []].append(ShellDestination(route))
             return .opened

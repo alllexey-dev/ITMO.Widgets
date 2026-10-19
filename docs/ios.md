@@ -68,7 +68,9 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
 - Tabs. `ShellTabs` is the glass `TabView` of iOS 26 in the bar order of the shared `AppTab` (recordbook, schedule,
   today, sport, profile), with its names and icons; a tab shows only while `PlatformCapabilities` offers its
   feature. `ShellTab`'s raw values are the frozen route ids, so today is `home` and profile is `me`. Tabs switch by
-  the tab bar only, no swipe ([Tab switching](design.md#tab-switching-and-back)); a pushed screen keeps the bar.
+  the tab bar only, no swipe ([Tab switching](design.md#tab-switching-and-back)); a pushed screen keeps the bar,
+  except a `RouteTarget.fullScreen` route (the campus map): while it is on top, `ShellView` hides the tab
+  bar and the shell leaves out the pass accessory and the demo banner (`AppRouter.isFullScreen`).
 - Pass accessory. While today is selected, `tabViewBottomAccessory` shows `QR-пропуск` (`ShellPassAccessory`), which
   opens the pass sheet (`AppRoutes.QrPass`), the same sheet widgets, the Control and shortcuts open. `QrPassSheet`
   (`Features/Qr/`) is a content-height `ItmoSheet` over `QrPassViewModel`: holder, the code from `QrCodeGenerator`

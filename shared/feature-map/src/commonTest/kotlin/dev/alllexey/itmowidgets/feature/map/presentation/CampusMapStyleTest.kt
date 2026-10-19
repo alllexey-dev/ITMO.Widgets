@@ -49,6 +49,28 @@ class CampusMapStyleTest {
     }
 
     @Test
+    fun foodIsApartFromStudyPlacesAndTheRouteHasACasing() {
+        val ids = layers.map { it.getValue("id").jsonPrimitive.content }
+        assertTrue(ids.indexOf("route_casing") < ids.indexOf("route_line_dashed"))
+        assertTrue(ids.indexOf("route_casing") < ids.indexOf("route_line_current"))
+        val study = layers.single { it.getValue("id").jsonPrimitive.content == "room_student_places" }
+        val fill = study.getValue("paint").jsonObject.getValue("fill-color").jsonArray
+        assertEquals("""["match",["get","subclass"],["canteen","food"],"rgba(255, 240, 229, 1)","rgba(214, 241, 236, 1)"]""", fill.toString())
+    }
+
+    @Test
+    fun theDarkStyleKeepsNoLightColourAndChangesNothingElse() {
+        val dark = Json.parseToJsonElement(CampusMapStyle.json(scene, dark = true)).jsonObject
+        val text = dark.toString()
+
+        CampusMapStyle.DARK_COLORS.keys.forEach { light -> assertTrue("\"$light\"" !in text, light) }
+        val darkLayers = dark.getValue("layers").jsonArray.map { it.jsonObject }
+        assertEquals(layers.map { it["id"] to it["filter"] }, darkLayers.map { it["id"] to it["filter"] })
+        val background = darkLayers.first().getValue("paint").jsonObject.getValue("background-color").jsonPrimitive.content
+        assertEquals("rgba(22, 24, 27, 1)", background)
+    }
+
+    @Test
     fun noRouteAndNoSelectionAreEmptyCollections() {
         assertEquals(0, Json.parseToJsonElement(CampusMapGeoJson.selection(null)).jsonObject.getValue("features").jsonArray.size)
         assertEquals(CampusMapGeoJson.EMPTY, CampusMapGeoJson.route(null, 0, null))

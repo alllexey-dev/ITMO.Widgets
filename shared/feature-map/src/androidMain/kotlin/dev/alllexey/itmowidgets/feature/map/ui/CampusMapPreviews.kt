@@ -37,6 +37,18 @@ internal class CampusMapCityPreview {
     fun CampusMap() = ItmoPreview { CampusMapScreen(CampusMapSamples.City, CampusMapActions(), map = placeholder) }
 }
 
+internal class CampusMapPickPreview {
+    @Preview(name = "pick", heightDp = SCREEN_HEIGHT)
+    @Composable
+    fun CampusMap() = ItmoPreview { CampusMapScreen(CampusMapSamples.Pick, CampusMapActions(), map = placeholder) }
+}
+
+internal class CampusMapSwitchingPreview {
+    @Preview(name = "switching", heightDp = SCREEN_HEIGHT)
+    @Composable
+    fun CampusMap() = ItmoPreview { CampusMapScreen(CampusMapSamples.Switching, CampusMapActions(), map = placeholder) }
+}
+
 internal class CampusMapSearchPreview {
     @Preview(name = "search", heightDp = SCREEN_HEIGHT)
     @Composable
