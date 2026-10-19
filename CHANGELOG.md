@@ -17,6 +17,10 @@ new iOS app.
 - `:shared:feature-qr` keeps its Compose UI in `androidMain` (convention `itmowidgets.cmp.android`), so its iOS code no longer compiles Compose; the pass sheet looks the same.
 - `:shared:feature-resources` keeps its Compose UI in `androidMain` the same way; `LinkAction`, `LinkActionsModel` and `linkActions` move to `LinkActionsModel.kt` in common code for SwiftUI; the links sheets look the same.
 
+- `:shared:feature-reviews` keeps its review editor and report dialog in `androidMain`, so its iOS code no longer compiles Compose; both look the same.
+
+- `:shared:feature-home` keeps its Compose UI in `androidMain` the same way; Today and the bell sheet look the same.
+
 ### Recordbook polish (2026-10-19)
 
 - The BARS offer and notices keep the title at full width with the button under it, no more words broken into a
