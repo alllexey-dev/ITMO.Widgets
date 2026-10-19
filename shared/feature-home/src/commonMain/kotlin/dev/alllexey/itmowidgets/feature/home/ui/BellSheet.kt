@@ -38,6 +38,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.IconTile
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.PersonAvatarSize
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.TextTile
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
@@ -247,11 +248,10 @@ private fun Lead(item: BellItem) {
         }
         BellKind.SCHEDULE_CHANGE -> IconTile(painterResource(KitRes.drawable.ic_edit_calendar), Tone.Warning)
         BellKind.SPORT -> IconTile(painterResource(KitRes.drawable.ic_sprint), if (item.failed) Tone.Error else Tone.Success)
-        BellKind.FRIEND_REQUEST -> Avatar(item.lead, item.pictureUrl, size = LeadSize, initials = item.initials)
+        BellKind.FRIEND_REQUEST -> Avatar(item.lead, item.pictureUrl, size = PersonAvatarSize, initials = item.initials)
     }
 }
 
-private val LeadSize = 40.dp
 private val DotSize = 8.dp
 private val NothingNewIconSize = 20.dp
 private val LineGap = 2.dp

@@ -304,6 +304,17 @@ final class ScheduleWidgetLayoutTests: XCTestCase {
         XCTAssertEqual(uniform.y(810), 330, accuracy: 0.01)
     }
 
+    /// A short day does not stretch over the widget: an hour takes at most the maximum and the rest stays empty below.
+    func testTheAxisKeepsAShortDayCompact() {
+        var content = day(date: "2026-09-07", tomorrow: false)
+        content.axisStart = 540
+        content.axisEnd = 810
+        content.lessons = [lesson(start: 590, end: 680), lesson(start: 690, end: 780)]
+        let axis = DayAxis(day: content, height: 300, minimumBlock: 26, maximumDensity: 0.6)
+        XCTAssertEqual(axis.y(810), 162, accuracy: 0.01)
+        XCTAssertEqual(axis.y(680) - axis.y(590), 54, accuracy: 0.01)
+    }
+
     private func day(date: String, tomorrow: Bool) -> DayContent {
         DayContent(kind: .content, date: date, tomorrow: tomorrow, summary: nil, lessons: [], gaps: [], axisStart: 0, axisEnd: 0, now: nil)
     }

@@ -90,6 +90,6 @@ page seed `Content(refreshing = true)` from it, so a second visit never shows th
 under the native bar (title, subtitle), over `RecordbookSubjectViewModel` resolved with the arguments
 (`ScreenViewModelStore.resolve(type:parameters:)`).
 
-- Links open in the system; the link editor, a link's actions and `Все ссылки` are the Compose sheets of
+- Links open in the system; the link editor, a link's actions and `Все ссылки` are the SwiftUI sheets of
   [subject links](resources.md#ios); `Мои баллы` is the SwiftUI sheet of [sheet scores](sheet-scores.md#ios).
 - `Подключить` and `Войти` open `BarsLoginSheet`; a vote that fails says so in a banner.

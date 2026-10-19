@@ -5,16 +5,16 @@
     android:gravity="center_horizontal"
     android:orientation="vertical">
 
-    <FrameLayout
-        android:layout_width="184dp"
-        android:layout_height="184dp">
+    <!-- The 2 x 2 widget at its launcher size, fitted to the card (QrSettingsPreview sets the size). -->
+    <dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFrame
+        android:id="@+id/qr_preview_frame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <include
             android:id="@+id/qr_preview_widget"
             layout="@layout/widget_qr_code" />
-
-
-    </FrameLayout>
+    </dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFrame>
 
     <TextView
         android:id="@+id/qr_preview_hint"
@@ -24,6 +24,6 @@
         android:paddingBottom="8dp"
         android:text="@string/widget_preview_qr_hint"
         android:textAppearance="?attr/textAppearanceBodySmall"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        android:textColor="?attr/colorOnPrimaryContainer" />
 
 </LinearLayout>

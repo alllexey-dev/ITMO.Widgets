@@ -3,7 +3,8 @@ package dev.alllexey.itmowidgets.feature.schedule.ui.widget
 /**
  * Where the day widget draws its day in [height] dp: minutes of the day from [axisStart] to [axisEnd] map to time, a
  * lesson ([from] to [to] minutes, in start order) is never shorter than [minLesson] dp, and the rest of the day shares
- * what is left in proportion. A lesson that starts inside the one above it starts at that one's end.
+ * what is left in proportion, at most [maxPerMinute] dp a minute: a short day keeps compact blocks at the top instead of
+ * stretching to the bottom. A lesson that starts inside the one above it starts at that one's end.
  */
 internal class DayTimelineLayout(
     lessons: List<IntRange>,
@@ -11,6 +12,7 @@ internal class DayTimelineLayout(
     axisEnd: Int,
     height: Float,
     minLesson: Float,
+    maxPerMinute: Float = Float.MAX_VALUE,
 ) {
     private class Segment(val from: Int, val to: Int, val lesson: Boolean) {
         val minutes: Int get() = to - from
@@ -35,7 +37,7 @@ internal class DayTimelineLayout(
         repeat(segments.size + 1) {
             val fixed = segments.indices.filter { pinned[it] }.size * minLesson
             val minutes = segments.indices.filter { !pinned[it] }.sumOf { segments[it].minutes }
-            scale = if (minutes > 0) ((height - fixed) / minutes).coerceAtLeast(0f) else 0f
+            scale = if (minutes > 0) ((height - fixed) / minutes).coerceIn(0f, maxPerMinute) else 0f
             val newly = segments.indices.filter { !pinned[it] && segments[it].lesson && segments[it].minutes * scale < minLesson }
             if (newly.isEmpty()) return@run segments.indices.map { if (pinned[it]) minLesson else segments[it].minutes * scale }
             newly.forEach { pinned[it] = true }

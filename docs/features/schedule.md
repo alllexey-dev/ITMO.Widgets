@@ -188,7 +188,7 @@ own active sport queues to the schedule (as lessons with `очередь 2 из 
 ## Lesson sheet
 
 `Лист пары` is one sheet for every lesson list (the feed, Сегодня, the bell, the subject's Пары): `AppRoutes.LessonDetails`
-for a timetable lesson, `AppRoutes.PendingSportDetails` for an own sport queue, content height. `LessonSheetViewModel`
+for a timetable lesson, `AppRoutes.PendingSportDetails` for an own sport queue, the full height (iOS too). `LessonSheetViewModel`
 reads the route's arguments (`LessonSheetArgs`, one JSON string in the `SavedStateHandle`); nothing is fetched for the
 lesson itself.
 
@@ -203,6 +203,9 @@ sheet otherwise. On iOS there is no shell route to the sport tab's sheet yet, so
   [campus map](map.md) with the route from the day's previous lesson), `Видео` (the meeting link, opened, never shown),
   `Друзья 2` (scrolls to the friends on the lesson), `Ссылки 3` and `Предмет` from the first `LessonSubjectSource` that
   knows the subject (an open set in `core/lesson`).
+- The tiles never reflow once shown: their row keeps its height, empty, until the opt-in and the subject are known (the
+  subject at most 1 s, then the tiles show without it), and `Друзья` stays in place, disabled and without a count,
+  while the friends load and when nobody is on the lesson.
 - The recordbook's source (`RecordbookLessonSubjects`) takes the record book subject of the lesson's half-year that the
   subject page would bind to the lesson's schedule subject (`SubjectContextResolver`: a confirmed binding or the same
   id, else the one subject of that name not bound elsewhere). `Предмет` opens its [page](subject-page.md), `Ссылки 3`

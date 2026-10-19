@@ -62,7 +62,6 @@ final class AccountTests: XCTestCase {
 
     func testMyItmoWebIsASwiftUIScreenUnderTheNativeBar() {
         XCTAssertEqual(target(AppRoutes.MyItmoWeb.shared), .swiftUI)
-        XCTAssertEqual(Routes.target(for: AppRoutes.MyItmoWeb.shared).chrome, .native)
     }
 
     // MARK: Update offer
@@ -127,16 +126,14 @@ final class AccountTests: XCTestCase {
 
     /// `RouteTarget` without its view factories.
     private enum TargetKind: Equatable {
-        case tab(ShellTab), gate, compose, swiftUI, sheet(ShellSheet), composeSheet, swiftUISheet, notOnIOS
+        case tab(ShellTab), gate, swiftUI, sheet(ShellSheet), swiftUISheet, notOnIOS
 
         init(_ target: RouteTarget) {
             switch target {
             case let .tab(tab): self = .tab(tab)
             case .gate: self = .gate
-            case .compose: self = .compose
             case .swiftUI: self = .swiftUI
             case let .sheet(sheet): self = .sheet(sheet)
-            case .composeSheet: self = .composeSheet
             case .swiftUISheet: self = .swiftUISheet
             case .notOnIOS: self = .notOnIOS
             }

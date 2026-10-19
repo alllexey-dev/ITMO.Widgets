@@ -17,6 +17,29 @@ new iOS app.
   horizontal swipe, on Android and iOS. A subject row puts its number under the name when a word would not fit beside
   it.
 
+### Lesson sheet people and avatars (2026-10-19)
+
+- Lesson sheet: the action tiles no longer jump in after it opens (`Друзья` keeps its place, disabled while the
+  friends load or when nobody is there), `Друзья` scrolls to the list with its bottom margin, the sheet's colour runs
+  under the navigation bar, people use the friends list's compact row everywhere, Android avatars are M3 Expressive
+  cookies (iOS keeps circles), and the sport catalog's friend avatars are no longer squashed.
+
+### iOS native screens (2026-10-19)
+
+- On iOS the last Compose screens are native SwiftUI: all links of a subject, a link's actions, the link editor and the link report, the review editor and another user's sport; the Compose host (`ComposeHost`, the `.compose` routes and `shared/ios` `screens/`) is gone.
+
+### Builds outside the official pipeline (2026-10-19)
+
+- Builds name their origin: `BUILD_CHANNEL`, `BUILD_SOURCE` and `BUILD_COMMIT` in Android's `BuildConfig`,
+  `BuildChannel`, `BuildSource` and `BuildCommit` in the iOS Info.plist. `official` only with the official signing,
+  `custom` otherwise ([building](docs/building.md#build-identity)).
+- The iOS build number from `archive.sh` is Android's `versionCode` instead of the commit count, so a fork's merge
+  commits and shallow clones no longer change it.
+- `dist.yml` builds a self-signed release APK and an unsigned `.ipa` on demand, with no secrets, in this repository
+  or a fork, and attaches the `.ipa` to every published release. `./gradlew :app:assembleGithubRelease
+  -Pitmo.selfSigned=true` gives an installable APK locally.
+- Pushes and scheduled runs of the upstream workflows build nothing in a fork.
+
 ### Notification settings (2026-10-19)
 
 - «Уведомления» gives every type its own switch, the pushes included (`Спорт`, `Друзья`, `Новые устройства`): the
@@ -36,6 +59,10 @@ new iOS app.
 - `201 (составное)` on Биржевая opens its own room on the campus map instead of room 201: the whole timetable text is
   matched first. `RoomMatcherParityTest` checks the matcher on every room of Backend's synced lessons against
   itmo-map-web's `rooms.js`.
+
+### Widget polish (2026-10-19)
+
+- `Виджеты` shows every widget whole and in proportion (drawn at its launcher size, shrunk to the card), one card per row with the name and the buttons under it; `Расписание на день` keeps a short day compact at the top (an hour at most 32 dp, 36 pt on iOS), and the `сейчас` line reaches into the current lesson up to its text (never through it), where the elapsed shade, inset inside the block, ends at it, on both platforms; the lesson's colour bar is a little shorter, off the block's top and bottom edges.
 
 ### Widgets (2026-10-18)
 

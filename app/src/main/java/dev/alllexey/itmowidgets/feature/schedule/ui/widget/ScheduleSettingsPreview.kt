@@ -10,11 +10,11 @@ import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.settings.ScheduleWidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
+import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFrame
 import dev.alllexey.itmowidgets.designsystem.theme.widgetPalette
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewLabels
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewMoment
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
-import kotlin.math.roundToInt
 
 /**
  * The real next-lesson, day or classic list widget on the sample Monday at 12:22 ([SchedulePreviewScenario]), with the settings
@@ -24,7 +24,9 @@ class ScheduleSettingsPreview(
     private val context: Context,
     private val scenario: SchedulePreviewScenario,
 ) : WidgetPreview {
-    private val frame = FrameLayout(context)
+    private val frame = WidgetPreviewFrame(context).apply {
+        layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    }
     override val view: View = frame
     private var settings: WidgetPreviewSettings.Schedule? = null
 
@@ -45,12 +47,7 @@ class ScheduleSettingsPreview(
                 frame.addView(remote.apply(context, frame).apply { setTag(R.id.widget_preview_layout, remote.layoutId) })
             }
         }
-        val height = when (next.format) {
-            ScheduleWidgetFormat.COMPACT -> NEXT_HEIGHT_DP
-            ScheduleWidgetFormat.FULL -> DAY_HEIGHT_DP
-            ScheduleWidgetFormat.LIST -> LIST_HEIGHT_DP
-        }
-        frame.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(height))
+        frame.size = size(next.format)
     }
 
     override fun close() {
@@ -58,12 +55,19 @@ class ScheduleSettingsPreview(
         settings = null
     }
 
-    private fun dp(value: Float) = (value * context.resources.displayMetrics.density).roundToInt()
-
     companion object {
-        const val NEXT_HEIGHT_DP = 180f
-        const val DAY_HEIGHT_DP = 330f
-        const val LIST_HEIGHT_DP = 250f
+        private const val NEXT_WIDTH_DP = 340f
+        private const val NEXT_HEIGHT_DP = 180f
+        private const val DAY_WIDTH_DP = 320f
+        private const val DAY_HEIGHT_DP = 330f
+        private const val LIST_HEIGHT_DP = 250f
+
+        /** The launcher size (dp) the preview of [format] is drawn at before the gallery fits it to its card. */
+        fun size(format: ScheduleWidgetFormat) = when (format) {
+            ScheduleWidgetFormat.COMPACT -> SizeF(NEXT_WIDTH_DP, NEXT_HEIGHT_DP)
+            ScheduleWidgetFormat.FULL -> SizeF(DAY_WIDTH_DP, DAY_HEIGHT_DP)
+            ScheduleWidgetFormat.LIST -> SizeF(DAY_WIDTH_DP, LIST_HEIGHT_DP)
+        }
 
         fun labels(context: Context) = SchedulePreviewLabels(
             math = context.getString(R.string.widget_preview_subject_math),
@@ -108,7 +112,5 @@ class ScheduleSettingsPreview(
                 ScheduleWidgetFormat.LIST -> error("The classic list is a collection: draw it with view()")
             }
         }
-
-        private const val DAY_WIDTH_DP = 320f
     }
 }

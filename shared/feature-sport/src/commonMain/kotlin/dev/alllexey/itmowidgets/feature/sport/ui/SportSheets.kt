@@ -46,6 +46,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.FilterChips
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.PersonListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SearchField
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.SegmentedChoice
@@ -55,7 +56,6 @@ import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.kit.container
 import dev.alllexey.itmowidgets.designsystem.kit.ink
 import dev.alllexey.itmowidgets.designsystem.kit.onContainer
-import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportBookingAction
@@ -418,10 +418,11 @@ fun SportLessonSheetContent(
                 }
                 sheet.friends.forEach { friend ->
                     item {
-                        ListRow(
+                        PersonListRow(
                             title = friend.name,
+                            pictureUrl = friend.pictureUrl,
+                            initials = friend.initials,
                             subtitle = friend.status?.asString(),
-                            leading = { Avatar(friend.name, friend.pictureUrl, size = ItmoTheme.spacing.section, initials = friend.initials) },
                             chevron = true,
                             onClick = { actions.onProfile(friend.isu) },
                         )

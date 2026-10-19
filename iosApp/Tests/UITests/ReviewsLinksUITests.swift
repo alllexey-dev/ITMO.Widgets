@@ -1,13 +1,10 @@
 import XCTest
 
-/// The subject links and the teacher reviews on the shared demo session: the Compose sheets in SwiftUI
-/// sheets above the subject page's materials tab (the link editor, a link's actions) with the link report as a Compose
-/// dialog over them; on a teacher's SwiftUI card the report of a review, a SwiftUI form sheet, and the review editor,
-/// a form sheet a drag does not close. The demo shows
-/// `DemoSubjectLinks` and `DemoReviews` and refuses every change (`error_demo_unavailable`) without a request. Compose
-/// maps `testTag` to the accessibility identifier (`SubjectLinksSheetTestTags`, `LinkEditorSheetTestTags`,
-/// `LinkActionsSheetTestTags`, `UserProfileTestTags`, `TeacherReviewTestTags`, `ReviewEditorSheetTestTags`); the texts
-/// are Russian on an English iPhone. The ids are the demo set's (`DemoStudy`, `DemoPeople`).
+/// The subject links and the teacher reviews on the shared demo session: the SwiftUI sheets above the subject page's
+/// materials tab (the link editor, a link's actions) with the link report as a form sheet over the actions; on a
+/// teacher's card the report of a review, a form sheet, and the review editor, a form sheet a drag does not close. The
+/// demo shows `DemoSubjectLinks` and `DemoReviews` and refuses every change (`error_demo_unavailable`) without a
+/// request. The texts are Russian on an English iPhone. The ids are the demo set's (`DemoStudy`, `DemoPeople`).
 final class ReviewsLinksUITests: XCTestCase {
     private let rootTimeout: TimeInterval = 30
     private let stepTimeout: TimeInterval = 10
@@ -36,7 +33,7 @@ final class ReviewsLinksUITests: XCTestCase {
         let url = element(app, "link_editor_url")
         url.tap()
         url.typeText(Self.newUrl)
-        element(app, "link_editor_category_SCORES").tap()
+        app.buttons[Self.scoresCategory].firstMatch.tap()
         element(app, "link_editor_save").tap()
         XCTAssertTrue(message(app, Self.demoUnavailable).waitForExistence(timeout: stepTimeout), "the demo refusal")
         XCTAssertTrue(editor.exists, "a refused save keeps the form")
@@ -63,7 +60,7 @@ final class ReviewsLinksUITests: XCTestCase {
         XCTAssertTrue(element(app, "recordbook.subject").exists, "the page is still under the editor")
     }
 
-    func testALinksReportIsTheDialogOverItsActions() {
+    func testALinksReportIsAFormOverItsActions() {
         let app = XCUIApplication.itmo()
         app.launch()
         openAlgorithms(app)
@@ -82,12 +79,12 @@ final class ReviewsLinksUITests: XCTestCase {
         app.buttons[Self.spam].firstMatch.tap()
         app.buttons[Self.send].firstMatch.tap()
         XCTAssertTrue(message(app, Self.demoUnavailable).waitForExistence(timeout: stepTimeout), "under the comment")
-        XCTAssertTrue(labelled(app, Self.linkReportTitle).exists, "a refused report keeps the dialog")
+        XCTAssertTrue(labelled(app, Self.linkReportTitle).exists, "a refused report keeps the form")
         attachScreenshot(named: "link-report")
 
         app.buttons[Self.cancel].firstMatch.tap()
         XCTAssertTrue(waitForAbsence(labelled(app, Self.linkReportTitle)))
-        XCTAssertTrue(actions.exists, "the actions stay under the dialog")
+        XCTAssertTrue(actions.exists, "the actions stay under the form")
         dragDown(app, actions)
         XCTAssertTrue(waitForAbsence(actions))
         XCTAssertTrue(element(app, "recordbook.subject").exists)
@@ -185,6 +182,8 @@ final class ReviewsLinksUITests: XCTestCase {
     private static let ownLink = "Мои заметки к экзамену"
     private static let sharedLink = "Конспекты лекций"
     private static let newUrl = "https://disk.yandex.ru/d/demo-notes"
+    /// `links_category_scores`.
+    private static let scoresCategory = "Таблица баллов"
     private static let reviewText = "Лекции понятные, на практике разбирают каждую задачу до конца."
 
     /// The algorithms page on its materials tab.

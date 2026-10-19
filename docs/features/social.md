@@ -217,8 +217,8 @@ to `.swiftUI` targets and the Профиль root is the me tab ([profile tab](m
 - Sharing goes through `SocialShares` and `PlatformActions`; the invitation
   names the App Store page, or the site while the app has no App Store record.
   Copying the ISU shows `person_isu_copied`, since iOS confirms nothing itself.
-- The report of a review is a SwiftUI sheet over `ReportReviewViewModel` (`AppRoutes.ReportReview`); the review
-  editor stays the Compose sheet ([reviews](reviews.md#ios)).
+- The report of a review is a SwiftUI sheet over `ReportReviewViewModel` (`AppRoutes.ReportReview`), the review
+  editor one over `ReviewEditorViewModel` ([reviews](reviews.md#ios)).
 - Tests: `SocialIosModuleTest` (`scripts/ios/test.sh kn :shared:feature-social`), the social snapshot references and
   `UITests/SocialUITests` on the demo session.
 

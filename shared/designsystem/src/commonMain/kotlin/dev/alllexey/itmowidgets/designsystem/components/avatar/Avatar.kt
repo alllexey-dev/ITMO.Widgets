@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,12 +43,14 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 val LocalAvatarImageLoader = staticCompositionLocalOf<ImageLoader?> { null }
 
 /**
- * A person's round avatar: their photo from [pictureUrl] when it loads, their initials until then and whenever it
- * fails or there is no URL, and an empty circle without a [name]. The letters are [initials], by default
+ * A person's avatar: their photo from [pictureUrl] when it loads, their initials until then and whenever it fails or
+ * there is no URL, and an empty shape without a [name]. The shape is M3 Expressive's nine-sided cookie with
+ * [ItmoTheme.expressive] (Android), a circle otherwise (the iOS style). The letters are [initials], by default
  * `personInitials` of [name]; a caller with ITMO.ID's name parts passes their initials. Each URL is its own request, so
  * a late failure of an earlier URL never replaces a newer photo (`core/ui/AvatarView.kt` guarded that by hand).
  * Decorative unless [contentDescription] is given, since the name usually stands beside it.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun Avatar(
     name: String?,
@@ -61,7 +66,7 @@ fun Avatar(
     Box(
         modifier
             .size(size)
-            .clip(CircleShape)
+            .clip(if (ItmoTheme.expressive) MaterialShapes.Cookie9Sided.toShape() else CircleShape)
             .background(ItmoTheme.colorScheme.surfaceVariant)
             .then(described),
         contentAlignment = Alignment.Center,
@@ -99,7 +104,7 @@ private fun Photo(url: String, initials: String) {
 @Composable
 private fun Initials(letters: String) {
     BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        // 40 % of the circle in pixels, unscaled by the font scale, as AvatarView sized its text.
+        // 40 % of the avatar in pixels, unscaled by the font scale, as AvatarView sized its text.
         val fontSize = with(LocalDensity.current) { (minOf(maxWidth, maxHeight) * INITIALS_RATIO).toSp() }
         Text(
             letters,

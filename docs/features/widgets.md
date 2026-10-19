@@ -43,7 +43,11 @@ Shared in `shared/feature-schedule` (`domain/widget`, `data/widget`); RemoteView
 - W2 (`DayTimelineWidgetProvider`, `widget_day_info`): from API 31 one layout per launcher size (`OPTION_APPWIDGET_SIZES`), the hours,
   the gaps, the lessons and the `сейчас` line placed at their minutes on `day_canvas` with `setViewLayoutMargin`
   and `setViewLayoutHeight`. `DayTimelineLayout` maps minutes to dp: a lesson keeps at least two lines' height and
-  the rest of the day shares what is left in proportion. Below API 31 the lessons stack in `day_list`.
+  the rest of the day shares what is left in proportion, an hour at most 32 dp (times the text size), so a day of
+  one to three lessons stays compact at the top. The `сейчас` line runs under the lessons; inside the current lesson
+  it crosses only the colour bar up to the text, never the text, and the elapsed part's shade, inset in the block, ends
+  at it (iOS draws the same). Below API 31 the lessons stack in
+  `day_list`.
 - The classic list (`DayScheduleWidgetProvider`, `widget_lesson_list_info`, `Список пар`) is 2.2's list widget on
   the same snapshot: `ScheduleListRows` turns `day` into the header (`Сегодня · 7 сентября`), a row per lesson (time,
   type dot, subject, type or queue or `отменена`, place and teacher; done and cancelled ones faded) and the end
@@ -134,7 +138,8 @@ in `feature/sport/ui/widget` (`SportWidgetProvider`, `SportWidgetRenderer`, `Spo
   renderers on the sample day, written by `WidgetPreviewImagesTest` with `ITMO_WRITE_WIDGET_PREVIEWS=1`; the Android
   12+ `previewLayout`s show the same images. Regenerate them whenever a widget layout changes.
 - The gallery's previews: real renderers on sample data via `core/ui/widget.WidgetPreviewFactory`
-  (`DefaultWidgetPreviewFactory`: `ScheduleSettingsPreview`, `SportSettingsPreview`, `QrSettingsPreview`);
+  (`DefaultWidgetPreviewFactory`: `ScheduleSettingsPreview`, `SportSettingsPreview`, `QrSettingsPreview`), each laid
+  out at its launcher size in a `WidgetPreviewFrame` and shrunk as a whole to its card's width;
   `QrPreviewBitmapCache` holds at most four bitmap pairs, off the main thread. Previews never register a host,
   create PendingIntents, touch the network or write snapshots.
 - Checks: `WidgetsScreenshotTest` (`app/screenshots/Widget_*`) draws every widget state through RemoteViews on the

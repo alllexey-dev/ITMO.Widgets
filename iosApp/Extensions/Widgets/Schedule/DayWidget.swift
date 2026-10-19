@@ -101,7 +101,10 @@ private struct DayTimeline: View {
     var body: some View {
         GeometryReader { geometry in
             let minimum = Layout.minimumBlock * unit * scale
-            let axis = DayAxis(day: day, height: geometry.size.height, minimumBlock: minimum)
+            let axis = DayAxis(
+                day: day, height: geometry.size.height, minimumBlock: minimum,
+                maximumDensity: Layout.maximumHour / 60 * unit * scale
+            )
             let lessonsWidth = geometry.size.width - Layout.axisWidth
             ZStack(alignment: .topLeading) {
                 ForEach(hours(axis), id: \.self) { hour in
@@ -119,7 +122,7 @@ private struct DayTimeline: View {
                             .offset(x: Layout.axisWidth, y: (top + bottom) / 2 - Layout.gapPill * unit * scale / 2)
                     }
                 }
-                // The line runs under the blocks; the current block draws its own part of it.
+                // The line runs under the blocks; the current block draws its part up to its text.
                 if let now = day.now {
                     Rectangle()
                         .fill(WidgetColors.nowLine)
@@ -162,6 +165,8 @@ private struct DayTimeline: View {
     enum Layout {
         static let axisWidth: CGFloat = 28
         static let minimumBlock: CGFloat = 26
+        /// The most an hour takes: a day of one or two lessons stays compact at the top.
+        static let maximumHour: CGFloat = 36
         static let blockGap: CGFloat = 3
         static let gapPill: CGFloat = 18
     }
@@ -182,8 +187,9 @@ private struct DayBlock: View {
     var body: some View {
         let current = lesson.state == .now && !lesson.cancelled
         HStack(spacing: 7) {
+            // Off the block's top and bottom edges, as on Android (3 dp padding and 3 dp margin).
             WidgetTypeBar(typeId: lesson.typeId)
-                .padding(.vertical, 4)
+                .padding(.vertical, 6)
             if height >= 30 * unit * scale {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 4) {
@@ -229,19 +235,35 @@ private struct DayBlock: View {
             ZStack(alignment: .top) {
                 current ? colors.hero : colors.block
                 if current, let now {
-                    let elapsed = min(max(axis.y(now) - axis.y(lesson.startMinute), 0), height)
-                    VStack(spacing: 0) {
-                        colors.accent.opacity(0.14).frame(height: elapsed)
-                        WidgetColors.nowLine.frame(height: 1.5)
-                        Spacer(minLength: 0)
-                    }
+                    // The elapsed part, inset inside the block, down to the now line.
+                    UnevenRoundedRectangle(topLeadingRadius: 6, topTrailingRadius: 6, style: .continuous)
+                        .fill(colors.accent.opacity(0.25))
+                        .frame(height: max(elapsed(now) - Self.inset, 0))
+                        .padding([.top, .horizontal], Self.inset)
                 }
+            }
+        }
+        .overlay(alignment: .topLeading) {
+            // The now line inside the block runs across the colour bar up to the text, never through it.
+            if current, let now {
+                WidgetColors.nowLine
+                    .frame(width: Self.gutter, height: 1.5)
+                    .offset(y: min(max(elapsed(now) - 0.75, 0), height - 1.5))
             }
         }
         .clipShape(.rect(cornerRadius: 9, style: .continuous))
         .opacity(lesson.state == .done || lesson.cancelled ? 0.5 : 1)
         .accessibilityElement(children: .combine)
     }
+
+    /// The points of the block above the now line.
+    private func elapsed(_ now: Int) -> CGFloat {
+        min(max(axis.y(now) - axis.y(lesson.startMinute), 0), height)
+    }
+
+    /// The elapsed shade's inset; the gutter before the text (padding 4, bar 3, spacing 7) less 2 points.
+    private static let inset: CGFloat = 3
+    private static let gutter: CGFloat = 12
 
     private var subject: some View {
         Text(verbatim: ScheduleWidgetText.subject(of: lesson))
@@ -276,11 +298,12 @@ private struct DayBlock: View {
 }
 
 /// The day widget's vertical scale: minutes of the day to points from the top. Time runs linearly, except that every
-/// lesson gets at least `minimumBlock` points, so a short one stays readable; the rest of the day shares the room left.
+/// lesson gets at least `minimumBlock` points, so a short one stays readable; the rest of the day shares the room left,
+/// at most `maximumDensity` points a minute, so a short day keeps compact blocks at the top instead of stretching.
 struct DayAxis {
     private let breakpoints: [(minute: Int, y: CGFloat)]
 
-    init(day: DayContent, height: CGFloat, minimumBlock: CGFloat) {
+    init(day: DayContent, height: CGFloat, minimumBlock: CGFloat, maximumDensity: CGFloat = .infinity) {
         let start = day.axisStart, end = max(day.axisEnd, day.axisStart + 1)
         let lessons = day.lessons
             .map { (start: min(max($0.startMinute, start), end), end: min(max($0.endMinute, start), end)) }
@@ -296,7 +319,7 @@ struct DayAxis {
         func total(_ base: CGFloat) -> CGFloat {
             zip(lengths, needs).reduce(0) { $0 + $1.0 * max(base, $1.1) }
         }
-        var low: CGFloat = 0, high = height / CGFloat(end - start)
+        var low: CGFloat = 0, high = min(height / CGFloat(end - start), maximumDensity)
         let densities: [CGFloat]
         if total(0) >= height {
             // Too many lessons for their minimum: everything shrinks alike.
