@@ -1,7 +1,7 @@
-// A feature module: Compose UI, Res strings, host and screenshot tests.
+// A feature module: shared domain, data and ViewModels; Android-only Compose UI in androidMain (ADR 0035).
 // Features read core, designsystem and compose-strings, never another feature.
 plugins {
-    id("itmowidgets.cmp.ui")
+    id("itmowidgets.cmp.android")
     id("itmowidgets.testing")
 }
 
@@ -9,8 +9,6 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":shared:core"))
-            implementation(project(":shared:designsystem"))
-            implementation(project(":shared:compose-strings"))
             // The review editor's and report's ViewModels are KMP ViewModels that :app obtains through Koin.
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)

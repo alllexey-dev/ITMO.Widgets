@@ -13,9 +13,10 @@ background change check is in [schedule changes](schedule-changes.md), the phone
 - `:shared:feature-schedule` (`commonMain`, package `dev.alllexey.itmowidgets.feature.schedule`): `domain`
   (lessons, `ScheduleDays`, changes, calendar events, widget selector and timeline), `presentation` (`feed`,
   `month`, `friends`, `lesson`: Compose-free view models with `UiText` keys, [ADR 0031](../decisions/0031-swiftui-ios-screens.md)),
-  `ui` (the Android Compose screens on the kit, `ui/preview/ScheduleSamples` for both platforms' references) and
+  `ui` (`ui/preview/ScheduleSamples` for both platforms' references; the Android Compose screens on the kit are in
+  `androidMain`, [ADR 0035](../decisions/0035-ios-without-compose.md)) and
   `data` (cache, file stores, My ITMO and Backend sources, `ScheduleDaysImpl`, calendar sync, `DemoSchedule`). Koin:
-  `scheduleModule`, `scheduleDataModule`. `androidMain` only supplies `ScheduleFileSystem`; `iosMain` adds the iOS
+  `scheduleModule`, `scheduleDataModule`. `androidMain` also supplies `ScheduleFileSystem`; `iosMain` adds the iOS
   change check, the widget timeline writer and the Koin parameters of the SwiftUI screens (`ScheduleIosParameters.kt`).
 - My ITMO comes through MyItmoApi 2.x, Backend through Core 2.0's `ScheduleApi`: `syncLessons` (best-effort upload
   of own lessons), `userLessons` (another user's schedule) and `friendsOnLesson`, all behind `BackendGate`. Every
