@@ -7,8 +7,8 @@ The Спорт tab is `Моё` and `Запись` under the static root header: 
 or a horizontal swipe switches them (owner, 2026-10-19). The week strip keeps
 its swipes to the weeks and never switches the part; the chip row hands a swipe
 past its end to the pager on Android; `Откуда баллы` is a pushed screen. View models are shared and Compose-free (`presentation/`, texts
-are `UiText` keys); Android draws them in Compose (`ui/`, `commonMain` until
-the screens leave it), iOS in SwiftUI (`iosApp/Sources/Features/Sport/`).
+are `UiText` keys); Android draws them in Compose (`ui/`, `androidMain`),
+iOS in SwiftUI (`iosApp/Sources/Features/Sport/`).
 Official data comes from MyItmoApi; queues, friends' bookings and the queue
 limit come from Backend behind the custom-services gate.
 

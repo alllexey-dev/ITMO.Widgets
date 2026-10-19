@@ -10,28 +10,12 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
-### iOS strings without Compose (2026-10-19)
+### iOS framework without Compose (2026-10-19)
 
 - On iOS, Kotlin text (notifications, widget files, shares, the widgets gallery) comes from the app's string tables through Swift, and the app no longer carries the Compose resources (ADR 0035, proposed).
 - The widgets' theme palette is built in `:shared:core` without Compose, so no iOS code reads the design system any more; the colours stay the same.
-- `:shared:feature-qr` keeps its Compose UI in `androidMain` (convention `itmowidgets.cmp.android`), so its iOS code no longer compiles Compose; the pass sheet looks the same.
-- `:shared:feature-settings` keeps its settings, connection, notification, diagnostics, calendar export and widgets gallery screens in `androidMain`, so its iOS code no longer compiles Compose; they look the same.
-
-- `:shared:feature-social` keeps its Compose screens (friends, person card, another user's friends, review rows) in `androidMain`, so its iOS code no longer compiles Compose; they look the same.
-
-- `:shared:feature-account` keeps its Compose UI in `androidMain` the same way; the sign-in logo becomes an Android drawable that the iOS app bundles by path; the account screens look the same.
-
-- `:shared:feature-recordbook` keeps its Compose UI in `androidMain` the same way; Зачётка, the subject page and the sheet scores look the same.
-
-- `:shared:feature-sport` keeps its Compose UI in `androidMain` (`SportTab` stays common for SwiftUI), so its iOS code no longer compiles Compose; the sport screens look the same.
-
-- `:shared:feature-schedule` keeps its Compose UI in `androidMain` the same way; the schedule screens look the same.
-
-- `:shared:feature-resources` keeps its Compose UI in `androidMain` the same way; `LinkAction`, `LinkActionsModel` and `linkActions` move to `LinkActionsModel.kt` in common code for SwiftUI; the links sheets look the same.
-
-- `:shared:feature-reviews` keeps its review editor and report dialog in `androidMain`, so its iOS code no longer compiles Compose; both look the same.
-
-- `:shared:feature-home` keeps its Compose UI in `androidMain` the same way; Today and the bell sheet look the same.
+- Every feature module but the campus map keeps its Compose screens in `androidMain` (convention `itmowidgets.cmp.android`) and reads its strings from `:shared:compose-strings`; the screens look the same on Android, and their iOS code compiles no Compose.
+- The design system and the Compose strings are Android-only modules, the test kit's Compose helpers Android-only, and the shared route keys no longer extend Nav3's `NavKey`; only the campus map still brings Compose into the iOS framework.
 
 ### Recordbook polish (2026-10-19)
 

@@ -1,7 +1,7 @@
 # 0035 The iOS framework links no Compose
 
-**Status.** Proposed (2026-10-19). Phase A (strings) is in; phase B (screens out of `commonMain`) waits for the open
-feature PRs.
+**Status.** Proposed (2026-10-19). Done for core and every feature but the campus map, whose screens move once its
+open work lands; until then `:shared:feature-map` keeps `itmowidgets.cmp.ui` and brings Compose into the framework.
 
 **Decision.** After ADR 0031 no iOS screen draws Compose, so the `Shared` framework stops carrying Compose
 Multiplatform at all.
@@ -39,9 +39,13 @@ Multiplatform at all.
   the Russian text on iOS is checked by `StringsTests` in the hosted app tests.
 - `AppLocale.install()` (now in `:shared:core`) keeps the app process Russian for whatever reads the preferred
   languages; it no longer serves Compose.
-- Phase B moves about 104 Compose files of the feature modules, and the Compose-free samples and `QrCodeGenerator`
-  out of their `ui` packages (Swift reads them). Each feature's `commonMain` screens read `:shared:designsystem` and
-  `:shared:compose-strings`, so those two become Android-only last, after every feature module has moved.
+- About 104 Compose files of the feature modules moved to `androidMain`; the Compose-free samples, `LinkRows`,
+  `LinkCaptions` and `QrCodeGenerator` stay in `commonMain` (Swift reads them), with `PreviewFixtures` and
+  `GroupPosition` moved to `:shared:core` for them.
+- `:shared:designsystem` and `:shared:compose-strings` have the Android target only (`itmowidgets.cmp.kit`); `:shared:testing`
+  keeps its fakes for every target and its Compose helpers on Android.
+- `AppRoute` extends no Nav3 type: `navigation3-runtime` brought the Compose runtime to iOS, and the Android shell
+  takes the keys as `NavEntry<AppRoute>` (amends ADR 0020).
 - Measurements are in the phase PRs.
 
 **Amends.**
@@ -50,5 +54,6 @@ Multiplatform at all.
 - ADR 0031, amendment of 2026-10-12: `:shared:compose-strings` and the feature modules' CMP leave iOS as described
   here.
 - ADR 0017: screens live in `androidMain`, not `commonMain`.
+- ADR 0020: route keys live in `commonMain` without `navigation3-runtime`.
 
 **Revisit when.** A screen is shared with iOS again, or the Compose compiler can no longer be limited to one target.

@@ -2,12 +2,14 @@ package dev.alllexey.itmowidgets.architecture
 
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.verify.assertFalse
-import dev.alllexey.itmowidgets.architecture.ArchitectureScope.moduleFile
 import dev.alllexey.itmowidgets.architecture.ArchitectureScope.productionFiles
-import java.io.File
 import org.junit.Test
 
-/** What common and iOS source sets may import. Android `R` is `UiTextRulesTest`'s. */
+/**
+ * What common and iOS source sets of the multiplatform modules may import. The Android-only modules (the Compose kit
+ * and strings, [isAndroidOnlyModule]) have no iOS target, so their `commonMain` is Android code. Android `R` is
+ * `UiTextRulesTest`'s.
+ */
 class KmpRulesTest {
 
     @Test
@@ -17,48 +19,23 @@ class KmpRulesTest {
 
     @Test
     fun `common and ios code imports androidx only from the multiplatform artifacts`() {
-        // A blanket androidx ban would break Compose Multiplatform and the multiplatform DataStore core.
         kmpFiles().assertFalse { file ->
             file.imports.any { import ->
-                val name = import.name
-                name.startsWith("androidx.") &&
-                    (multiplatformAndroidx.none(name::startsWith) || androidOnlyCompose.any(name::startsWith))
+                import.name.startsWith("androidx.") && multiplatformAndroidx.none(import.name::startsWith)
             }
         }
     }
 
     @Test
-    fun `ios code outside the Compose kit imports no Compose`() {
-        // iOS draws no Compose (ADR 0031) and reads text from the app's string tables (ADR 0035); widget palettes come
-        // from core. The design system's and the test kit's iOS actuals go with the Compose kit once it leaves
-        // commonMain.
-        iosFiles().assertFalse { file -> file.imports.any { import -> COMPOSE.any(import.name::startsWith) } }
+    fun `common and ios code imports no Compose`() {
+        // iOS draws no Compose (ADR 0031): core and every feature keep their Compose UI in androidMain and read text
+        // from the app's string tables on iOS (ADR 0035), so the iOS framework links no Compose.
+        kmpFiles().assertFalse { file -> file.imports.any { import -> COMPOSE.any(import.name::startsWith) } }
     }
-
-    @Test
-    fun `modules with Android-only Compose keep Compose out of common code`() {
-        // itmowidgets.cmp.android puts Compose, the design system and the Compose strings in androidMain only (ADR
-        // 0035); the rule names the file that would break the iOS compile first.
-        val modules = androidComposeModules().requireNonEmpty("modules on itmowidgets.cmp.android")
-        kmpFiles()
-            .filter { file -> modules.any { file.projectPath.startsWith("/shared/$it/") } }
-            .requireNonEmpty("common and iOS files of those modules")
-            .assertFalse { file -> file.imports.any { import -> COMPOSE.any(import.name::startsWith) } }
-    }
-
-    /** The `shared/` module directories whose build applies itmowidgets.cmp.android. */
-    private fun androidComposeModules(): List<String> =
-        moduleFile("shared", "").listFiles().orEmpty()
-            .filter { it.resolve("build.gradle.kts").takeIf(File::isFile)?.readText()?.contains(CMP_ANDROID) == true }
-            .map { it.name }
-
-    private fun iosFiles(): List<KoFileDeclaration> = productionFiles
-        .filter { it.isIosOutsideComposeKit() }
-        .requireAtLeast(MIN_IOS_SOURCE_FILES, "iosMain files outside the Compose kit")
 
     private fun kmpFiles(): List<KoFileDeclaration> = productionFiles
-        .filter { KMP_SOURCE_SET.containsMatchIn(it.projectPath) }
-        .requireAtLeast(MIN_KMP_SOURCE_FILES, "commonMain and iosMain files")
+        .filter { KMP_SOURCE_SET.containsMatchIn(it.projectPath) && !it.isAndroidOnlyModule() }
+        .requireAtLeast(MIN_KMP_SOURCE_FILES, "commonMain and iosMain files of the multiplatform modules")
 
     private companion object {
         /** `commonMain`, `iosMain` and the per-target `ios*Main` sets. */
@@ -66,7 +43,7 @@ class KmpRulesTest {
 
         val PLATFORM_ONLY = listOf("android.", "java.", "javax.")
 
-        /** Compose UI and resources, Coil's Compose layer, the Compose kit. */
+        /** Compose UI and resources, Coil's and MaterialKolor's Compose layers, the Compose kit and strings. */
         val COMPOSE = listOf(
             "androidx.compose.",
             "org.jetbrains.compose.",
@@ -77,28 +54,14 @@ class KmpRulesTest {
             "dev.alllexey.itmowidgets.shared.designsystem.",
         )
 
-        const val MIN_IOS_SOURCE_FILES = 100
-
-        const val CMP_ANDROID = "id(\"itmowidgets.cmp.android\")"
-
-        /** The androidx artifacts that publish common and iOS variants. */
+        /** The androidx artifacts that publish common and iOS variants and carry no Compose. */
         val multiplatformAndroidx = listOf(
-            "androidx.compose.",
             "androidx.lifecycle.",
-            "androidx.navigation3.",
             "androidx.savedstate.",
             "androidx.datastore.core.",
             "androidx.datastore.preferences.core.",
             "androidx.annotation.",
             "androidx.collection.",
-            // graphics-shapes is multiplatform; CMP material3 exposes its RoundedPolygon through MaterialShapes.
-            "androidx.graphics.shapes."
-        )
-
-        /** Compose APIs that exist only on Android. */
-        val androidOnlyCompose = listOf(
-            "androidx.compose.ui.platform.LocalContext",
-            "androidx.compose.ui.viewinterop."
         )
     }
 }

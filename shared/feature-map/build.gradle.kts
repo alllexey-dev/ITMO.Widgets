@@ -9,14 +9,15 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":shared:core"))
-            implementation(project(":shared:designsystem"))
-            implementation(project(":shared:compose-strings"))
             // The map ViewModel is a KMP ViewModel that :app obtains through Koin and iOS through SKIE.
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
         }
         androidMain.dependencies {
+            // The Compose kit and strings are Android-only modules (ADR 0035).
+            implementation(project(":shared:designsystem"))
+            implementation(project(":shared:compose-strings"))
             // The mirror's engine and the native map view of the Android screen.
             implementation(libs.ktor.client.okhttp)
             implementation(libs.maplibre.android)

@@ -10,12 +10,13 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.unit.Dp
+import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 
 /**
- * The minimum touch target of an actionable element under the platform's default style: Material's 48 dp on
- * Android, Apple's 44 pt on iOS (`ItmoPlatformStyle.minTouchTarget`, which `ItmoTheme` applies by default there).
+ * The minimum touch target of an actionable element under the default style: Material's 48 dp
+ * (`ItmoPlatformStyle.minTouchTarget`, which `ItmoTheme` applies by default).
  */
-expect val MinTouchTarget: Dp
+val MinTouchTarget: Dp = ItmoPlatformStyle.Material.minTouchTarget
 
 /**
  * Every clickable node is at least [minSize] square; the default is the platform style's minimum ([MinTouchTarget]).

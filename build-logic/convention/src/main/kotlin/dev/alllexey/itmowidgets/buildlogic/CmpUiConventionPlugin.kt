@@ -12,11 +12,16 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 /**
  * A shared module with Compose UI: itmowidgets.kmp.library plus Compose Multiplatform, the Compose compiler and
  * `composeResources` served through Android resources. The `Res` class lives in the module namespace and is public
- * only in the modules other modules read strings and icons from.
+ * only in the modules other modules read strings and icons from. With [ios] false (`itmowidgets.cmp.kit`) the module
+ * has the Android target only: the Compose kit and the Compose strings, which iOS never links (ADR 0035).
  */
-class CmpUiConventionPlugin : Plugin<Project> {
+open class CmpUiConventionPlugin : Plugin<Project> {
+
+    /** Whether the module has the iOS targets. */
+    protected open val ios: Boolean = true
+
     override fun apply(target: Project) = with(target) {
-        pluginManager.apply("itmowidgets.kmp.library")
+        pluginManager.apply(if (ios) "itmowidgets.kmp.library" else "itmowidgets.kmp.android")
         pluginManager.apply("org.jetbrains.compose")
         pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
         pluginManager.apply("itmowidgets.strings")
@@ -50,4 +55,9 @@ class CmpUiConventionPlugin : Plugin<Project> {
     private companion object {
         val PUBLIC_RES_MODULES = setOf(":shared:compose-strings", ":shared:designsystem")
     }
+}
+
+/** `itmowidgets.cmp.kit`: [CmpUiConventionPlugin] on the Android target only. */
+class CmpKitConventionPlugin : CmpUiConventionPlugin() {
+    override val ios: Boolean = false
 }

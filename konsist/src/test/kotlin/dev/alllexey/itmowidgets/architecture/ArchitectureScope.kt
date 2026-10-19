@@ -38,15 +38,27 @@ internal fun <T> List<T>.requireAtLeast(floor: Int, what: String): List<T> = als
 
 internal fun <T> List<T>.requireNonEmpty(what: String): List<T> = requireAtLeast(1, what)
 
-/**
- * A file of an `iosMain` or per-target `ios*Main` set outside the design system and the test kit, whose iOS actuals
- * belong to the Compose kit and leave with it (ADR 0035).
- */
-internal fun KoFileDeclaration.isIosOutsideComposeKit(): Boolean =
-    IOS_SOURCE_SET.containsMatchIn(projectPath) && COMPOSE_KIT_MODULES.none(projectPath::startsWith)
+/** A file of an `iosMain` or per-target `ios*Main` set. */
+internal fun KoFileDeclaration.isIos(): Boolean = IOS_SOURCE_SET.containsMatchIn(projectPath)
+
+/** A file of a module with the Android target only (`itmowidgets.cmp.kit`, `itmowidgets.kmp.android`, ADR 0035). */
+internal fun KoFileDeclaration.isAndroidOnlyModule(): Boolean =
+    projectPath.substringBefore("/src/") in androidOnlyModules
 
 private val IOS_SOURCE_SET = Regex("""/src/ios\w*Main/""")
-private val COMPOSE_KIT_MODULES = listOf("/shared/designsystem/", "/shared/testing/")
+
+/** `/shared/designsystem` and the like: the `shared/` modules whose build applies an Android-only convention. */
+private val androidOnlyModules: Set<String> by lazy {
+    ArchitectureScope.moduleFile("shared", "").listFiles().orEmpty()
+        .filter { dir ->
+            val build = dir.resolve("build.gradle.kts").takeIf(File::isFile)?.readText().orEmpty()
+            ANDROID_ONLY_CONVENTIONS.any { it in build }
+        }
+        .map { "/shared/${it.name}" }
+        .toSet()
+}
+
+private val ANDROID_ONLY_CONVENTIONS = listOf("id(\"itmowidgets.cmp.kit\")", "id(\"itmowidgets.kmp.android\")")
 
 internal const val APP_MODULE = "app"
 

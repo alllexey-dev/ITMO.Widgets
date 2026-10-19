@@ -9,8 +9,9 @@ is [feature-flow.md](feature-flow.md); tests are [testing.md](testing.md).
 
 ITMO.Widgets is a Kotlin Multiplatform app for Android and iOS.
 
-- `shared/*` holds almost everything: domain models, repositories, view
-  models and Compose Multiplatform screens, in `commonMain`.
+- `shared/*` holds almost everything: domain models, repositories and view
+  models in `commonMain`, the Compose screens in `androidMain` of the same
+  module (iOS draws SwiftUI over the same view models).
 - `app/` is the Android app: the Navigation 3 shell around the shared screens
   and everything only Android has (RemoteViews widgets, the quick-settings
   tile, WorkManager, FCM, WebView sign-in pages, Koin wiring of Android ports).
@@ -30,20 +31,22 @@ document describes the current state.
 included build with the convention plugins (`itmowidgets.kmp.library`,
 `itmowidgets.cmp.ui`, `itmowidgets.cmp.android`, `itmowidgets.testing`,
 `itmowidgets.strings`, `itmowidgets.android.app`); versions live in
-`gradle/libs.versions.toml`. A feature on `itmowidgets.cmp.android` keeps its
-Compose UI in `androidMain` and reads strings from `:shared:compose-strings`
-only, so its iOS klib has no Compose
-([ADR 0035](decisions/0035-ios-without-compose.md)); `:shared:feature-qr` is
-the first, the others still use `itmowidgets.cmp.ui`.
+`gradle/libs.versions.toml`. A feature applies `itmowidgets.cmp.android`:
+Compose UI in `androidMain`, strings from `:shared:compose-strings` only, so
+its iOS klib has no Compose. `:shared:designsystem` and
+`:shared:compose-strings` apply `itmowidgets.cmp.kit`, which is
+`itmowidgets.cmp.ui` with the Android target only
+([ADR 0035](decisions/0035-ios-without-compose.md)). `:shared:feature-map`
+still applies `itmowidgets.cmp.ui` until its screens move.
 
 | Module | Holds |
 |---|---|
 | `:app` | Android app: shell, Android-only surfaces, Koin start, Android ports |
 | `:shared:core` | Contracts and models every feature shares (`core/*` packages), common strings; no Compose |
-| `:shared:compose-strings` | The Compose side of the catalog: one CMP `Res` over a copy of every module's strings, the `UiText` resolvers |
-| `:shared:designsystem` | `ItmoTheme`, tokens, the component kit, the Android-only M3 Expressive kit of the redesign (`designsystem.kit`, which draws `core/lesson`), icons, preview helpers |
+| `:shared:compose-strings` | Android only: the Compose side of the catalog, one CMP `Res` over a copy of every module's strings, the `UiText` resolvers |
+| `:shared:designsystem` | Android only: `ItmoTheme`, tokens, the component kit, the Android-only M3 Expressive kit of the redesign (`designsystem.kit`, which draws `core/lesson`), icons, preview helpers |
 | `:shared:backend-client` | Typed Ktor client of the ITMO.Widgets Backend (`BackendClient`, one `*Api` per area) |
-| `:shared:testing` | Test kit: Robolectric and screenshot harness, semantics checks, fake clocks |
+| `:shared:testing` | Test kit: fake clocks, files and HTTP for every target; Robolectric, Compose UI test, semantics checks and the screenshot harness on Android |
 | `:shared:feature-account` | Sign-in, first-run flow, profile tab, web sign-in, My ITMO web page, update offer |
 | `:shared:feature-map` | Campus map: plan data, room mapping, the indoor router and trip planner |
 | `:shared:feature-home` | Сегодня and the bell over every feature's `DayLessonsGateway`, `TodayTodoSource`s and `BellSource`s |
@@ -55,20 +58,22 @@ the first, the others still use `itmowidgets.cmp.ui`.
 | `:shared:feature-settings` | Settings pages, appearance, services opt-in, diagnostics |
 | `:shared:feature-social` | Friends, people search, person profiles, friend picker |
 | `:shared:feature-sport` | Sport catalog, bookings, queues, score |
-| `:shared:ios` | Umbrella that builds the static framework `Shared` for Xcode, iOS Koin start, iOS screen factories |
+| `:shared:ios` | Umbrella that builds the static framework `Shared` for Xcode, iOS Koin start, the Swift bridge |
 | `:konsist` | Architecture rules over the sources of `app/` and `shared/` |
 | `:baselineprofile` | Device-only: generates `:app`'s baseline and startup profiles and runs the nightly frame-timing benchmarks over the demo session (docs/testing.md) |
 
-Allowed edges: a feature module depends on `:shared:core`,
-`:shared:designsystem` and `:shared:compose-strings` only (`:shared:testing` in
-tests). Features never depend on each other. `:shared:compose-strings` depends
-on `:shared:core` only; `:shared:designsystem` on `:shared:core` and `:shared:compose-strings`. `:app` and `:shared:ios` depend on every shared module.
+Allowed edges: a feature module depends on `:shared:core` (all targets) and on
+`:shared:designsystem` and `:shared:compose-strings` from `androidMain` only
+(`:shared:testing` in tests). Features never depend on each other. `:shared:compose-strings` depends
+on `:shared:core` only; `:shared:designsystem` on `:shared:core` and `:shared:compose-strings`. `:app` depends on every shared module, `:shared:ios` on core, the features and
+`:shared:backend-client`.
 `:shared:backend-client` depends on nothing in this repository.
 
-Shared modules target `android`, `iosArm64` and `iosSimulatorArm64`. Source
+Shared modules target `android`, `iosArm64` and `iosSimulatorArm64`, except the
+Android-only `:shared:designsystem` and `:shared:compose-strings`. Source
 sets: `commonMain`, `androidMain`, `iosMain`, `commonTest`, `androidHostTest`
-(JVM with Robolectric) and `iosTest`. `commonMain` has no `android.*`,
-`java.*` or `R`.
+(JVM with Robolectric) and `iosTest`. In the multiplatform modules `commonMain`
+has no `android.*`, `java.*`, `R` or Compose (`KmpRulesTest`).
 
 ## Layers inside a feature
 
@@ -278,9 +283,9 @@ notifications, the tile), with frozen keys in `scripts/strings-frozen-keys.txt`.
 - `:shared:core` compiles no CMP resources. `:shared:compose-strings` compiles
   a copy of every module's catalog files into one public CMP `Res` and
   resolves `UiText` in Compose (`asString()`) and in suspend code
-  (`resolve()`); screens read core strings from that `Res`. Feature modules
-  still compile their own catalog for their screens, so a string sits twice in
-  the app until the screens leave `commonMain`.
+  (`resolve()`); every Compose screen reads its strings from that `Res`.
+  Feature modules compile no `Res` of their own (the campus map still does
+  until its screens move).
 - Android Views, widgets and notifications resolve `UiText` with
   `resolve(context)` through the generated key -> `R` table
   (`ExportedStringIds`), Swift with `UiText.resolved` from the `.xcstrings`
@@ -288,8 +293,8 @@ notifications, the tile), with frozen keys in `scripts/strings-frozen-keys.txt`.
   implements over the same tables (`IosPlatform.resolveText`). Nothing on iOS
   reads a CMP resource ([ADR 0035](decisions/0035-ios-without-compose.md)).
 - `:shared:core` and the `data`, `domain` and `presentation` packages import no
-  CMP resource, `Res` or Compose resolver, and iOS code outside the design
-  system imports no Compose at all (`UiTextRulesTest`, `KmpRulesTest`).
+  CMP resource, `Res` or Compose resolver, and common and iOS code imports no
+  Compose at all (`UiTextRulesTest`, `KmpRulesTest`).
 
 The `itmowidgets.strings` plugin exports what Android `res` still needs, and
 `./gradlew :app:exportAppleStrings` writes the `.xcstrings` tables and
