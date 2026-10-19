@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
@@ -61,7 +62,7 @@ internal fun createFixture(
         widgets = WidgetsPageProvider(repository, tileAccess, capabilities),
         schedule = SchedulePageProvider(repository, calendarSync, capabilities),
         sport = SportPageProvider(repository),
-        maintenance = MaintenancePageProvider(refresher, onboarding, AppVersion("2.1-test"), RecordingDiagnostics())
+        maintenance = MaintenancePageProvider(refresher, onboarding, TEST_BUILD, RecordingDiagnostics())
     )
     val viewModel = SettingsViewModel(
         pages = pages,
@@ -359,3 +360,6 @@ internal class FakeWidgetRefreshRequester : WidgetRefreshRequester {
         refreshCount += 1
     }
 }
+
+/** A fork's build, so the version row shows the commit and the source; `SettingsPreviewData` shows the same. */
+internal val TEST_BUILD = AppBuild("2.1-test", "20100", AppBuild.CUSTOM, "AlexPer777/ITMO.Widgets", "a1b2c3d4e5f6")

@@ -1,14 +1,13 @@
 package dev.alllexey.itmowidgets.feature.settings.di
 
 import androidx.lifecycle.SavedStateHandle
-import dev.alllexey.itmowidgets.core.platform.AppBundleVersion
+import dev.alllexey.itmowidgets.core.platform.IosClientVersion
 import dev.alllexey.itmowidgets.core.settings.CustomSpoilerRepository
 import dev.alllexey.itmowidgets.feature.settings.data.IosBackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.data.IosWidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.domain.BackgroundWorkAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
-import dev.alllexey.itmowidgets.feature.settings.presentation.AppVersion
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import kotlinx.datetime.LocalDate
@@ -17,8 +16,8 @@ import org.koin.dsl.module
 /**
  * The iOS side of [settingsDataModule] and [settingsModule], what `androidSettingsModule` and `androidScheduleModule`
  * give Android: widget reloads, Background App Refresh as the background work access, no quick settings tile, no custom
- * spoiler image (iOS hides that row), the bundle's version. The first-run flow resolves the opt-in and the widget
- * appearance through it too. The core contracts come from `iosCoreModule`, the onboarding flag from
+ * spoiler image (iOS hides that row), the bundle's version and build identity. The first-run flow resolves the opt-in
+ * and the widget appearance through it too. The core contracts come from `iosCoreModule`, the onboarding flag from
  * `onboardingDataModule`.
  *
  * The schedule change switch and the calendar sync are the schedule data graph's (`scheduleDataModule`); the phone's
@@ -30,7 +29,7 @@ val settingsIosModule = module {
     single<BackgroundWorkAccess> { IosBackgroundWorkAccess() }
     single<QuickSettingsTileAccess> { NoQuickSettingsTile }
     single<CustomSpoilerRepository> { NoCustomSpoilerRepository }
-    single { AppVersion(AppBundleVersion.fromMainBundle()) }
+    single { IosClientVersion.appBuildFromMainBundle() }
 }
 
 /**

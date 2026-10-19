@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Build in the version row (2026-10-19)
+
+- Settings `Версия` shows the build number, the short commit and, for a custom build, its source (`AlexPer777/ITMO.Widgets` or `своя сборка`); a tap copies the full build details.
+
 ### iOS push switches hidden (2026-10-19)
 
 - On iOS «Уведомления» hides `Спорт`, `Друзья` and `Новые устройства` until the app holds Apple's notification filtering entitlement; every push shows, the stored switches stay.

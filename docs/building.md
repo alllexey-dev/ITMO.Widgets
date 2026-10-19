@@ -83,6 +83,10 @@ they only label.
   distribution (`github`, `play`, `appstore`, ...) as the header's `channel`, a
   `custom` one sends `custom`; `source` and `commit` go as built (an empty
   commit is left out), so Backend counts forks and self-built apps apart.
+- **Settings.** The `Версия` row shows the same identity through
+  `AppBuild` (`:shared:core`): `2.3.0 (20292) · a1b2c3d` for an official
+  build, `· <owner>/<repo>` or `· своя сборка` (source `local`) added for a
+  custom one; a tap copies version, build, channel, source and the full commit.
 
 ## Workflows in a fork
 

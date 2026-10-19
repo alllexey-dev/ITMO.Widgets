@@ -35,14 +35,32 @@ object IosClientVersion {
             kind = "ios",
             version = AppBundleVersion.from(bundle.objectForInfoDictionaryKey(SHORT_VERSION_KEY)),
             build = AppBundleVersion.from(bundle.objectForInfoDictionaryKey(BUNDLE_VERSION_KEY)),
-            identity = buildIdentity(
-                distribution = mainBundleDistribution(),
-                channel = bundle.objectForInfoDictionaryKey(BUILD_CHANNEL_KEY),
-                source = bundle.objectForInfoDictionaryKey(BUILD_SOURCE_KEY),
-                commit = bundle.objectForInfoDictionaryKey(BUILD_COMMIT_KEY)
-            ),
+            identity = mainBundleIdentity(),
             os = osMajorVersion(),
             installId = installId
+        )
+    }
+
+    /** This build for the settings version row: the bundle's version and the identity `X-Client` sends. */
+    fun appBuildFromMainBundle(): AppBuild {
+        val bundle = NSBundle.mainBundle
+        val identity = mainBundleIdentity()
+        return AppBuild(
+            version = AppBundleVersion.from(bundle.objectForInfoDictionaryKey(SHORT_VERSION_KEY)),
+            build = AppBundleVersion.from(bundle.objectForInfoDictionaryKey(BUNDLE_VERSION_KEY)),
+            channel = identity.channel,
+            source = identity.source,
+            commit = identity.commit
+        )
+    }
+
+    private fun mainBundleIdentity(): BuildIdentity {
+        val bundle = NSBundle.mainBundle
+        return buildIdentity(
+            distribution = mainBundleDistribution(),
+            channel = bundle.objectForInfoDictionaryKey(BUILD_CHANNEL_KEY),
+            source = bundle.objectForInfoDictionaryKey(BUILD_SOURCE_KEY),
+            commit = bundle.objectForInfoDictionaryKey(BUILD_COMMIT_KEY)
         )
     }
 
@@ -52,7 +70,7 @@ object IosClientVersion {
      * unknown. `base` stays out: the version already is the upstream one.
      */
     fun buildIdentity(distribution: String, channel: Any?, source: Any?, commit: Any?): BuildIdentity = BuildIdentity(
-        channel = if (channel == CUSTOM) CUSTOM else distribution,
+        channel = if (channel == AppBuild.CUSTOM) AppBuild.CUSTOM else distribution,
         source = (source as? String)?.takeIf(String::isNotBlank),
         commit = (commit as? String)?.takeIf(String::isNotBlank)
     )
@@ -99,5 +117,4 @@ object IosClientVersion {
     private const val BUILD_CHANNEL_KEY = "BuildChannel"
     private const val BUILD_SOURCE_KEY = "BuildSource"
     private const val BUILD_COMMIT_KEY = "BuildCommit"
-    private const val CUSTOM = "custom"
 }
