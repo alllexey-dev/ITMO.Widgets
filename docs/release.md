@@ -185,7 +185,9 @@ closed-test condition in [releases](product/releases.md#distribution).
 
 Upload the CI-built archive to TestFlight, internal first, then external
 testing or App Store review. The marketing version follows the app; the build
-number is the commit time that `archive.sh` stamps. The owner's
+number is the `versionCode` of step 5, which `archive.sh` stamps. Every upload
+consumes it, as a Play upload does: a second upload needs the next
+`versionCode`. The owner's
 `Signing.local.xcconfig` sets `ITMO_BUILD_CHANNEL = official`
 ([build identity](building.md#build-identity)).
 

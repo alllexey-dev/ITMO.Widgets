@@ -346,7 +346,7 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
   pushes to `master` that change `shared/` (see [testing.md](testing.md#ci)); `ios-nightly.yml` runs every module's
   `kn` tests and all `UITests`.
 - Release builds: `scripts/ios/archive.sh --unsigned` (an `.ipa` for self-signing) or `--signed [--upload]` with
-  `Signing.local.xcconfig`. The build number is the commit time in Unix seconds, and the build identity
+  `Signing.local.xcconfig`. The build number is Android's `versionCode` from `app/build.gradle.kts`, and the build identity
   (`BuildChannel`, `BuildSource`, `BuildCommit`) is in [building](building.md#build-identity). Uploads are manual
   steps; `dist.yml` builds the unsigned `.ipa` on demand and attaches it to every published release.
 

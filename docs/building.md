@@ -73,12 +73,11 @@ they only label.
 - **Commit.** Android stamps it in release-type builds only, so debug builds
   keep their compile cache (empty in debug). iOS stamps it in `archive.sh`
   builds, with `-dirty` for uncommitted changes; Xcode builds leave it empty.
-- **Build numbers do not count commits.** Android's `versionCode` is set per
-  release line in `app/build.gradle.kts`
-  ([releases](product/releases.md#distribution)). The iOS `CFBundleVersion`
-  from `archive.sh` is the commit time in Unix seconds: monotonic along
-  `master`, and the same for one commit in every clone, shallow or a fork's;
-  Xcode builds keep `1`.
+- **Build numbers do not count commits.** Both platforms use one number
+  committed in the repository: Android's `versionCode` in
+  `app/build.gradle.kts` ([releases](product/releases.md#distribution)), which
+  `archive.sh` also stamps as the iOS `CFBundleVersion`. It is the same in
+  every clone, shallow or a fork's; Xcode builds keep `1`.
 - **Statistics.** The app sends these with its Backend calls in `X-Client`
   ([ADR 0034](https://github.com/alllexey-dev/ITMO.Widgets/pull/457)). The
   header's `channel` is the distribution (`github`, `play`, `sideload`, ...);

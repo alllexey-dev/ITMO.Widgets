@@ -15,8 +15,8 @@ new iOS app.
 - Builds name their origin: `BUILD_CHANNEL`, `BUILD_SOURCE` and `BUILD_COMMIT` in Android's `BuildConfig`,
   `BuildChannel`, `BuildSource` and `BuildCommit` in the iOS Info.plist. `official` only with the official signing,
   `custom` otherwise ([building](docs/building.md#build-identity)).
-- The iOS build number from `archive.sh` is the commit time in Unix seconds instead of the commit count, so a fork's
-  merge commits and shallow clones no longer change it.
+- The iOS build number from `archive.sh` is Android's `versionCode` instead of the commit count, so a fork's merge
+  commits and shallow clones no longer change it.
 - `dist.yml` builds a self-signed release APK and an unsigned `.ipa` on demand, with no secrets, in this repository
   or a fork, and attaches the `.ipa` to every published release. `./gradlew :app:assembleGithubRelease
   -Pitmo.selfSigned=true` gives an installable APK locally.
