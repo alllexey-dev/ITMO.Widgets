@@ -1,7 +1,8 @@
 # Getting started
 
 From a clean machine to the app running on an Android emulator and an iOS
-simulator. Read [architecture.md](architecture.md) next.
+simulator. Read [architecture.md](architecture.md) next. To only build an
+installable copy, see [building](building.md).
 
 ## Prerequisites
 

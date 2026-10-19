@@ -14,6 +14,24 @@ new iOS app.
 
 - On iOS the last Compose screens are native SwiftUI: all links of a subject, a link's actions, the link editor and the link report, the review editor and another user's sport; the Compose host (`ComposeHost`, the `.compose` routes and `shared/ios` `screens/`) is gone.
 
+### Builds outside the official pipeline (2026-10-19)
+
+- Builds name their origin: `BUILD_CHANNEL`, `BUILD_SOURCE` and `BUILD_COMMIT` in Android's `BuildConfig`,
+  `BuildChannel`, `BuildSource` and `BuildCommit` in the iOS Info.plist. `official` only with the official signing,
+  `custom` otherwise ([building](docs/building.md#build-identity)).
+- The iOS build number from `archive.sh` is Android's `versionCode` instead of the commit count, so a fork's merge
+  commits and shallow clones no longer change it.
+- `dist.yml` builds a self-signed release APK and an unsigned `.ipa` on demand, with no secrets, in this repository
+  or a fork, and attaches the `.ipa` to every published release. `./gradlew :app:assembleGithubRelease
+  -Pitmo.selfSigned=true` gives an installable APK locally.
+- Pushes and scheduled runs of the upstream workflows build nothing in a fork.
+
+### Notification settings (2026-10-19)
+
+- «Уведомления» gives every type its own switch, the pushes included (`Спорт`, `Друзья`, `Новые устройства`): the
+  device drops a switched-off push (`FcmPayloadDispatcher`, the iOS notification service; a sport push still books);
+  the sample notifications and the explanatory notes are gone; a system block shows once, as one card on top.
+
 ### Votes (2026-10-19)
 
 - Teacher reviews vote with like and dislike thumbs instead of arrows, as links do: Android has one `VotePill` for links and reviews (the subject page's `Материалы` takes it too), iOS already used `ItmoVotePill` everywhere; `arrow_drop_up` is gone.

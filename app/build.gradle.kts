@@ -1,3 +1,5 @@
+import java.security.KeyStore
+import java.security.MessageDigest
 import java.util.Properties
 
 // SDK levels, JVM 17, the Compose compiler and test defaults come from itmowidgets.android.app (build-logic).
@@ -16,6 +18,29 @@ val keystoreProperties = Properties().apply {
     if (file.exists()) file.inputStream().use(::load)
 }
 
+// Build identity (docs/building.md): `official` only when the release key is the official one (the SHA-256 in
+// docs/product/releases.md and the site's assetlinks.json), so a fork with its own key or none builds `custom`.
+val officialCertSha256 = "939e9bd52c89fbb7a9b3c6b8d0f0883ee2c9c12c6d8fed922251e2bdfbc1f071"
+val buildChannel = if (keystoreProperties.isNotEmpty() && releaseCertSha256() == officialCertSha256) "official" else "custom"
+val buildSource = providers.environmentVariable("GITHUB_REPOSITORY").orElse("local").get()
+val buildCommit = providers.exec {
+    commandLine("git", "rev-parse", "--short=12", "HEAD")
+    isIgnoreExitValue = true
+}.standardOutput.asText.map(String::trim)
+
+fun releaseCertSha256(): String? = runCatching {
+    val store = KeyStore.getInstance(
+        rootProject.file(keystoreProperties.getProperty("storeFile", "app-keystore.jks")),
+        keystoreProperties.getProperty("storePassword").toCharArray(),
+    )
+    val cert = store.getCertificate(keystoreProperties.getProperty("keyAlias", "key0"))
+    MessageDigest.getInstance("SHA-256").digest(cert.encoded).joinToString("") { "%02x".format(it) }
+}.getOrNull()
+
+// `-Pitmo.selfSigned=true` signs the release outputs with the local debug key when keystore.properties is absent, so
+// a custom build installs (docs/building.md). Without it they stay unsigned, as ship-check.sh expects.
+val selfSigned = providers.gradleProperty("itmo.selfSigned").map(String::toBoolean).getOrElse(false)
+
 // Android Test Orchestrator with clearPackageData for the platform list only: `scripts/verify.sh ui @platform`
 // and the nightly managed-device job pass -Pitmo.orchestrator=true. The other suites share TestSession and the real
 // Koin graph across tests, so they keep the plain runner.
@@ -29,6 +54,8 @@ android {
         versionCode = 20292
         versionName = "2.3-SNAPSHOT"
         resValue("string", "app_version", versionName!!)
+        buildConfigField("String", "BUILD_CHANNEL", "\"$buildChannel\"")
+        buildConfigField("String", "BUILD_SOURCE", "\"$buildSource\"")
 
         // The real ITMO and Backend hosts fail at once in instrumented tests, never hang them.
         testInstrumentationRunner = "dev.alllexey.itmowidgets.testing.OfflineHostsTestRunner"
@@ -80,6 +107,7 @@ android {
         }
         release {
             signingConfig = signingConfigs.findByName("release")
+                ?: signingConfigs.getByName("debug").takeIf { selfSigned }
             isMinifyEnabled = true
             isShrinkResources = true
             buildConfigField(
@@ -233,6 +261,14 @@ baselineProfile {
 androidComponents {
     onVariants(selector().withBuildType("benchmarkRelease")) { it.useDevBackend() }
     onVariants(selector().withBuildType("nonMinifiedRelease")) { it.useDevBackend() }
+    // The commit only in release-type builds: in debug it would recompile the app and rerun its tests on every commit.
+    onVariants { variant ->
+        val commit = if (variant.buildType == "debug") provider { "" } else buildCommit
+        variant.buildConfigFields?.put(
+            "BUILD_COMMIT",
+            commit.map { com.android.build.api.variant.BuildConfigField("String", "\"$it\"", null) },
+        )
+    }
 }
 
 fun com.android.build.api.variant.Variant.useDevBackend() {

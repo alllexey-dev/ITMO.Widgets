@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.session.IdTokenCurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import kotlinx.coroutines.CoroutineScope
@@ -77,6 +78,7 @@ val accountIosModule = module {
             get(),
             get<IosPushDevice>().observeAlertsAllowed(),
             get<ServicesOptInPreferences>().observeCustomServicesEnabled(),
+            get<PushCategoryPreferences>().observeDisabled(),
             get(),
             get()
         ).also { sync ->

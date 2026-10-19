@@ -18,6 +18,12 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>BuildChannel</key>
+	<string>$(ITMO_BUILD_CHANNEL)</string>
+	<key>BuildSource</key>
+	<string>$(ITMO_BUILD_SOURCE)</string>
+	<key>BuildCommit</key>
+	<string>$(ITMO_BUILD_COMMIT)</string>
 	<key>AppGroupID</key>
 	<string>$(APP_GROUP_ID)</string>
 	<key>KeychainGroup</key>

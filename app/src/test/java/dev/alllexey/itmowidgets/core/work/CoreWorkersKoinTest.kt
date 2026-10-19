@@ -5,6 +5,8 @@ import androidx.work.ListenableWorker.Result
 import androidx.work.workDataOf
 import dev.alllexey.itmowidgets.core.notification.FcmMessageWorker
 import dev.alllexey.itmowidgets.core.notification.FcmPayloadDispatcher
+import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmPayloadHandler
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.notification.FcmTokenWorker
@@ -17,7 +19,10 @@ import dev.alllexey.itmowidgets.core.session.IdentitySyncWork
 import dev.alllexey.itmowidgets.core.session.IdentitySyncWorker
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import java.io.IOException
@@ -96,7 +101,12 @@ class CoreWorkersKoinTest {
         single<CurrentUserProvider> { FixedUser(currentIsu) }
         single<SessionTokenStore> { FakeSessionTokenStore(signedIn = true) }
         single<BackendGate> { FakeBackendGate(optedIn = true) }
-        single<FcmPayloadDispatcher> { FcmPayloadDispatcher(listOf(handler), RecordingDiagnostics()) }
+        single<FcmPayloadDispatcher> { FcmPayloadDispatcher(
+            listOf(handler),
+            RecordingAppNotifier(),
+            PushCategoryPreferences(InMemoryPreferencesDataStore()),
+            RecordingDiagnostics(),
+        ) }
     }
 
     private fun message(recipientIsu: Int) = workDataOf(
@@ -110,8 +120,9 @@ class CoreWorkersKoinTest {
 
     private class RecordingHandler(override val type: String) : FcmPayloadHandler {
         val received = mutableListOf<JsonElement>()
+        override val channel = AppNotificationChannels.SPORT
 
-        override suspend fun handle(payload: JsonElement) {
+        override suspend fun handle(payload: JsonElement, notifier: AppNotifier) {
             received += payload
         }
     }
