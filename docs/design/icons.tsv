@@ -43,6 +43,7 @@ event_note	event_note	0	shared	calendar.day.timeline.left	-
 event_repeat	event_repeat	0	shared	repeat	The sport queue that repeats every two weeks
 exercise	exercise	0	shared	dumbbell	-
 expand_more	expand_more	0	shared	chevron.down	Same glyph as summary_expand
+fit_screen	fit_screen	0	shared	viewfinder	Campus map: show the whole building
 flag	flag	0	shared	flag	-
 folder	folder	0	shared	folder	-
 format_list_numbered	format_list_numbered	0	shared	list.number	-
@@ -95,6 +96,7 @@ star_shine	star_shine	0	shared	sparkle	-
 stat_notifications	notifications	0	android	-	Monochrome notification mask; SystemUI tints it
 summary_collapse	expand_less	0	shared	chevron.up	id differs from the symbol name
 summary_expand	expand_more	0	shared	chevron.down	id differs from the symbol name; same glyph as expand_more
+swap_vert	swap_vert	0	shared	arrow.up.arrow.down	Campus map: swap the route ends
 table	table	0	shared	tablecells	-
 thumb_down	thumb_down	0	shared	hand.thumbsdown	Link dislike
 thumb_down_filled	thumb_down	1	shared	hand.thumbsdown.fill	Selected link dislike

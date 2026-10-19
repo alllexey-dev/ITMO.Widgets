@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
+    "map_buildings" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Корпус"
+          }
+        }
+      }
+    },
     "map_close" : {
       "comment" : "Generated from strings_map.xml",
       "extractionState" : "manual",
@@ -9,6 +21,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Закрыть"
+          }
+        }
+      }
+    },
+    "map_fit_building" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать корпус целиком"
           }
         }
       }
@@ -45,6 +69,246 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Этажи"
+          }
+        }
+      }
+    },
+    "map_kind_atm" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Банкомат"
+          }
+        }
+      }
+    },
+    "map_kind_bike" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Велопарковка"
+          }
+        }
+      }
+    },
+    "map_kind_canteen" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Столовая"
+          }
+        }
+      }
+    },
+    "map_kind_cloakroom" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гардероб"
+          }
+        }
+      }
+    },
+    "map_kind_conferenceroom" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конференц-зал"
+          }
+        }
+      }
+    },
+    "map_kind_coworking" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коворкинг"
+          }
+        }
+      }
+    },
+    "map_kind_education" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аудитория"
+          }
+        }
+      }
+    },
+    "map_kind_entrance" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход"
+          }
+        }
+      }
+    },
+    "map_kind_fitnessroom" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фитнес-зал"
+          }
+        }
+      }
+    },
+    "map_kind_food" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Еда"
+          }
+        }
+      }
+    },
+    "map_kind_healthcare" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Медкабинет"
+          }
+        }
+      }
+    },
+    "map_kind_library" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Библиотека"
+          }
+        }
+      }
+    },
+    "map_kind_lockerroom" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Раздевалка"
+          }
+        }
+      }
+    },
+    "map_kind_meetingroom" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переговорная"
+          }
+        }
+      }
+    },
+    "map_kind_museum" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Музей"
+          }
+        }
+      }
+    },
+    "map_kind_office" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Офис"
+          }
+        }
+      }
+    },
+    "map_kind_restroom" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Туалет"
+          }
+        }
+      }
+    },
+    "map_kind_studentservices" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Студофис"
+          }
+        }
+      }
+    },
+    "map_kind_water" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Питьевая вода"
+          }
+        }
+      }
+    },
+    "map_loading" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружаем план…"
           }
         }
       }
@@ -229,50 +493,62 @@
         }
       }
     },
-    "map_room_on_floor" : {
+    "map_route_badge_from" : {
       "comment" : "Generated from strings_map.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@, %2$@"
+            "value" : "А"
           }
         }
       }
     },
-    "map_route" : {
+    "map_route_badge_to" : {
       "comment" : "Generated from strings_map.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Маршрут"
+            "value" : "Б"
           }
         }
       }
     },
-    "map_route_from_entrance" : {
+    "map_route_entrance" : {
       "comment" : "Generated from strings_map.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "От входа"
+            "value" : "Вход"
           }
         }
       }
     },
-    "map_route_from_room" : {
+    "map_route_from_here" : {
       "comment" : "Generated from strings_map.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "От %1$@"
+            "value" : "Отсюда"
+          }
+        }
+      }
+    },
+    "map_route_here" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сюда"
           }
         }
       }
@@ -285,6 +561,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Дальше"
+          }
+        }
+      }
+    },
+    "map_route_not_found" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Путь по плану не найден"
+          }
+        }
+      }
+    },
+    "map_route_pick_from" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откуда"
+          }
+        }
+      }
+    },
+    "map_route_pick_hint" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найдите место или нажмите на него на плане"
+          }
+        }
+      }
+    },
+    "map_route_pick_to" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Куда"
           }
         }
       }
@@ -309,6 +633,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Шаг %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "map_route_swap" : {
+      "comment" : "Generated from strings_map.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поменять местами"
           }
         }
       }
