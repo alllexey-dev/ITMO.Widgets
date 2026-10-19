@@ -8,8 +8,8 @@ import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 
 /**
  * `Моё` of the Спорт tab (docs/features/sport.md): the score ring that leads to `Откуда баллы`, the bookings and
- * queues as lesson cards by day with `Сделать секцией` on the booked ones, the user's [sections] with their next
- * dates, and the question before a cancellation ([cancel]).
+ * queues as lesson cards by day, the user's [sections] with their next dates, and the question before a cancellation
+ * ([cancel]). `Сделать секцией` lives in a booked lesson's sheet.
  */
 data class SportMyUiState(
     val score: SportScoreUi? = null,
@@ -39,8 +39,8 @@ sealed interface SportMyBody {
 /** One day of bookings under its label: `Сегодня, 7 сент.`. */
 data class SportBookingDay(val title: UiText, val bookings: List<SportBookingItem>)
 
-/** A booking or a queue as a lesson card; [lessonId] opens its sheet; a booked one has its [section] switch. */
-data class SportBookingItem(val lessonId: Long, val lesson: LessonUi, val section: SportSectionToggleUi? = null)
+/** A booking or a queue as a lesson card; [lessonId] opens its sheet. */
+data class SportBookingItem(val lessonId: Long, val lesson: LessonUi)
 
 /**
  * The points of the semester in a ring: [visits] and the credited [bonus] add up to [total] out of 100; [formula] is

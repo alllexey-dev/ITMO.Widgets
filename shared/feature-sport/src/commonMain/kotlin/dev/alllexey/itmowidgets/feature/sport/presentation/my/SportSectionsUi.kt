@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDate
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportSectionDateState
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportSectionsState
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.sportDayLabel
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.sportPlace
 import dev.alllexey.itmowidgets.shared.feature.sport.SportStrings
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -18,7 +19,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 
 /**
- * `Сделать секцией` of a booked lesson, on its card in `Моё` and in its sheet: [on] with the place (`3-й из 7 в
+ * `Сделать секцией` of a booked lesson in its sheet: [on] with the place (`3-й из 7 в
  * секции`), or off with how many chose it; [enabled] false while a change runs or the slot is full (`Мест в секции нет`).
  */
 data class SportSectionToggleUi(
@@ -30,37 +31,47 @@ data class SportSectionToggleUi(
 )
 
 /**
- * A section in `Моё`: [title] (`Волейбол`), the slot (`Среда, 10:00, раз в две недели`), the teacher and the hall ([venue]),
- * the place in the section queue, the next [dates] with their switches; [busy] while a change runs.
+ * A section in `Моё`: [title] (`Волейбол`), the [slot] (`Среда, 10:00 · раз в две недели`), the [teacher]
+ * (`Тихонова М. Ю.`), the [place] (`спортивный зал, Кронва`), the [position] in the section queue (`3-й из 7 в
+ * секции`), the next [dates] with their switches; [busy] while a change runs.
  */
 data class SportSectionCardUi(
     val id: Long,
     val title: String,
     val slot: UiText,
-    val venue: String?,
-    val place: UiText,
+    val teacher: String?,
+    val place: UiText?,
+    val position: UiText,
     val dates: List<SportSectionDateUi>,
     val busy: Boolean,
 )
 
 /**
- * One date of a section: [day] `Ср, 21 окт.`, [status] `в очереди, 2-й из 5`, `лимит на месяц исчерпан`, `пропустим это занятие`
- * or `встанем в очередь, когда откроется запись`; [on] false for a skipped date, [enabled] false for one the limit skipped.
+ * One date of a section: [day] `Ср, 21 окт.` and its [status] as a pill: `очередь 2 из 5`, `запись не открыта`,
+ * `пропустим` or `лимит исчерпан`, toned by [state] (null: auto-sign has not opened yet); [on] false for a skipped
+ * date, [enabled] false for one the limit skipped.
  */
-data class SportSectionDateUi(val start: Instant, val day: UiText, val status: UiText, val on: Boolean, val enabled: Boolean)
+data class SportSectionDateUi(
+    val start: Instant,
+    val day: UiText,
+    val status: UiText,
+    val state: SportSectionDateState?,
+    val on: Boolean,
+    val enabled: Boolean,
+)
 
 object SportSectionsPresenter {
 
-    /** `в очереди, 2-й из 5` while a queued date waits, else its state. */
+    /** `очередь 2 из 5` while a queued date waits, as a booking's queue reads, else its state. */
     private fun status(date: SportSectionDate): UiText {
         val position = date.position
         val total = date.total
         if (date.state == SportSectionDateState.QUEUED && position != null && total != null) {
-            return UiText.Res(SportStrings.sport_section_date_queued_position, listOf(position, total))
+            return UiText.Res(SportStrings.sport_queue_position, listOf(position, total))
         }
         return UiText.Res(
             when (date.state) {
-                SportSectionDateState.QUEUED -> SportStrings.sport_section_date_queued
+                SportSectionDateState.QUEUED -> SportStrings.sport_queue_pill
                 SportSectionDateState.LIMIT -> SportStrings.sport_section_date_limit
                 SportSectionDateState.SKIPPED -> SportStrings.sport_section_date_skipped
                 null -> SportStrings.sport_section_date_waiting
@@ -105,18 +116,19 @@ object SportSectionsPresenter {
         val lesson = section.lesson
         val start = lesson.start.toLocalDateTime(zone)
         val weekday = DateTexts.weekday(start.dayOfWeek).replaceFirstChar { it.uppercaseChar() }
-        val teacher = lesson.teacherFio.trim().takeIf(String::isNotEmpty)?.let(::shortPersonName)
         return SportSectionCardUi(
             id = section.id,
             title = SectionName(lesson.sectionName).shorten(),
             slot = UiText.Res(SportStrings.sport_section_slot, listOf(weekday, start.time.format(DateTexts.TIME))),
-            venue = listOfNotNull(teacher, lesson.roomName.trim().takeIf(String::isNotEmpty)).joinToString(", ").takeIf(String::isNotEmpty),
-            place = UiText.Res(SportStrings.sport_section_place, listOf(section.place, section.subscribers)),
+            teacher = lesson.teacherFio.trim().takeIf(String::isNotEmpty)?.let(::shortPersonName),
+            place = sportPlace(lesson.roomName).short(),
+            position = UiText.Res(SportStrings.sport_section_place, listOf(section.place, section.subscribers)),
             dates = section.dates.map { date ->
                 SportSectionDateUi(
                     start = date.start,
                     day = sportDayLabel(date.start.toLocalDateTime(zone).date, today),
                     status = status(date),
+                    state = date.state,
                     on = date.state == null || date.state == SportSectionDateState.QUEUED,
                     enabled = !busy && date.state != SportSectionDateState.LIMIT,
                 )

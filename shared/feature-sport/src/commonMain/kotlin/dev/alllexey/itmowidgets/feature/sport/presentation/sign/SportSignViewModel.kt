@@ -123,6 +123,7 @@ class SportSignViewModel(
 
     fun toggle(chip: SportQuickFilter) = filters.update {
         when (chip) {
+            SportQuickFilter.AVAILABLE -> it.copy(onlyAvailable = !it.onlyAvailable)
             SportQuickFilter.FREE -> it.copy(onlyFree = !it.onlyFree)
             SportQuickFilter.MORNING -> it.copy(dayPart = if (it.dayPart == SportDayPart.MORNING) SportDayPart.ANYTIME else SportDayPart.MORNING)
             SportQuickFilter.EVENING -> it.copy(dayPart = if (it.dayPart == SportDayPart.EVENING) SportDayPart.ANYTIME else SportDayPart.EVENING)
@@ -168,6 +169,8 @@ class SportSignViewModel(
     fun selectTeacher(name: String?) = filters.update { it.copy(teacher = name) }
 
     fun selectDayPart(part: SportDayPart) = filters.update { it.copy(dayPart = part) }
+
+    fun setOnlyAvailable(on: Boolean) = filters.update { it.copy(onlyAvailable = on) }
 
     fun setOnlyFree(on: Boolean) = filters.update { it.copy(onlyFree = on) }
 

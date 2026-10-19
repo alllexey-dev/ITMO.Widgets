@@ -38,10 +38,10 @@ sealed interface SportSignEvent {
     data class OpenLesson(val lessonId: Long) : SportSignEvent
 }
 
-/** A quick filter chip: `Есть места`, `Утро`, `Вечер`, `Друзья`, in that order. */
+/** A quick filter chip: `Доступные`, `Есть места`, `Утро`, `Вечер`, `Друзья`, in that order. */
 data class SportChip(val filter: SportQuickFilter, val label: UiText, val selected: Boolean)
 
-enum class SportQuickFilter { FREE, MORNING, EVENING, FRIENDS }
+enum class SportQuickFilter { AVAILABLE, FREE, MORNING, EVENING, FRIENDS }
 
 /** A day of the strip: `пн` over `7`, a dot per visible lesson (at most five). */
 data class SportWeekDay(
@@ -150,6 +150,7 @@ data class SportFiltersUi(
     val showDayPart: Boolean,
     val teachers: List<SportOption>?,
     val teacher: String?,
+    val onlyAvailable: Boolean,
     val onlyFree: Boolean,
     val onlyPinned: Boolean?,
     val onlyFriends: Boolean,
@@ -183,6 +184,8 @@ data class SportSignFilters(
     val building: String? = null,
     val teacher: String? = null,
     val dayPart: SportDayPart = SportDayPart.ANYTIME,
+    /** Hides the lessons the viewer can neither sign up for nor queue for (the lock rows); the own ones stay. */
+    val onlyAvailable: Boolean = false,
     val onlyFree: Boolean = false,
     val onlyPinned: Boolean = false,
     val onlyFriends: Boolean = false,
@@ -190,7 +193,7 @@ data class SportSignFilters(
     /** How many filters narrow the list, for the badge on the filters button; the search does not count. */
     val count: Int
         get() = sections.size + listOfNotNull(building, teacher).size +
-            listOf(dayPart != SportDayPart.ANYTIME, onlyFree, onlyPinned, onlyFriends).count { it }
+            listOf(dayPart != SportDayPart.ANYTIME, onlyAvailable, onlyFree, onlyPinned, onlyFriends).count { it }
 
     fun cleared(): SportSignFilters = SportSignFilters(selectedDate = selectedDate, query = query)
 }

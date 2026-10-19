@@ -263,7 +263,8 @@ object SportSamples {
 
     /**
      * Мария's sections: Thursday's volleyball, third of seven, its next date queued, the one after skipped for the
-     * limit, the third turned off; today's swimming is not a section yet, Tuesday's queue is no booking.
+     * limit, the third turned off, the fourth waiting for its auto-sign to open (every state, more dates than Backend
+     * sends); today's swimming is not a section yet, Tuesday's queue is no booking.
      */
     private val sections: SportSectionsState
         get() {
@@ -272,7 +273,7 @@ object SportSamples {
             val section = MySportSection(
                 id = 1,
                 lesson = volley,
-                dates = listOf(SportSectionDateState.QUEUED, SportSectionDateState.LIMIT, SportSectionDateState.SKIPPED)
+                dates = listOf(SportSectionDateState.QUEUED, SportSectionDateState.LIMIT, SportSectionDateState.SKIPPED, null)
                     .mapIndexed { index, state ->
                         val shift = period * (index + 1)
                         val queued = state == SportSectionDateState.QUEUED
@@ -302,16 +303,13 @@ object SportSamples {
                 myBookings.groupBy { it.start.toLocalDateTimeIn() }.map { (date, items) ->
                     SportBookingDay(
                         sportDayLabel(date, today),
-                        items.map { SportBookingItem(it.lessonId, it.toLessonUi(time), section(it)) },
+                        items.map { SportBookingItem(it.lessonId, it.toLessonUi(time)) },
                     )
                 }
             },
         ),
         sections = if (state == "none") emptyList() else SportSectionsPresenter.cards(sections, today, zone),
     )
-
-    private fun section(booking: SportBooking): SportSectionToggleUi? =
-        if (booking.signed) SportSectionsPresenter.toggle(sections, booking.lessonId) else null
 
     /** The `Сделать секцией` switch of a lesson sheet: [state] `on`, `off` or `full`. */
     fun sectionToggle(state: String): SportSectionToggleUi {
