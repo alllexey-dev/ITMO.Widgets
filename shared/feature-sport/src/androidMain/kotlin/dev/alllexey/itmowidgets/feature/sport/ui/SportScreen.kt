@@ -92,9 +92,6 @@ import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
 import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 
-/** The two parts of the Спорт tab. */
-enum class SportTab { MY, SIGN }
-
 /** Test tags of the Спорт tab. */
 object SportTestTags {
     const val TABS = "sport:tabs"
