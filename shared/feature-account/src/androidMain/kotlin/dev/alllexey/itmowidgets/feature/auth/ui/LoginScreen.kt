@@ -24,7 +24,7 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginUiState
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.auth_signing_in
 import dev.alllexey.itmowidgets.shared.compose.strings.auth_web_error
 import dev.alllexey.itmowidgets.shared.compose.strings.auth_web_title
@@ -56,11 +56,11 @@ fun LoginScreen(
             .background(ItmoTheme.colorScheme.surface),
     ) {
         AppTopBar(
-            title = stringResource(CoreRes.string.auth_web_title),
+            title = stringResource(Res.string.auth_web_title),
             navigation = {
                 AppTopBarAction(
                     painterResource(KitRes.drawable.ic_close),
-                    stringResource(CoreRes.string.common_close),
+                    stringResource(Res.string.common_close),
                     onClose,
                     Modifier.testTag(LoginTestTags.CLOSE),
                 )
@@ -76,7 +76,7 @@ fun LoginScreen(
                 LoginError(state, onRetry)
             }
             if (state.completingLogin) {
-                val description = stringResource(CoreRes.string.auth_signing_in)
+                val description = stringResource(Res.string.auth_signing_in)
                 CircularProgressIndicator(
                     Modifier
                         .align(Alignment.Center)
@@ -105,14 +105,14 @@ private fun LoginError(state: InteractiveLoginUiState, onRetry: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                state.error?.asString() ?: stringResource(CoreRes.string.auth_web_error),
+                state.error?.asString() ?: stringResource(Res.string.auth_web_error),
                 Modifier.fillMaxWidth(),
                 color = ItmoTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 style = ItmoTheme.typography.bodyLarge,
             )
             ProgressButton(
-                label = stringResource(CoreRes.string.common_retry),
+                label = stringResource(Res.string.common_retry),
                 onClick = onRetry,
                 modifier = Modifier
                     .padding(top = ItmoTheme.spacing.content)

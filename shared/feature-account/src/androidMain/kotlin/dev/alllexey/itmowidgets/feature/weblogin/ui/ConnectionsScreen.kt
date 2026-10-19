@@ -38,19 +38,18 @@ import dev.alllexey.itmowidgets.feature.weblogin.domain.ConnectionKind
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.ConnectionRow
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.ConnectionsUiState
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.ConnectionsViewModel
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_back
 import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.connections_empty
+import dev.alllexey.itmowidgets.shared.compose.strings.connections_itmo_badge
+import dev.alllexey.itmowidgets.shared.compose.strings.connections_revoke
+import dev.alllexey.itmowidgets.shared.compose.strings.connections_title
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
 import dev.alllexey.itmowidgets.shared.designsystem.ic_computer
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.connections_empty
-import dev.alllexey.itmowidgets.shared.feature.account.connections_itmo_badge
-import dev.alllexey.itmowidgets.shared.feature.account.connections_revoke
-import dev.alllexey.itmowidgets.shared.feature.account.connections_title
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -102,7 +101,7 @@ fun ConnectionsScreen(
     ItmoDetailScreen(
         title = stringResource(Res.string.connections_title),
         onBack = actions.onBack,
-        backLabel = stringResource(CoreRes.string.common_back),
+        backLabel = stringResource(Res.string.common_back),
         modifier = modifier,
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
@@ -115,7 +114,7 @@ fun ConnectionsScreen(
                     title = state.text.asString(),
                     modifier = Modifier.fillMaxSize().testTag(ConnectionsTestTags.ERROR),
                     icon = painterResource(KitRes.drawable.ic_error),
-                    action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry),
+                    action = ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
                 )
                 is ConnectionsUiState.Content -> if (state.rows.isEmpty()) {
                     ContentState(
@@ -184,7 +183,7 @@ internal fun RevokeDialog(row: ConnectionRow, actions: ConnectionsActions, windo
     val title = row.revokeTitle.asString()
     val text = row.revokeText.asString()
     val confirm = stringResource(Res.string.connections_revoke)
-    val dismiss = stringResource(CoreRes.string.common_cancel)
+    val dismiss = stringResource(Res.string.common_cancel)
     if (windowed) {
         ConfirmDialog(
             title, confirm, dismiss, actions.onConfirmRevoke, actions.onDismissRevoke, text = text, destructive = true,

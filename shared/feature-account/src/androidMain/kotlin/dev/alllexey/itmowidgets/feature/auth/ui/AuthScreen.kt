@@ -51,30 +51,29 @@ import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthUiState
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.app_name
 import dev.alllexey.itmowidgets.shared.compose.strings.app_unofficial_notice
 import dev.alllexey.itmowidgets.shared.compose.strings.auth_initializing
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_login_itmo_id
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_login_refresh_token
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_manual_token_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_manual_token_note
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_manual_token_placeholder
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_manual_token_required
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_manual_token_sign_in
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_official_page_notice
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_other_text
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_reauthentication_description
 import dev.alllexey.itmowidgets.shared.compose.strings.auth_signing_in
+import dev.alllexey.itmowidgets.shared.compose.strings.auth_tagline
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_content_paste
 import dev.alllexey.itmowidgets.shared.designsystem.ic_key
 import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import dev.alllexey.itmowidgets.shared.designsystem.ic_login
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.auth_login_itmo_id
-import dev.alllexey.itmowidgets.shared.feature.account.auth_login_refresh_token
-import dev.alllexey.itmowidgets.shared.feature.account.auth_logo
-import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_hint
-import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_note
-import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_placeholder
-import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_required
-import dev.alllexey.itmowidgets.shared.feature.account.auth_manual_token_sign_in
-import dev.alllexey.itmowidgets.shared.feature.account.auth_official_page_notice
-import dev.alllexey.itmowidgets.shared.feature.account.auth_other_text
-import dev.alllexey.itmowidgets.shared.feature.account.auth_reauthentication_description
-import dev.alllexey.itmowidgets.shared.feature.account.auth_tagline
+import dev.alllexey.itmowidgets.shared.feature.account.R
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -102,7 +101,7 @@ fun AuthScreen(
             .background(ItmoTheme.colorScheme.surface),
     ) {
         if (state.initializing) {
-            val description = stringResource(CoreRes.string.auth_initializing)
+            val description = stringResource(Res.string.auth_initializing)
             ItmoLoadingIndicator(
                 Modifier
                     .align(Alignment.Center)
@@ -145,7 +144,7 @@ private fun AuthContent(
         Spacer(Modifier.heightIn(min = TopSpace))
         Logo(onLogoTap)
         Text(
-            stringResource(CoreRes.string.app_name),
+            stringResource(Res.string.app_name),
             textModifier.padding(top = ItmoTheme.spacing.group),
             color = colors.onSurface,
             textAlign = TextAlign.Center,
@@ -205,7 +204,7 @@ private fun AuthContent(
             enabled = loginEnabled,
         )
         if (state.manualLoginInProgress || state.sessionTransitionInProgress) {
-            val description = stringResource(CoreRes.string.auth_signing_in)
+            val description = stringResource(Res.string.auth_signing_in)
             ItmoLoadingIndicator(
                 Modifier
                     .padding(top = ItmoTheme.spacing.compact)
@@ -215,7 +214,7 @@ private fun AuthContent(
             )
         }
         Text(
-            stringResource(CoreRes.string.app_unofficial_notice),
+            stringResource(Res.string.app_unofficial_notice),
             textModifier
                 .padding(top = ItmoTheme.spacing.compact)
                 .testTag(AuthTestTags.UNOFFICIAL_NOTICE),
@@ -236,7 +235,11 @@ private fun Logo(onTap: () -> Unit) {
             .testTag(AuthTestTags.LOGO)
             .pointerInput(Unit) { detectTapGestures(onTap = { currentOnTap() }) },
     ) {
-        Image(painterResource(Res.drawable.auth_logo), contentDescription = null, modifier = Modifier.size(LogoSize))
+        Image(
+            androidx.compose.ui.res.painterResource(R.drawable.auth_logo),
+            contentDescription = null,
+            modifier = Modifier.size(LogoSize),
+        )
     }
 }
 
@@ -267,7 +270,7 @@ internal fun OtherWaysSheetContent(onSignIn: (String) -> Unit, onDismiss: () -> 
     SheetScaffold(
         title = stringResource(Res.string.auth_login_refresh_token),
         modifier = modifier.testTag(AuthTestTags.OTHER_WAYS),
-        close = SheetClose(stringResource(CoreRes.string.common_close)) {
+        close = SheetClose(stringResource(Res.string.common_close)) {
             token = ""
             onDismiss()
         },

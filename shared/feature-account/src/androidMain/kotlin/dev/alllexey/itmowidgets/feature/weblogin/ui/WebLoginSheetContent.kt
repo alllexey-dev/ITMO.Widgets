@@ -53,26 +53,25 @@ import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingKind
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.ScopeChoice
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginUiState
 import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.connections_title
+import dev.alllexey.itmowidgets.shared.compose.strings.pair_rotating
+import dev.alllexey.itmowidgets.shared.compose.strings.pair_sending
+import dev.alllexey.itmowidgets.shared.compose.strings.pair_shared_session
+import dev.alllexey.itmowidgets.shared.compose.strings.pair_unlocking
+import dev.alllexey.itmowidgets.shared.compose.strings.web_login_code_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.web_login_continue
+import dev.alllexey.itmowidgets.shared.compose.strings.web_login_scan
+import dev.alllexey.itmowidgets.shared.compose.strings.web_login_title
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
 import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
 import dev.alllexey.itmowidgets.shared.designsystem.ic_computer
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code_scanner
-import dev.alllexey.itmowidgets.shared.feature.account.Res
-import dev.alllexey.itmowidgets.shared.feature.account.connections_title
-import dev.alllexey.itmowidgets.shared.feature.account.pair_rotating
-import dev.alllexey.itmowidgets.shared.feature.account.pair_sending
-import dev.alllexey.itmowidgets.shared.feature.account.pair_shared_session
-import dev.alllexey.itmowidgets.shared.feature.account.pair_unlocking
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_code_hint
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_continue
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_scan
-import dev.alllexey.itmowidgets.shared.feature.account.web_login_title
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -159,13 +158,13 @@ fun WebLoginSheetContent(
                 is WebLoginUiState.Done -> ResultStep(
                     icon = KitRes.drawable.ic_check_circle,
                     text = state.text.asString(),
-                    action = ContentStateAction(stringResource(CoreRes.string.common_close), actions.onClose,
+                    action = ContentStateAction(stringResource(Res.string.common_close), actions.onClose,
                         modifier = Modifier.testTag(WebLoginSheetTestTags.RESULT_ACTION)),
                 )
                 is WebLoginUiState.Error -> ResultStep(
                     icon = KitRes.drawable.ic_error,
                     text = state.text.asString(),
-                    action = ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry,
+                    action = ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry,
                         modifier = Modifier.testTag(WebLoginSheetTestTags.RESULT_ACTION)),
                 )
             }
@@ -318,7 +317,7 @@ private fun ConfirmStep(state: WebLoginUiState.Confirm, actions: WebLoginActions
         enabled = state.canApprove,
     )
     ProgressButton(
-        label = stringResource(CoreRes.string.common_cancel),
+        label = stringResource(Res.string.common_cancel),
         onClick = actions.onEditCode,
         modifier = Modifier
             .stepMargin()
