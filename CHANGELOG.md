@@ -13,6 +13,7 @@ new iOS app.
 ### iOS strings without Compose (2026-10-19)
 
 - On iOS, Kotlin text (notifications, widget files, shares, the widgets gallery) comes from the app's string tables through Swift, and the app no longer carries the Compose resources (ADR 0035, proposed).
+- The widgets' theme palette is built in `:shared:core` without Compose, so no iOS code reads the design system any more; the colours stay the same.
 
 ### Recordbook polish (2026-10-19)
 

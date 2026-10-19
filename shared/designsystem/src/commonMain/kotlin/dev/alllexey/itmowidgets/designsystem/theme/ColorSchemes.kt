@@ -8,10 +8,11 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.dynamicColorScheme
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeSeeds
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 
 /** The launcher, shortcut and `lesson_type_lecture` blue: the seed of [staticColorScheme]. */
-internal const val BRAND_SEED: Int = 0xFF4984E2.toInt()
+internal const val BRAND_SEED: Int = ThemeSeeds.BRAND
 
 /**
  * The static scheme of API 26-30 and iOS: the TonalSpot variant of the 2021 spec from

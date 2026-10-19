@@ -122,9 +122,12 @@ in `feature/sport/ui/widget` (`SportWidgetProvider`, `SportWidgetRenderer`, `Spo
 `Виджеты в цвет темы` (`widgets_follow_app_theme`, off by default,
 [settings](../settings.md#widgets-in-the-apps-colours)).
 
-- One resolver: `ThemeSpec.widgetPalette(context)` (`:shared:designsystem`, without `Чёрный фон`) -> `WidgetPalette`
-  (surface, containers, text, outline, primary, primary container, tertiary); renderers read it via
-  `WidgetPaletteSource` (null while off).
+- One resolver: `ThemeSpec.widgetPalette()` (`:shared:core`, `core/settings/ThemeSeeds.kt`, without `Чёрный фон`,
+  built without Compose from material-color-utilities) -> `WidgetPalette` (surface, containers, text, outline,
+  primary, primary container, tertiary). Android calls `widgetPalette(context)` (`:shared:designsystem`), which takes
+  the wallpaper's own scheme where the app does; iOS writes the core palette into every App Group file. Renderers
+  read it via `WidgetPaletteSource` (null while off). `WidgetPalettesTest` holds the core palette equal to the
+  roles of `resolveColorScheme` for every seeded appearance.
 - `WidgetColors` sets every colour on every render: on Android 12+ light/dark pairs (`RemoteViews.setColorInt`),
   shapes tinted through `setColorFilter`. The lesson type colours and the status tones (`очередь`, `записаны`)
   stay the widgets' own. Background tint layers (`widget_theme_background.xml`) show only while on.

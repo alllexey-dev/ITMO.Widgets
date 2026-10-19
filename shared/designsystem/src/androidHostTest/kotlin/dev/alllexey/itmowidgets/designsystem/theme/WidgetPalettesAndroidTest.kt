@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
+import dev.alllexey.itmowidgets.core.settings.widgetPalette
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

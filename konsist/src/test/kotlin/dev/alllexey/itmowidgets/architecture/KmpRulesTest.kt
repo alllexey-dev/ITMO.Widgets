@@ -27,8 +27,9 @@ class KmpRulesTest {
 
     @Test
     fun `ios code outside the Compose kit imports no Compose`() {
-        // iOS draws no Compose (ADR 0031) and reads text from the app's string tables (ADR 0035). The design system's
-        // and the test kit's iOS actuals go with the Compose kit once it leaves commonMain.
+        // iOS draws no Compose (ADR 0031) and reads text from the app's string tables (ADR 0035); widget palettes come
+        // from core. The design system's and the test kit's iOS actuals go with the Compose kit once it leaves
+        // commonMain.
         iosFiles().assertFalse { file -> file.imports.any { import -> COMPOSE.any(import.name::startsWith) } }
     }
 
@@ -46,8 +47,14 @@ class KmpRulesTest {
 
         val PLATFORM_ONLY = listOf("android.", "java.", "javax.")
 
-        /** Compose UI and resources, Coil's Compose layer. */
-        val COMPOSE = listOf("androidx.compose.", "org.jetbrains.compose.", "coil3.compose")
+        /** Compose UI and resources, Coil's Compose layer, the Compose kit. */
+        val COMPOSE = listOf(
+            "androidx.compose.",
+            "org.jetbrains.compose.",
+            "coil3.compose",
+            "com.materialkolor.ktx.",
+            "dev.alllexey.itmowidgets.designsystem.",
+        )
 
         const val MIN_IOS_SOURCE_FILES = 100
 

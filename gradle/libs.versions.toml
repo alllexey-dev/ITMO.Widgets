@@ -110,6 +110,8 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle" }
 androidx-core-remoteviews = { module = "androidx.core:core-remoteviews", version.ref = "coreRemoteviews" }
 material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+# The color science under material-kolor without Compose: the widget palettes of :shared:core.
+material-color-utilities = { module = "com.materialkolor:material-color-utilities", version.ref = "materialKolor" }
 
 # Koin (ADR 0019)
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }

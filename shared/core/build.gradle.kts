@@ -27,6 +27,8 @@ kotlin {
             api(project(":shared:backend-client"))
             // kotlinx.atomicfu.locks.SynchronizedObject of AtomicTextFile; library only, no plugin.
             implementation(libs.kotlinx.atomicfu)
+            // The widget palettes without Compose (ThemeSeeds.kt); the same version material-kolor builds on.
+            implementation(libs.material.color.utilities)
         }
         // The Darwin engine of every iOS Ktor client; the clients take the engine.
         iosMain.dependencies {
