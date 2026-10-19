@@ -40,17 +40,16 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.schedule.presentation.month.MonthDay
 import dev.alllexey.itmowidgets.feature.schedule.presentation.month.ScheduleMonthUiState
 import dev.alllexey.itmowidgets.feature.schedule.presentation.month.ScheduleMonthViewModel
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_month_next
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_month_previous
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_month_title
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_left
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
-import dev.alllexey.itmowidgets.shared.feature.schedule.Res
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_month_next
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_month_previous
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_month_title
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [ScheduleMonthSheetContent]. */
@@ -90,7 +89,7 @@ fun ScheduleMonthSheetContent(state: ScheduleMonthUiState, actions: ScheduleMont
     SheetScaffold(
         title = stringResource(Res.string.schedule_month_title),
         modifier = modifier,
-        close = SheetClose(stringResource(CoreRes.string.common_close), actions.onClose),
+        close = SheetClose(stringResource(Res.string.common_close), actions.onClose),
     ) {
         Column(
             Modifier

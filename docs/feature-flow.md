@@ -65,6 +65,9 @@ with `viewModelOf(::ScheduleFeedViewModel)`.
 
 ## 5. Compose screen (Android)
 
+The `ui` files below except `ui/preview/ScheduleSamples.kt` are in `src/androidMain` (same package), so the iOS code
+compiles no Compose ([ADR 0035](decisions/0035-ios-without-compose.md)).
+
 - `ui/feed/ScheduleFeedRoute.kt`: `ScheduleFeedRoute(...)` collects state and events and turns the screen's actions
   into view model calls and the `ScheduleFeedHost` lambdas the shell passes in.
 - `ui/feed/ScheduleFeedScreen.kt`: stateless, takes state and lambdas, built from the `designsystem.kit` kit
