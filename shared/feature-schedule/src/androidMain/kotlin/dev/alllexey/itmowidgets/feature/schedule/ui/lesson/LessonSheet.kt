@@ -56,8 +56,14 @@ import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonActio
 import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonSheetChanges
 import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonSheetUiState
 import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonSheetViewModel
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.schedule_lesson_details_flow
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_sheet_changes
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_sheet_friends_title
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_sheet_note
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_sheet_online
+import dev.alllexey.itmowidgets.shared.compose.strings.schedule_sheet_password
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_forward
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_note
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
@@ -66,16 +72,9 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
 import dev.alllexey.itmowidgets.shared.designsystem.ic_directions
 import dev.alllexey.itmowidgets.shared.designsystem.ic_videocam
-import dev.alllexey.itmowidgets.shared.feature.schedule.Res
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_sheet_changes
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_sheet_friends_title
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_sheet_note
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_sheet_online
-import dev.alllexey.itmowidgets.shared.feature.schedule.schedule_sheet_password
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** Test tags of [LessonSheetContent]. */
@@ -122,7 +121,7 @@ fun LessonSheetContent(state: LessonSheetUiState, actions: LessonSheetActions, m
     SheetScaffold(
         title = state.over.asString(),
         modifier = modifier,
-        close = SheetClose(stringResource(CoreRes.string.common_close), actions.onClose),
+        close = SheetClose(stringResource(Res.string.common_close), actions.onClose),
     ) {
         Column(
             Modifier
@@ -341,7 +340,7 @@ private fun Details(state: LessonSheetUiState, actions: LessonSheetActions) {
         }
         state.flow?.let { flow ->
             item {
-                ListRow(flow, subtitle = stringResource(CoreRes.string.schedule_lesson_details_flow), icon = painterResource(KitRes.drawable.ic_group))
+                ListRow(flow, subtitle = stringResource(Res.string.schedule_lesson_details_flow), icon = painterResource(KitRes.drawable.ic_group))
             }
         }
         state.sport?.let { sport ->
