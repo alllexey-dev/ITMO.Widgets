@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.DefaultBackendIdentitySync
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
@@ -153,7 +154,7 @@ class DemoNetworkGateTest {
         }
         val devices = DefaultBackendDeviceSession(
             gate, utility, backendClient.device, "Pixel", user, demo, dispatchers,
-            ClientVersion("2.3.0", "20300", "android", "github")
+            ClientVersion("2.3.0", "20300", "android", "github"), PushCategoryPreferences(InMemoryPreferencesDataStore())
         )
         val identity = DefaultBackendIdentitySync(
             gate, unreachableSession.tokens, unreachableTokens, backendClient.users, RecordingDiagnostics(), demo,

@@ -62,7 +62,8 @@ val sessionModule = module {
                 .filter(String::isNotEmpty)
                 .distinct()
                 .joinToString(" ")
-                .ifBlank { "Android" }
+                .ifBlank { "Android" },
+            pushCategories = get(),
         )
     }
     single<SessionLifecycleEffects> {

@@ -23,6 +23,9 @@ import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.binds
@@ -56,9 +59,17 @@ val accountIosModule = module {
             demo = get(),
             currentUser = get(),
             version = get(),
+            pushCategories = get(),
         )
     } binds arrayOf(FcmTokenSync::class, BackendDeviceSession::class)
     single { PushForegroundRefresh(get(), get(), get()) }
+    // A push switch changed: the registration names the categories that are off, so Backend stops sending them.
+    single(named("push-categories"), createdAtStart = true) {
+        val refresh = get<PushForegroundRefresh>()
+        get<PushCategoryPreferences>().observeDisabled().drop(1)
+            .onEach { refresh.refresh() }
+            .launchIn(CoroutineScope(SupervisorJob() + get<AppDispatchers>().main))
+    } onClose { it?.cancel() }
     single<BackendIdentitySync> {
         DefaultBackendIdentitySync(
             gate = get(),

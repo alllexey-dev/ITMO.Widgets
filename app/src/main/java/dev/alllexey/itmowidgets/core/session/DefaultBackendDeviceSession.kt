@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.client.device.UnregisterDeviceRequest
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
+import dev.alllexey.itmowidgets.core.storage.mutedCategoriesOf
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import kotlinx.coroutines.withContext
 
@@ -17,7 +19,8 @@ import kotlinx.coroutines.withContext
  * notifications on this device never decides it.
  *
  * Backend records the build from the request's `X-App-Version` ([version]); the stored registration keeps it, so
- * `DefaultFcmTokenSync` registers once more after an update.
+ * `DefaultFcmTokenSync` registers once more after an update. It also names the push categories switched off on this
+ * device ([pushCategories]), which Backend then stops sending; the stored registration keeps them too.
  */
 class DefaultBackendDeviceSession(
     private val gate: BackendGate,
@@ -27,7 +30,8 @@ class DefaultBackendDeviceSession(
     private val currentUser: CurrentUserProvider,
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers,
-    private val version: ClientVersion
+    private val version: ClientVersion,
+    private val pushCategories: PushCategoryPreferences,
 ) : BackendDeviceSession {
 
     override suspend fun registerCurrentDevice() {
@@ -36,15 +40,18 @@ class DefaultBackendDeviceSession(
         val fcmToken = utilityStorage.getFirebaseToken()?.trim()?.takeIf(String::isNotEmpty)
             ?: return
 
+        val muted = pushCategories.disabled()
+
         withContext(dispatchers.io) {
             devices.register(
                 RegisterDeviceRequest(
                     fcmToken = fcmToken,
                     deviceName = deviceName,
-                    platform = DevicePlatform.ANDROID
+                    platform = DevicePlatform.ANDROID,
+                    mutedPushCategories = mutedCategoriesOf(muted),
                 )
             )
-            utilityStorage.setRegisteredFirebaseToken(fcmToken, ownerIsu, version.headerValue)
+            utilityStorage.setRegisteredFirebaseToken(fcmToken, ownerIsu, version.headerValue, muted)
         }
     }
 

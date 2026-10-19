@@ -64,13 +64,14 @@ class DeviceRequestTest {
             platform = DevicePlatform.IOS,
             alertsAllowed = false,
             appVersion = "2.3",
+            mutedPushCategories = listOf("FRIENDS", "SPORT"),
         )
 
         val body = recordRequest("register") { client.device.register(request) }.body.orEmpty()
 
         assertJsonEquals(
             """{"fcmToken":"synthetic-fcm-token","deviceName":"iPhone (synthetic)","platform":"IOS",""" +
-                """"alertsAllowed":false,"appVersion":"2.3"}""",
+                """"alertsAllowed":false,"appVersion":"2.3","mutedPushCategories":["FRIENDS","SPORT"]}""",
             body,
         )
     }
@@ -83,18 +84,20 @@ class DeviceRequestTest {
             platform = DevicePlatform.ANDROID,
             alertsAllowed = true,
             appVersion = "2.3",
+            mutedPushCategories = listOf("CONNECTIONS"),
         )
         val cases = mapOf(
             "platform" to full.copy(platform = null),
             "alertsAllowed" to full.copy(alertsAllowed = null),
             "appVersion" to full.copy(appVersion = null),
+            "mutedPushCategories" to full.copy(mutedPushCategories = null),
         )
         for ((omitted, request) in cases) {
             val body = recordRequest("register") { client.device.register(request) }.body.orEmpty()
 
             val keys = Regex(""""(\w+)":""").findAll(body).map { it.groupValues[1] }.toSet()
             assertEquals(
-                setOf("fcmToken", "deviceName", "platform", "alertsAllowed", "appVersion") - omitted,
+                setOf("fcmToken", "deviceName", "platform", "alertsAllowed", "appVersion", "mutedPushCategories") - omitted,
                 keys,
                 omitted,
             )
@@ -105,7 +108,7 @@ class DeviceRequestTest {
     fun requestsDoNotPrintTheToken() {
         assertEquals(
             "RegisterDeviceRequest(fcmToken=<redacted>, deviceName=Pixel 8 (synthetic), platform=null, " +
-                "alertsAllowed=null, appVersion=null)",
+                "alertsAllowed=null, appVersion=null, mutedPushCategories=null)",
             DeviceRouteCases.released.toString(),
         )
         assertEquals(

@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -31,9 +32,19 @@ class UtilityStorage(
     /** The `X-App-Version` of the build that last registered, `null` before the first registration of 2.3. */
     suspend fun getRegisteredFirebaseAppVersion(): String? = read()[REGISTERED_FIREBASE_APP_VERSION]
 
-    /** What Backend last accepted; a `null` [token] forgets the owner and the app version too. */
-    suspend fun setRegisteredFirebaseToken(token: String?, ownerIsu: Int? = null, appVersion: String? = null) {
+    /** The push channels switched off when Backend last accepted the registration; empty before they were sent. */
+    suspend fun getRegisteredFirebaseMutedPushes(): Set<String> = read()[REGISTERED_FIREBASE_MUTED].orEmpty()
+
+    /** What Backend last accepted; a `null` [token] forgets the owner, the app version and the muted pushes too. */
+    suspend fun setRegisteredFirebaseToken(
+        token: String?,
+        ownerIsu: Int? = null,
+        appVersion: String? = null,
+        mutedPushes: Set<String> = emptySet(),
+    ) {
         dataStore.edit { preferences ->
+            if (token == null) preferences.remove(REGISTERED_FIREBASE_MUTED)
+            else preferences[REGISTERED_FIREBASE_MUTED] = mutedPushes
             if (token == null) preferences.remove(REGISTERED_FIREBASE_TOKEN)
             else preferences[REGISTERED_FIREBASE_TOKEN] = token
             if (token == null || ownerIsu == null) preferences.remove(REGISTERED_FIREBASE_OWNER)
@@ -92,6 +103,7 @@ class UtilityStorage(
         private val REGISTERED_FIREBASE_OWNER = intPreferencesKey("registered_firebase_owner")
         private val REGISTERED_FIREBASE_TOKEN = stringPreferencesKey("registered_firebase_token")
         private val REGISTERED_FIREBASE_APP_VERSION = stringPreferencesKey("registered_firebase_app_version")
+        private val REGISTERED_FIREBASE_MUTED = stringSetPreferencesKey("registered_firebase_muted_pushes")
         private val FIREBASE_TOKEN = stringPreferencesKey("firebase_token")
         private val LAST_UPDATE_TIMESTAMP = longPreferencesKey("last_update_timestamp")
         private val LESSON_WIDGET_STYLE_CHANGED =

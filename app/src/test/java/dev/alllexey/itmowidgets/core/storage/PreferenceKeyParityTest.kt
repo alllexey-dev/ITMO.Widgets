@@ -19,14 +19,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 54 key names
- * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The four
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 56 key names
+ * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The five
  * `push_registered_*` keys are written only by iOS, whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 54 key names, each declared once`() {
+    fun `the app preferences keep their 56 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules.
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -37,7 +37,7 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(54, declared.map { it.name }.toSet().size)
+        assertEquals(56, declared.map { it.name }.toSet().size)
     }
 
     @Test
@@ -141,6 +141,7 @@ class PreferenceKeyParityTest {
             Key("UtilityStorage.kt", "int", "registered_firebase_owner"),
             Key("UtilityStorage.kt", "string", "registered_firebase_token"),
             Key("UtilityStorage.kt", "string", "registered_firebase_app_version"),
+            Key("UtilityStorage.kt", "stringSet", "registered_firebase_muted_pushes"),
             Key("UtilityStorage.kt", "string", "firebase_token"),
             Key("UtilityStorage.kt", "long", "last_update_timestamp"),
             Key("UtilityStorage.kt", "boolean", "lesson_widget_style_changed"),
@@ -151,6 +152,7 @@ class PreferenceKeyParityTest {
             Key("PushRegistrationPreferences.kt", "int", "push_registered_owner"),
             Key("PushRegistrationPreferences.kt", "boolean", "push_registered_alerts"),
             Key("PushRegistrationPreferences.kt", "string", "push_registered_app_version"),
+            Key("PushRegistrationPreferences.kt", "stringSet", "push_registered_muted"),
             Key("DataStoreSubjectBindingStore.kt", "string", "subject_bindings"),
             Key("BarsPreferenceRepositoryImpl.kt", "boolean", "recordbook_bars"),
             Key("BarsPreferenceRepositoryImpl.kt", "boolean", "recordbook_bars_offer_hidden"),

@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
@@ -74,6 +75,19 @@ class BackendDeviceRegistrationTest {
         )
         assertFalse("alertsAllowed" in body)
         assertFalse("appVersion" in body)
+    }
+
+    @Test fun `registration names the switched off push categories and stores them`() = runTest {
+        val fixture = Fixture()
+        fixture.prepare()
+        fixture.categories.setEnabled("sport", false)
+        fixture.categories.setEnabled("connections", false)
+
+        fixture.device.registerCurrentDevice()
+
+        val body = Json.parseToJsonElement(fixture.harness.requests.single().bodyText()).jsonObject
+        assertEquals(Json.parseToJsonElement("""["CONNECTIONS","SPORT"]"""), body["mutedPushCategories"])
+        assertEquals(setOf("sport", "connections"), fixture.utility.getRegisteredFirebaseMutedPushes())
     }
 
     @Test fun `unregistration sends the token in the body, never in the URL`() = runTest {
@@ -140,6 +154,7 @@ class BackendDeviceRegistrationTest {
     ) {
         val settings = ServicesOptInPreferences(MemoryPreferences())
         val utility = UtilityStorage(MemoryPreferences(), "test")
+        val categories = PushCategoryPreferences(MemoryPreferences())
         var owner: Int? = 123456
         val version = ClientVersion("2.3.0", "20300", "android", "github")
         val harness = Core2Harness(session(), backend = answer)
@@ -148,7 +163,7 @@ class BackendDeviceRegistrationTest {
             object : CurrentUserProvider {
                 override suspend fun getCurrentUser() = owner?.let { CurrentUser(it, "Synthetic user", null) }
             },
-            demo, mainDispatcherRule.appDispatchers, version
+            demo, mainDispatcherRule.appDispatchers, version, categories
         )
 
         suspend fun prepare() {

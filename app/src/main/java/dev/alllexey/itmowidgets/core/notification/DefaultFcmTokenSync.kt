@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -30,8 +31,9 @@ class DefaultFirebaseTokenProvider : FirebaseTokenProvider {
 }
 
 /**
- * Registers this installation again only when the token, the owner or the build ([version], the `X-App-Version`
- * Backend records) differs from what Backend last accepted: one call after an update, none on an unchanged launch.
+ * Registers this installation again only when the token, the owner, the build ([version], the `X-App-Version`
+ * Backend records) or the switched-off push categories ([pushCategories]) differ from what Backend last accepted: one
+ * call after an update or a switch, none on an unchanged launch.
  */
 class DefaultFcmTokenSync(
     private val tokens: FirebaseTokenProvider,
@@ -41,7 +43,8 @@ class DefaultFcmTokenSync(
     private val deviceSession: BackendDeviceSession,
     private val currentUser: CurrentUserProvider,
     private val diagnostics: AppDiagnostics,
-    private val version: ClientVersion
+    private val version: ClientVersion,
+    private val pushCategories: PushCategoryPreferences,
 ) : FcmTokenSync {
     private val mutex = Mutex()
 
@@ -67,5 +70,6 @@ class DefaultFcmTokenSync(
     private suspend fun registrationDiffers(token: String, ownerIsu: Int): Boolean =
         utility.getRegisteredFirebaseToken() != token ||
             utility.getRegisteredFirebaseOwner() != ownerIsu ||
-            utility.getRegisteredFirebaseAppVersion() != version.headerValue
+            utility.getRegisteredFirebaseAppVersion() != version.headerValue ||
+            utility.getRegisteredFirebaseMutedPushes() != pushCategories.disabled()
 }

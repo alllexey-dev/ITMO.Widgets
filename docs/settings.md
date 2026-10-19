@@ -408,10 +408,13 @@ pushes while connected) or `запрещены в системе`.
   app's switch per type, stored in `PushCategoryPreferences` by channel
   (`sport_notifications_enabled`, `friends_notifications_enabled`,
   `connections_notifications_enabled`; absent means on; a device setting that
-  survives sign-out). Backend has no per-type preference, so the device drops
-  them: `FcmPayloadDispatcher` on Android, the notification service on iOS
-  ([notifications](features/notifications.md#flow)). A sport push still books
-  while its type is off. Turning a push on without the permission asks for it;
+  survives sign-out). The device registration sends the switched-off ones to
+  Backend (`mutedPushCategories`), which stops sending them to this device; the
+  device also drops whatever still arrives of them: `FcmPayloadDispatcher` on
+  Android, the notification service on iOS
+  ([notifications](features/notifications.md#token-sync)). The sport queue
+  pushes still arrive and book while `Спорт` is off; Android hides them, iOS
+  shows them until the filtering entitlement exists. Turning a push on without the permission asks for it;
   no background work hint. Without the connection one row
   `Нужно подключение к ITMO.Widgets` opens «Подключение и данные» and the push
   switches are disabled.

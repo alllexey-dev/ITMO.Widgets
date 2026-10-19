@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.client.AccessTokenSource
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
@@ -41,7 +42,9 @@ class PushDeviceRegistrationTest {
     private val demo = FakeDemoMode()
     private val gate = FakeBackendGate(optedIn = true, demo = demo)
     private val device = IosPushDevice(appVersion = "2.3.0", readAlertsAllowed = { alerts })
-    private val registrations = PushRegistrationPreferences(InMemoryPreferencesDataStore())
+    private val preferences = InMemoryPreferencesDataStore()
+    private val registrations = PushRegistrationPreferences(preferences)
+    private val pushCategories = PushCategoryPreferences(preferences)
     private var user: CurrentUser? = CurrentUser(isu = ISU, name = null, pictureUrl = null)
     private var alerts = true
 
@@ -58,6 +61,7 @@ class PushDeviceRegistrationTest {
             override suspend fun getCurrentUser(): CurrentUser? = user
         },
         version = version,
+        pushCategories = pushCategories,
     )
 
     @Test
@@ -122,6 +126,23 @@ class PushDeviceRegistrationTest {
         assertEquals(listOf(register(alertsAllowed = true), register(alertsAllowed = false)), requests)
         assertEquals(false, registrations.get()?.alertsAllowed)
         assertEquals(false, device.observeAlertsAllowed().value)
+    }
+
+    @Test
+    fun aSwitchedOffPushCategoryRegistersAgainWithItsWireName() = runTest {
+        device.updateToken("synthetic-fcm")
+        registration.sync()
+
+        pushCategories.setEnabled(AppNotificationChannels.FRIENDS, false)
+        pushCategories.setEnabled(AppNotificationChannels.CONNECTIONS, false)
+        registration.sync()
+        registration.sync()
+
+        assertEquals(
+            listOf(register(alertsAllowed = true), register(alertsAllowed = true, muted = "\"CONNECTIONS\",\"FRIENDS\"")),
+            requests,
+        )
+        assertEquals(setOf("friends", "connections"), registrations.get()?.mutedPushes)
     }
 
     @Test
@@ -237,10 +258,11 @@ class PushDeviceRegistrationTest {
         assertNull(registrations.get(), "a refused registration is not recorded, so the next refresh retries")
     }
 
-    private fun register(alertsAllowed: Boolean) =
+    private fun register(alertsAllowed: Boolean, muted: String? = null) =
         "POST /api/device/register-device " +
             """{"fcmToken":"synthetic-fcm","deviceName":"${device.name}","platform":"IOS",""" +
-            """"alertsAllowed":$alertsAllowed,"appVersion":"2.3.0"}"""
+            """"alertsAllowed":$alertsAllowed,"appVersion":"2.3.0"""" +
+            (muted?.let { ""","mutedPushCategories":[$it]""" } ?: "") + "}"
 
     private companion object {
         const val ORIGIN = "https://backend.test"

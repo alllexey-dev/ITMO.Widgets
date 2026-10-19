@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.*
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -72,6 +73,19 @@ class DefaultFcmTokenSyncTest {
         assertEquals(UPDATED.headerValue, fixture.utility.getRegisteredFirebaseAppVersion())
     }
 
+    @Test fun `a switched off push category registers once more and an unchanged one not at all`() = runTest {
+        val fixture = Fixture()
+        fixture.settings.setCustomServicesEnabled(true)
+        fixture.sync.sync()
+
+        fixture.categories.setEnabled("friends", false)
+        fixture.sync.sync()
+        fixture.sync.sync()
+
+        assertEquals(2, fixture.registrations)
+        assertEquals(setOf("friends"), fixture.utility.getRegisteredFirebaseMutedPushes())
+    }
+
     @Test fun `a registration from before 2_3 without a recorded build registers once more`() = runTest {
         val fixture = Fixture()
         fixture.settings.setCustomServicesEnabled(true)
@@ -111,6 +125,7 @@ class DefaultFcmTokenSyncTest {
     private class Fixture {
         val utility = UtilityStorage(MemoryPreferences(), "test")
         val settings = ServicesOptInPreferences(MemoryPreferences())
+        val categories = PushCategoryPreferences(MemoryPreferences())
         val demo = FakeDemoMode()
         var token = "synthetic-token"
         var signedIn = true
@@ -130,12 +145,12 @@ class DefaultFcmTokenSyncTest {
                 override suspend fun registerCurrentDevice() {
                     registrations++
                     if (failRegistration) throw IOException("Synthetic network failure")
-                    utility.setRegisteredFirebaseToken(utility.getFirebaseToken(), ownerIsu, version.headerValue)
+                    utility.setRegisteredFirebaseToken(utility.getFirebaseToken(), ownerIsu, version.headerValue, categories.disabled())
                 }
                 override suspend fun unregisterCurrentDevice() = Unit
             }, object : CurrentUserProvider {
                 override suspend fun getCurrentUser() = if (signedIn) CurrentUser(ownerIsu, "Synthetic user", null) else null
-            }, RecordingDiagnostics(), version)
+            }, RecordingDiagnostics(), version, categories)
     }
 
     private companion object {

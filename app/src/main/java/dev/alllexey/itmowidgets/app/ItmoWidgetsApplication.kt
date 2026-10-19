@@ -7,12 +7,14 @@ import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.notification.create
 import dev.alllexey.itmowidgets.core.notification.FcmWork
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.ui.AppLocale
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
 import dev.alllexey.itmowidgets.designsystem.theme.AppColorSource
 import dev.alllexey.itmowidgets.di.KoinStarter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 class ItmoWidgetsApplication : Application() {
@@ -31,6 +33,10 @@ class ItmoWidgetsApplication : Application() {
         diagnostics.importPendingCrashes()
         AppNotificationChannels.create(this)
         FcmWork.syncToken(this)
+        // A push switch changed: the token sync registers again, so Backend stops sending that category here.
+        applicationScope.launch {
+            koin.get<PushCategoryPreferences>().observeDisabled().drop(1).collect { FcmWork.syncToken(this@ItmoWidgetsApplication) }
+        }
         // Enrols the periodic checks after an update or a restore, and drops them when the session is gone.
         backgroundChecksSync = applicationScope.launch {
             koin.getAll<BackgroundCheck>().forEach { it.syncWork() }

@@ -8252,6 +8252,15 @@
           "fcmToken": {
             "type": "string"
           },
+          "mutedPushCategories": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
           "platform": {
             "type": [
               "string",

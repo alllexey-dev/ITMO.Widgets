@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
+import dev.alllexey.itmowidgets.core.storage.mutedCategoriesOf
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -18,8 +20,9 @@ import kotlinx.coroutines.sync.withLock
  *
  * Nothing reaches Backend in the demo, without the opt-in ([BackendGate.mayCallBackend]), without a signed-in ISU or
  * without a push token: an empty token is never registered. [sync] registers only when the token, the owner, the
- * alerts answer or the build ([version], the `X-App-Version` Backend records) differs from what Backend last
- * accepted, so it runs on every return to the foreground and registers once after an update.
+ * alerts answer, the build ([version], the `X-App-Version` Backend records) or the switched-off push categories
+ * ([pushCategories]) differ from what Backend last accepted, so it runs on every return to the foreground and after a
+ * switch, and registers once after an update.
  */
 class PushDeviceRegistration(
     private val devices: DeviceApi,
@@ -29,6 +32,7 @@ class PushDeviceRegistration(
     private val demo: DemoMode,
     private val currentUser: CurrentUserProvider,
     private val version: ClientVersion,
+    private val pushCategories: PushCategoryPreferences,
 ) : BackendDeviceSession, FcmTokenSync {
 
     private val mutex = Mutex()
@@ -57,7 +61,7 @@ class PushDeviceRegistration(
         if (demo.isActive() || !gate.mayCallBackend()) return null
         val ownerIsu = currentUser.getCurrentUser()?.isu?.takeIf { it > 0 } ?: return null
         val token = device.token().orNullIfBlank() ?: return null
-        return PushRegistration(token, ownerIsu, device.alertsAllowed(), version.headerValue)
+        return PushRegistration(token, ownerIsu, device.alertsAllowed(), version.headerValue, pushCategories.disabled())
     }
 
     private suspend fun register(registration: PushRegistration) {
@@ -68,6 +72,7 @@ class PushDeviceRegistration(
                 platform = device.platform,
                 alertsAllowed = registration.alertsAllowed,
                 appVersion = device.appVersion,
+                mutedPushCategories = mutedCategoriesOf(registration.mutedPushes),
             )
         )
         registrations.set(registration)

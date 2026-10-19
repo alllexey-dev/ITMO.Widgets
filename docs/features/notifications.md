@@ -34,8 +34,9 @@ type only and ignored; payloads above 4 KB (`FcmPayloadDispatcher.MAX_PAYLOAD_BY
    notifier. Each handler names its channel; while the user's switch of that
    channel is off (`PushCategoryPreferences`) the handler still runs (a sport
    push still books, a friendship push still refreshes) but gets a notifier
-   that shows nothing. Backend has no per-type preference: the gate is on the
-   device.
+   that shows nothing. Backend also skips a device for the categories it
+   registered as muted ([token sync](#token-sync)); this gate stays for the
+   sport queue pushes, which still arrive, and for an older Backend.
 4. Handlers post `AppNotification` (channel, stable id, `UiText` title and
    text, destination, `silent`, `publicTitle`); `AndroidAppNotifier` renders
    it with the channel as tag and an immutable PendingIntent into
@@ -47,8 +48,12 @@ type only and ignored; payloads above 4 KB (`FcmPayloadDispatcher.MAX_PAYLOAD_BY
 
 `DefaultFcmTokenSync` stores the SDK token in `UtilityStorage` and registers
 the device with Backend when services are on, the user is signed in and the
-registered token, owner or build (`X-App-Version`, `ClientVersion`) differs, so
-an update registers once and an unchanged start sends nothing. It runs from
+registered token, owner, build (`X-App-Version`, `ClientVersion`) or switched-off
+push categories differ, so an update or a switch registers once and an
+unchanged start sends nothing. The registration names the switched-off channels
+as `mutedPushCategories` (`SPORT`, `FRIENDS`, `CONNECTIONS`), and Backend stops
+sending those to this device, except the sport queue pushes the device books
+on. Changing a switch enqueues the sync (`ItmoWidgetsApplication`). It runs from
 `FcmTokenWorker` on start and on `onNewToken`, and directly on sign-in and on
 enabling services. Disabling services unregisters first; sign-out unregisters
 before clearing credentials.
@@ -145,4 +150,7 @@ See [iOS app](../ios.md#notifications) and
   account, the demo, a missing opt-in and a type switched off in the app
   (`disabledPushes` of session-v1.json, written by `SessionSnapshotSync`) drop
   the push; a switched-off sport push still books and leaves its result for the
-  bell. Dropped pushes are not hidden until the filtering entitlement exists.
+  bell. Dropped pushes are not hidden until the filtering entitlement exists,
+  so `PushDeviceRegistration` also sends the switched-off categories to Backend
+  (on every return to the foreground and after a switch), which then does not
+  send them. A switched-off sport queue push still arrives and shows.
