@@ -24,23 +24,22 @@ import dev.alllexey.itmowidgets.designsystem.theme.accentSwatch
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_add
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_allow
-import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_later
-import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_open_settings
-import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_rationale
-import dev.alllexey.itmowidgets.shared.feature.settings.calendar_access_title
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_accent_color_done
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_brightness
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_hex
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_hex_error
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_hue
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_preview
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_color_picker_saturation
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.calendar_access_allow
+import dev.alllexey.itmowidgets.shared.compose.strings.calendar_access_later
+import dev.alllexey.itmowidgets.shared.compose.strings.calendar_access_open_settings
+import dev.alllexey.itmowidgets.shared.compose.strings.calendar_access_rationale
+import dev.alllexey.itmowidgets.shared.compose.strings.calendar_access_title
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_done
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_color_picker_brightness
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_color_picker_hex
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_color_picker_hex_error
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_color_picker_hue
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_color_picker_preview
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_color_picker_saturation
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -185,7 +184,7 @@ private fun SettingsChoice(windowed: Boolean, item: SettingItem.Choice, onSelect
     val descriptions = item.options.map { it.description?.asString() }
     val selected = item.options.indexOfFirst { it.key == item.selectedOptionKey }
     val select = { index: Int -> onSelect(item.options[index].key) }
-    val dismissLabel = stringResource(CoreRes.string.common_cancel)
+    val dismissLabel = stringResource(Res.string.common_cancel)
     if (windowed) {
         ChoiceDialog(title, labels, selected, select, onDismiss, dismissLabel = dismissLabel, descriptions = descriptions)
     } else {

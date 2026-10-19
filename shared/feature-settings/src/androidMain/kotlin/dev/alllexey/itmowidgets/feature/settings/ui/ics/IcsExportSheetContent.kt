@@ -45,21 +45,20 @@ import dev.alllexey.itmowidgets.shared.compose.strings.schedule_lesson_count
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_event_note
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_empty
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_open
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_pick_other
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_preparing
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_ready_hint
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_ready_summary
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_ready_title
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_send
-import dev.alllexey.itmowidgets.shared.feature.settings.ics_sheet_subtitle
-import dev.alllexey.itmowidgets.shared.feature.settings.settings_ics_export_title
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.ics_empty
+import dev.alllexey.itmowidgets.shared.compose.strings.ics_open
+import dev.alllexey.itmowidgets.shared.compose.strings.ics_pick_other
+import dev.alllexey.itmowidgets.shared.compose.strings.ics_preparing
+import dev.alllexey.itmowidgets.shared.compose.strings.ics_ready_hint
+import dev.alllexey.itmowidgets.shared.compose.strings.ics_ready_summary
+import dev.alllexey.itmowidgets.shared.compose.strings.ics_ready_title
+import dev.alllexey.itmowidgets.shared.compose.strings.ics_send
+import dev.alllexey.itmowidgets.shared.compose.strings.ics_sheet_subtitle
+import dev.alllexey.itmowidgets.shared.compose.strings.settings_ics_export_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What the sheet asks of its host and its view model; sending and opening the file are the host's intents. */
@@ -282,7 +281,7 @@ private fun Ready(ready: IcsExportUiState.Ready?, openable: Boolean, actions: Ic
 @Composable
 private fun readySummary(ready: IcsExportUiState.Ready): String = stringResource(
     Res.string.ics_ready_summary,
-    pluralStringResource(CoreRes.plurals.schedule_lesson_count, ready.file.lessons, ready.file.lessons),
+    pluralStringResource(Res.plurals.schedule_lesson_count, ready.file.lessons, ready.file.lessons),
     ready.dates.asString(),
 )
 
@@ -300,7 +299,7 @@ private fun Problem(state: IcsExportUiState, actions: IcsExportActions) {
         size = ContentStateSize.Compact,
         icon = painterResource(if (failed != null) KitRes.drawable.ic_error else KitRes.drawable.ic_event_note),
         action = if (failed != null) {
-            ContentStateAction(stringResource(CoreRes.string.common_retry), actions.onRetry)
+            ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry)
         } else {
             ContentStateAction(stringResource(Res.string.ics_pick_other), actions.onChooseAnother)
         },

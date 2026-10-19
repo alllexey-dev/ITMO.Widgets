@@ -43,20 +43,19 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsUiState
 import dev.alllexey.itmowidgets.shared.compose.strings.common_back
 import dev.alllexey.itmowidgets.shared.compose.strings.common_cancel
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
-import dev.alllexey.itmowidgets.shared.feature.settings.Res
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_clear
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_clear_confirm_message
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_clear_confirm_title
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_copy
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_description
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_empty_title
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_level_crash
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_level_error
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_level_warning
-import dev.alllexey.itmowidgets.shared.feature.settings.diagnostics_title
+import dev.alllexey.itmowidgets.shared.compose.strings.Res
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_clear
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_clear_confirm_message
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_clear_confirm_title
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_copy
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_description
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_empty_title
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_level_crash
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_level_error
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_level_warning
+import dev.alllexey.itmowidgets.shared.compose.strings.diagnostics_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.compose.strings.Res as CoreRes
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** What the journal asks its host: leave, put the journal on the clipboard, clear it once the user confirmed. */
@@ -102,7 +101,7 @@ fun DiagnosticsScreen(
                 title = stringResource(Res.string.diagnostics_title),
                 navigation = {
                     AppTopBarBack(
-                        stringResource(CoreRes.string.common_back),
+                        stringResource(Res.string.common_back),
                         actions.onBack,
                         Modifier.testTag(DiagnosticsTestTags.BACK),
                     )
@@ -167,7 +166,7 @@ fun DiagnosticsScreen(
 internal fun DiagnosticsClearDialog(onConfirm: () -> Unit, onDismiss: () -> Unit, windowed: Boolean = true) {
     val title = stringResource(Res.string.diagnostics_clear_confirm_title)
     val confirm = stringResource(Res.string.diagnostics_clear)
-    val dismiss = stringResource(CoreRes.string.common_cancel)
+    val dismiss = stringResource(Res.string.common_cancel)
     val text = stringResource(Res.string.diagnostics_clear_confirm_message)
     if (windowed) {
         ConfirmDialog(title, confirm, dismiss, onConfirm, onDismiss, text = text, destructive = true)
