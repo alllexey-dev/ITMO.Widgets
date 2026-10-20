@@ -47,7 +47,6 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksSnapshot
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.resources.UserRestriction
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel
@@ -308,7 +307,7 @@ class SubjectLinksSheetTest {
     private fun Frame(width: Dp, fontScale: Float, height: Dp, content: @Composable () -> Unit) {
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+            ItmoTheme {
                 Box(Modifier.size(width, height)) { content() }
             }
         }

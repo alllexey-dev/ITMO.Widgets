@@ -29,7 +29,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
@@ -74,20 +73,12 @@ fun SwatchChoiceDialogSurface(
     below: (@Composable () -> Unit)? = null,
 ) {
     val content = @Composable { SwatchGrid(swatches, selectedIndex, onSelect, below) }
-    when (ItmoTheme.platformStyle) {
-        ItmoPlatformStyle.Material -> DialogSurface(
-            title = title,
-            modifier = modifier,
-            buttons = { TextButton(onClick = onDismiss) { Text(confirmLabel) } },
-            content = content,
-        )
-        ItmoPlatformStyle.Ios -> IosAlertSurface(
-            title = title,
-            buttons = listOf(IosAlertButton(confirmLabel, onDismiss, IosAlertButtonKind.Preferred)),
-            modifier = modifier,
-            content = content,
-        )
-    }
+    DialogSurface(
+        title = title,
+        modifier = modifier,
+        buttons = { TextButton(onClick = onDismiss) { Text(confirmLabel) } },
+        content = content,
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)

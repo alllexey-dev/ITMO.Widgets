@@ -15,7 +15,7 @@ import org.jetbrains.compose.resources.painterResource
 @Preview
 @Composable
 private fun GroupActionRowPreview() = ItmoPreview {
-    Column(Modifier.groupPreviewBackdrop().padding(ItmoTheme.spacing.screenMargin)) {
+    Column(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
         GroupActionRow(
             "Добавить ссылку",
             painterResource(Res.drawable.ic_add),

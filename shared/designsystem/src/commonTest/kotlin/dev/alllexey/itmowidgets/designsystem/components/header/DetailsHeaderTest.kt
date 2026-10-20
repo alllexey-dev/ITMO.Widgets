@@ -1,8 +1,5 @@
 package dev.alllexey.itmowidgets.designsystem.components.header
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -16,8 +13,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.testkit.MinTouchTarget
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
@@ -29,11 +26,10 @@ import kotlin.test.assertEquals
 @RunWith(RobolectricTestRunner::class)
 class DetailsHeaderTest {
     @Test
-    fun aTeacherWithAnIdIsAOneTargetRowWithItsActionLabelInBothStyles() = runComposeUiTest {
-        var style by mutableStateOf(ItmoPlatformStyle.Material)
+    fun aTeacherWithAnIdIsAOneTargetRowWithItsActionLabel() = runComposeUiTest {
         val events = mutableListOf<String>()
         setContent {
-            ItmoTheme(platformStyle = style) {
+            ItmoTheme {
                 DetailsHeader(
                     title = TITLE,
                     date = DATE,
@@ -51,22 +47,19 @@ class DetailsHeaderTest {
             }
         }
 
-        ItmoPlatformStyle.entries.forEach { current ->
-            style = current
-            onNodeWithText(TEACHER)
-                .assertHeightIsAtLeast(current.minTouchTarget)
-                .assert(SemanticsMatcher("click label") { it.config[SemanticsActions.OnClick].label == OPEN_PROFILE })
-                .assert(
-                    SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(TEACHER_LABEL, TONE)),
-                )
-                .performClick()
-            onNodeWithText(MAP).performClick()
-            onNodeWithText(TITLE).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-            assertTouchTargets(current.minTouchTarget)
-            assertNoTextOverflow()
-        }
+        onNodeWithText(TEACHER)
+            .assertHeightIsAtLeast(MinTouchTarget)
+            .assert(SemanticsMatcher("click label") { it.config[SemanticsActions.OnClick].label == OPEN_PROFILE })
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(TEACHER_LABEL, TONE)),
+            )
+            .performClick()
+        onNodeWithText(MAP).performClick()
+        onNodeWithText(TITLE).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        assertTouchTargets()
+        assertNoTextOverflow()
 
-        assertEquals(listOf(TEACHER, MAP, TEACHER, MAP), events)
+        assertEquals(listOf(TEACHER, MAP), events)
     }
 
     @Test

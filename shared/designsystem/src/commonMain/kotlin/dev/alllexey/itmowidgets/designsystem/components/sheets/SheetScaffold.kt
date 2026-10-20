@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.kit.LocalOnSheet
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
@@ -50,11 +49,6 @@ enum class SheetClosePlacement {
  * the header and the footer, so a scrolling list inside it scrolls instead of pushing the footer away, and it is at
  * least [contentMinHeight] tall, so loading, content and error switch without the sheet jumping (the 288 dp cases).
  * The host owns the container (colour, corners, insets, dismissal): the Compose shell's sheet scene on Android.
- *
- * Under the iOS style the host is SwiftUI's `.sheet`, which draws the grabber, so no [handle] is drawn; the header is
- * a sheet's navigation bar on the grouped background: the title in headline (subheadline semibold over a [subtitle] in
- * caption) centred and kept clear of the wider side, [close] as a text button in the tint at the leading edge for
- * [SheetClosePlacement.Start] and as the circled close mark at the trailing edge for [SheetClosePlacement.End].
  */
 @Composable
 fun SheetScaffold(
@@ -68,19 +62,14 @@ fun SheetScaffold(
     footer: (@Composable ColumnScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
     BoundedBodyLayout(
-        modifier = if (ios) modifier.background(ItmoTheme.iosColors.groupedSheetBackground) else modifier,
+        modifier = modifier,
         top = {
-            if (ios) {
-                IosSheetHeader(title, subtitle, close, closePlacement)
-            } else {
-                Column(Modifier.fillMaxWidth()) {
-                    if (handle) SheetHandle(Modifier.align(Alignment.CenterHorizontally))
-                    when (closePlacement) {
-                        SheetClosePlacement.End -> EndCloseHeader(title, subtitle, close, handle)
-                        SheetClosePlacement.Start -> StartCloseHeader(title, subtitle, close)
-                    }
+            Column(Modifier.fillMaxWidth()) {
+                if (handle) SheetHandle(Modifier.align(Alignment.CenterHorizontally))
+                when (closePlacement) {
+                    SheetClosePlacement.End -> EndCloseHeader(title, subtitle, close, handle)
+                    SheetClosePlacement.Start -> StartCloseHeader(title, subtitle, close)
                 }
             }
         },

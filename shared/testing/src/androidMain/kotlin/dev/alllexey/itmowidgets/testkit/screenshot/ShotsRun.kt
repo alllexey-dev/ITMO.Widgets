@@ -15,10 +15,6 @@ object ShotsRun {
     val fullMatrix: Boolean
         get() = FULL in appearanceSets || gallery != null
 
-    /** `-Pshots.appearance=ios` (or `full,ios`): the three iOS appearances join, in every module. */
-    val iosMatrix: Boolean
-        get() = IOS in appearanceSets
-
     private val appearanceSets: Set<String>
         get() = System.getProperty("shots.appearance").orEmpty().split(',').map(String::trim).toSet()
 
@@ -30,5 +26,4 @@ object ShotsRun {
         get() = System.getProperty("shots.gallery")?.takeIf(String::isNotBlank)?.let(::File)
 
     private const val FULL = "full"
-    private const val IOS = "ios"
 }

@@ -17,7 +17,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.schedule.IcsFile
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsRangeKind
@@ -147,7 +146,7 @@ class IcsExportSheetTest {
         compose.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, LARGE_FONT)) {
-                ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+                ItmoTheme {
                     Box(Modifier.width(320.dp).heightIn(max = 867.dp)) {
                         IcsExportSheetContent(state, actions, canOpen = { openable })
                     }

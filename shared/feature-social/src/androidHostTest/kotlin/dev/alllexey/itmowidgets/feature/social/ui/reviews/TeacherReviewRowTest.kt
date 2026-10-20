@@ -19,8 +19,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.presentation.GroupPosition
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.testkit.MinTouchTarget
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
@@ -140,7 +140,7 @@ class TeacherReviewRowTest {
         var deletions = 0
         var review by mutableStateOf(F.ownRejected)
         setContent {
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+            ItmoTheme {
                 OwnTeacherReviewRow(review, busy = false, actions = TeacherReviewActions(onEdit = { edits++ }, onDelete = { deletions++ }))
             }
         }
@@ -170,7 +170,7 @@ class TeacherReviewRowTest {
         actions: TeacherReviewActions = TeacherReviewActions(),
     ) {
         // Material on every platform, so the targets are its 48 dp, not the platform default's (44 pt on iOS).
-        ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+        ItmoTheme {
             TeacherReviewRow(review, GroupPosition.Single, canVote = canVote, canReport = true, busy = busy, actions = actions)
         }
     }
@@ -179,6 +179,6 @@ class TeacherReviewRowTest {
         const val UP = "Полезный отзыв"
         const val DOWN = "Бесполезный отзыв"
         const val ACTIONS = "Действия с отзывом"
-        val Target = ItmoPlatformStyle.Material.minTouchTarget
+        val Target = MinTouchTarget
     }
 }

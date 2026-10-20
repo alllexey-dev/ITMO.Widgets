@@ -18,7 +18,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsUiState
 import dev.alllexey.itmowidgets.testkit.assertNoTextOverflow
@@ -129,7 +128,7 @@ class DiagnosticsScreenTest {
         compose.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, LARGE_FONT)) {
-                ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+                ItmoTheme {
                     DiagnosticsScreen(state, actions, DiagnosticsSamples::timeLabel)
                 }
             }

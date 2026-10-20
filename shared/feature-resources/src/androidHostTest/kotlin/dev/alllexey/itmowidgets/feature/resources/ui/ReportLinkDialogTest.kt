@@ -26,7 +26,6 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.resources.presentation.LinkEvent
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksViewModel
@@ -117,7 +116,7 @@ class ReportLinkDialogTest {
         }
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, NARROW_FONT_SCALE)) {
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+            ItmoTheme {
                 val state by model.uiState.collectAsState()
                 ReportLinkForm(
                     sending = state.busy,

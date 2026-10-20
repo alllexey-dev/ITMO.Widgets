@@ -31,7 +31,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRowMatch
@@ -255,7 +254,7 @@ class SheetScoresSheetTest {
     private fun Sheet(state: SheetScoresUiState) {
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, NARROW_FONT_SCALE)) {
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+            ItmoTheme {
                 Box(Modifier.width(NARROW_WIDTH).heightIn(max = SHEET_MAX_HEIGHT)) {
                     SheetScoresSheet(SheetScoresPreviewSamples.SUBJECT, state, actions, Modifier.testTag(SHEET))
                 }

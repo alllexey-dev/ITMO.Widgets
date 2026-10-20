@@ -71,8 +71,6 @@ scripts/verify.sh shots all --gallery /tmp/shots        # render everything into
 - Baselines recorded on macOS verify on CI's Linux runner under a small
   per-pixel tolerance (`ShotsCompare` in `shared/testing`). Record on a Mac.
 - Captures also run accessibility checks (touch targets, labels, contrast).
-- `_ios-*` baselines (`shared/designsystem`, `shared/feature-qr`) belong to the kit's leftover
-  `ItmoPlatformStyle.Ios`, which no app draws; they still verify, nothing new records them.
 - Galleries are for review only; never copy a gallery PNG into `screenshots/`.
 
 ## Instrumented tests

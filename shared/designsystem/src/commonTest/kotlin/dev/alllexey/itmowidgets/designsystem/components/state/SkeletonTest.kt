@@ -9,7 +9,6 @@ import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -21,26 +20,14 @@ class SkeletonTest {
     @Test
     fun takesTheHeightOfItsRows() = runComposeUiTest {
         setContent {
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+            ItmoTheme {
                 Skeleton(SkeletonStyle.List, Modifier.testTag(TAG), rows = 3)
             }
         }
 
-        // Material's 16 dp screen margin (iOS: 20 pt) twice, three 64 dp rows, two 12 dp gaps; six rows
+        // The 16 dp screen margin twice, three 64 dp rows, two 12 dp gaps; six rows
         // would not fit Robolectric's 470 dp window.
         onNodeWithTag(TAG).assertHeightIsEqualTo(248.dp)
-    }
-
-    @Test
-    fun takesIosMarginsUnderTheIosStyle() = runComposeUiTest {
-        setContent {
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Ios) {
-                Skeleton(SkeletonStyle.List, Modifier.testTag(TAG), rows = 3)
-            }
-        }
-
-        // UIKit's 20 pt margin twice, the same three 64 dp rows and two 12 dp gaps.
-        onNodeWithTag(TAG).assertHeightIsEqualTo(256.dp)
     }
 
     @Test

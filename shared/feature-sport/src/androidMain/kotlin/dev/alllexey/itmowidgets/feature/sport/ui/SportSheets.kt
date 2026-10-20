@@ -213,7 +213,6 @@ internal fun SportPromptSheet(prompt: SportPrompt, actions: SportPromptActions) 
             onConfirm = { actions.onConfirm(false) },
             onDismiss = actions.onDismiss,
             text = prompt.message.asString(),
-            destructive = true,
         )
         is SportPrompt.Info -> InfoDialog(null, prompt.message.asString(), text(SportStrings.common_ok), actions.onDismiss)
     }
@@ -281,7 +280,6 @@ internal fun SportCancelDialog(prompt: SportCancelPrompt, onConfirm: () -> Unit,
         onConfirm = onConfirm,
         onDismiss = onDismiss,
         text = prompt.message.asString(),
-        destructive = true,
     )
 }
 

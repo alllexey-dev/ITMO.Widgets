@@ -26,10 +26,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
-import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ToneDot
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
@@ -67,9 +64,6 @@ data class DetailsMapAction(val label: String, val onClick: () -> Unit)
  * The head of every details sheet: what ([title], [kind] with an optional type colour), when ([date], [time] and
  * [duration], all preformatted), who and where ([teacher], [flow], [place]) and the [map] button. A missing row
  * disappears instead of reading as empty. The caller pads the header horizontally, as the sheets pad their content.
- *
- * Under the iOS style the layout and the teacher-chevron rule stay; the title is title 2 semibold, the secondary text
- * and the icons take the secondary label colour, the chevron the tertiary one, and the map button is a tinted capsule.
  */
 @Composable
 fun DetailsHeader(
@@ -113,25 +107,17 @@ fun DetailsHeader(
     }
 }
 
-/** The colours and the title style a [DetailsHeader] draws in: Material's roles, or iOS's labels and type. */
+/** The colours and the title style a [DetailsHeader] draws in: Material's roles. */
 @Immutable
 private class DetailsLook(val title: TextStyle, val primary: Color, val secondary: Color, val chevron: Color)
 
 @Composable
-private fun detailsLook(): DetailsLook = when (ItmoTheme.platformStyle) {
-    ItmoPlatformStyle.Material -> DetailsLook(
-        title = ItmoTheme.typography.titleLarge,
-        primary = ItmoTheme.colorScheme.onSurface,
-        secondary = ItmoTheme.colorScheme.onSurfaceVariant,
-        chevron = ItmoTheme.colorScheme.onSurfaceVariant,
-    )
-    ItmoPlatformStyle.Ios -> DetailsLook(
-        title = ItmoTheme.emphasizedTypography.headlineSmall,
-        primary = ItmoTheme.iosColors.label,
-        secondary = ItmoTheme.iosColors.secondaryLabel,
-        chevron = ItmoTheme.iosColors.tertiaryLabel,
-    )
-}
+private fun detailsLook(): DetailsLook = DetailsLook(
+    title = ItmoTheme.typography.titleLarge,
+    primary = ItmoTheme.colorScheme.onSurface,
+    secondary = ItmoTheme.colorScheme.onSurfaceVariant,
+    chevron = ItmoTheme.colorScheme.onSurfaceVariant,
+)
 
 @Composable
 private fun KindRow(kind: String, kindColor: Color?, look: DetailsLook) {
@@ -246,16 +232,6 @@ private fun RailIcon(icon: Painter, style: TextStyle, look: DetailsLook, label: 
 
 @Composable
 private fun MapButton(map: DetailsMapAction) {
-    if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
-        ProgressButton(
-            map.label,
-            onClick = map.onClick,
-            modifier = Modifier.padding(start = MapButtonInset),
-            style = ProgressButtonStyle.Tonal,
-            icon = painterResource(Res.drawable.ic_location_on),
-        )
-        return
-    }
     ElevatedButton(onClick = map.onClick, modifier = Modifier.padding(start = MapButtonInset)) {
         Icon(painterResource(Res.drawable.ic_location_on), contentDescription = null, Modifier.size(MapIconSize))
         Spacer(Modifier.width(ItmoTheme.spacing.compact))

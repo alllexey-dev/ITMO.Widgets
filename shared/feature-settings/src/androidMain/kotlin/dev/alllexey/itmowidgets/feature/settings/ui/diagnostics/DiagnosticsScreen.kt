@@ -169,9 +169,9 @@ internal fun DiagnosticsClearDialog(onConfirm: () -> Unit, onDismiss: () -> Unit
     val dismiss = stringResource(Res.string.common_cancel)
     val text = stringResource(Res.string.diagnostics_clear_confirm_message)
     if (windowed) {
-        ConfirmDialog(title, confirm, dismiss, onConfirm, onDismiss, text = text, destructive = true)
+        ConfirmDialog(title, confirm, dismiss, onConfirm, onDismiss, text = text)
     } else {
-        ConfirmDialogSurface(title, confirm, dismiss, onConfirm, onDismiss, text = text, destructive = true)
+        ConfirmDialogSurface(title, confirm, dismiss, onConfirm, onDismiss, text = text)
     }
 }
 

@@ -31,7 +31,6 @@ private fun ConfirmDialogPreview() = ItmoPreview {
             dismissLabel = "Отмена",
             onConfirm = {},
             onDismiss = {},
-            destructive = true,
         )
     }
 }

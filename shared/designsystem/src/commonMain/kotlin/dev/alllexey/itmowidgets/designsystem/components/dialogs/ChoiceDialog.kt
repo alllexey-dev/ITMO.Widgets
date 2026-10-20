@@ -17,17 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 
 /**
  * Picks one of [options]. With a [selectedIndex] the rows are radio buttons with the current choice marked
  * (`setSingleChoiceItems`); with null they are plain items (`setItems`). A tap reports [onSelect]; the caller applies
  * it and stops showing the dialog, as the View dialogs closed on a pick. [dismissLabel] adds a cancel button;
- * [onDismiss] also gets back and a tap outside. [descriptions] puts a line under an option, by index (Material only).
- *
- * Under the iOS style it is an iOS alert: the single choice as a list with a trailing checkmark in the tint on the
- * current row, the plain items as stacked action capsules, the cancel capsule last.
+ * [onDismiss] also gets back and a tap outside. [descriptions] puts a line under an option, by index.
  */
 @Composable
 fun ChoiceDialog(
@@ -57,12 +53,7 @@ fun ChoiceDialogSurface(
     dismissLabel: String? = null,
     descriptions: List<String?> = emptyList(),
 ) {
-    when (ItmoTheme.platformStyle) {
-        ItmoPlatformStyle.Material ->
-            MaterialChoiceDialog(title, options, selectedIndex, onSelect, onDismiss, modifier, dismissLabel, descriptions)
-        ItmoPlatformStyle.Ios ->
-            IosChoiceDialog(title, options, selectedIndex, onSelect, onDismiss, modifier, dismissLabel)
-    }
+    MaterialChoiceDialog(title, options, selectedIndex, onSelect, onDismiss, modifier, dismissLabel, descriptions)
 }
 
 @Composable
@@ -98,43 +89,6 @@ private fun MaterialChoiceDialog(
                             RadioButton(selected = index == selectedIndex, onClick = null)
                         }
                     }
-                }
-            }
-        },
-    )
-}
-
-@Composable
-private fun IosChoiceDialog(
-    title: String,
-    options: List<String>,
-    selectedIndex: Int?,
-    onSelect: (Int) -> Unit,
-    onDismiss: () -> Unit,
-    modifier: Modifier,
-    dismissLabel: String?,
-) {
-    val cancel = listOfNotNull(dismissLabel?.let { IosAlertButton(it, onDismiss) })
-    if (selectedIndex == null) {
-        val items = options.mapIndexed { index, option -> IosAlertButton(option, onClick = { onSelect(index) }) }
-        IosAlertSurface(title = title, buttons = items + cancel, modifier = modifier)
-        return
-    }
-    IosAlertSurface(
-        title = title,
-        buttons = cancel,
-        modifier = modifier,
-        content = {
-            Column(Modifier.verticalScroll(rememberScrollState()).selectableGroup()) {
-                options.forEachIndexed { index, option ->
-                    IosAlertCheckRow(
-                        option,
-                        checked = index == selectedIndex,
-                        first = index == 0,
-                        interaction = Modifier.selectable(index == selectedIndex, role = Role.RadioButton) {
-                            onSelect(index)
-                        },
-                    )
                 }
             }
         },

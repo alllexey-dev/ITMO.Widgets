@@ -20,10 +20,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
-import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 
@@ -51,8 +48,7 @@ data class ContentStateAction(
 /**
  * An empty or error state: an optional decorative icon, a title, an optional description and an optional action,
  * centred in the area the content would take (`Widget.ItmoWidgets.ContentState`). [ContentStateLoading] takes the same
- * area, so loading, content, empty and error switch without a layout jump. Under the iOS style the action is the
- * `UIButton` capsule of [ProgressButton] (tonal as bordered, filled as prominent).
+ * area, so loading, content, empty and error switch without a layout jump.
  */
 @Composable
 fun ContentState(
@@ -96,8 +92,7 @@ fun ContentState(
 
 /**
  * The loading member of the family: an indeterminate indicator in `primary` ([ItmoLoadingIndicator], the expressive
- * one when the theme's switch is on), centred in the same area. Under the iOS style it is the large
- * `UIActivityIndicatorView` whatever the switch says.
+ * one when the theme's switch is on), centred in the same area.
  */
 @Composable
 fun ContentStateLoading(
@@ -111,14 +106,6 @@ fun ContentStateLoading(
 
 @Composable
 private fun ContentStateButton(action: ContentStateAction) {
-    if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
-        val style = when (action.style) {
-            ContentStateActionStyle.Tonal -> ProgressButtonStyle.Tonal
-            ContentStateActionStyle.Filled -> ProgressButtonStyle.Filled
-        }
-        ProgressButton(action.label, action.onClick, action.modifier, style = style)
-        return
-    }
     when (action.style) {
         ContentStateActionStyle.Tonal ->
             TonalButton(onClick = action.onClick, modifier = action.modifier) { Text(action.label) }

@@ -1,7 +1,5 @@
 package dev.alllexey.itmowidgets.designsystem.components.rows
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
@@ -13,15 +11,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -30,7 +25,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_thumb_down
@@ -69,9 +63,6 @@ class VoteLabels(
  * [onVote] only reports which thumb was tapped. A disabled pill (a vote in flight) keeps its look and ignores taps.
  * The score reads [scoreDescription] and carries both votes as TalkBack custom actions, so a row that merges the pill
  * offers them too.
- *
- * Under the iOS style the thumbs are 44 pt targets that dim while pressed instead of a ripple and the pill takes
- * `tertiarySystemFill`; the pill stays 32 high with the same room around the score and the thumbs.
  */
 @Composable
 fun VotePill(
@@ -83,16 +74,12 @@ fun VotePill(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
-    val container = if (ios) ItmoTheme.iosColors.tertiarySystemFill else ItmoTheme.colorScheme.surfaceContainerHighest
-    // The pill keeps its 32 dp inside the thumbs' targets of either style: 16 x 8 dp in Material's 48, 12 x 6 in 44.
-    val insetHorizontal = if (ios) ItmoTheme.spacing.touchTarget - PillHeight else PillInsetHorizontal
-    val insetVertical = if (ios) (ItmoTheme.spacing.touchTarget - PillHeight) / 2 else PillInsetVertical
+    val container = ItmoTheme.colorScheme.surfaceContainerHighest
     Row(
         modifier
             .height(ItmoTheme.spacing.touchTarget)
             .drawBehind {
-                val inset = Offset(insetHorizontal.toPx(), insetVertical.toPx())
+                val inset = Offset(PillInsetHorizontal.toPx(), PillInsetVertical.toPx())
                 drawRoundRect(
                     color = container,
                     topLeft = inset,
@@ -108,7 +95,7 @@ fun VotePill(
             myVote,
             scoreDescription,
             labels,
-            margin = if (onVote != null) 0.dp else insetHorizontal + ItmoTheme.spacing.content,
+            margin = if (onVote != null) 0.dp else PillInsetHorizontal + ItmoTheme.spacing.content,
             actions = onVote.takeIf { enabled },
         )
         if (onVote != null) VoteThumb(Vote.Down, myVote, labels.down, enabled, onVote)
@@ -160,29 +147,14 @@ private fun VoteThumb(vote: Vote, myVote: Vote?, label: String, enabled: Boolean
         selected -> Res.drawable.ic_thumb_down_filled
         else -> Res.drawable.ic_thumb_down
     })
-    val target = if (ItmoTheme.platformStyle == ItmoPlatformStyle.Ios) {
-        val interaction = remember { MutableInteractionSource() }
-        val pressed by interaction.collectIsPressedAsState()
-        Modifier
-            .selectable(
-                selected = selected,
-                interactionSource = interaction,
-                indication = null,
-                enabled = enabled,
-                role = Role.Button,
-                onClick = { onVote(vote) },
-            )
-            .graphicsLayer { alpha = if (pressed) IOS_PRESSED_ALPHA else 1f }
-    } else {
-        Modifier.selectable(
-            selected = selected,
-            enabled = enabled,
-            role = Role.Button,
-            interactionSource = null,
-            indication = ripple(bounded = false, radius = ThumbRippleRadius),
-            onClick = { onVote(vote) },
-        )
-    }
+    val target = Modifier.selectable(
+        selected = selected,
+        enabled = enabled,
+        role = Role.Button,
+        interactionSource = null,
+        indication = ripple(bounded = false, radius = ThumbRippleRadius),
+        onClick = { onVote(vote) },
+    )
     Box(
         Modifier
             .size(ItmoTheme.spacing.touchTarget)
@@ -212,12 +184,6 @@ private const val MINUS_SIGN = '\u2212'
 /** `bg_link_vote_pill`: the pill is inset 16 dp from the thumbs' outer edges and 8 dp from the 48 dp row. */
 private val PillInsetHorizontal = 16.dp
 private val PillInsetVertical = 8.dp
-
-/** `bg_link_vote_pill`'s height: 48 dp less twice [PillInsetVertical]. */
-private val PillHeight = 32.dp
-
-/** How much a pressed thumb dims under the iOS style, as UIKit's plain buttons fade instead of a ripple. */
-private const val IOS_PRESSED_ALPHA = 0.5f
 
 /** `bg_link_vote_pill`'s 16 dp corners: a fully round 32 dp pill. */
 private val PillRadius = 16.dp

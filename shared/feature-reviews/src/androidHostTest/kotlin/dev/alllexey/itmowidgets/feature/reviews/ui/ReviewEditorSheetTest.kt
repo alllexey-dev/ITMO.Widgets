@@ -54,7 +54,6 @@ import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReviewEditorViewModel
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
@@ -256,7 +255,7 @@ class ReviewEditorSheetTest {
     private fun Editor(model: ReviewEditorViewModel, discarding: Boolean = false, height: Dp = SHEET_HEIGHT) {
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, NARROW_FONT_SCALE)) {
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+            ItmoTheme {
                 Box(Modifier.size(NARROW_WIDTH, height)) {
                     val form by model.uiState.collectAsState()
                     ReviewEditorSheet(
