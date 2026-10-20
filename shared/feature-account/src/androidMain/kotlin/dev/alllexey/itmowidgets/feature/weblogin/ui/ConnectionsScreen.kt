@@ -186,11 +186,11 @@ internal fun RevokeDialog(row: ConnectionRow, actions: ConnectionsActions, windo
     val dismiss = stringResource(Res.string.common_cancel)
     if (windowed) {
         ConfirmDialog(
-            title, confirm, dismiss, actions.onConfirmRevoke, actions.onDismissRevoke, text = text, destructive = true,
+            title, confirm, dismiss, actions.onConfirmRevoke, actions.onDismissRevoke, text = text,
         )
     } else {
         ConfirmDialogSurface(
-            title, confirm, dismiss, actions.onConfirmRevoke, actions.onDismissRevoke, text = text, destructive = true,
+            title, confirm, dismiss, actions.onConfirmRevoke, actions.onDismissRevoke, text = text,
         )
     }
 }

@@ -5,12 +5,7 @@ package dev.alllexey.itmowidgets.testkit.screenshot
  * and dark at [CaptureSize]'s phone size, with accessibility checks.
  *
  * - [packageTree]: where the previews live, when the subclass sits elsewhere.
- * - [allAppearances]: always all four Material appearances (the kit), not only with `-Pshots.appearance=full`.
- * - [iosAppearances]: always the three iOS appearances, not only with `-Pshots.appearance=ios` or a recorded baseline
- *   (the kit).
- * - [materialOnlyPackageTrees]: previews in these package trees are captured in the Material appearances only, even
- *   with [iosAppearances] or `-Pshots.appearance=ios`: Android-only Compose that iOS never draws (the kit's
- *   `designsystem.kit`, ADR 0031).
+ * - [allAppearances]: always all four appearances (the kit), not only with `-Pshots.appearance=full`.
  * - [widthDp], [heightDp], [density]: the capture window ([CaptureSize]); a preview's own `widthDp`/`heightDp`
  *   override them.
  * - [accessibilityChecks]: ATF (Roborazzi accessibility check, error level) on every capture.
@@ -23,8 +18,6 @@ package dev.alllexey.itmowidgets.testkit.screenshot
 annotation class PreviewScreenshots(
     val packageTree: String = "",
     val allAppearances: Boolean = false,
-    val iosAppearances: Boolean = false,
-    val materialOnlyPackageTrees: Array<String> = [],
     val widthDp: Int = CaptureSize.PHONE_WIDTH_DP,
     val heightDp: Int = CaptureSize.PHONE_HEIGHT_DP,
     val density: String = CaptureSize.DENSITY,

@@ -439,8 +439,7 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
 ## The M3 Expressive kit
 
 `designsystem.kit` (`shared/designsystem/.../kit/`) is the kit of the redesigned Android screens, ported from the
-design lab: Material 3 Expressive, Android's only (its previews are captured only in the four Material appearances,
-`materialOnlyPackageTrees`); iOS draws the same screens in SwiftUI ([ADR 0031](decisions/0031-swiftui-ios-screens.md)). Its components take formatted text, icons and colours;
+design lab: Material 3 Expressive; iOS draws the same screens in SwiftUI ([ADR 0031](decisions/0031-swiftui-ios-screens.md)). Its components take formatted text, icons and colours;
 what a lesson says and which pills it gets is decided by shared presentation: `core/lesson/LessonTimelines` builds
 `LessonUi` and `TimelineItem` (states, pills, gaps of an hour or more, progress, change notes) for every lesson list;
 a lesson is online by MyITMO's remote format or by a placeholder room (`дистант`, `онлайн`, `DayLesson.isOnline`),
@@ -468,12 +467,6 @@ one, otherwise from [Shared components](#shared-components).
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |
 | `SearchField`, `FilterChips`, `ChipSpec`, `OccupancyBar` | The search of a list as a pill with a clear button and a trailing action with a badge (more filters); filter chips in a sideways row or wrapped; places taken as a bar (88 dp, down to 44 dp in a tight row; the text never wraps) and `22 из 24` in a tone |
 | `WeekStrip`, `WeekStripDay` | Past weekday/date labels are dimmed on both platforms; today and the selected day (including a past selection) keep full emphasis. One week as seven targets: weekday, date, a dot per lesson, today in `primary`, the chosen day on a `primary` indicator that slides on the scheme's default spatial spring while the colours crossfade (a week gaining or losing the choice fades it in place; snaps under reduced motion); a pager of these pages by weeks |
-
-## Platform styles
-
-`ItmoPlatformStyle` still has an `Ios` value with branches in the kit and `_ios-*` baselines, but only Android renders
-the kit (`defaultPlatformStyle()` is `Material`; iOS draws no Compose, [ADR 0035](decisions/0035-ios-without-compose.md)).
-It is a leftover: a new component needs no `Ios` branch. The SwiftUI look of iOS is in [iOS app](ios.md#design-system).
 
 ## Expressive components
 

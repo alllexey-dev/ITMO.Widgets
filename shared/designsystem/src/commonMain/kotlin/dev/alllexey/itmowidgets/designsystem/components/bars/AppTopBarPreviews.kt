@@ -50,15 +50,14 @@ private fun AppTopBarLongTitlePreview() = ItmoPreview {
     )
 }
 
-/** A back button with the previous screen's title, a text action and the separator of content scrolled beneath. */
+/** A back button and a text action. */
 @Preview
 @Composable
 private fun AppTopBarScrolledPreview() = ItmoPreview {
     AppTopBar(
         title = "Занятие",
-        navigation = { AppTopBarBack("Назад", onClick = {}, title = "Расписание") },
+        navigation = { AppTopBarBack("Назад", onClick = {}) },
         actions = { AppTopBarTextAction("Готово", onClick = {}) },
-        scrolledUnder = true,
     )
 }
 

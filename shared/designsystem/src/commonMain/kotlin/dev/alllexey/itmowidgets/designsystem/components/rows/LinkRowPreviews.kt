@@ -7,9 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupSurface
-import dev.alllexey.itmowidgets.designsystem.components.groups.PreviewBackdrop
 import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupItem
-import dev.alllexey.itmowidgets.designsystem.components.groups.groupPreviewBackdrop
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.core.preview.PreviewFixtures
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -24,7 +22,7 @@ import org.jetbrains.compose.resources.painterResource
 @Preview
 @Composable
 private fun LinkRowPreview() = ItmoPreview {
-    Column(Modifier.groupPreviewBackdrop().padding(ItmoTheme.spacing.screenMargin)) {
+    Column(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
         LinkRow(
             "Баллы потока",
             onClick = {},
@@ -55,7 +53,7 @@ private fun LinkRowPreview() = ItmoPreview {
 @Preview
 @Composable
 private fun LinkRowLongTitlePreview() = ItmoPreview {
-    Column(Modifier.groupPreviewBackdrop(PreviewBackdrop.Sheet).padding(ItmoTheme.spacing.screenMargin)) {
+    Column(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
         LinkRow(
             PreviewFixtures.LongSubjectName,
             onClick = {},

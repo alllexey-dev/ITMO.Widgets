@@ -26,7 +26,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewEvent
 import dev.alllexey.itmowidgets.feature.reviews.presentation.ReportReviewViewModel
@@ -116,7 +115,7 @@ class ReportReviewDialogTest {
         }
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, NARROW_FONT_SCALE)) {
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+            ItmoTheme {
                 val state by model.uiState.collectAsState()
                 ReportReviewForm(
                     sending = state.sending,

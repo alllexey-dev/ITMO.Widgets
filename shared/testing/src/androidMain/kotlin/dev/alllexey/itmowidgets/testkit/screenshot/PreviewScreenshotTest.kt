@@ -12,9 +12,7 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.checkRoboAccessibility
 import com.google.android.apps.common.testing.accessibility.framework.AccessibilityCheckPreset
 import com.google.android.apps.common.testing.accessibility.framework.checks.TouchTargetSizeCheck
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.preview.LocalPreviewAppearance
-import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExternalResource
@@ -33,8 +31,7 @@ import org.robolectric.RuntimeEnvironment
  * [PreviewScreenshotRunner] makes one test per [PreviewCase] (`capture[<base>_<appearance>]`) and one `baselines`
  * test that checks the directory against the previews ([BaselineInventory]). Each capture sets the window from the
  * case (Russian, width, height, night mode, density) and the font scale, provides the appearance to `ItmoPreview`,
- * stops the clock after two frames, so animations are frozen at a fixed time, and runs the ATF checks. An iOS
- * appearance checks touch targets against Apple's 44 pt instead of ATF's 48 dp ([assertTouchTargets] with the style).
+ * stops the clock after two frames, so animations are frozen at a fixed time, and runs the ATF checks.
  */
 @RunWith(PreviewScreenshotRunner::class)
 abstract class PreviewScreenshotTest {
@@ -74,23 +71,21 @@ abstract class PreviewScreenshotTest {
         repeat(SETTLE_FRAMES) { compose.mainClock.advanceTimeByFrame() }
         compose.onRoot().captureRoboImage(case.fileName, ShotsCompare.options)
         if (suite.accessibilityChecks) {
-            val style = case.appearance.platformStyle
             compose.onRoot().checkRoboAccessibility(
                 roborazziATFAccessibilityCheckOptions = RoborazziATFAccessibilityCheckOptions(
-                    checker = atfChecker(style, suite.touchTargetsExempt(case)),
+                    checker = atfChecker(suite.touchTargetsExempt(case)),
                     failureLevel = CheckLevel.Error,
                 ),
             )
-            if (style != ItmoPlatformStyle.Material) compose.assertTouchTargets(style)
         }
     }
 
     /**
-     * ATF's latest checks; without its 48 dp touch-target check under the iOS style (replaced by the style's own) and
-     * for a narrow capture the suite exempts ([PreviewScreenshots.narrowTouchTargetExemptions]).
+     * ATF's latest checks; without its 48 dp touch-target check for a narrow capture the suite exempts
+     * ([PreviewScreenshots.narrowTouchTargetExemptions]).
      */
-    private fun atfChecker(style: ItmoPlatformStyle, touchTargetsExempt: Boolean): RoborazziATFAccessibilityChecker {
-        if (style == ItmoPlatformStyle.Material && !touchTargetsExempt) {
+    private fun atfChecker(touchTargetsExempt: Boolean): RoborazziATFAccessibilityChecker {
+        if (!touchTargetsExempt) {
             return RoborazziATFAccessibilityChecker(preset = AccessibilityCheckPreset.LATEST)
         }
         val checks = AccessibilityCheckPreset.getAccessibilityHierarchyChecksForPreset(AccessibilityCheckPreset.LATEST)

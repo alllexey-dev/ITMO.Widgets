@@ -162,7 +162,6 @@ fun LinkActionsSheetRoute(
                 viewModel.delete(linkId)
             },
             onDismiss = { confirmingDelete = false },
-            destructive = true,
         )
     }
 }

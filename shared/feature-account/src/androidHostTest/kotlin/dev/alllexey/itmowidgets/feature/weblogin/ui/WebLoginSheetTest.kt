@@ -33,7 +33,6 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
 import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.weblogin.domain.AgentScope
 import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlockResult
@@ -295,7 +294,7 @@ class WebLoginSheetTest {
     private fun Narrow(content: @Composable () -> Unit) {
         val density = LocalDensity.current
         CompositionLocalProvider(LocalDensity provides Density(density.density, NARROW_FONT_SCALE)) {
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+            ItmoTheme {
                 Box(Modifier.requiredSize(NARROW_WIDTH, SHEET_HEIGHT)) { content() }
             }
         }

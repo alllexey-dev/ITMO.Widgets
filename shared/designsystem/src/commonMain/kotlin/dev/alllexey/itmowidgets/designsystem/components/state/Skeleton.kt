@@ -30,9 +30,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.designsystem.tokens.IosMetrics
 import dev.alllexey.itmowidgets.designsystem.tokens.ShapeTokens
 import dev.alllexey.itmowidgets.designsystem.tokens.rememberReducedMotion
 
@@ -48,11 +46,8 @@ enum class SkeletonStyle(internal val defaultRows: Int, internal val defaultRowH
 /**
  * Placeholder rows for a first load without a cache (`core/ui/SkeletonView`): the shape of the coming content in
  * the area it will take, pulsing between `pulseMinAlpha` and opaque every `pulseMillis`, static under reduced
- * motion. Rows that do not fit the bounds are not drawn; TalkBack skips it.
- *
- * Under the iOS style the shapes and bars are UIKit's `systemFill` (a bar over a card is the fill twice, as a
- * placeholder over a filled cell) and a card has the inset group's corners; the geometry and the pulse stay. The
- * avatar takes `Avatar`'s shape: the cookie with [ItmoTheme.expressive], a circle otherwise.
+ * motion. Rows that do not fit the bounds are not drawn; TalkBack skips it. The avatar takes `Avatar`'s shape: the
+ * cookie with [ItmoTheme.expressive], a circle otherwise.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -63,10 +58,8 @@ fun Skeleton(
     rowHeight: Dp = style.defaultRowHeight,
 ) {
     val padding = ItmoTheme.spacing.screenMargin
-    val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
-    val surface = if (ios) ItmoTheme.iosColors.systemFill else ItmoTheme.colorScheme.surfaceVariant
-    val bar = if (ios) surface else ItmoTheme.colorScheme.onSurfaceVariant.copy(alpha = BAR_ALPHA)
-    val cardRadius = if (ios) IosMetrics.insetGroupRadius else CardRadius
+    val surface = ItmoTheme.colorScheme.surfaceVariant
+    val bar = ItmoTheme.colorScheme.onSurfaceVariant.copy(alpha = BAR_ALPHA)
     val avatarShape = if (ItmoTheme.expressive) MaterialShapes.Cookie9Sided.toShape() else CircleShape
     val alpha = rememberPulseAlpha()
     Canvas(
@@ -84,7 +77,7 @@ fun Skeleton(
             val area = RowArea(left = inset, top = top, width = size.width - 2 * inset, height = height)
             when (style) {
                 SkeletonStyle.List -> drawListRow(area, avatarShape, surface, bar)
-                SkeletonStyle.Cards -> drawCard(area, surface, bar, cardRadius.toPx())
+                SkeletonStyle.Cards -> drawCard(area, surface, bar, CardRadius.toPx())
             }
             top += height + RowGap.toPx()
         }

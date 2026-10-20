@@ -15,7 +15,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.MinTouchTarget
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
@@ -78,7 +77,7 @@ class TeacherSummaryCardTest {
 
     @Composable
     private fun Card(summary: TeacherSummary, expanded: Boolean, onToggle: () -> Unit = {}) {
-        ItmoTheme(platformStyle = ItmoPlatformStyle.Material) { TeacherSummaryCard(summary, expanded, onToggle) }
+        ItmoTheme { TeacherSummaryCard(summary, expanded, onToggle) }
     }
 
     private companion object {

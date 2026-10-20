@@ -150,7 +150,6 @@ fun UserProfileRoute(exits: UserProfileExits, viewModel: UserProfileViewModel = 
             },
             onDismiss = { pendingRemoval = null },
             text = stringResource(Res.string.friends_remove_confirm_message, name.asString()),
-            destructive = true,
         )
     }
     if (pendingReviewDeletion) {
@@ -163,7 +162,6 @@ fun UserProfileRoute(exits: UserProfileExits, viewModel: UserProfileViewModel = 
                 viewModel.deleteOwnReview()
             },
             onDismiss = { pendingReviewDeletion = false },
-            destructive = true,
         )
     }
 }

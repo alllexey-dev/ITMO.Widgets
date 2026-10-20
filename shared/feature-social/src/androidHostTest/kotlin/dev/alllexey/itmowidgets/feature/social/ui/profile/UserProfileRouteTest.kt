@@ -22,7 +22,6 @@ import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.testing.ownReview
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.FakePersonRepository
 import dev.alllexey.itmowidgets.feature.social.presentation.UserProfileUiState
@@ -141,7 +140,7 @@ class UserProfileRouteTest {
     }
 
     private fun ComposeUiTest.setRoute(viewModel: UserProfileViewModel, exits: UserProfileExits = UserProfileExits()) {
-        setContent { ItmoTheme(platformStyle = ItmoPlatformStyle.Material) { UserProfileRoute(exits, viewModel = viewModel) } }
+        setContent { ItmoTheme { UserProfileRoute(exits, viewModel = viewModel) } }
     }
 
     private fun ComposeUiTest.scrollTo(tag: String) {

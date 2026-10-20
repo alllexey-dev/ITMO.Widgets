@@ -16,7 +16,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -24,19 +23,18 @@ import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/** The colour picker in both platform styles: named radio swatches that report a pick and stay open. */
+/** The colour picker: named radio swatches that report a pick and stay open. */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
 class SwatchChoiceDialogTest {
 
     @Test
     fun swatchesAreNamedRadioButtonsThatReportAPickAndKeepTheDialog() = runComposeUiTest {
-        var style by mutableStateOf(ItmoPlatformStyle.Material)
         var selected by mutableStateOf(1)
         val picks = mutableListOf<Int>()
         var dismissals = 0
         setContent {
-            ItmoTheme(platformStyle = style) {
+            ItmoTheme {
                 SwatchChoiceDialog(
                     title = TITLE,
                     swatches = SWATCHES,
@@ -48,22 +46,18 @@ class SwatchChoiceDialogTest {
             }
         }
 
-        ItmoPlatformStyle.entries.forEach {
-            style = it
-            selected = 1
-            onNodeWithContentDescription(SWATCHES[1].label).assertIsSelected()
-                .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
-            onNodeWithText(SWATCHES[1].label).assertIsDisplayed()
-            onNodeWithContentDescription(SWATCHES[2].label).assertIsNotSelected().performClick()
-            onNodeWithContentDescription(SWATCHES[2].label).assertIsSelected()
-            onNodeWithText(SWATCHES[2].label).assertIsDisplayed()
-            onNodeWithText(TITLE).assertIsDisplayed()
-            assertTouchTargets(it.minTouchTarget)
-            onNodeWithText(DONE).performClick()
-        }
+        onNodeWithContentDescription(SWATCHES[1].label).assertIsSelected()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+        onNodeWithText(SWATCHES[1].label).assertIsDisplayed()
+        onNodeWithContentDescription(SWATCHES[2].label).assertIsNotSelected().performClick()
+        onNodeWithContentDescription(SWATCHES[2].label).assertIsSelected()
+        onNodeWithText(SWATCHES[2].label).assertIsDisplayed()
+        onNodeWithText(TITLE).assertIsDisplayed()
+        assertTouchTargets()
+        onNodeWithText(DONE).performClick()
 
-        assertEquals(listOf(2, 2), picks)
-        assertEquals(2, dismissals)
+        assertEquals(listOf(2), picks)
+        assertEquals(1, dismissals)
     }
 
     private companion object {

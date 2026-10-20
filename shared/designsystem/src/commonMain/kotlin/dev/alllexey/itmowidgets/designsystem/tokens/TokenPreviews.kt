@@ -26,7 +26,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoExtendedColors
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -55,16 +54,13 @@ private fun TokenTypographyPreview() = ItmoPreview {
     val sample = "Аб"
     val emphasized = ItmoTheme.emphasizedTypography
     val roles = materialRoles(ItmoTheme.typography).zip(emphasizedRoles(emphasized))
-    val ios = ItmoTheme.platformStyle == ItmoPlatformStyle.Ios
     TokenColumn {
         roles.forEach { (role, twin) ->
             val (name, style) = role
-            val token = (if (ios) IosTypeScaleTokens.roles else TypeScaleTokens.roles).getValue(name).first
-            // Under iOS the label names the text style the role takes.
-            val textStyle = IosTypeScaleTokens.styles.getValue(name).first.name.takeIf { ios }
+            val token = TypeScaleTokens.roles.getValue(name).first
             Column {
                 val metrics = "${token.size.toInt()}/${token.lineHeight.toInt()} ${token.weight}"
-                TokenLabel(listOfNotNull(name, textStyle, metrics).joinToString(" "))
+                TokenLabel("$name $metrics")
                 Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.group)) {
                     Text(sample, color = ItmoTheme.colorScheme.onSurface, style = style)
                     Text(sample, color = ItmoTheme.colorScheme.onSurface, style = twin.second)

@@ -177,7 +177,6 @@ fun MeScreen(
                 actions.onSignOut()
             },
             onDismiss = { confirmingSignOut = false },
-            destructive = true,
         )
     }
 }

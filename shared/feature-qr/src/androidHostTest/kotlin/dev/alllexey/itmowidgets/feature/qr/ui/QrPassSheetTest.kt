@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.designsystem.platform.ItmoPlatformStyle
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassCode
 import dev.alllexey.itmowidgets.feature.qr.presentation.QrPassStatus
@@ -46,7 +45,7 @@ class QrPassSheetTest {
         var width by mutableStateOf(NarrowWidth)
         setContent {
             // The sides below are Material's (16 dp sheet margin).
-            ItmoTheme(platformStyle = ItmoPlatformStyle.Material) {
+            ItmoTheme {
                 Box(Modifier.requiredWidth(width)) { QrPassSheetContent(state, onRefresh = {}, onClose = {}) }
             }
         }

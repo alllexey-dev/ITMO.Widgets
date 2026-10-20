@@ -171,6 +171,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - 16 shared Kotlin Multiplatform modules; Compose screens live in each feature's `androidMain`, iOS links no Compose
   (ADRs 0017, 0031, 0035). `:shared:designsystem` is the one source of the look and exports tokens for iOS and the
   web app.
+- The Compose kit draws Material only: its unused iOS style (`ItmoPlatformStyle`, iOS tokens, alerts, haptics and
+  `_ios-*` baselines) is gone.
 - MyItmoApi 2.x and Core 2.0 (`:shared:backend-client`) over Ktor, Koin only; Retrofit, Gson, Hilt, Dagger and KSP
   are gone. MyItmoApi comes from Maven Central (`MYITMOAPI_DIR` for a local checkout).
 - Every Backend request carries `X-App-Version` and `X-Client` (ADR 0034); every call checks the opt-in and demo.

@@ -45,7 +45,7 @@ val LocalAvatarImageLoader = staticCompositionLocalOf<ImageLoader?> { null }
 /**
  * A person's avatar: their photo from [pictureUrl] when it loads, their initials until then and whenever it fails or
  * there is no URL, and an empty shape without a [name]. The shape is M3 Expressive's nine-sided cookie with
- * [ItmoTheme.expressive] (Android), a circle otherwise (the iOS style). The letters are [initials], by default
+ * [ItmoTheme.expressive], a circle otherwise. The letters are [initials], by default
  * `personInitials` of [name]; a caller with ITMO.ID's name parts passes their initials. Each URL is its own request, so
  * a late failure of an earlier URL never replaces a newer photo (`core/ui/AvatarView.kt` guarded that by hand).
  * Decorative unless [contentDescription] is given, since the name usually stands beside it.
