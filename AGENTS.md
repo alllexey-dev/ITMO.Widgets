@@ -1,10 +1,10 @@
 # ITMO.Widgets
 
 Android and iOS app for ITMO University students: schedule, QR pass, sport, record book, friends, widgets. One
-Kotlin Multiplatform codebase: shared modules in `shared/` with Compose Multiplatform screens, Koin and Navigation 3;
-`app/` is the Android app (Android-only surfaces, RemoteViews widgets, workers); `iosApp/` is the SwiftUI shell that
-hosts the shared screens. Official MyITMO and BARS data come through MyItmoApi; social data through the ITMO.Widgets
-Backend (`shared/backend-client`).
+Kotlin Multiplatform codebase: shared modules in `shared/` (domain, data, presentation, Koin, and the Android Compose
+screens); `app/` is the Android app (Navigation 3 shell, RemoteViews widgets, workers); `iosApp/` is a native SwiftUI
+app over the same view models and draws no Compose (ADR 0031, 0035). Official MyITMO and BARS data come through
+MyItmoApi; social data through the ITMO.Widgets Backend (`shared/backend-client`).
 
 ## Docs
 

@@ -21,8 +21,7 @@ Product behaviour: [Как это работает: аккаунт](../how-it-wo
 - `ShellHost` runs the check (`AppUpdateGateViewModel`) outside the demo and opens the offer only
   while the activity is resumed.
 - Key `UpdateRoutes.AppUpdate` carries the result as `AppUpdateArgs`, so the screen has no loading or
-  error state. `AccountEntries.kt` registers `AppUpdateRoute` (`AppUpdateViewModel`, `UpdateModule.kt`)
-  over the stateless `AppUpdateScreen` in `:shared:feature-account` (no Android types).
+  error state.
 - `Пропустить версию` closes the screen only after the skipped version is stored.
 
 ## Download action per distribution
@@ -38,10 +37,6 @@ Product behaviour: [Как это работает: аккаунт](../how-it-wo
 - `ShellHost` runs `InstallStateWatcher` between `onResume` and `onPause`; a downloaded flexible
   update shows an indefinite snackbar whose action calls `completeUpdate()`. The `github` watcher
   never reports.
-
-Tests: `AppUpdateScreenTest` (`:shared:feature-account`), `GithubUpdateActionTest`
-(`app/src/testGithub`), `PlayUpdateActionTest` (instrumented, `app/src/androidTestPlay`: Play's
-`FakeAppUpdateManager` needs real `PendingIntent`s).
 
 ## iOS
 

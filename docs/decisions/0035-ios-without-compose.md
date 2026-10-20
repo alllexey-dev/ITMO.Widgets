@@ -1,6 +1,6 @@
 # 0035 The iOS framework links no Compose
 
-**Status.** Proposed (2026-10-19). Implemented for core and every feature module; the iOS framework links no Compose.
+**Status.** Accepted (2026-10-19). Implemented for core and every feature module; the iOS framework links no Compose.
 
 **Decision.** After ADR 0031 no iOS screen draws Compose, so the `Shared` framework stops carrying Compose
 Multiplatform at all.

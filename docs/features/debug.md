@@ -28,22 +28,13 @@ and reads none of its overrides. User-facing counterparts: [Settings](../setting
   - Test sport scores: 0..9999 each for attendance and bonus.
   - Template sport lessons switch.
   - One-off checks on the real account: `ScheduleChangeTracking.checkNow()` (`schedule-changes-now`),
-    `MarkTracking.checkNow()` (`marks-check-now`), `BarsSessionProbe.start()` (read-only, logs only its
-    outcome; see [mark tracking](marks-tracking.md#debug-tools)).
+    `MarkTracking.checkNow()` (`marks-check-now`, `ExistingWorkPolicy.REPLACE`, network, tag `marks`),
+    and `Проверить продление БАРС`, `BarsSessionProbe.start()`: `BarsCookieProbeWorker`
+    (`bars-cookie-probe`, 120 s delay to kill the app and start cold), read-only, writes no cookies or BARS header; logcat
+    `BarsCookieProbe` holds only outcome, step, counts and process age.
 - The opt-in section is always hidden (the opt-in lives in settings).
 - Every override change recreates the activity, so every screen reads the new value from the start.
   The open dialog survives recreation; typed text does not.
-
-## Stable identifiers
-
-From `StableIdentifiersTest`: override files `debug/academic_date_override`,
-`debug/sport_score_override`, `debug/sport_lesson_templates` in `noBackupFilesDir`; work names
-`schedule-changes-now`, `marks-check-now`.
-
-## Tests
-
-`DebugToolsViewModelTest`, `DebugRulesTest`, `DebugToolsScreenshotTest` (`app/screenshots/`),
-`AccountEntriesTest`.
 
 ## iOS
 

@@ -77,7 +77,7 @@ ITMO.Widgets».
 ## Для разработчиков
 
 - [Друзья и профили](../features/social.md), [профиль](../features/me.md),
-  [выбор друга](../features/friend-selector.md),
+  [выбор друга](../features/schedule.md#friend-picker),
   [ссылки и «Поделиться»](../features/app-links.md), [настройки](../settings.md)
 - Сервер: [privacy.md](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/contracts/privacy.md),
   [friendships.md](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/contracts/friendships.md)

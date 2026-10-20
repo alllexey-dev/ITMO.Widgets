@@ -50,10 +50,9 @@ Rules the mapper relies on:
 
 ## Recordbook list
 
-Зачётка is one shared view model, `RecordbookViewModel` (Koin, `RecordbookKoinModule.kt`), drawn by Compose on
-Android (`RecordbookRoute`, `ui/RecordbookScreen.kt`) and SwiftUI on iOS. It loads; `RecordbookPresenter`
-(`presentation/RecordbookPresenter.kt`, pure) puts the subjects into `RecordbookUiState`: the header's subtitle
-(`2 курс, 2025/2026`) and period menu (`3 семестр`, every period of every programme, newest first), and the body.
+Зачётка is one shared view model, `RecordbookViewModel`, drawn by Compose on Android and SwiftUI on iOS;
+`RecordbookPresenter` (pure) builds `RecordbookUiState`: the header's subtitle and period menu (every period of every
+programme, newest first), and the body.
 
 - One list: `Требуют внимания`, then `Дисциплины`. No `Семестр` / `Сессия` switch.
 - Session: while `RecordbookSessionWindow` (`domain/RecordbookSessionWindow.kt`) is open, the hero `Сдано N из M`
@@ -65,10 +64,8 @@ Android (`RecordbookRoute`, `ui/RecordbookScreen.kt`) and SwiftUI on iOS. It loa
   earlier answer brought (`RecordbookRepository.cachedControls` or `BarsRecordbookRepository.cachedControls`); the
   list never requests controls itself. A passed subject never needs attention. The reason replaces the kind, in red
   (or orange for sport points).
-- A row's number and its quiet source: [which number is shown](#which-number-is-shown); when beside it a word of the
-  name or the reason would not fit (a narrow phone, a large font), the number moves under them. Points sit over a 0-100 bar
-  in the tone of the row's reason; a final result is a pill (`4C`, `Зачёт`, `2FX`, `Неявка`); a missing number is a
-  dash.
+- A row's number and its quiet source: [which number is shown](#which-number-is-shown). A final result is a pill
+  (`4C`, `Зачёт`, `2FX`, `Неявка`); a missing number is a dash, never 0.
 - Физкультура shows the sport total in a small ring (visits and bonus) and opens the Спорт tab; its official result
   still comes only from `rate`.
 - A tap on a source opens `Откуда баллы` (`RecordbookSources`): BARS, My ITMO and the teacher's sheet side by side,
@@ -91,7 +88,7 @@ value wins:
 A source without a value never hides one with a value. With no value anywhere the dash is labelled by the first
 source present in the same order: a connected sheet, a BARS journal, else My ITMO. The sheet counts only while the
 subject is in progress; a final result or a no-show takes BARS's or My ITMO's number. `Откуда баллы` says why the
-shown one won, or that no source has points yet. Tests: `RecordbookPointsRuleTest`.
+shown one won, or that no source has points yet.
 
 ## BARS
 
@@ -101,11 +98,9 @@ overlays score, grade, attempt and control tree; periods, identities, teachers, 
 
 - Not connected: the list is complete from My ITMO and one quiet line under it, `Контрольные и минимумы из БАРС`,
   offers `Подключить` (the BARS sign-in) and a cross that hides it. A completed sign-in connects BARS and loads again.
-  This row and the notices below share one layout: the title over its button, the cross at the top end, so the title
-  keeps the row's width on a narrow phone or a large font.
 - Connected: journals are requested in parallel with My ITMO; My ITMO is on screen at once. Until the period's first
-  BARS answer comes (`RecordbookRow.pending`) every number but the sport one pulses in place (`LoadingPulse`, iOS
-  `itmoLoadingPulse`); a reload over an earlier answer shows that answer still.
+  BARS answer comes (`RecordbookRow.pending`) every number but the sport one pulses in place; a reload over an
+  earlier answer shows that answer still.
 - An ended session (`Unauthorized`): one row over the list, `БАРС: сессия истекла`, with `Войти`; the earlier BARS
   answer of the period stays, its sources dimmed with its time or date. Another failure: `БАРС: не удалось
   загрузить` with `Повторить`, My ITMO values. Nothing is silently substituted.
@@ -113,6 +108,7 @@ overlays score, grade, attempt and control tree; periods, identities, teachers, 
   either side are not matched. An empty journal (`total = 0`, no marks) is "no marks", not 0.
 - Changing the period with BARS connected changes the saved period in web BARS too (server-side setting, no
   stateless read).
+- Tokens and cookies are never editable settings or bundled credentials.
 - Mapper (`BarsRecordbookMapper`): server `marks.total`; the last unambiguous active approval
   (`Approval.gradeCode`, `Удвл., E` -> `3/E`); works by `checkpoint_id`; extra points as a separate
   row; absence is not a pass; plans with `has_course_project` are rejected.
@@ -124,11 +120,9 @@ Session:
   `OwnerBoundBarsStorage` and `BarsRenewal`) and `BarsLogin` for ITMO.ID. Own Ktor OkHttp engine
   (`barsEngineQualifier` in `di/RecordbookModule.kt`: connect 20 s, read 30 s, no cookie jar, cache or
   redirects), never MyITMO's.
-- Data classes live in `:shared:feature-recordbook` `commonMain`, one instance each (Koin
-  `recordbookModule`); the platform supplies the engine, `BarsLogin`, `ItmoIdCookies` and
-  `BarsSilentLogin`. Six named `SessionDataCleaner`s in `RecordbookKoinModule.kt` join sign-out,
-  among them `RecordbookRepositoryImpl` (memory cache), `BarsPreferenceRepositoryImpl` (token,
-  connection and offer) and `BarsRecordbookRepositoryImpl` (in-memory `cachedControls`).
+- The data layer is common code; the platform supplies the engine, `BarsLogin`, `ItmoIdCookies` and
+  `BarsSilentLogin`. Sign-out clears the memory caches, the BARS token, the connection and the offer
+  (named `SessionDataCleaner`s in `RecordbookKoinModule.kt`).
 - The interactive sign-in (`BarsLoginActivity`, iOS `BarsLoginSheet`) opens the same OIDC URL in the web store
   the ITMO.ID sign-in used (`CookieManager`, `WKWebsiteDataStore.default()`), so the SSO session that sign-in left
   there redirects straight to the callback, with no second password (decision
@@ -162,30 +156,13 @@ Background renewal (`BarsClient.backgroundAccount`, decision
 - The background read restores the user's server-side period
   ([mark tracking](marks-tracking.md#bars-in-the-background)).
 
-## Verification
-
-```bash
-./gradlew verifyQuick
-scripts/verify.sh shots feature-recordbook -Pshots.appearance=full
-scripts/ios/test.sh --only SnapshotTests/RecordbookSnapshotTests
-ANDROID_SERIAL=emulator-<port> scripts/verify.sh ui MarksWorkTest,MarksNotificationTest
-```
-
-View model tests (`RecordbookViewModelTest`, `RecordbookBarsTest`, `RecordbookSubjectViewModelTest`), the pure rules
-(`RecordbookPointsRuleTest`, `RecordbookSessionWindowTest`) and Roborazzi
-references (`RecordbookScreen_*`, `RecordbookSourcesSheetContent_*`, `RecordbookSubjectScreen_*`) in
-`:shared:feature-recordbook` ([ADR 0022](../decisions/0022-jvm-screenshot-tests.md)), on the states `RecordbookSamples`
-builds with the real presenters; `RecordbookEntriesTest` in `:app`; the iOS references in
-`iosApp/Tests/SnapshotTests/Features/RecordbookSnapshotTests.swift` on the same samples.
-
 ## iOS
 
-`RecordbookScreen` (`iosApp/Sources/Features/Recordbook/`) is the tab's root over `RecordbookViewModel`
-(`ObservableViewModel`), with the native root header (`.itmoRootHeader`) and the period `Menu` in the toolbar.
+`RecordbookScreen` is the tab's root over `RecordbookViewModel` (`ObservableViewModel`), with the period `Menu` in
+the toolbar.
 
 - `Подключить`, `Войти` and the BARS reminder's tap open `BarsLoginSheet`; a completed sign-in calls
   `barsSignedIn()`.
 - `Откуда баллы` is `RecordbookSourcesSheet`, a content-height `ItmoSheet`.
 - A subject opens [its page](subject-page.md#ios) only with valid arguments; Физкультура selects the sport tab.
 - Demo: `DemoRecordbook` answers with no request; mark tracking: [iOS](marks-tracking.md#ios).
-- Tests: `RecordbookSnapshotTests`, `RecordbookIosModuleTest`, `RecordbookUITests`.

@@ -14,16 +14,9 @@ read [docs/architecture.md](docs/architecture.md) first.
 
 ## CI expectations
 
-A pull request runs the fast checks for what it touches (unit and host tests,
-the debug APK, screenshot tests of the changed modules, the docs check, the iOS
-build for iOS changes) in about 10 minutes; emulator, release and lint suites
-run on `master` and nightly. Label a risky PR `full-ci` to run everything on
-it. Details in [docs/testing.md](docs/testing.md#ci).
-
-Run the relevant parts locally first: `./gradlew verifyQuick`,
-`scripts/verify.sh shots <module>` for UI changes, `scripts/ios/test.sh` for
-iOS changes, `scripts/check-docs.sh` for docs. Details in
-[docs/testing.md](docs/testing.md).
+A pull request runs the fast checks for what it touches in about 10 minutes; label a risky PR `full-ci` to run
+everything. Run the relevant commands from [docs/testing.md](docs/testing.md) locally first; CI details are in
+[docs/testing.md](docs/testing.md#ci).
 
 ## Changelog and docs
 

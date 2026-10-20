@@ -9,36 +9,46 @@ and never enforces privacy itself. Backend data requires
 without it. The device fetches that profile directly through MyItmoApi; Backend
 does not proxy it or call My ITMO with the viewer's token. Its service account
 still resolves current study groups in `UserData`, see
-[Current study groups on read](../../../itmo-widgets-backend/docs/contracts/friendships.md#current-study-groups-on-read).
+[Current study groups on read](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/contracts/friendships.md#current-study-groups-on-read).
 
-## Modules and routes
+The friend picker is the schedule's ([friend picker](schedule.md#friend-picker)); `app/` keeps only
+`FriendshipPushHandler` ([notifications](notifications.md)) and debug fixtures.
 
-- Domain, presentation and data of `feature/social` live in `:shared:feature-social` `commonMain` (no Android types),
-  the Compose screens in `androidMain` (`feature/social/ui`); the Koin module `socialModule` (`SocialModule.kt`)
-  declares the singles and the ViewModels (`viewModelOf`), and binds `FriendRepositoryImpl` as the core
-  `FriendRepository` the schedule's friend picker and sport read.
-- Android: `shell/entries/SocialEntries.kt` registers `AppRoutes.Friends`
-  (`FriendsRoute`, with the search), `AppRoutes.UserFriends` (`UserFriendsRoute`), `AppRoutes.UserProfile`
-  (`UserProfileRoute`); the friend picker is the schedule's ([friend picker](friend-selector.md)). Entries perform the platform effects:
-  sharing, clipboard, invitation (`feature/social/ui/SocialSharing.kt`),
-  navigation.
-- `app/` keeps only `FriendshipPushHandler` (bound in
-  `di/ComponentBindingsModule.kt`, see [notifications](notifications.md)) and the
-  debug fixtures (`SocialDebugFixtures`, `FriendSelectorFixture`).
-- Texts are the module's `strings_social.xml`; `:app` reads four ids as Android
-  resources (`person_isu_label`, `person_isu_copied`, `user_search_invite_text`,
-  `user_search_invite_chooser`).
+## Privacy
+
+The owner sets three audiences on «Сервер ITMO.Widgets» -> `Кто видит`
+([settings](../settings.md#privacy)): `Расписание`, `Спорт` and `Список друзей`,
+each `Все`, `Друзья` or `Никто`.
+
+- Name, group and ISU are always visible to authenticated users; nothing in the
+  app implies these official identity fields can be hidden.
+- Defaults: `Друзья` for schedule and sport (new users), `Все` for the friends
+  list (existing and new accounts).
+- `Все` allows any authenticated app user, regardless of the viewer's own
+  choices; `Друзья` requires mutual friendship; `Никто` allows only the owner.
+  There is no reciprocal sharing requirement.
+- Upgrading never silently broadens an audience: enabled legacy settings became
+  `Друзья`, disabled ones `Никто`.
+- Backend, not the app, enforces audiences and friendship (decision
+  [0004](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0004-privacy-audiences.md)).
+  Only the owner privacy endpoint returns audience settings; other responses
+  carry viewer-scoped permissions. Unknown settings are disabled and shown
+  without an invented audience; a failed save restores the confirmed values.
+- Connecting reloads the audiences; loading and retry (`Сервер не ответил`,
+  `Повторить`) stay visible at least 300 ms to avoid a flash, without delaying
+  the request. Disconnecting forgets them at once.
+- Friends are explicit: a request stays pending until the other side accepts or
+  rejects or the sender cancels; a crossed request becomes a friendship at once.
+  Blocking does not exist and a rejected request is not a block.
+- There is no review-visibility setting: the author chooses `Анонимно` per
+  review ([teacher reviews](reviews.md#editor)).
 
 ## Repositories
 
 - `SocialRepository` loads friends, incoming and outgoing requests and the own
-  Backend profile in one refresh through Core's `UsersApi` and `FriendsApi`,
-  mapping users with `UserData.toUserSummary()` (`core/model/ClientUserMapping.kt`),
-  and caches them as `LoadState` flows. It exposes `profile(isu)`,
-  `userFriends(isu)`, `lookup(isus)` and the actions `sendRequest`,
-  `acceptRequest`, `rejectRequest`, `cancelRequest`, `removeFriend`. Every action
-  returns the fresh `UserProfile` and folds it into the cached lists, so screens
-  never refresh after acting.
+  Backend profile in one refresh and caches them as `LoadState` flows. Every
+  action returns the fresh `UserProfile` and folds it into the cached lists, so
+  screens never refresh after acting.
 - `PeopleSearchRepository` searches by name through
   `MyItmoClient.personalities.searchPersonalities` (20 per page) and annotates
   registered users through Backend lookup in chunks of 50. Phone and e-mail from
@@ -51,14 +61,9 @@ still resolves current study groups in `UserData`, see
   this endpoint's HTTP 400 with numeric `error_code=100` and explicit
   `result=null`, a successful null result, or a mismatched result ISU. Other
   400s stay errors; MyItmoApi itself keeps the HTTP error unchanged.
-- `core/reviews/TeacherReviewsRepository` supplies the optional review section
-  ([reviews](reviews.md)).
-- `core/friend/FriendRepository` is a facade over `SocialRepository` for the
-  schedule picker.
-
-One `SocialRepositoryImpl` serves the screens, the bell's friend requests
-(`FriendRequestsBellSource`, a `BellSource` under the `social` qualifier), the picker, `MeViewModel`,
-`FriendshipPushHandler` and `SportDataRepositoryImpl`.
+- One `SocialRepositoryImpl` serves the screens, the bell's friend requests, the
+  schedule's friend picker (through `core/friend/FriendRepository`), the profile
+  tab, `FriendshipPushHandler` and sport.
 
 ### Invariants
 
@@ -99,15 +104,11 @@ screens through the shared framework) are the first letters of the two parts whe
 ## Screens
 
 - Profile tab: [me.md](me.md).
-- Друзья (`FriendsRoute`, `FriendsViewModel`, `FriendsUiState`): the only home of friends and requests
-  (DECISIONS.md, Друзья). The people search sits on top; while the query is blank the lists show: `Заявки` (incoming
-  with `Принять` filled and `Отклонить` tonal under the row, sent ones with `Отменить` at the end), `Друзья` with the
-  count (rows open the card; removing a friend lives in the card) and `Поделиться профилем` (the viewer's Backend
-  profile, `FriendsUiState.self`). The header subtitle is `3 друга, 1 заявка`. An empty screen says `Пока никого` and
-  offers the link; without the connection the screen is a gate with `Подключить` (`SettingsPage.SERVICES`). A row in
-  flight keeps its buttons inert. A request's status line says when it was sent (`Хочет добавить вас, вчера`) from
-  `UserProfile.requestedAt` (Backend's `requestedAt` from f9dd1e0) through `requestStatus` and the shared
-  `eventMoment` (`12:05`, `вчера`, `28 сент.`), the bell's wording; without the time it is the status alone.
+- Друзья (`FriendsViewModel`): the only home of friends and requests. The people search sits on top; while the
+  query is blank the lists show: `Заявки` (incoming and sent), `Друзья` (rows open the card; removing a friend lives
+  in the card) and `Поделиться профилем`. Without the connection the screen is a gate with `Подключить`. A row in
+  flight keeps its buttons inert. A request's status line says when it was sent from `UserProfile.requestedAt`
+  through the shared `eventMoment`, the bell's wording; without the time it is the status alone.
 - People search, in Друзья: a query searches 300 ms after the last keystroke through `PeopleSearchRepository` and
   stands in place of the lists (`PeopleSearchResults`: `В ITMO.Widgets` first, then `Остальные`, `Показать ещё`);
   clearing the field returns to the lists at once. Actions update the found row from the returned profile without a
@@ -119,13 +120,11 @@ screens through the shared framework) are the first letters of the two parts whe
   the plain empty state: someone else's privacy is not a gate. The target list is never stored in the viewer's own
   friends cache; `cachedUserFriends` keeps the last answer per ISU. Backend enforces the `Кто видит список друзей`
   choice (`Все` by default) and never exposes pending requests or the owner's raw audience.
-- Shared list row: presentation builds `UserRowUi` values (`M3206, 2 курс` and a status line); `ui/list/UserList.kt`
-  renders them as kit `ListRow`s with the avatar (`PersonRow`, `personGroup`, `userList`).
 
 ## Person profile
 
 `AppRoutes.UserProfile` (argument `UserScreenArgs.ISU`): `UserProfileRoute`
-with `UserProfileViewModel`, rendered by `UserProfileScreen` (the person card, DECISIONS.md, Карточка человека). It
+with `UserProfileViewModel`, rendered by `UserProfileScreen` (the person card). It
 opens for any positive ISU and combines four independently loaded parts: `PersonRepository` (My ITMO identity,
 positions, rooms, education), `SocialRepository.profile(isu)` (the ITMO.Widgets block), `TeacherReviewsRepository`
 and, for someone My ITMO lists a position for, `TeacherLessonsGateway.taughtBy(isu)` (the viewer's own lessons with
@@ -135,8 +134,7 @@ builds it:
 - Name and photo come from My ITMO when the person exists, else from Backend;
   a missing photo uses initials, never another source's photo. Backend's group
   is used only without a My ITMO person.
-- The centred header: avatar, full name, `roles` (each position as `shortRole, shortDepartment`, `Студент, M3206`,
-  `в друзьях`, `это вы`), `ИСУ N` with copy, up to two `actions`, the first filled. `Написать отзыв`
+- The header: avatar, full name, `roles`, `ИСУ N` with copy, up to two `actions`. `Написать отзыв`
   (`ProfileReviews.canWrite`) comes first for someone who teaches the viewer; the friendship's next step
   (`Добавить в друзья`, `Отменить заявку`, `Принять заявку` + `Отклонить`) is for a user of ITMO.Widgets; a student
   Backend does not know (`SocialAbsence.NOT_REGISTERED`) gets `Пригласить в ITMO.Widgets`; nothing without the
@@ -199,13 +197,6 @@ friendship push sends `AppEntryIntents.ACTION_OPEN_USER_PROFILE`, which
 `EntryRouteParser` turns into the profile tab with the person above it; a
 `https://<host>/u/{isu}` link does the same ([app-links.md](app-links.md)).
 
-## Tests
-
-JVM and Compose tests in `:shared:feature-social` (`commonTest`,
-`androidHostTest`, goldens in `SocialScreenshotTest`), `FriendshipPushHandlerTest`
-in `app/src/test`, `SocialRulesTest` in `:konsist`; see
-[screenshot tests](../testing.md#screenshot-tests).
-
 ## iOS
 
 The iOS app ([iOS app](../ios.md)) draws Друзья, the person card and another user's friends as SwiftUI screens over
@@ -220,21 +211,3 @@ to `.swiftUI` targets and the Профиль root is the me tab ([profile tab](m
   Copying the ISU shows `person_isu_copied`, since iOS confirms nothing itself.
 - The report of a review is a SwiftUI sheet over `ReportReviewViewModel` (`AppRoutes.ReportReview`), the review
   editor one over `ReviewEditorViewModel` ([reviews](reviews.md#ios)).
-- Tests: `SocialIosModuleTest` (`scripts/ios/test.sh kn :shared:feature-social`), the social snapshot references and
-  `UITests/SocialUITests` on the demo session.
-
-## Not implemented yet
-
-Blocking (Backend has no block model), live privacy audiences on the profile
-tab, and FCM-driven refresh of the badge when the app is closed.
-
-Parts of the person card the design (DECISIONS.md) asks for that need data the app does not have yet:
-
-- `Сейчас ведёт пару до 13:10` for a teacher draws `TeacherNowGateway.lessonOf(isu)` (`core/schedule/TeacherNow.kt`),
-  but nothing binds the gateway yet: its MyITMO implementation needs MyItmoApi 2.2.0. Koin injects it with
-  `getOrNull()`, so the card simply has no lesson-now hero until the binding lands.
-- A friend's `Сейчас на спорте до 13:10` hero: the status exists in the schedule's friend picker, but the social
-  feature has no core port to read it.
-- Counts on the study rows (`3 общие пары в неделю`, `2 записи на неделе`) and common friends: nothing computes them.
-- The lesson type of `Ведёт у вас` (`лабораторные`): `TeacherLessons` carries subjects only.
-- All reviews are listed; there is no `Все 24 отзыва` collapse.

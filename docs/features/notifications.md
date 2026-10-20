@@ -55,41 +55,21 @@ before clearing credentials.
 
 ## Channels
 
-`sport`, `friends`, `schedule_changes`, `marks`, `connections`, all default importance,
-created on start (`AppNotificationChannels`). The app switches each type on or
-off on «Уведомления»; Android owns the permission, sound and per-channel
-visibility. Friend
-notifications use the actor's ISU as id (a repeated request replaces the old
-one) and are grouped under a summary.
+| Channel | Name | Source |
+|---|---|---|
+| `sport` | `Спорт: автозапись` | FCM |
+| `friends` | `Друзья` | FCM |
+| `connections` | `Подключения устройств` | FCM |
+| `schedule_changes` | `Изменения расписания` | the local schedule check |
+| `marks` | `Оценки` | the local mark check |
 
-## Settings page
-
-«Уведомления» (`AppRoutes.Settings` `NOTIFICATIONS`, DECISIONS.md: one settings
-page) is the only home of notification settings; the bell's last row, the
-settings root and the schedule settings link to it. `NotificationSettingsViewModel`
-(`:shared:feature-settings`, `presentation/notifications`) serves the Compose and
-the SwiftUI screens; details are in [settings](../settings.md#notifications).
-
-- Every type has its switch here. The local checks: `Баллы` (the mark check,
-  with its sources My ITMO, БАРС once BARS has answered, and the teachers'
-  sheets) and `Изменения расписания` switch the check itself.
-- The pushes (`Спорт`, `Друзья`, `Новые устройства`) switch their channel in
-  `PushCategoryPreferences` (`sport_notifications_enabled`,
-  `friends_notifications_enabled`, `connections_notifications_enabled`, absent
-  means on, kept on sign-out). Without the connection one row
-  `Нужно подключение к ITMO.Widgets` opens «Сервер ITMO.Widgets» and the push
-  switches are disabled.
-- iOS lists no push switch and no connection row
-  (`PlatformCapabilities.pushSwitches`): the notification service can hide a
-  delivered push only with `com.apple.developer.usernotifications.filtering`,
-  which the app does not hold yet, so all three would do nothing (Спорт
-  included: iOS has no local sport notification, only the remote push). The
-  stored switches stay, and the notification service ignores them
-  (`PushHandler.honorsDisabledPushes`): a type left off before is shown.
-- One card stands first while the system keeps something back: the permission
-  (`Разрешить`; the settings below stay, dimmed), else on Android a system
-  channel of a type that is on here (`Открыть настройки`, the app's
-  notification page).
+- All five are at default importance, created on start (`AppNotificationChannels`). Android owns the permission,
+  sound and per-channel visibility. The switches of «Уведомления» ([settings](../settings.md#notifications)) switch
+  the checks themselves and, for the pushes, whether the device shows them; they never change a channel.
+- A denied notification permission suppresses only the visual alert, not sport automation already enabled or the
+  background checks. Disabling user services suppresses FCM actions and unregisters this device.
+- Friend notifications use the actor's ISU as id (a repeated request replaces the old one) and are grouped under a
+  summary.
 
 ## Sport handler
 
@@ -153,4 +133,4 @@ See [iOS app](../ios.md#notifications) and
   hidden until the filtering entitlement exists; until then the types switched
   off in the app (`disabledPushes` of session-v1.json, written by
   `SessionSnapshotSync`) are ignored and their switches hidden
-  ([settings page](#settings-page)).
+  ([settings](../settings.md#notifications)).

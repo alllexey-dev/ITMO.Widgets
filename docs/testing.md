@@ -36,6 +36,8 @@ Conventions:
 ```bash
 ./gradlew verifyQuick                                   # everything below except screenshots, plus lintGithubDebug and both debug APKs
 ./gradlew verifyFull                                    # verifyQuick plus lintPlayDebug
+./gradlew verifyIosKlibs                                # the iOS main and test klibs compile (no Xcode needed)
+scripts/verify.sh checks                                # Gradle-free checks: docs links, ui-report and ci-plan self-tests
 ./gradlew :shared:feature-schedule:testAndroidHostTest  # one shared module (commonTest and androidHostTest)
 ./gradlew :app:testGithubDebugUnitTest                  # app tests of the github flavour
 ./gradlew :app:testPlayDebugUnitTest                    # app tests of the play flavour
@@ -55,7 +57,6 @@ through `verify.sh shots`.
 scripts/verify.sh shots feature-schedule                # compare with the baselines
 scripts/verify.sh shots feature-schedule --record       # re-record after a deliberate change
 scripts/verify.sh shots feature-schedule --record -Pshots.appearance=full  # also the two narrow appearances
-scripts/verify.sh shots feature-qr --record -Pshots.appearance=ios         # also the three iOS-style appearances
 scripts/verify.sh shots app                             # :app (shell chrome, debug screens, widget theme)
 scripts/verify.sh shots all                             # every module plus :app, as CI does
 scripts/verify.sh shots all --gallery /tmp/shots        # render everything into a new directory, no compare
@@ -70,6 +71,8 @@ scripts/verify.sh shots all --gallery /tmp/shots        # render everything into
 - Baselines recorded on macOS verify on CI's Linux runner under a small
   per-pixel tolerance (`ShotsCompare` in `shared/testing`). Record on a Mac.
 - Captures also run accessibility checks (touch targets, labels, contrast).
+- `_ios-*` baselines (`shared/designsystem`, `shared/feature-qr`) belong to the kit's leftover
+  `ItmoPlatformStyle.Ios`, which no app draws; they still verify, nothing new records them.
 - Galleries are for review only; never copy a gallery PNG into `screenshots/`.
 
 ## Instrumented tests
@@ -136,8 +139,7 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   demo's day has lessons on any weekday; a test that needs another day passes
   `itmo(academicDate:)`. Element checks that guard a blank render use
   `isDrawn` (`isShown` in scroll loops, `waitUntilDrawn`), not only
-  `isHittable`: a Compose or SwiftUI view can take taps while nothing of it is
-  drawn.
+  `isHittable`: a SwiftUI view can take taps while nothing of it is drawn.
 - `test.sh ui` waits for SpringBoard's notification server to take in the
   installed apps (two minutes after the simulator boots; an app installed
   earlier never gets the notification dialog nor its scheduled notifications),
@@ -154,36 +156,21 @@ scripts/ios/test.sh --cleanup                                  # delete this che
 
 ## Baseline profiles
 
-Release and `minifiedSmoke` builds ship the app's baseline profile and startup
-profile from `app/src/main/generated/baselineProfiles/` (`baseline-prof.txt`,
-`startup-prof.txt`), so ART compiles the tab roots, the shell and startup ahead
-of time instead of interpreting them on first visits; the startup profile also
-orders the dex files (`dexLayoutOptimization`). `androidx.profileinstaller`
-installs the profile on sideloaded APKs as well; there ART compiles against it
-at the next background dexopt, while Google Play compiles at install. The
-profiles are committed, so
-no build needs a device.
-
-`:baselineprofile` drives the demo session with UiAutomator
-(`baselineprofile/src/main/java/.../DemoJourneys.kt`): five taps on the logo,
-every tab by a tap, the pass sheet, and `Друзья` pushed from `Профиль` and
-popped with Back. The journeys find the shell by its test tags, which
-`ShellHost` exposes as resource ids. Regenerate the profiles after a change to
-the shell, a tab root or startup, on an emulator with API 33 or later:
+Release and `minifiedSmoke` builds ship the committed baseline and startup profiles from
+`app/src/main/generated/baselineProfiles/`, so ART compiles the tab roots, the shell and startup ahead of time
+(`androidx.profileinstaller` covers sideloaded APKs at the next background dexopt). `:baselineprofile` drives the demo
+session with UiAutomator (`DemoJourneys.kt`: the logo taps, every tab, the pass sheet, `Друзья` pushed and popped),
+finding the shell by the test tags `ShellHost` exposes as resource ids. Regenerate after a change to the shell, a tab
+root or startup, on an emulator with API 33 or later, and commit both files (only the github flavour runs; `main`
+serves `play` too):
 
 ```bash
 ANDROID_SERIAL=emulator-5554 ./gradlew :app:generateBaselineProfile \
   -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
 ```
 
-It builds `githubNonMinifiedRelease` (pointed at dev, like `minifiedSmoke`),
-runs `BaselineProfileGenerator` and writes both files; commit them. Only the
-github flavour runs; the files in `main` serve `play` too.
-
-`NavigationBenchmark` measures frame timing (`FrameTimingMetric`) of tab taps
-and of a push and pop, in a fresh process, without the app's profile and with
-it; the profile run fails when the APK ships no profile. It runs nightly in
-`android-nightly.yml`; locally:
+`NavigationBenchmark` measures frame timing of tab taps and a push and pop with and without the profile (the profile
+run fails when the APK ships none). It runs nightly in `android-nightly.yml`; locally:
 
 ```bash
 ANDROID_SERIAL=emulator-5554 ./gradlew :baselineprofile:connectedGithubBenchmarkReleaseAndroidTest \
@@ -191,9 +178,8 @@ ANDROID_SERIAL=emulator-5554 ./gradlew :baselineprofile:connectedGithubBenchmark
   -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR
 ```
 
-Results are in
-`baselineprofile/build/outputs/connected_android_test_additional_output/`.
-Judge smoothness on these builds, never on a debug build.
+Results land in `baselineprofile/build/outputs/connected_android_test_additional_output/`. Judge smoothness on these
+builds, never on a debug build.
 
 ## CI
 

@@ -52,8 +52,8 @@ enforces the constructor parameter (`core/network` is exempt); the per-feature
 
 Non-obvious per-area rules:
 
-- `Подключение к ITMO.Widgets` reads as on (`CustomServicesRepository.isEnabled`)
-  while the stored choice is kept; `isChangeable()` is false.
+- The connection to ITMO.Widgets (`Сервер ITMO.Widgets`) reads as on
+  (`CustomServicesRepository.isEnabled`) while the stored choice is kept; `isChangeable()` is false.
 - `Синхронизация с календарём` returns `CalendarSyncResult.DEMO_UNAVAILABLE`;
   `.ics` export works on the demo schedule.
 - Sport auto-sign pushes are ignored (`SportSignPushHandler`).
@@ -62,15 +62,12 @@ Non-obvious per-area rules:
 
 ## Data set
 
-- `core/demo` holds the people (`DemoPeople`, ISUs in the 999xxx range no real
-  student has), subjects with teachers and flows (`DemoStudy`) and weekly sport
-  slots (`DemoSportSlots`); each feature's `data/demo` builds its models from
-  them, so all screens name the same subjects and people.
-- Dates come from `AcademicTimeProvider`: today and two weeks around it by the
-  weekly template; no direct `now()`. When today has no sport lesson left,
-  `DemoSportSlots.extraSlots` adds two from the next ten-minute mark.
-- `StoreScreenshotCapture` (Play frames, also the landing's screenshots) walks
-  this set through the real `MainActivity`; `DemoContentTest` guards the set.
+- `core/demo` holds the people (`DemoPeople`, ISUs in the 999xxx range no real student has), subjects
+  (`DemoStudy`) and sport slots (`DemoSportSlots`); each feature's `data/demo` builds on them, so all
+  screens name the same subjects and people.
+- Dates come from `AcademicTimeProvider` (no direct `now()`); when today has no sport lesson left,
+  `DemoSportSlots.extraSlots` adds two from the next ten-minute mark. `StoreScreenshotCapture` walks the set
+  through the real `MainActivity` for the Play and landing screenshots; `DemoContentTest` guards it.
 
 ## iOS
 

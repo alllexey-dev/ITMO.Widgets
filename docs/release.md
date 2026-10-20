@@ -100,7 +100,8 @@ published; Core 1.x stays at 1.7.0.
    curl -s https://widgets.alllexey.dev/api/app/version-info
    ```
 
-7. Record the deployment in `B/docs/ops/deployments.md`.
+7. Nothing records deployments in a file: `platform history itmowidgets` and the
+   GitHub releases are the record.
 8. Rollback is image only: `ssh alllexey.dev platform rollback itmowidgets`.
    Restoring the dump loses writes after the deploy and is a separate
    decision.

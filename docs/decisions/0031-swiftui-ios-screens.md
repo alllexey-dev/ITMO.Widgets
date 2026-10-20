@@ -1,6 +1,7 @@
 # 0031 iOS screens are native SwiftUI over shared Kotlin
 
-**Status.** Accepted (2026-10-12).
+**Status.** Accepted (2026-10-12). The open questions below are settled: view models reach Swift through SKIE and
+`ObservableViewModel`, and every screen has moved (ADR 0035).
 
 **Decision.** Every iOS screen is a native SwiftUI view over shared Kotlin. Shared
 Compose Multiplatform screens hosted through `ComposeUIViewController` are replaced

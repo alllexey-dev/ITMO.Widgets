@@ -11,45 +11,22 @@ subject page. The
 [Backend contract](../../../itmo-widgets-backend/docs/contracts/teacher-reviews.md)
 defines the routes, limits, premoderation and the ISU check.
 
-## Packages
-
-- `core/reviews`: the `TeacherReviewsRepository` and `TeacherLevelsRepository`
-  contracts and models (`TeacherReviews`, `TeacherReview` with `ReviewOrigin`,
-  `OwnTeacherReview`, `TeacherReviewDraft`, `TeacherReviewLimits`, `ReviewDate`,
-  `TeacherSummary.kt`).
-- `core/schedule/TeacherLessons.kt`: `TeacherLessonsGateway`, the viewer's own
-  lessons with a teacher ([schedule](schedule.md#lessons-with-a-teacher)).
-- `core/navigation/TeacherReviewArgs.kt`: teacher ISU and full name for the
-  editor and the report.
-- `:shared:feature-reviews` `commonMain`: `feature/reviews/data`
-  (`TeacherReviewsRepositoryImpl`, `TeacherReviewMappers.kt`,
-  `TeacherLevelsRepositoryImpl`, `TeacherLevelsFileStore`; Koin `reviewsModule`,
-  one instance each, sign-out cleaners `reviews` and `teacher-levels`),
-  `feature/reviews/presentation` (`ReviewEditorViewModel`,
-  `ReportReviewViewModel`); `androidMain`: `feature/reviews/ui`
-  (`ReviewEditorSheet`, `ReportReviewForm`).
-- Section rows and `TeacherSummaryCard` live in `:shared:feature-social`.
-- `ReviewsEntries.kt` (`:app`) registers `AppRoutes.ReviewEditor` (a sheet with
-  `SheetPolicy.Dismissal.FORM`) and `AppRoutes.ReportReview` (a dialog), both
-  carrying `TeacherReviewArgs`; view models come from `ReviewsKoinModule.kt`.
-  The profile opens them through its route's exits, which `SocialEntries.kt`
-  turns into those keys, so the two features never import each other.
+The editor and the report are `AppRoutes.ReviewEditor` (a form sheet) and
+`AppRoutes.ReportReview` (a dialog) with `TeacherReviewArgs`; the profile opens
+them through its route's exits, so the social and reviews features never import
+each other. Own lessons with a teacher come from `core/schedule/TeacherLessonsGateway`
+([schedule](schedule.md#lessons-with-a-teacher)).
 
 ## Connection and cache
 
-- Both repositories call Core's `TeacherReviewsApi` (`BackendClient.reviews`).
-  `DemoMode` is checked first and every call passes
-  `BackendGate.mayCallBackend()`.
-- `TeacherReviewsRepositoryImpl` checks the custom-services opt-in before every
-  read and mutation; without it it returns `AppError.CustomServicesDisabled`
-  with no request. Its per-ISU memory cache is hidden while the opt-in is off or
-  unknown and cleared when it is disabled or the session is cleared. It is one
-  `SessionDataCleaner` shared by the cleaner, the profile and the editor.
-- The cache is one immutable snapshot (opt-in, local generation, entries)
-  changed only under one `Mutex`; non-suspend `cachedReviews` reads it without a
-  lock. The generation check prevents requests or opt-in reads from an older
-  connection from refilling a cleared cache, including an off/on cycle.
-  Cancellation is propagated, not turned into a display error.
+- Both repositories check `DemoMode` first and pass `BackendGate.mayCallBackend()`
+  on every call; without the opt-in `TeacherReviewsRepositoryImpl` returns
+  `AppError.CustomServicesDisabled` with no request.
+- Its per-ISU memory cache (one instance, a `SessionDataCleaner`) is hidden
+  while the opt-in is off or unknown and cleared when it is disabled or the
+  session is cleared. A local generation, changed under one `Mutex`, keeps
+  answers from an older connection (an off/on cycle included) from refilling a
+  cleared cache. Cancellation is propagated, not turned into a display error.
 - Every mutation (`save`, `delete`, `vote`, `report`) answers with the teacher's
   fresh reviews; the answer replaces the cache entry and is emitted on
   `observeUpdates()`, both only while its generation is current.
@@ -77,7 +54,7 @@ defines the routes, limits, premoderation and the ISU check.
   `author` is set only for a review under the name. `REVIEWS` ->
   `ReviewOrigin.Reviews(sourceTitle, sourceUrl)`: a valid HTTPS source (host
   present, no user info) or else
-  `https://onetwozzzplus.github.io/reviews/#/teacher/{isu}`. `core/ui/LinkOpener`
+  `https://onetwozzzplus.github.io/reviews/#/teacher/{isu}`. `PlatformActions.openLink`
   makes the final navigation-policy check.
 - `summary` -> `TeacherSummary` or `null`: unknown tags skipped, repeats and
   blank pros, cons and reasons dropped, a blank description means no summary.
@@ -162,9 +139,8 @@ subject page ([subject page](subject-page.md)) say the tone in words instead (`T
 
 ## Report
 
-`ReportReviewForm` on the kit's report dialog: a reason is required, the comment
-is optional (up to 500); both survive recreation. The dialog cannot be dismissed
-while sending; success closes it, failure keeps it with the error.
+`ReportReviewForm`: a reason is required, the comment is optional (up to 500);
+both survive recreation. Not dismissable while sending.
 
 ## Verification of authors
 
@@ -186,17 +162,3 @@ The iOS app ([iOS app](../ios.md)) loads `reviewsModule` with
   (`iosApp/Sources/Features/Reviews/ReportReviewSheet.swift`); a failure shows under the comment.
 - The demo shows `DemoReviews` and refuses every change
   (`error_demo_unavailable`) with no request.
-- Tests: `ReviewsIosModuleTest` (`scripts/ios/test.sh kn :shared:feature-reviews`)
-  and `ReviewsLinksUITests`.
-
-## Not implemented
-
-Handing ITMO.Widgets reviews over to the Reviews project is separate work.
-
-## Tests
-
-Data and view-model tests in `:shared:feature-reviews` `commonTest`
-(`TeacherReviewsRepositoryRemoteTest` runs both repositories over the real Core
-client), Compose host tests and goldens in `:shared:feature-reviews` and
-`:shared:feature-social`, `ReviewsEntriesTest` in `:app`; see
-[screenshot tests](../testing.md#screenshot-tests).

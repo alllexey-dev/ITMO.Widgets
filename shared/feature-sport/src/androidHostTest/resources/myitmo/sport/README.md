@@ -22,6 +22,6 @@ copied unchanged from MyItmoApi (`M/`) commit `3a85bd82a9c9a6101ae0f8aeb85cc3ed1
 | `empty.json` | `M/kmp/fixtures/sport/empty.json` |
 
 Backend sport and FCM fixtures are not copied: the tests read them by path from
-`shared/backend-client/src/commonTest/resources/contract/` (CO-09a).
+`shared/backend-client/src/commonTest/resources/contract/`.
 
 Refresh the commit above whenever a fixture is updated from a newer pin.

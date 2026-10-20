@@ -6,22 +6,19 @@ See [modules](../docs/architecture.md#modules) and
 [0018](../docs/decisions/0018-module-graph-and-toolchain.md) (toolchain) and
 [0028](../docs/decisions/0028-strings-and-icons.md) (strings and icons).
 
-- `convention/`: `itmowidgets.android.app`, `itmowidgets.kmp.library`,
-  `itmowidgets.kmp.android`, `itmowidgets.cmp.kit`,
-  `itmowidgets.cmp.android` and `itmowidgets.testing`
-  (SDK levels, JVM 17, targets and source sets, Robolectric and Roborazzi
-  defaults). `itmowidgets.cmp.android` is Compose on the Android target only:
-  the compiler for `androidJvm`, Compose, the design system and
-  `:shared:compose-strings` in `androidMain`, no CMP `Res` of its own
-  ([ADR 0035](../docs/decisions/0035-ios-without-compose.md)).
-  `itmowidgets.kmp.android` is `kmp.library` with the Android target only;
-  `itmowidgets.cmp.kit` adds Compose Multiplatform and its resources to it
-  (the design system and the Compose strings). Each module's `itmoIosKlib` feeds the root `verifyIosKlibs`.
-- `strings/`: `itmowidgets.strings`: the catalog check, the per-module key
-  objects (`<Area>Strings`, `<Area>Plurals`), the Android string export and
-  ids, the Apple string and symbol export (`exportAppleStrings`),
-  with golden tests under `src/test/resources/`.
-  `strings/apple-tables.properties` lists the Apple-only string tables.
+- `convention/`: `itmowidgets.kmp.library` (KMP targets and source sets, SDK
+  levels, JVM 17), `itmowidgets.kmp.android` (the same, Android target only),
+  `itmowidgets.cmp.kit` (plus Compose Multiplatform and its resources: the
+  design system and the Compose strings), `itmowidgets.cmp.android` (Compose on
+  the Android target only, no CMP `Res` of its own,
+  [ADR 0035](../docs/decisions/0035-ios-without-compose.md)),
+  `itmowidgets.testing` (Robolectric and Roborazzi defaults) and
+  `itmowidgets.android.app`. Each module's `itmoIosKlib` feeds the root
+  `verifyIosKlibs`.
+- `strings/`: `itmowidgets.strings`: the catalog check, the `<Area>Strings` /
+  `<Area>Plurals` key objects, the Android and Apple string exports
+  (`exportAppleStrings`), golden tests under `src/test/resources/`;
+  `strings/apple-tables.properties` lists the Apple-only tables.
 - Versions come only from the root catalog `gradle/libs.versions.toml`; the
   plugin jars are `implementation` dependencies here, the one copy on the build
   classpath, so no module or root plugin block carries a version.

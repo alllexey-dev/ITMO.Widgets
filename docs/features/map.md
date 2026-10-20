@@ -1,8 +1,7 @@
 # Campus map
 
 The campus map shows ITMO's indoor floor plans and plans «Маршрут» to a lesson's room. Its code is the
-`:shared:feature-map` module; the spec is the UX overhaul's (`vibe/design-lab/ux-native/DECISIONS.md`, «Карта»),
-the data decision [ADR 0033](../decisions/0033-campus-map-mirror.md).
+`:shared:feature-map` module; the data decision is [ADR 0033](../decisions/0033-campus-map-mirror.md).
 
 ## Screen
 
@@ -11,35 +10,22 @@ the data decision [ADR 0033](../decisions/0033-campus-map-mirror.md).
 
 - Opened from `Маршрут` in the lesson sheet and on the Сегодня hero (`CampusMapArgs(lesson, route = true)`): the
   lesson's building on the floor of its room, the room selected and the route shown at once.
-- The chrome follows itmo-map-web at phone width and stays opaque with a shadow over the plan: the back button and
-  the search on top, under them the building pill (a menu of the buildings) and the place chips with the plan's own
-  icons, the floors on the right edge, and one compact card at the bottom (the room, the route or the results). No
-  compass: the plan turns with the building's bearing. Opening a result or picking a route end puts the keyboard
-  away. On iOS the map is a full-screen route (`RouteTarget.fullScreen`): the system bar with an inline title, and no
-  tab bar, pass accessory or demo banner.
-- Room card: the kind's icon, the number, `Аудитория · 4 этаж` (under a bare number what the room is, as
-  itmo-map-web names the plan's subclass, else the room's own name: `Столовая · 1 этаж`; then the floor, and in
-  search results from other buildings the building), `Сюда` and `Отсюда`. A near match says
-  `1224в нет на плане, показана 1224`; a room not on the plan says `Аудитории 9999 нет на плане` and the plan opens
-  on the entrance floor.
-- Route card: `А` and `Б` in one line with the swap, then the step: its icon, `Шаг 2 из 4 · Подъём`, the instruction,
-  a progress bar and the arrows. Each step switches the building and the floor. No lengths, no times.
-- `Сюда` routes to the room from the day's previous in-person lesson (from `DayLessonsGateway`) when it is the
-  lesson's room and that lesson's room is on a plan, else from the entrance of the room's building (`Вход`).
-  `Отсюда` starts at the room and asks `Куда`. A tap on `А` or `Б` picks that end again: the search turns into
-  `Откуда`/`Куда` with the building's entrances before anything is typed, and a tap on the plan picks the room under
-  it. The ends may be in two buildings: the walk to the exit, `По городу` (an icon opens the system map app at the
-  target building), the walk from the target entrance.
-- Browse: the search over the shown building, then `В других корпусах`; the place chips (`Туалеты`, `Еда`,
-  `Коворкинги`, ...) show only what the building has, and a chip moves the plan to the closest floor that has the
-  place and to its first room there; a tap on the plan selects the room under it. Under the floors, `Показать корпус
-  целиком` (itmo-map-web's) frames the whole building again.
-- Loading: while a building's files or a route are on their way the plan stays and `Загружаем план...` shows over it;
-  the native view shows a spinner until its style has loaded. Decoding, hashing, the style JSON, the icons and the
-  router run off the main thread.
-- A building without a plan (Вяземский, Чайковского today): `У корпуса нет плана` with `Открыть в Картах`.
-- No mirror and no stored copy: `Не удалось загрузить` with `Повторить`.
-- The attribution `План: Университет ИТМО` comes from the manifest.
+- The chrome follows itmo-map-web at phone width and stays opaque over the plan: back and search on top, the
+  building menu and the place chips, the floors on the right edge, one compact card at the bottom (the room, the
+  route or the results). No compass: the plan turns with the building's bearing. On iOS the map is a full-screen
+  route (`RouteTarget.fullScreen`) without the tab bar, pass accessory or demo banner.
+- A near match says `1224в нет на плане, показана 1224`; a room not on the plan opens the plan on the entrance floor.
+- Route: `А` and `Б` with the swap, then the steps; each step switches the building and the floor. No lengths, no
+  times. `Сюда` routes to the room from the day's previous in-person lesson (from `DayLessonsGateway`) when that
+  lesson's room is on a plan, else from the entrance of the room's building. `Отсюда` starts at the room and asks
+  `Куда`. The ends may be in two buildings: the walk to the exit, `По городу` (the system map app), the walk from
+  the target entrance.
+- Browse: the search over the shown building, then the other buildings; the place chips show only what the building
+  has; a tap on the plan selects the room under it.
+- Decoding, hashing, the style JSON, the icons and the router run off the main thread.
+- A building without a plan (Вяземский, Чайковского today): `У корпуса нет плана` with `Открыть в Картах`. No mirror
+  and no stored copy: the error state with `Повторить`. The attribution `План: Университет ИТМО` comes from the
+  manifest.
 
 ## Mirror and offline
 
@@ -57,23 +43,16 @@ The address is `CAMPUS_MAP_URL`: Android `BuildConfig` (`-PcampusMapUrl=<url>` f
 mirror cannot be reached).
 
 The style is ITMO's own: the campus app's style JSON (as itmo-map-web serves it) is embedded unchanged in
-`presentation/ItmoStyle.kt`, so the plan looks like the official app and map.alllexey.dev: its room and corridor
-fills, walls with the 3D extrusion from zoom 19, the room labels and the POI and room-kind icons, the route (solid
-current part, dashed other parts, faded on other floors, `A` and `Б` ends) and the selected room's highlight from
-itmo-map-web. Three changes to it: canteens and food keep the orange while coworkings, the library and the student
-office turn teal (the template fills them all orange, so food and coworkings looked alike), and the route is 3 px wide
-over a casing (white, dark in the dark theme) on the shown floor. In the dark theme the same layers take dark twins of every colour (`CampusMapStyle.DARK_COLORS`): rooms
-over the footprint, corridors and walls lighter, the kinds keep their hue at a dark tone, the route a lighter blue.
-`CampusMapStyle` points it at the local MBTiles file, turns its legacy filters into expressions (the
-SDKs' `setFilter` takes only those) and replaces the campus app's SF Pro Text Semibold with Noto Sans Bold, the
-closest weight among the mirror's open fonts: SF Pro may not be redistributed, and MapLibre draws Latin and Cyrillic
-only from glyph files (`localIdeographFontFamily` covers CJK only), so iOS cannot use the system font either. The 36
-icons are bundled (`src/androidMain/assets/map_sprites` of `:shared:feature-map`, 144 KB; iOS references the same folder; `coworking`,
-`library` and `studoffice` recoloured from the campus app's orange to the teal of their rooms) and added at a pixel
-ratio of 3. Floors and the selected room switch by the filters `CampusMapStyle.filters` returns. The map shows no
-caption, MapLibre logo or attribution button; the plans' source and the licences are in Settings, `Лицензии`.
-Until the first style has loaded the view shows the theme's background (Android: MapLibre's load colour and a cover;
-iOS: the view stays transparent), never MapLibre's default map or a white frame.
+`presentation/ItmoStyle.kt`, so the plan looks like the official app. Changes to it: canteens and food keep the orange
+while coworkings, the library and the student office turn teal (the template fills them all orange); the route is 3 px
+over a casing on the shown floor; the dark theme takes dark twins of every colour (`CampusMapStyle.DARK_COLORS`).
+`CampusMapStyle` points it at the local MBTiles file, turns its legacy filters into expressions (the SDKs'
+`setFilter` takes only those) and replaces SF Pro Text Semibold with Noto Sans Bold: SF Pro may not be redistributed,
+and MapLibre draws Latin and Cyrillic only from glyph files (`localIdeographFontFamily` covers CJK only), so iOS
+cannot use the system font either. The 36 icons are bundled (`src/androidMain/assets/map_sprites`, iOS references the
+same folder) at a pixel ratio of 3. The map shows no MapLibre logo or attribution button; the plans' source and the
+licences are in Settings, `Лицензии`. Until the first style has loaded the view shows the theme's background, never
+MapLibre's default map or a white frame.
 
 ## Data
 
@@ -126,21 +105,13 @@ closest place on its floor that has a way and the last step says `По 2 эта�
 target building's entrance; another building is the walk to its entrance, «По городу» (the system Maps) and the
 walk from the target entrance.
 
-## Tests
+## Verification
 
-- `RouterParityTest` (host): the Kotlin router against `router.js` on a synthetic graph
-  (`scripts/map/router-fixtures.mjs` writes the graph and the expected routes into the test resources). With
-  `CAMPUS_MAP_GRAPHS=<dir of <id>.json>` and `CAMPUS_MAP_EXPECTED=<file from router-fixtures.mjs --graphs>` it also
-  checks ITMO's real graphs; on 2026-10-17 all 360 pairs of the six buildings matched.
-- `RoomMatcherParityTest` (host): `RoomMatcher` against itmo-map-web's `rooms.js` (`scripts/map/reference-rooms.mjs`)
-  on every timetable room of Backend's synced lessons. `scripts/map/room-fixtures.mjs <lessons.tsv> <rooms dir>`
-  writes the cases (timetable text and the accepted plan room ids, no plans) into the test resources; the test runs
-  with `CAMPUS_MAP_ROOMS=<the same rooms dir>`. itmo-map-web's `web/rooms.test.mjs` checks `rooms.js` on the same
-  cases.
-- `IndoorRouterTest`, `RoomMatcherTest`, `PlanBuildingResolverTest`, `TripPlannerTest` (`commonTest`).
-- `CampusMapRepositoryImplTest` (MockEngine, fake file system: download once, offline copy, hash check),
-  `CampusMapViewModelTest` (room, route from the entrance and through the city, `Отсюда` with the end picked in
-  another building, the swap, a start picked on the plan, missing room, no plan, search, chips), `CampusMapStyleTest`
-  (with the dark style).
-- Screens: `CampusMapScreenshotTest` (Android) and `CampusMapSnapshotTests` (iOS) over `CampusMapSamples`, with a
-  placeholder instead of the GL view, which renders nothing in either test. The native view is checked on a device.
+- `RouterParityTest` (host) checks the Kotlin router against `router.js` on a synthetic graph
+  (`scripts/map/router-fixtures.mjs`). With `CAMPUS_MAP_GRAPHS=<dir of <id>.json>` and
+  `CAMPUS_MAP_EXPECTED=<file from router-fixtures.mjs --graphs>` it also checks ITMO's real graphs.
+- `RoomMatcherParityTest` (host) checks `RoomMatcher` against itmo-map-web's `rooms.js` on every timetable room of
+  Backend's synced lessons: `scripts/map/room-fixtures.mjs <lessons.tsv> <rooms dir>` writes the cases (no plans)
+  into the test resources; run with `CAMPUS_MAP_ROOMS=<the same rooms dir>`.
+- Screenshot tests use a placeholder instead of the GL view, which renders nothing in tests; the native view is
+  checked on a device.

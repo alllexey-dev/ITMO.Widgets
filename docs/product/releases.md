@@ -1,48 +1,20 @@
 # Releases and compatibility
 
-## Release sequence
-
-1. **v2.0.1** restored full functional parity with the legacy application on
-   the refactored Hilt/repository architecture: authentication, onboarding, FCM,
-   QR, all widgets, settings, diagnostics, schedule and sport.
-2. **v2.0.2** is reserved for compatibility or bug-fix work found after v2.0.1.
-   No product features.
-3. **v2.1** adds the social and study-context layer: explicit friendships and
-   privacy, own and public profiles, friends on a lesson, lesson details, map
-   hand-off and the subject hub.
-4. **v2.1.1** is a bug-fix release on top of v2.1: current study groups on
-   every screen, sign-in through third-party providers on the ITMO.ID page,
-   cached content kept on screen during refresh, skeleton first loads. No
-   product features, no Core or Backend change.
-5. **v2.2** adds moderated community resources and reviews, legacy reviews
-   synced from the Reviews project, own sheet totals, schedule
-   change tracking, My ITMO and BARS mark notifications, range calendar export, verified
-   App Links, sharing, the QR quick-settings tile with app shortcuts, and the
-   home feed. It is the first release built for Google Play as well: the demo
-   session for the review, account deletion on request and the two
-   distribution variants. GitHub ships it first; Play follows its closed test.
-6. **v2.3** (Android) moves the app onto Kotlin Multiplatform and Compose
-   Multiplatform with the Material 3 Expressive look and no new product
-   features; a 2.2 install upgrades in place.
-7. **iOS 2.3** is the first iOS client: a SwiftUI app over the shared Kotlin
-   code with the Android feature set (decision 0023); its screens move from
-   shared Compose screens to native SwiftUI (decision 0031). Minimum iOS
-   18, marketing version 2.3.0, bundle ID `dev.alllexey.itmowidgets`. Sport
-   auto-sign in a notification service extension, the App Store release,
-   in-app account deletion and a Smart App Banner are stretch goals.
+The current line is 2.3: Android moves onto Kotlin Multiplatform with the
+Material 3 Expressive look (a 2.2 install upgrades in place), and iOS 2.3 is
+the first iOS client, native SwiftUI screens over the shared Kotlin code
+(decisions 0023, 0031, 0035): minimum iOS 26.1, marketing version 2.3.0,
+bundle ID `dev.alllexey.itmowidgets`. Development happens on `master`
+(`2.3-SNAPSHOT`); released versions are the `v*` tags and GitHub releases, the
+history is in [CHANGELOG](../../CHANGELOG.md), the steps of a release are in
+[release](../release.md).
 
 Achievements, messaging, posts, followers and free-window discovery are out of
 scope. Do not add them opportunistically.
 
-Development happens on `master`, which builds `2.3-SNAPSHOT` at the code of
-the last beta (20292 after `2.3.0-beta.2`); the latest release is `2.2`
-(version code 6), the latest prerelease `2.3.0-beta.2` (tag `v2.3.0-beta.2` on
-`5c405114`, published 2026-10-11). The steps of a release are in
-[release](../release.md).
-
 ## Distribution
 
-From 2.2 the app builds in two variants (flavor dimension `distribution`) with
+The Android app builds in two variants (flavor dimension `distribution`) with
 one `applicationId` (`dev.alllexey.itmowidgets`) and one key, so an install of
 either updates the other:
 
@@ -52,7 +24,7 @@ either updates the other:
 | `play` | `./gradlew :app:bundlePlayRelease` | `app/build/outputs/bundle/playRelease/app-play-release.aab`, uploaded to Google Play | Play In-App Updates, otherwise the Play card |
 
 - Both are signed with `app-keystore.jks` (alias `key0`, the certificate of
-  2.0.1, SHA-256 `939e9bd5…f071`) through the ignored `keystore.properties`;
+  2.0.1, SHA-256 `939e9bd5...f071`) through the ignored `keystore.properties`;
   without it both build unsigned. The same certificate is in the site's
   `assetlinks.json` for App Links.
 - Google Play uses Play App Signing with this same key, uploaded
@@ -70,81 +42,69 @@ either updates the other:
   36, 16 KB aligned native libraries, no GitHub update link in the `play`
   bundle.
 - `release/2.2` starts at the `v2.2` tag and carries only 2.2.x fixes and Play
-  uploads while 2.3 is in development; its version codes continue 7, 8, … below
+  uploads while 2.3 is in development; its version codes continue 7, 8, ... below
   100, and every fix is ported to `master` by hand (the ledger is kept locally).
 - From 2.3 the version code is `major*10000 + minor*100 + patch`: 2.3.0 = 20300,
-  `2.3.0-beta.N` = 20290 + N with N ≤ 9, development builds 20290, or the last
+  `2.3.0-beta.N` = 20290 + N with N <= 9, development builds 20290, or the last
   beta's code once a beta is tagged. Previews ship only as a GitHub
-  `--prerelease` or a Play internal upload; `2.3.0-beta.1` went out on
-  2026-10-10 only as an APK in the Telegram channel, with no GitHub release,
-  and `2.3.0-beta.2` (2026-10-11) has no GitHub release either, so
-  `releases/latest` stays `v2.2`.
+  `--prerelease`, a Play internal upload or an APK in the Telegram channel, so
+  `releases/latest` stays the last stable release.
 - Until the Play listing is public, GitHub is the only channel; the README and
   the site get the Google Play button only after publication.
 
 ## Version compatibility
 
-Core and Backend use their own semantic versions. Each client release records
-the minimum Core and Backend it needs.
+Backend uses its own semantic versions; each client release records the
+minimum Backend it needs.
 
-| Client | Core | Backend | MyItmoApi | Notes |
-|---|---|---|---|---|
-| iOS 2.3 | 2.0, built in | 1.8.0, in production | 2.1.0 | Not released. Uses the `platform` parameter, alert pushes and account deletion of 1.8.0. |
-| 2.3 (development) | 2.0, built in (`:shared:backend-client`, decision 0026); 1.7.0 from Maven Central until it lands | 1.7.0 or later; new request fields are optional | 2.1.1 (`dev.alllexey:my-itmo-api-kmp` on Maven Central: JVM, Android minSdk 26 and iOS; suspend ITMO.ID, MyITMO and BARS clients in `dev.alllexey.itmoapi`). The 1.x `dev.alllexey:my-itmo-api` stays a separate compatible line; the 1.x to 2.x mapping is in `M/docs/migration.md` | Not released. Works against production 1.8.0. |
-| 2.2 | 1.7.0 (Maven Central), including `teacherReviews` with `reviews`/`mine`/`summary` and `saveMyTeacherReview`, `deleteMyTeacherReview`, `voteTeacherReview`, `reportTeacherReview`, `teacherSummaryLevels` | 1.7.0, PostgreSQL through V10: V4 (subject links), V5 (web sessions and admin), V6, V7 (external teacher reviews), V8 (`V8__service_credentials.sql`; `my_itmo_storage` stays until a separate migration of the next release), V9 (`V9__teacher_reviews.sql`) and V10 (`V10__teacher_summaries.sql`, AI summaries and the `GEMINI_API_KEY` row) | 1.8.2 (through Core and directly; `BarsAuthHelper.requestCodeWithCookies` for the background BARS renewal of the mark check) | Released on GitHub (`github` variant); Google Play follows. Backend 1.7.0 ran on production from 2026-10-03 to 2026-10-10 and stays compatible with 2.1.1; 1.8.0 serves 2.2 as well. |
-| 2.1.1 | 1.2.0 | 1.2.1 (`770293b`, current groups in every profile response) | 1.8.1 | Client-only release; works against Backend 1.2.0 as well, then lesson friends may show an older group. |
-| 2.1 | 1.2.0 (Maven Central, tag `1.2.0`) | 1.2.0, commit `a70cab1` or later | 1.8.1 (Maven Central, tag `1.8.1`) | Backend 1.2.0 requires the PostgreSQL cutover; 2.0.x clients are rejected by it and are told to update through `GET /api/app/version`. |
-| 2.0.x (legacy) | 1.1.x | 1.1.6 | 1.6.0 | MariaDB backend, reciprocal friend requests, boolean privacy. |
+| Client | Backend client | Backend | MyItmoApi |
+|---|---|---|---|
+| 2.3, Android and iOS (development) | Core 2.0, built in (`:shared:backend-client`, decision 0026) | 1.8.0 (`platform` parameter, alert pushes, account deletion); new request fields are optional | `dev.alllexey:my-itmo-api-kmp`, the version in `gradle/libs.versions.toml` |
+| 2.2 | Core 1.7.0 (Maven Central) | 1.7.0 or later | 1.8.2 |
+| 2.1, 2.1.1 | Core 1.2.0 | 1.2.0 or later | 1.8.1 |
 
-From 2.3 Core 2.0 is a client module inside this repository and is not
-published; Core 1.x stays frozen at 1.7.0 on Maven Central (decision 0026).
-MyItmoApi 2.x comes from Maven Central; `MYITMOAPI_DIR=<my-itmo-api
-checkout>` builds against a local checkout instead (decision 0024).
+Core 1.x stays frozen at 1.7.0 on Maven Central (decision 0026). MyItmoApi 2.x
+comes from Maven Central; `MYITMOAPI_DIR=<my-itmo-api checkout>` builds against
+a local checkout instead (decision 0024); the 1.x `dev.alllexey:my-itmo-api`
+stays a separate compatible line.
 
 `app.minimum` stays 2.1 until 2.2 reaches Play production, may rise to 2.2
-after that and never goes above 2.2 in v2.3; while it is at most 2.2 Backend
-changes only additively (decision 0030).
-
-| Backend | Content | Android and iOS served |
-|---|---|---|
-| 1.8.0 | The single Backend release of v2.3, in production since 2026-10-10: `version-info?platform=ANDROID\|IOS`, Spring Boot 4.1, V11 (drops `my_itmo_storage`), V12 `device_platform`, 401 for missing or invalid credentials (403 stays for denied access, `restricted` and `csrf`), push v2 with APNs alerts, `DELETE /api/users/me`, MyItmoApi 2.0.0. Expand-only, so the rollback to the 1.7.0 image stays image-only | Android 2.1 and later; iOS 2.3 |
-| 1.7.0 | In production from 2026-10-03 to 2026-10-10 | Android 2.1 and later |
+after that and never goes above 2.2 in the 2.3 line; while it is at most 2.2
+Backend changes only additively (decision 0030); Flyway V1 is immutable
+(Backend decision 0002). Backend 1.8.0 is expand-only, so its rollback to the 1.7.0
+image stays image-only.
 
 ## What each release must not break
 
-- Existing enabled legacy privacy settings become `Друзья`; disabled ones stay
-  `Никто`. An upgrade never broadens an audience.
+- An upgrade never broadens a privacy audience.
 - Widgets keep the single established style and smart update scheduling.
 - User refresh tokens stay on the device. Backend uses the access token for
   authentication; ID-token identity publication is a separate opt-in request.
-- The production database reset is a fresh PostgreSQL cluster after the Android
-  2.1 release, with a verified backup and separate approval. It is not an
-  in-place MariaDB migration.
-
-## Environments
-
-| Environment | URL | Used by |
-|---|---|---|
-| Development | `https://dev.widgets.alllexey.dev` | Debug builds (`BuildConfig.WIDGETS_BASE_URL`) |
-| Production | `https://widgets.alllexey.dev` | Release builds |
-
-The base URL is selected per build type in `app/build.gradle.kts`, never
-hard-coded in a DI module. A release build must never point at development.
+- A release build never points at the development Backend
+  (`https://dev.widgets.alllexey.dev`); the origin is chosen per build type in
+  `app/build.gradle.kts` (`WIDGETS_BASE_URL`), never in a DI module.
 
 ## Backlog
 
 Ideas that need a decision before they become work:
 
 - Glance widgets on Android ([0027](../decisions/0027-remoteviews-widgets.md)).
-- The iOS QR widget's custom spoiler image.
-- A sport score widget (attendances, bonus and debt toward 100 points).
+- iOS: a custom QR spoiler image (Android has it).
 - English localisation.
-- Blocking users, deferred from the v2.1 social layer.
+- Blocking users (Backend has no block model yet) and their management.
 - Strict verification of flow audiences for subject links (ISU or zkTLS,
   [0008](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0008-community-moderation.md)).
 - Student sections of the web version, signed in with an ITMO.ID token kept in
   the browser; Backend does not proxy MyITMO.
 - Release signing in CI.
+- Social: live privacy audiences on the profile tab; an FCM-driven refresh of
+  the friends badge while the app is closed; a requests badge on the Профиль
+  tab; the connection's last sync time.
+- Person card: a friend's current sport status, counts on the study rows and
+  common friends, the lesson type in `Ведёт у вас`, collapsed long review lists.
+- Subject links: a cross-subject list of own links, a Сегодня card for
+  moderation results.
+- Teacher reviews: hand ITMO.Widgets reviews over to the Reviews project.
 - Proposed without a verdict: sport debt and history, the official teacher
   card, request statuses, scholarship totals, a live "идёт пара" update,
   lesson reminders, electives, the study plan, a session view.

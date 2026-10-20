@@ -79,24 +79,13 @@ and runs the tests ([testing.md](testing.md#ios)).
 
 ## Everyday commands
 
-Run from the repository root.
-
 ```bash
-./gradlew verifyQuick                                 # what CI's android-ci runs: all unit and host tests, Konsist, lintGithubDebug, both debug APKs
-./gradlew :app:testGithubDebugUnitTest                # app JVM tests
-./gradlew :shared:feature-schedule:testAndroidHostTest # one shared module's tests on the JVM
-./gradlew :konsist:test                               # architecture rules
-./gradlew :app:lintGithubDebug                        # lint (verifyFull adds lintPlayDebug)
-./gradlew verifyIosKlibs                              # iOS compile check, no Xcode needed
-scripts/verify.sh shots feature-schedule              # compare one module's screenshots with its baselines
-scripts/verify.sh shots feature-schedule --record     # re-record after a deliberate UI change
-scripts/verify.sh shots all                           # every module, as CI does
-scripts/check-docs.sh                                 # dead paths and links in the docs
-scripts/ios/test.sh                                   # iOS build, unit and snapshot tests
+./gradlew verifyQuick     # what a PR's android-ci runs: unit and host tests, Konsist, lint, debug APKs
+scripts/ios/test.sh       # iOS build, unit and snapshot tests
 ```
 
-Emulator tests, iOS UI tests and how CI splits all this are in
-[testing.md](testing.md).
+Every other command (one module, screenshots, docs check, emulator and iOS UI
+tests) is in [testing.md](testing.md).
 
 ## Working on MyItmoApi
 

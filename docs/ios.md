@@ -2,13 +2,9 @@
 
 The iOS client lives in `iosApp/` and links one Kotlin umbrella framework, `Shared`, built from `shared/ios/`
 ([ADR 0023](decisions/0023-ios-client.md)). It has three bundles: the app, a WidgetKit extension and a notification
-service extension. The app is a SwiftUI shell with five tabs (recordbook, schedule, today, sport, profile). System screens
-(sign-in, the first-run flow, settings, diagnostics, the web sign-in, My ITMO web, the update offer, the BARS sign-in),
-Сегодня with the bell's sheet, the pass sheet, the schedule with its sheets (the lesson sheet, the month sheet, the
-friend picker), the recordbook, the subject page with `Мои баллы`, the sport tab with its sections and `Откуда баллы`, the profile tab,
-Друзья, the person card with the review report and editor, another user's friends and sport, and the subject links
-sheets are SwiftUI over shared ViewModels: no iOS route hosts a Compose Multiplatform screen
-([ADR 0031](decisions/0031-swiftui-ios-screens.md), see Moving to SwiftUI).
+service extension. The app is a SwiftUI shell with five tabs (recordbook, schedule, today, sport, profile); every screen
+is SwiftUI over a shared ViewModel and no route hosts Compose ([ADR 0031](decisions/0031-swiftui-ios-screens.md),
+[ADR 0035](decisions/0035-ios-without-compose.md)). A new screen: [Adding a SwiftUI screen](recipes/ios-host.md).
 
 ## Prerequisites
 
@@ -72,22 +68,16 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   except a `RouteTarget.fullScreen` route (the campus map): while it is on top, `ShellView` hides the tab
   bar and the shell leaves out the pass accessory and the demo banner (`AppRouter.isFullScreen`).
 - Pass accessory. While today is selected, `tabViewBottomAccessory` shows `QR-пропуск` (`ShellPassAccessory`), which
-  opens the pass sheet (`AppRoutes.QrPass`), the same sheet widgets, the Control and shortcuts open. `QrPassSheet`
-  (`Features/Qr/`) is a content-height `ItmoSheet` over `QrPassViewModel`: holder, the code from `QrCodeGenerator`
-  drawn as the QR widget draws it, and the line with `Обновить`; full brightness while it is on screen.
-- Root header. A SwiftUI root takes `.itmoRootHeader(title:subtitle:titleMenu:titleMenuLabel:actions:)`: title and
-  subtitle with the actions in one row, static (owner, 2026-10-13); with `titleMenu` the title is a button with a
-  chevron (the schedule's month sheet). The system's `.inlineLarge` title collapses to `.inline` on scroll, so the
-  root hides the navigation bar and draws the header in a `safeAreaBar` on the grouped background that the content
-  scrolls under and never shows through; the navigation title stays for a pushed screen's back button. Today's root (`TodayScreen`,
-  `Features/Home/`) has it with today's academic date and the bell (`ItmoBellButton` with the count of unseen events,
-  today only) over `TodayContent` (`TodayViewModel`: the hero, the day as `ItmoLessonTimeline` from the shared
-  `LessonTimelines` rows, `Support/LessonUi+Kit.swift`, the things to do); the bell opens `BellSheet`, a tall
-  `ItmoSheet` over `BellViewModel` ([the bell](features/home.md#the-bell)). The schedule, sport and profile roots
-  have the same header.
+  opens the pass sheet (`AppRoutes.QrPass`, `QrPassSheet`), the same sheet widgets, the Control and shortcuts open;
+  full brightness while it is on screen.
+- Root header. Every tab root takes `.itmoRootHeader(title:subtitle:titleMenu:titleMenuLabel:actions:)`; with
+  `titleMenu` the title is a button with a chevron (the schedule's month sheet). The system's `.inlineLarge` title
+  collapses to `.inline` on scroll, so the root hides the navigation bar and draws the header in a `safeAreaBar` that
+  the content scrolls under; the navigation title stays for a pushed screen's back button. Today's root
+  (`TodayScreen`, `Features/Home/`) shows the academic date and the bell (`ItmoBellButton`, today only), which opens
+  `BellSheet` ([the bell](features/home.md#the-bell)).
 - Stacks and sheets. Each tab has one `NavigationStack` whose path `AppRouter` holds. One router sheet shows at a
-  time; `replaceSheet(with:)` swaps it. Sheets take one of three heights (`ItmoSheet`, `ItmoSheetHeight`): the
-  content's, 0.82 of the screen, or full; none goes under the status bar.
+  time; `replaceSheet(with:)` swaps it.
 - Router (`Sources/App/Router/`) on the shared route model of `:shared:core`. Every URL, App Intent and notification
   becomes an `EntryRoute` (`RouteURL` over `EntryRouteParser`) and waits in the shared `RouteQueue` until the tabs are
   on screen; a tap opens an `AppRoute` key with `AppRouter.open(_:)`. Results return through `open(_:onResult:)` and
@@ -137,7 +127,8 @@ Swift reaches Kotlin through `Shared` and SKIE (`shared/ios/build.gradle.kts`): 
   the inline title mode on its hidden bar, since with the default large title SwiftUI moves the scroll view's refresh
   control into the hidden bar and nothing is drawn (`RefreshUITests`).
 - `UiText` resolves in Swift with `text.resolved` (`Sources/Support/UiText+Resolve.swift`), icons with
-  `AppIcon.symbol` and `AppSymbol.image`.
+  `AppIcon.symbol` and `AppSymbol.image`. Kotlin cannot resolve it: Kotlin/Native turns the table's `NSString` into a
+  Kotlin `String` and drops the `.stringsdict` plural rules ([ADR 0035](decisions/0035-ios-without-compose.md)).
 
 ## Settings and diagnostics
 
@@ -149,11 +140,10 @@ notification permission and Background App Refresh to the ViewModel on appear an
 calendar switch asks EventKit for access in Swift (`Features/Calendar/`). `DiagnosticsScreen` lists `AppDiagnostics`
 records and shares the journal.
 
-The `SERVICES` key (and the old `PRIVACY`) opens `ConnectionDataScreen` (`Features/Connection/`, over
-`ConnectionViewModel`, with `ServicesConsentSheet`, which the first-run flow shares, and `StoredDataSheet`) and `NOTIFICATIONS` opens `NotificationSettingsScreen`
-(over `NotificationSettingsViewModel`; without the filtering entitlement it lists no push switch, see
-[Degradations](#degradations)). Both report the system state as `SettingsScreen` does. The connected devices (`ConnectionsScreen`) and the
-pairing sheet (`WebLoginSheet`) are drawn on the kit; their logic is the shared one.
+The `SERVICES` key (and the old `PRIVACY`) opens `ConnectionDataScreen` (`Features/Connection/`, with
+`ServicesConsentSheet`, shared with the first-run flow) and `NOTIFICATIONS` opens `NotificationSettingsScreen`, which
+without the filtering entitlement lists no push switch ([Degradations](#degradations)). Both report the system state as
+`SettingsScreen` does.
 
 ## Strings and icons
 
@@ -175,25 +165,42 @@ The catalog is the Android resource files ([ADR 0028](decisions/0028-strings-and
 
 ## Design system
 
-SwiftUI screens use native controls with the shared tokens; the kit is `iosApp/Sources/DesignSystem/`, ported from
-the design lab's prototype (`proto/kit/ios`, DECISIONS.md) and described in [design.md](design.md#swiftui-screens-ios).
+SwiftUI screens and the system surfaces (widgets, the Control, quick actions) follow Apple's HIG for iOS 26: native
+controls and Liquid Glass tinted with the shared tokens, Dynamic Type text styles, no fixed sizes. The kit is
+`iosApp/Sources/DesignSystem/`, the twin of Android's M3 Expressive kit ([design.md](design.md#the-m3-expressive-kit)),
+which iOS never draws; M3 Expressive stays Android's only.
 
-- `scripts/ios/gen-tokens.py` turns `shared/designsystem/tokens/itmo-tokens.json` into `Tokens.generated.swift`:
-  colour roles, shapes, spacing, type roles and motion. `check-tokens.sh` fails while the file is stale.
+- `scripts/ios/gen-tokens.py` turns `shared/designsystem/tokens/itmo-tokens.json` into `Tokens.generated.swift`
+  (`ItmoColor`, `Font.itmo`, `ItmoSpacing`, shapes, motion). `check-tokens.sh` fails while the file is stale.
 - Type roles map onto the nearest Dynamic Type text style (`Font.itmo(.bodyLarge)`), so text scales. Touch targets
   are at least `ItmoMetrics.touchTarget`. `ItmoMotion.animation(_:reduceMotion:)` respects Reduce Motion.
-- Frames: `.itmoRootHeader(title:subtitle:)`, `ItmoScreenStack` (the scrolling column), `ItmoSheet` with
-  `ItmoSheetHeight` (`.content`, `.tall` at 0.82, `.full`), `ItmoBellButton`.
-- Blocks: `ItmoCard` (one hero per screen), `ItmoSectionHeader`, `ItmoListGroup` with `ItmoRow`, `ItmoIconTile` and
-  `ItmoGroupNote`; `ItmoStatusPill` over `ItmoPill`, `ItmoAvatar`, `ItmoFlow`; `ItmoSegmentedChoice` (the native
-  segmented picker) for two to four options and in-screen tabs. Tones (`ItmoTone`) colour cards, pills and tiles.
+- Frames: `.itmoRootHeader(title:subtitle:)` (static, never collapses), `.itmoDetailHeader(title:subtitle:)` (a pushed
+  screen: the system bar keeps back and the toolbar, the title and subtitle under it wrap in full), `ItmoScreenStack`
+  (the scrolling column), `ItmoSheet` with `ItmoSheetHeight` (`.content`, never cut; `.tall` at 0.82, draggable to
+  full; `.full` below the status bar), `ItmoBellButton`. A form (an editor, a report) is a `NavigationStack` with a
+  `Form`, cancel and the action in the toolbar.
+- Layout: side margin `ItmoKit.margin` (16), `ItmoKit.gap` between cards, cards and groups at iOS 26's inset grouped
+  corner (26 pt), separators inset 56 under icons and 68 under 40 pt avatars.
+- Blocks: `ItmoCard` (at most one hero per screen, `ItmoCard(tone: .primary, hero: true)`), `ItmoSectionHeader`,
+  `ItmoListGroup` with `ItmoRow`, `ItmoIconTile` and `ItmoGroupNote`; `ItmoStatusPill` over `ItmoPill`, `ItmoAvatar`,
+  `ItmoFlow`; `ItmoSegmentedChoice` (the native segmented picker) for two to four options and in-screen tabs. One
+  prominent button per area (`ItmoProminentButton`, `.glassProminent` in the primary role; `.controlSize(.small)` next
+  to a hero's big text), others `.glass` or `.bordered`.
+- Tones (`ItmoTone`: `neutral`, `primary`, `tertiary`, `ok`, `warn`, `bad`) colour cards, pills and tiles from the
+  shared roles.
 - Lessons: `ItmoLesson` is what a lesson says, resolved by the caller; a day's list is `ItmoLessonTimeline` (rail,
-  now marker, gap rows, change and overlap notes), a single lesson `ItmoLessonCard`; `ItmoWeekStrip` (in
-  `ItmoFilters.swift`) is one week of the schedule's and the sport tab's strip.
+  now marker, gap rows, change and overlap notes), a single lesson `ItmoLessonCard`.
+- Filters (`ItmoFilters.swift`): `ItmoSearchField`, `ItmoChips`, `ItmoWeekStrip` (pages by weeks; its indicator
+  slides with `matchedGeometryEffect`, off under Reduce Motion), `ItmoSwitchRow`, `ItmoOccupancy`.
+- Numbers (`ItmoScores.swift`): `ItmoValueWithSource`, `ItmoProgressBar` (a 4 pt capsule, one element for
+  VoiceOver), `ItmoPointsMeter`, `ItmoSportRing`, `ItmoGradeScale`, `ItmoVotePill`. Every track is the environment's
+  `itmoTrack`: the tone's colour (or the label colour on neutral surfaces) at `ItmoKit.trackOpacity` (0.16), a
+  groove in its container's hue, never the system grey on a light wash.
 - States: `ItmoLoadingView`, `ItmoEmptyView` and `ItmoErrorView` (the system's unavailable view with one glass
-  button), `ItmoGateCard`, `ItmoActionCard`, `ItmoLockNote`, `ItmoStale`; settings pages keep `ItmoFormSection` and
-  the form rows. `ItmoProgressButton`, `ItmoDemoBanner`.
-- Texts reach the kit resolved, so the kit holds no copy; icons come only from `AppSymbol`.
+  button), `ItmoGateCard`, `ItmoActionCard`, `ItmoLockNote`, `ItmoStale`, `itmoLoadingPulse`; settings pages keep
+  `ItmoFormSection` and the form rows. `ItmoProgressButton`, `ItmoDemoBanner`. Banners stay
+  `SettingsMessageBanner.lifetime` (2 s).
+- Texts reach the kit resolved, so the kit holds no copy; icons come only from `AppSymbol` (SF Symbols).
 
 ## Identifiers and signing
 
@@ -325,16 +332,7 @@ calendar sync), keeps Android's periods in
 
 ## Build and test
 
-```bash
-scripts/ios/test.sh                                   # checks, xcodegen, build, unit and snapshot tests
-scripts/ios/test.sh --only ITMOWidgetsTests/StableIdentifiersTests
-scripts/ios/test.sh --record --only SnapshotTests/SettingsSnapshotTests   # re-record references
-scripts/ios/test.sh ui SmokeUITests                   # XCUITest classes (all without a class)
-scripts/ios/test.sh kn core                           # iosSimulatorArm64Test of a shared module
-scripts/ios/screenshots.sh                            # review screenshots, light and dark
-scripts/ios/test.sh --cleanup                         # delete this worktree's simulator
-./gradlew verifyIosKlibs                              # Kotlin/Native klibs only
-```
+Commands: [testing.md](testing.md#ios); `./gradlew verifyIosKlibs` compiles the Kotlin/Native klibs only.
 
 - The app target's Run Script builds `Shared` with `./gradlew :shared:ios:embedAndSignAppleFrameworkForXcode`.
 - `test.sh` runs `xcodebuild build-for-testing`, then `test-without-building`, so the scheme (and Gradle) builds
@@ -359,19 +357,4 @@ scripts/ios/test.sh --cleanup                         # delete this worktree's s
   `ProgressView` with a still stand-in (`StillSpinnerStyle` in `AssertAppearances.swift`).
 - Whole screens with system chrome (the glass tab bar, navigation bars, presented sheets) use
   `assertScreenAppearances(of:named:)`, which draws the view in a window of its own at 375 x 667 pt with UIKit
-  animations off; a layer render misses that chrome. `ShellSnapshotTests` covers the tabs, the root header, a pushed
-  screen and the sheet heights on kit fixtures, `KitSnapshotTests` the kit components, `TodaySnapshotTests` and
-  `BellSheetSnapshotTests` Сегодня and the bell on the states the shared presenter builds from `TodaySamples`,
-  `ScheduleSnapshotTests` the schedule and its sheets on `ScheduleSamples`.
-- CMP-hosted routes draw into a Metal layer those snapshots miss, so they are checked by XCUITest screenshots and
-  their goldens stay Roborazzi's on the JVM until their SwiftUI screens replace them
-  ([ADR 0022](decisions/0022-jvm-screenshot-tests.md)).
-
-## Moving to SwiftUI
-
-[ADR 0031](decisions/0031-swiftui-ios-screens.md): every iOS screen becomes native SwiftUI over a shared,
-Compose-free view model. A route moves in one change: the SwiftUI screen in `Sources/Features/<Feature>/`, its
-snapshot tests and the `.swiftUI` target in `Routes+<Feature>.swift`. Every route has moved; the Compose hosts
-(`ComposeHost`, the `.compose` targets, the `shared/ios` screen factories) are gone. How:
-[Adding a SwiftUI screen](recipes/ios-host.md). Open
-questions (minimum iOS version, how view models reach Swift, screen order) are listed in the ADR.
+  animations off; a layer render misses that chrome (`ShellSnapshotTests`, `ScheduleSnapshotTests`).

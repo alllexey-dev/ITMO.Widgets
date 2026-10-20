@@ -80,18 +80,13 @@ the site, because Universal Links need a signed build with associated domains
 
 ## Verification and the site
 
-- `itmo-widgets-web` serves `site/.well-known/assetlinks.json` on both hosts:
-  one statement for `dev.alllexey.itmowidgets` with the release and the debug
-  (`~/.android/debug.keystore`) fingerprints, JSON without redirects.
-- Android 12+ verifies each host separately: release-signed builds on both, a
-  debug-signed one only on dev. Android 8-11 verify all hosts together, so a
-  debug-signed build is verified on none. Check with
-  `pm get-app-links dev.alllexey.itmowidgets`. Debug builds use the release key
-  when `keystore.properties` is present (a local build), so only CI debug builds
-  are debug-signed.
-- Without the app, nginx answers `/u/*` with `site/link/profile.html` and
-  `/sport/*` with `site/link/sport.html` (200, `noindex`, `no-referrer`). The pages
-  make no API request and never print the ISU or lesson id. On Android the open
-  button is an `intent://` URL with `browser_fallback_url` to the releases page.
-- Tests: `AppLinksTest`, `EntryRouteParserTest`, `ShellHostTest`,
-  `SportSignViewModelTest`, instrumented `MainActivityDeepLinkTest`.
+- `itmo-widgets-web` serves `site/.well-known/assetlinks.json` on both hosts: one statement for
+  `dev.alllexey.itmowidgets` with the release and the debug (`~/.android/debug.keystore`)
+  fingerprints, JSON without redirects.
+- Android 12+ verifies each host separately (a debug-signed build only on dev); Android 8-11 verify
+  all hosts together, so a debug-signed build is verified on none. A local debug build uses the
+  release key when `keystore.properties` is present, so only CI debug builds are debug-signed. Check
+  with `pm get-app-links dev.alllexey.itmowidgets`.
+- Without the app, the site answers `/u/*` and `/sport/*` with `site/link/profile.html` and
+  `site/link/sport.html` (200, `noindex`, `no-referrer`): no API request, the ISU or lesson id is never
+  printed; on Android the open button is an `intent://` URL falling back to the releases page.
