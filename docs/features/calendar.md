@@ -4,8 +4,9 @@ Product behaviour: [Как это работает: расписание](../how
 
 The own personal schedule goes to the phone's calendar as a kept
 synchronization or a one-off `.ics` file, both on the `Расписание` settings
-page ([settings](../settings.md#schedule)). Backend is not involved. The code
-is part of the schedule feature ([modules](schedule.md#modules)).
+page ([settings](../settings.md#schedule)). Backend is not involved; the code is
+part of `:shared:feature-schedule`. Neither way needs the connection or
+`Изменения расписания`.
 
 ## Events
 
@@ -21,12 +22,21 @@ is part of the schedule feature ([modules](schedule.md#modules)).
 
 ## Synchronization
 
+- The switch is off by default. Turning it on asks for `READ_CALENDAR` and
+  `WRITE_CALENDAR` (only here). When Android suggests an explanation, the
+  `Доступ к календарю` dialog (`Не сейчас`, `Разрешить`) comes first. A plain
+  refusal leaves the switch off with the snackbar `Нет доступа к календарю`; a
+  refusal for good shows the same dialog with `Открыть настройки` (the app's
+  system page). Turning it off deletes the calendar with its events. After it
+  turned itself off the row says why (`нет доступа к календарю`, `календарь
+  удалён`).
 - `CalendarSyncRepositoryImpl` keeps today..today+28 (`WINDOW_DAYS`) in the
   app's own local calendar `ITMO.Widgets` (`ACCOUNT_TYPE_LOCAL`, created and
   deleted through the sync-adapter URI). No calendar choice.
 - Google-account calendars are never written: Google's sync adapter and
   Android's mass-delete guard bring deleted events back. Google users get the
-  `.ics` export.
+  `.ics` export. Google and Yandex Calendar do not show device calendars, so the
+  synchronized lessons appear only in the phone's own calendar app.
 - `AndroidPhoneCalendars` is the only `CalendarContract` code. Events are
   busy, without reminders. The description's last line is the tag
   `ITMO.Widgets · <key>` (`CalendarEvent.taggedDescription`); sweeps find the
@@ -87,28 +97,24 @@ is part of the schedule feature ([modules](schedule.md#modules)).
 - File `cacheDir/ics/itmo-schedule-<start>-<end>.ics` (only the latest kept),
   shared through `FileProvider` `${applicationId}.files`. An empty range writes
   nothing.
-- UI: `IcsExportBottomSheet` (`feature/settings/ui`, body
-  `IcsExportSheetContent` in `:shared:feature-settings`) over
-  `IcsExportViewModel`; states Choose, Preparing, Ready, Empty, Failed share
-  one fixed-height area. Range and written file live in `SavedStateHandle`;
-  after process death the file is written again.
-
-Tests: `commonTest` of `shared/feature-schedule`, `CalendarSyncProviderTest`
-against the emulator's CalendarProvider (including Google-like sync-adapter
-write-backs) and `SettingsNavigationTest` for the sheet.
+- UI: the `AppRoutes.IcsExport` sheet (`IcsExportSheetContent` in
+  `:shared:feature-settings`, hosted by `SettingsEntries` with the date range
+  picker and the share and view intents) over `IcsExportViewModel`; states
+  Choose, Preparing, Ready, Empty, Failed share one fixed-height area. Range and
+  written file live in `SavedStateHandle`; after process death the file is
+  written again.
 
 ## iOS
 
-Both ways exist on iOS (`IosPlatformCapabilities.calendarExport`), with the
-shared events, planner, sync file and `DefaultCalendarSync`; platform side in
-`shared/feature-schedule/src/iosMain/.../data/calendar/`,
-`calendarIosModule`, `iosApp/Sources/Features/Calendar/`.
+Both ways exist on iOS (`PlatformCapabilities.calendarExport`), with the
+shared events, planner, sync file and `DefaultCalendarSync`.
 
 - Access: turning on asks EventKit for full access
   (`EKEventStore.requestFullAccessToEvents`, `CalendarAccess`,
   `NSCalendarsFullAccessUsageDescription`); write-only access cannot create a
-  calendar or read events back. iOS prompts once; a permanent refusal offers
-  the app's Settings page.
+  calendar or read events back. iOS prompts once; after a refusal for good
+  the row shows `Доступ к календарю` with `Открыть настройки`, the app's page in
+  Settings. `.ics` goes through the share sheet.
 - `EventKitPhoneCalendars` creates `ITMO.Widgets` in the iCloud source, else
   local; never Exchange, Google or subscribed. After a reinstall a same-titled
   calendar there is adopted. Tag line in the notes, as on Android.

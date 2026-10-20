@@ -4,9 +4,7 @@ Product behaviour: [Как это работает: ссылки предмет�
 
 HTTPS links per subject and period, private or shared with a schedule flow or
 everybody. They live on the recordbook's [subject page](subject-page.md); there
-is no separate links screen. `core/resources` holds the contract,
-`feature/resources` (`:shared:feature-resources`) the data, sheets and view
-models. Backend contract: `../itmo-widgets-backend/docs/contracts/subject-links.md`;
+is no separate links screen. Backend contract: `../itmo-widgets-backend/docs/contracts/subject-links.md`;
 moderation model: decision
 [0008](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0008-community-moderation.md).
 
@@ -19,9 +17,7 @@ moderation model: decision
   for past periods too, never for physical education.
 - `SubjectLink`: a `LinkCategory`, a URL, an optional title (at most 120
   characters) and a visibility. `LinkCategory` declaration order is the display
-  order. Labels, icons and visibility texts are in
-  `core/resources/SubjectLinkTexts.kt` (`:shared:core`), shared by the recordbook
-  and the sheets. A chat is an ordinary `CHAT` link, never in the subject page's
+  order. A chat is an ordinary `CHAT` link, never in the subject page's
   short list.
 - Visibility: `PRIVATE` (owner only), `FLOW` (students with exactly this
   MyITMO schedule `flow_id` of the subject and period, any nesting depth), `ALL`
@@ -31,7 +27,9 @@ moderation model: decision
   name). While `premoderation` is true both wait for review: an `ALL` link for
   a moderator; a `FLOW` link is approved by Backend's ISU check when ISU
   confirms the author is in the flow and the flow has at most 50 members
-  (configurable on Backend), otherwise a moderator decides.
+  (configurable on Backend), otherwise a moderator decides. Moderation has no app UI;
+  operators use the Backend moderation API
+  (`../itmo-widgets-backend/docs/ops/moderation.md`).
 - Others always see published content; the owner also sees review states and
   the moderator's reason. `С прошлых лет` holds approved `ALL` links of
   `MATERIALS`, `TASKS`, `RECORDINGS`, `NOTES` and `EXAM` from earlier periods.
@@ -50,8 +48,8 @@ not shown. While the page is open the shown order stays
 (`core/presentation/StableOrder`): a vote changes a score in place and never
 moves a row; a new screen or a pull ranks afresh. Votes go through
 `RecordbookSubjectViewModel.voteLink`, one at a time. Own links show `моя` and
-their review state, never a vote; under a `VOTE` restriction the pill has no
-vote buttons. Like and dislike use outlined thumbs, filled for the selected vote, on both platforms.
+their review state, never a vote; under a `VOTE` restriction there are no vote
+buttons.
 
 The recordbook reads the cached snapshot through `SubjectLinksRepository.peek`
 first, then refreshes the scope.
@@ -60,11 +58,9 @@ first, then refreshes the scope.
 
 Keys `AppRoutes.SubjectLinks`, `AppRoutes.LinkEditor`, `AppRoutes.LinkActions`
 and the dialog `AppRoutes.ReportLink`, all with
-`core/navigation/SubjectLinksArgs`. Bodies are Compose in
-`:shared:feature-resources` (`feature.resources.ui`); `ResourcesEntries.kt` in
-`app/` registers the keys and runs the Android effects. Every entry gets its
-own view model from Koin (`ResourcesKoinModule.kt`), so the actions sheet and
-the report dialog each have their own `SubjectLinksViewModel`. The shell refuses
+`core/navigation/SubjectLinksArgs`. Every entry gets its own
+`SubjectLinksViewModel`, so the actions sheet and the report dialog never share
+state. The shell refuses
 a second sheet or dialog of a class already shown; a sheet that opens another
 sheet, a screen or the report closes itself first.
 
@@ -102,12 +98,9 @@ made during the upload is sent next time.
 
 ## Storage and synchronization
 
-- `core/resources/SubjectLinksRepository` is the port;
-  `feature/resources/data/SubjectLinksRepositoryImpl` implements it with Core's
-  `SubjectLinksApi` (`BackendClient.links`), the connection gate and an injected
-  wall clock. `DemoMode` is checked first; every call passes
-  `BackendGate.mayCallBackend()`. Koin's `resourcesModule` builds the one
-  repository shared by the sheets, the recordbook and sign-out (`links` cleaner).
+- `SubjectLinksRepositoryImpl` (one instance, shared by the sheets, the
+  recordbook and sign-out) checks `DemoMode` first; every call passes
+  `BackendGate.mayCallBackend()`.
 - `SubjectLinkMappers.kt` is the one place that reads Core's types: an unknown
   category shows as `OTHER`, an unknown status shows no badge.
 - With the connection the server is the source of truth: every action goes to it
@@ -138,11 +131,9 @@ made during the upload is sent next time.
 ## iOS
 
 The iOS app ([iOS app](../ios.md)) draws the sheets in SwiftUI over the same view
-models (`iosApp/Sources/Features/Resources/LinkSheets.swift`,
-`LinkEditorSheet.swift`; arguments from `subjectLinksParameters`); `Routes+Resources.swift`
-maps the three sheet routes, the graph loads `resourcesModule` with
-`resourcesIosModule`, and the [subject page](subject-page.md#ios) shows links
-and chats as on Android. What differs:
+models (`iosApp/Sources/Features/Resources/`); the
+[subject page](subject-page.md#ios) shows links and chats as on Android. What
+differs:
 
 - One router sheet at a time; from the subject page the actions sheet replaces
   itself with the editor or `Мои баллы` (`AppRouter.replaceSheet(with:)`). The
@@ -155,23 +146,3 @@ and chats as on Android. What differs:
   it). Copy confirms with `links_copied`; failures show as a banner.
 - The demo shows `DemoSubjectLinks` and refuses every change
   (`error_demo_unavailable`) with no request.
-- Tests: `ResourcesIosModuleTest` (`scripts/ios/test.sh kn
-  :shared:feature-resources`) and `ReviewsLinksUITests`.
-
-## Not in the app
-
-No cross-subject list of own links, no home-feed card for moderation results.
-Moderation has no app UI; operators use the Backend moderation API
-(`../itmo-widgets-backend/docs/ops/moderation.md`). Strict verification of flow
-membership is deferred (decision 0008).
-
-## Verification
-
-```bash
-./gradlew :shared:feature-resources:testAndroidHostTest :app:testGithubDebugUnitTest
-scripts/verify.sh shots feature-resources
-```
-
-Tests live in `:shared:feature-resources` (`commonTest`, `androidHostTest`,
-goldens in `shared/feature-resources/screenshots/`) and `ResourcesEntriesTest` in
-`:app`; the subject page rows are covered by the recordbook's tests.

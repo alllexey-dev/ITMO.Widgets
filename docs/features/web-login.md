@@ -7,8 +7,7 @@ the sheet are called `Подключить устройство`: the same sheet
 
 The web version at `https://<domain>/app/` has no password form: a browser
 signs in when the signed-in app approves its eight-character code (typed or
-scanned from a QR). `core/weblogin` holds the contract, `feature/weblogin` the
-parser, data, view model and sheet. Backend contract:
+scanned from a QR). Backend contract:
 `../itmo-widgets-backend/docs/contracts/web.md`; web side:
 `../itmo-widgets-web/web/README.md`.
 
@@ -20,9 +19,6 @@ parser, data, view model and sheet. Backend contract:
   true)`) once; the demo session refuses it (`ShellGate`). The sheet scene
   (`ShellScenes.kt`) opens it expanded to content, up to the height below the status bar,
   and resizes for the keyboard.
-- Body: `WebLoginSheetRoute` (`:shared:feature-account`,
-  `feature/weblogin/ui/`). `AccountEntries.kt` registers the key and keeps the
-  Android effects: the scanner (`scanWebLoginCode` in `:app`) and `onClose`.
 
 ## Reading the code
 
@@ -44,17 +40,10 @@ parser, data, view model and sheet. Backend contract:
 
 ## States
 
-`WebLoginViewModel` exposes one `WebLoginUiState`: `Input(code, error)`,
-`Checking(code)`, `Confirm(code, kind, title, name, client, requestedAt,
-access, scopes, scopesEditable, sharedSession, verification, warning, approve,
-approving)`, `Unlocking`, `Rotating`, `Sending`, `Done(text)`,
-`Error(text, code)`.
-
-- `requestedAt` uses the academic clock's zone; the field value lives in
-  `SavedStateHandle`.
-- While the approval is in flight both buttons are disabled: it may already
-  have signed the browser in.
-- `Done` and `Error` are polite live regions.
+`WebLoginViewModel` exposes one `WebLoginUiState` (`Input`, `Checking`, `Confirm`, `Unlocking`,
+`Rotating`, `Sending`, `Done`, `Error`); the field value lives in `SavedStateHandle`, `requestedAt`
+uses the academic clock's zone. While the approval is in flight both buttons are disabled: it may
+already have signed the browser in. `Done` and `Error` are polite live regions.
 
 ## Errors
 
@@ -101,8 +90,7 @@ cookie) is never called by the app.
 The same sheet connects a self-hosted agent: a link
 `https://<host>/pair#v1.<CODE>.<pk>.<s>` from the scanner, a pasted link or an
 App Link (`PairLink`, our two hosts only). Backend contract:
-`../itmo-widgets-backend/docs/contracts/pairing.md`; design:
-`vibe/plans/session-handoff-plan.md`.
+`../itmo-widgets-backend/docs/contracts/pairing.md`.
 
 1. `PairingRepository.open(code, link)` calls `POST
    /api/users/me/pair/{code}/open` and shows the card only when Backend's
@@ -111,17 +99,14 @@ App Link (`PairLink`, our two hosts only). Backend contract:
    a typed code of a keyed kind is refused with `Для этого устройства
    отсканируйте QR или вставьте ссылку` (the old web-login route answers 404
    for such a code, then `open` names the kind).
-2. `Confirm` shows the kind's title (`Свой клиент (сервер)`, `Новая сессия для
-   своего клиента`), the device's own name (`название задаёт само
-   устройство`), its version, the time, `Получит полный доступ к My ITMO`, the
-   permissions (switches `Спорт`, `Друзья`, `Расписание` for a new agent,
-   read-only for an agent session), the shared-session notice, `Код проверки
-   482 913 — сверьте с экраном устройства` and `Подключайте только своё
-   устройство`. `Отмена` rejects the challenge.
-3. `Подключить`: `Unlocking` (the screen lock), `Rotating` (`Входим…`, the
-   hand-off), `Sending` (`Отправляем…`, `POST .../{challengeId}/approve` with
-   the sealed bundle and, for a new agent, the scopes), then `Done`
-   (`Готово — проверьте экран устройства`).
+2. `Confirm` shows the kind, the device's self-given name and version, the
+   time, that it gets full My ITMO access, the permissions (switches for a new
+   agent, read-only for an agent session), the shared-session notice and the
+   six-digit verification code to compare with the device. `Отмена` rejects
+   the challenge.
+3. `Подключить`: `Unlocking` (the screen lock), `Rotating` (the hand-off),
+   `Sending` (`POST .../{challengeId}/approve` with the sealed bundle and, for
+   a new agent, the scopes), then `Done`.
 
 | Situation | Result |
 |---|---|
@@ -161,28 +146,16 @@ The link stays in the view model's memory; the saved state never holds it.
 
 ## Connected devices
 
-`Подключённые устройства` (`AppRoutes.Connections`, `ConnectionsViewModel`)
-opens from the sheet, from `Устройства` of «Сервер ITMO.Widgets» and from a
-new-connection push. Each device is a row of one group: the kind's tile, the
-name, when it connected and was last active, the badge and a tonal `Отключить`.
-`GET /api/users/me/connections` lists web sessions and agents with the kind
-icon, the name (an agent's own, a browser's description), `Подключено <date>`,
-the last activity and the `Общая сессия My ITMO` badge. `Отключить` asks first:
-`POST /api/users/me/connections/{id}/revoke` ends Backend access at once; for
-a device with the shared session the dialog says that the device deletes the
-ITMO session itself when it next calls, and only an ITMO.ID sign-out ends it
-otherwise (which also signs the phone out).
+`Подключённые устройства` (`AppRoutes.Connections`, `ConnectionsViewModel`) opens from the sheet,
+from `Устройства` and from a new-connection push. `GET /api/users/me/connections` lists web sessions
+and agents (kind, name, connected and last-active time, the shared-session badge). `Отключить` asks
+first; `POST /api/users/me/connections/{id}/revoke` ends Backend access at once. A device with the
+shared My ITMO session deletes that session itself on its next call; otherwise only an ITMO.ID
+sign-out ends it (which also signs the phone out), and the dialog says so.
 
 Backend pushes `DEVICE_CONNECTED_PAYLOAD` after every connection and
 `SPORT_AGENT_BOOKED_PAYLOAD` when an agent booked a lesson
 ([notifications](notifications.md)).
-
-## Look
-
-The sheet and the list are drawn on the kit on both platforms (the device card
-with its tile, the permissions as switch rows of one group, the verification
-code in a tinted card); the change was the look only: the code parsing, the
-screen lock before the approval, the HPKE sealing and their tests are as they were.
 
 ## iOS
 

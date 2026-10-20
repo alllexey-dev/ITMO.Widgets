@@ -2,7 +2,8 @@
 
 The schedule touches every layer: it reads MyITMO through MyItmoApi, uploads
 and reads lessons through the ITMO.Widgets Backend, caches on the device,
-shows a Compose screen on both platforms and feeds the home-screen widgets.
+shows a Compose screen on Android and a SwiftUI screen on iOS over one view
+model, and feeds the home-screen widgets.
 Follow it to learn where code goes; copy it when you add a feature. Product
 behaviour is in [features/schedule.md](features/schedule.md).
 
@@ -120,15 +121,10 @@ shows (`domain/widget/ScheduleWidgetSelector.kt`).
 
 ## 9. Tests at each layer
 
-| Layer | Tests |
-|---|---|
-| Data source and gates | `ScheduleRemoteDataSourceImplTest` (MockEngine through the real clients), `ScheduleDemoGateTest` |
-| Repository | `ScheduleRepositoryImplTest` |
-| View model | `ScheduleFeedPresenterTest`, `ScheduleFeedViewModelTest` (`commonTest`) |
-| Screen | `ScheduleScreenshotTest`, app `ScheduleEntriesTest`, iOS `ScheduleSnapshotTests` |
-| Koin | `ScheduleModuleTest`, `ScheduleIosModuleTest`, app `ScheduleGraphTest` |
-| Widget | `ScheduleWidgetSelectorTest`, `ScheduleWidgetDataProviderTest`, `SportWidgetSelectorTest`, `ScheduleTimelineWriterTest`, `WidgetsScreenshotTest`, instrumented `ScheduleWidgetSnapshotStoreTest` and `WidgetRenderingTest`, iOS `ScheduleTimelineTests.swift` |
-| UI on device | iOS `ScheduleUITests.swift` |
+Each layer has its own test next to it: the data source through MockEngine and the real clients, the demo gate
+(`ScheduleDemoGateTest`), the repository, the presenter and the view model in `commonTest`, the screen as JVM
+screenshots and iOS snapshots, Koin (`ScheduleModuleTest`, `ScheduleIosModuleTest`), and the widget selector and
+snapshot store. Copy the `Schedule*Test` next to the class you add.
 
 ## Adding a Backend call
 
@@ -164,14 +160,17 @@ Backend) and maps `MyItmoException` to `AppError` in the repository.
 1. `presentation/<Screen>UiState.kt` and `<Screen>ViewModel.kt`; register it
    with `viewModelOf` in the feature's `di/` module and add new modules to
    `KoinModules.kt` (Android) and `IosKoinModules.kt` (iOS).
-2. `ui/<Name>Route.kt` (takes navigation lambdas, `viewModel = koinViewModel()`)
-   and a stateless `ui/<Name>Screen.kt` from the kit. Strings go to the
-   module's `composeResources`, icons come from `docs/design/icons.tsv`.
+2. Android: `ui/<Name>Route.kt` (takes navigation lambdas,
+   `viewModel = koinViewModel()`) and a stateless `ui/<Name>Screen.kt` from the
+   kit, both in `src/androidMain`. Strings go to the module's
+   `composeResources`, icons come from `docs/design/icons.tsv`.
 3. Previews in `ui/<Name>ScreenPreviews.kt`, then
    `scripts/verify.sh shots feature-<x> --record` and look at every PNG.
-4. A key in `AppRoutes`, registered in `app/shell/entries/<Area>Entries.kt`
+4. iOS: a SwiftUI screen over the same view model
+   ([recipes/ios-host.md](recipes/ios-host.md)).
+5. A key in `AppRoutes`, registered in `app/shell/entries/<Area>Entries.kt`
    and mapped in `iosApp/Sources/App/Router/Routes+<Area>.swift`.
-5. Host tests: the screen in every state, the view model with fakes and a
+6. Host tests: the screen in every state, the view model with fakes and a
    fixed clock, `<X>ModuleTest`.
 
 ## Adding a background check

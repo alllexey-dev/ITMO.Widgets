@@ -6,479 +6,178 @@ publication or deployment.
 
 ## Unreleased (2.3.0)
 
-The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
-keeps its features and the data of 2.2, and the same shared screens run in a
-new iOS app.
-
-### Fewer background wake-ups (2026-10-20)
-
-- On Android the schedule widgets refresh every 7 minutes only while they show a sport queue, not all day with the auto sign on; the schedule and sport widgets drop the launcher's hourly update, which repeated the hourly periodic work; the own lessons and sport bookings go to Backend only when they changed or a day passed; a process start keeps a waiting FCM token sync instead of replacing it.
-
-### Settings with one home for every setting (2026-10-19)
-
-- Профиль keeps the friends (or their gate), `Виджеты`, `Настройки`, the links (now with `Карта`, the campus map, above My ITMO) and `Выйти`; `Приватность`, `Подключение и данные`, `Уведомления` and `Подключить устройство` left it, since each was a second way into a settings page.
-- The settings root starts with `Аккаунты`: `Сервер ITMO.Widgets` with its state and `БАРС` (`Подключён`, `Войти`, `Не подключён`), which opens the BARS sign-in; then `Уведомления` (`включено N из M`), `Виджеты` (how many are placed), `Оформление` (the accent), `Разделы` and `О приложении` (ex `Обслуживание`).
-- `Разделы` merges `Главный экран`, `Расписание` and `Спорт` into one page with the groups `Сегодня`, `Расписание` and `Спорт`; the schedule no longer links back to «Уведомления».
-- «Подключение и данные» is «Сервер ITMO.Widgets» and much shorter: the switch, `Кто видит` and `Устройства` (a page with `Подключить устройство` and `Подключённые устройства`) while connected, `Что даёт подключение` before it; what the server keeps opens in a sheet. `Работает и без подключения` and the BARS block are gone.
-- `Автозапись на спорт` (pending sport auto sign in the own schedule and its widgets) is on by default; a stored off stays off.
-- Old links and shortcuts to `PRIVACY`, `HOME`, `SCHEDULE`, `SPORT` and `MAINTENANCE` open the new places.
-
-### First run in two steps (2026-10-19)
-
-- The first-run flow has two steps instead of three: `Разрешения`, topped by a card with the full name and the ISU from ITMO.ID, then `Друзья и очередь` with one line, `Что хранит сервер`, `Подключить` and `Не сейчас`. The `Всё уже на месте` step (the lesson card and the `И ещё` rows) is gone, and every line of copy is shorter.
-- On Android the first-run titles and the name are no longer black in the dark theme.
-
-### Lesson subject without opening it first (2026-10-19)
-
-- The lesson sheet shows `Предмет` and `Ссылки 3` right away, also for a subject never opened in Зачётка: a subject whose links the device has never loaded no longer hides both tiles, the sheet fetches its links once.
-
-### Owner polish pack (2026-10-19)
-
-- The lesson sheet's `Друзья на паре` header keeps the usual gap above the list, the BARS row is top-aligned with its button under the title, the person card says `Было у вас осенью 2025` for a subject of an earlier term instead of `Ведёт у вас`, the campus map opens in the theme's background instead of a white frame, snackbars and banners last 2 s (5 s with an action), and a section change reloads the queue entries at once.
-
-### Build in the version row (2026-10-19)
-
-- Settings `Версия` shows the build number, the short commit and, for a custom build, its source (`AlexPer777/ITMO.Widgets` or `своя сборка`); a tap copies the full build details.
-
-### iOS push switches hidden (2026-10-19)
-
-- On iOS «Уведомления» hides `Спорт`, `Друзья` and `Новые устройства` until the app holds Apple's notification filtering entitlement; every push shows, the stored switches stay.
-
-### iOS framework without Compose (2026-10-19)
-
-- On iOS, Kotlin text (notifications, widget files, shares, the widgets gallery) comes from the app's string tables through Swift, and the app no longer carries the Compose resources (ADR 0035, proposed).
-- The widgets' theme palette is built in `:shared:core` without Compose, so no iOS code reads the design system any more; the colours stay the same.
-- Every feature module keeps its Compose screens in `androidMain` (convention `itmowidgets.cmp.android`) and reads its strings from `:shared:compose-strings`; the screens look the same on Android, and their iOS code compiles no Compose. The campus map's icons are Android assets that the iOS bundle references by path.
-- The design system and the Compose strings are Android-only modules, the test kit's Compose helpers Android-only, and the shared route keys no longer extend Nav3's `NavKey`; the iOS framework links no Compose any more (release framework 231.8 -> 102.7 MB).
-
-### Campus map polish (2026-10-19)
-
-- The map's chrome is compact and opaque over the plan: a building pill and place chips with the plan's icons, room
-  and route cards with icons, `Сюда` and `Отсюда` instead of `Маршрут` and `Открыть в Картах`; a route goes between
-  any two rooms (either end picked by the search or a tap on the plan, swapped with one tap); the plan is dark in the
-  dark theme; a building or a route on its way shows `Загружаем план...` and routing runs off the main thread.
-- Map follow-ups: rooms say what they are (`Аудитория · 4 этаж`), a place chip goes to the floor that has it, food
-  and coworkings have different colours, the route has a casing, `Показать корпус целиком` under the floors, and on
-  iOS the map is full screen (no tab bar, pass accessory or demo banner).
-
-### Recordbook polish (2026-10-19)
-
-- The BARS offer and notices keep the title at full width with the button under it, no more words broken into a
-  narrow column; Зачётка's numbers pulse until the first BARS answer comes; the subject page's tabs turn with a
-  horizontal swipe, on Android and iOS. A subject row puts its number under the name when a word would not fit beside
-  it.
-
-### Lesson sheet people and avatars (2026-10-19)
-
-- Lesson sheet: the action tiles no longer jump in after it opens (`Друзья` keeps its place, disabled while the
-  friends load or when nobody is there), `Друзья` scrolls to the list with its bottom margin, the sheet's colour runs
-  under the navigation bar, people use the friends list's compact row everywhere, Android avatars are M3 Expressive
-  cookies (iOS keeps circles), and the sport catalog's friend avatars are no longer squashed.
-- The subject page's teachers use the same person row as the rest of the app (40 dp avatar, a cookie on Android).
-
-### iOS native screens (2026-10-19)
-
-- On iOS the last Compose screens are native SwiftUI: all links of a subject, a link's actions, the link editor and the link report, the review editor and another user's sport; the Compose host (`ComposeHost`, the `.compose` routes and `shared/ios` `screens/`) is gone.
-
-### Builds outside the official pipeline (2026-10-19)
-
-- Builds name their origin: `BUILD_CHANNEL`, `BUILD_SOURCE` and `BUILD_COMMIT` in Android's `BuildConfig`,
-  `BuildChannel`, `BuildSource` and `BuildCommit` in the iOS Info.plist. `official` only with the official signing,
-  `custom` otherwise ([building](docs/building.md#build-identity)).
-- The iOS build number from `archive.sh` is Android's `versionCode` instead of the commit count, so a fork's merge
-  commits and shallow clones no longer change it.
-- `dist.yml` builds a self-signed release APK and an unsigned `.ipa` on demand, with no secrets, in this repository
-  or a fork, and attaches the `.ipa` to every published release. `./gradlew :app:assembleGithubRelease
-  -Pitmo.selfSigned=true` gives an installable APK locally.
-- Pushes and scheduled runs of the upstream workflows build nothing in a fork.
-
-### Notification settings (2026-10-19)
-
-- «Уведомления» gives every type its own switch, the pushes included (`Спорт`, `Друзья`, `Новые устройства`): the
-  device drops a switched-off push (`FcmPayloadDispatcher`, the iOS notification service; a sport push still books);
-  the sample notifications and the explanatory notes are gone; a system block shows once, as one card on top.
-
-### Votes (2026-10-19)
-
-- Teacher reviews vote with like and dislike thumbs instead of arrows, as links do: Android has one `VotePill` for links and reviews (the subject page's `Материалы` takes it too), iOS already used `ItmoVotePill` everywhere; `arrow_drop_up` is gone.
-
-### Спорт (2026-10-19)
-
-- Спорт: `Секции` read at a glance (icon lines, status pills, a short note), `Сделать секцией` only in a booked lesson's sheet, the `Доступные` filter is back, and `Моё` / `Запись` switch by a swipe too (Android and iOS).
-
-### Client statistics (2026-10-19)
-
-- Every Backend request also carries `X-Client` (ADR 0034): `kind`, version, build, channel, OS version and a random
-  install id, kept in the app's settings and replaced after sign-out. Android and iOS add their build identity: an official build's distribution as the channel, `custom` otherwise, with `source` and `commit`. `X-App-Version` stays as it was. The iOS
-  notification service sends the same header with the app's install id.
-
-### Campus map rooms (2026-10-19)
-
-- `201 (составное)` on Биржевая opens its own room on the campus map instead of room 201: the whole timetable text is
-  matched first. `RoomMatcherParityTest` checks the matcher on every room of Backend's synced lessons against
-  itmo-map-web's `rooms.js`.
-
-### Widget polish (2026-10-19)
-
-- `Виджеты` shows every widget whole and in proportion (drawn at its launcher size, shrunk to the card), one card per row with the name and the buttons under it; `Расписание на день` keeps a short day compact at the top (an hour at most 32 dp, 36 pt on iOS), and the `сейчас` line reaches into the current lesson up to its text (never through it), where the elapsed shade, inset inside the block, ends at it, on both platforms; the lesson's colour bar is a little shorter, off the block's top and bottom edges.
-
-### Widgets (2026-10-18)
-
-- The classic list widget is back as `Список пар` on Android and iOS, next to the new widgets: the day's lessons in
-  rows under `Сегодня · 7 сентября`, past ones faded, tomorrow once today is over, with the day widget's settings; on
-  Android it scrolls. It draws the same snapshot as the new widgets.
-- Widgets placed as lists in 2.2 and the first iOS builds stay lists (Android `DayScheduleWidgetProvider`, iOS kind
-  `.widget.day-schedule`); `Расписание на день` moves to its own provider and kind (`DayTimelineWidgetProvider`,
-  `.widget.day-timeline`), so a day widget placed from a master build after #447 has to be added again.
-- The classic list's `На сегодня всё` no longer shows cut in half at the bottom of a full day: on Android it stays
-  only when every row fits above it (the list still scrolls), as on iOS, where the rows that do not fit are left out.
-- `Пара`, `Расписание на день` and `Спорт` are marked beta: `(бета)` in the system widget picker and a `Бета` pill in
-  `Виджеты`.
-
-### Friend request time (2026-10-18)
-
-- Friend requests say when they were sent, in the bell and in Друзья on both platforms (`12:05`, `вчера`, `28 сент.`), from Backend's new `UserProfile.requestedAt` (itmo-widgets-backend#53, contract from Backend f9dd1e0); requests still lead the bell, newest first. Without the time from an older Backend nothing changes.
-
-### Fixes (2026-10-18)
-
-- iOS shows the pull-to-refresh spinner on every tab root (Спорт, Сегодня, Расписание, Зачётка, Профиль) under the
-  header, and on every screen it stays until the refresh ends: the roots' hidden navigation bar took the refresh
-  control with it, and the refresh action returned at once or was cancelled by the first state change.
-- Another user's sport is titled by their given name (`Спорт: Иван`), from ITMO.ID's `given_name` or the second word of «Фамилия Имя», not by their surname.
-
-### Data (2026-10-17)
-
-- `TeacherNowGateway`: the lesson a teacher gives now or next today, from My ITMO's teacher timetable (MyItmoApi 2.2.0 `getTeacherSchedule`), for the person card's «Сейчас ведёт»; parallel groups in one room are one lesson.
-
-### iOS UI tests (2026-10-18)
-
-- iOS UI tests run on a pinned academic date, this week's Wednesday (`-itmoAcademicDate` in a Debug build), so
-  `ShellUITests.testTodayUrlOpensScheduleOnToday` and the schedule tests no longer fail on a Sunday; a new test pins a
-  Sunday and checks that the `today` link lands on the weekend's `Выходные` row.
-- The scroll loops and key checks of the UI tests (profile rows, the Me tab, the pass code, Сегодня, sport
-  sections, the record book, settings) also check that the element is drawn, not only hittable.
-
-### Campus map (2026-10-17)
-
-- The campus map looks like the official ITMO app and map.alllexey.dev: ITMO's own style with its colours, icons, labels, walls and route line, the selected room highlighted, the floor selector with dots on the route's floors; Noto Sans Bold for the labels instead of the app's SF Pro. No caption, MapLibre logo or attribution on the map; Settings, `Лицензии` names the plans' source and carries the MapLibre Native and Noto Sans licences (2026-10-18).
-- New module `:shared:feature-map` with the router of itmo-map-web ported to shared Kotlin (same routes as `router.js` on all 360 checked pairs of ITMO's six plans), the mapping of timetable rooms to plan rooms and the three-part «Маршрут» planner; `itmo_buildings.json` gains each building's campus-map id and Гастелло, 12.
-- The campus map screen on both platforms (native MapLibre): the lesson's room on its floor, «Маршрут» from the day's previous lesson or the entrance with «По городу» in the system Maps between buildings, room view, search across buildings, place chips, «У корпуса нет плана». `Маршрут` in the lesson sheet and on the Сегодня hero opens it. Plans come from the mirror on map.alllexey.dev and stay on the device (ADR 0033).
-
-### Settings and first run (2026-10-17)
-
-- New «Подключение и данные» and «Уведомления» pages, a sign-in with one main path and `Другие способы входа` in a sheet, and a three-step first run (your data, permissions one by one, the connection through a consent sheet) on Android and iOS; the old services, privacy and recordbook settings pages and the widget steps of the first run are gone.
-
-### Спорт lesson sheet data (2026-10-17)
-
-- The sport lesson sheet's teacher row says the tone of the teacher's reviews in words, as the schedule's lesson sheet does.
-
-### Fixes (2026-10-17)
-
-- The lesson sheet shows `Предмет` and `Ссылки 3` on both platforms when the record book knows the lesson's subject (the same match as the subject page's `Пары`): `Предмет` opens the subject page, `Ссылки` its `Материалы` tab. The count comes from the links stored on the device and is 0 without the connection.
-- iOS draws the schedule's week strip again, on the tab and on another user's schedule: the paging strip of #429 drew
-  its days below its own clip while they still took taps. The feed stays on today when days load above it after the
-  launch jump (the nightly `testDemoScheduleOpensOnTodayUnderTheRootHeader`).
-- Past day headers in the schedule feed are dimmed like the strip's past days on Android and iOS.
-- The schedule no longer shows week parity: the header and the week rows read `7-я неделя`.
-- A sheet's total skips old copies and templates of a tab, columns still empty for everyone and text columns, checks the total against the sum of the row's points, and finds full names from the ITMO.ID name parts; on 13 real sheets 1805 of 1816 students get the right total, up from 931 (#419).
-- A doubtful total shows `Проверьте итог` on the subject page; the review shows the total with its reason, the row around it and the other candidates, and `Вернуть авто` undoes a hand-picked total. On iOS `Мои баллы` is a native sheet (#419).
-- An own sport queue in Сегодня and Расписание shows its place as the sport tab does, `очередь 2 из 5`, on both platforms; a predicted lesson or an unknown place keeps `очередь`.
-
-### Fixes (2026-10-15)
-
-- Schedule week paging uses stable dates on both platforms and no longer treats programmatic movement as a swipe;
-  prepending weeks and interrupted jumps no longer reset the selected weekday. iOS animates week changes and cancels
-  stale positioning passes. Timeline projection runs off main and is reused while scrolling; cached timestamps no
-  longer reread day files, disabled queue rows skip sport refreshes, and duplicate/edge requests are bounded.
-
-- Past days in the schedule and sport week strips are dimmer; today and the selected day keep full emphasis (#424).
-- `Главный экран` settings can hide the QR pass entry on Сегодня on both platforms without hiding widgets or shortcuts (#420).
-- Sport friend rows and lesson sheets preserve avatar URLs on both platforms; iOS friend-request notifications use their photo too (#426).
-- Sport lessons whose MyITMO end falls on the wrong date (two days before the start) end on their own day at the time slot end, so rows, sheets, the schedule, widgets and calendar export show the right time and length (#431).
-- MyItmoApi 2.1.1: the sport lesson end comes from its `normalizedDateEnd`, which replaces the app's copy of the rule; behaviour is unchanged.
-- Avatar initials are the surname and the given name on both platforms: «Фамилия Имя Отчество» shows ФИ instead of ФО, and the own name reads «Фамилия Имя» from ITMO.ID's `family_name` and `given_name` instead of its two-word `name`, as other students' names do with Backend that stores the parts (itmo-widgets-backend#52). Avatars of other students take the initials from Backend's new `familyName` and `givenName` when it sends them (contract from Backend e475238). iOS friend requests, sport friends and recordbook teachers use the shared `personInitials`; the demo students follow the same order.
-
-- Subject link votes use like/dislike thumbs on Android and iOS, filled for the selected vote (#421).
-- iOS publishes the ITMO.ID identity to Backend, including groups, with foreground retries (#422).
-- iOS loads avatar photos in shared Compose screens and native friend rows, with initials while loading or on failure (#425).
+The app is rebuilt on Kotlin Multiplatform: one shared Kotlin core (data, domain, view models) under Compose screens
+on Android and native SwiftUI screens in a new iOS app. Android keeps the features and the data of 2.2.
 
 ### iOS app
 
-- Sign-in through ITMO.ID or a refresh token, the demo session (five taps on
-  the logo), the first-run flow with `Как добавить виджет` hints, `Вход на
-  сайт` with the system QR scanner, and My ITMO in the app's browser (other
-  sites open in Safari).
-- The tabs are the shared screens of Android: `Зачётка` with BARS and the
-  subject page (links, chats, teacher reviews with the AI summary), the
-  schedule with friends' schedules and lesson sheets, sport with `Мой спорт` and `Запись`, the home feed, and the Me
-  tab with friends, people search, privacy and settings; rows iOS cannot
-  support are hidden.
-- The QR pass at full brightness, the QR widget with the spoiler and dynamic
-  colours, the `QR-пропуск` control in Control Center, on the Lock Screen and
-  the Action button, App Shortcuts `QR-пропуск` and `Сегодня` in Siri and
-  Spotlight, and quick actions on the app icon.
-- Schedule widgets `Пара` (small, medium, Lock Screen) and `Расписание`
-  (medium, large) read a timeline the app precomputes to the end of tomorrow,
-  so they switch lessons without waking the app.
-- Background refresh checks schedule changes and new marks (My ITMO, BARS,
-  connected sheets) with Android's periods and texts; what is found at night
-  arrives at 06:00, and a tap on a notification opens the screen it is about.
-- The notification service books a freed sport place as Android's push
-  handler does, never for another account, the demo or without the services
-  opt-in.
-- Phone calendar sync into an `ITMO.Widgets` calendar, and `.ics` export
-  through the share sheet.
-- A newer iOS release from Backend is offered with a link to the App Store
-  (inactive until the App Store record exists); a Kotlin crash is saved to
-  `Журнал ошибок`.
-- The app icon is Android's launcher icon, with iOS 18 dark and tinted
-  variants.
-- New shell for iOS 26.1 and later: a Liquid Glass tab bar `Сегодня`,
-  `Расписание`, `Зачётка`, `Спорт`, `Профиль`; a `QR-пропуск` accessory over
-  `Сегодня` opens the pass sheet; `Сегодня` has a header with the date and the
-  bell; sheets open at the content's height, 0.82 of the screen or full.
+- A new app for iOS 26.1 and later: a Liquid Glass tab bar `Сегодня`, `Расписание`, `Зачётка`, `Спорт`, `Профиль`,
+  native SwiftUI screens over the same view models as Android; sheets open at the content's height, 0.82 of the
+  screen or full.
+- Sign-in through ITMO.ID or a refresh token, the demo session (five taps on the logo), the first run, `Подключить
+  устройство` with the system QR scanner, and My ITMO in the app's browser (other sites open in Safari).
+- The QR pass at full brightness in a sheet from the `QR-пропуск` accessory over `Сегодня`, the `QR-пропуск` control
+  in Control Center, on the Lock Screen and the Action button, App Shortcuts `QR-пропуск` and `Сегодня`, and quick
+  actions on the app icon.
+- Widgets `Пара`, `Расписание на день`, `Список пар`, `Спорт` and Lock Screen widgets read a timeline the app
+  precomputes to the end of tomorrow, so they switch lessons without waking the app.
+- Background refresh checks schedule changes and new marks (My ITMO, BARS, connected sheets) with Android's periods
+  and texts; what is found at night arrives at 06:00, and a tap on a notification opens the screen it is about.
+- The notification service books a freed sport place as Android does, never for another account, the demo or
+  without the services opt-in. `Спорт`, `Друзья` and `Новые устройства` switches stay hidden until the app holds
+  Apple's notification filtering entitlement; until then every push shows.
+- Phone calendar sync into an `ITMO.Widgets` calendar and `.ics` export through the share sheet.
+- A newer iOS release from Backend is offered with a link to the App Store; a Kotlin crash is saved to `Журнал
+  ошибок`. The icon is Android's launcher icon with dark and tinted variants.
+- The session and BARS Keychain items stay on this device only, so a backup no longer restores them on another one.
 
-### Android screens on Compose Multiplatform
+### Shell and look
 
-- Every screen, sheet and dialog (home, QR pass, schedule, sport, recordbook,
-  social, settings, links, reviews, sign-in, first-run flow, Me tab, update
-  offer, web sign-in, My ITMO) is a Compose Multiplatform screen shared with
-  iOS; copy, layout and behaviour stay as in 2.2. XML layouts, adapters and
-  View-based visual tests are gone.
-- One Navigation 3 shell in `MainActivity` replaces the Fragments and nav
-  graphs; widget, notification, shortcut and App Link routes go through one
-  shared parser and queue.
-- Predictive back on Android 13-15, as on 16: the gesture previews closing a
-  screen or a sheet, the start tab shows the back-to-home animation, and My
-  ITMO goes back in its web history first.
-- The bottom tabs switch by a tap on the bar with a fade through, no swipe;
-  each tab keeps its scroll and state. Pushed screens move on the shared X
-  axis over the bar, and the predictive Back shows the previous screen under
-  the one being closed, already in place when the gesture ends (2026-10-13).
-  Back from a pushed screen keeps each tab root's scroll and no longer reloads
-  Профиль; Сегодня and its bell refresh when the app returns to the
-  foreground, not when a sheet closes over it (2026-10-13).
-- The predictive Back on a pushed screen is Material's back preview: the
-  screen shrinks to 90 % under the finger and dissolves over 300 ms on
-  release, also after a long drag or a fling; tab roots have no preview
-  (2026-10-14).
-- Smaller changes: the `.ics` sheet buttons stand side by side when they fit;
-  deleting an own link asks first; report dialogs keep their text across
-  rotation; the review editor's button stays above the keyboard; another
-  user's sport offers `Открыть на карте`; the My ITMO top bar no longer shows
-  the current site.
+- Five tabs `Зачётка`, `Расписание`, `Сегодня`, `Спорт`, `Профиль` with a static one-line header the content scrolls
+  under; on Android the Material 3 Expressive bar, tabs switch by a tap only and keep their scroll and state.
+- Android: one Navigation 3 shell replaces Fragments and XML layouts; pushed screens move over the bar, and the
+  predictive Back (Android 13 and later) shows Material's back preview; My ITMO goes back in its web history first.
+- Widget, notification, shortcut and App Link routes go through one parser on both platforms.
+- New `Оформление` page with a live sample: `Цвет оформления` (`Как обои` on Android 12+, `Фирменный`, six presets or
+  `Свой цвет`), `Стиль палитры`, `Контраст` and `Чёрный фон`. The defaults keep the look of 2.2; below Android 12 and
+  on iOS the app is brand blue instead of the baseline purple.
+- Material 3 Expressive: every bottom tab shows its label, the morphing loading indicator, a little expressive
+  motion; reduced motion shows end states at once. Tonal buttons use the accent instead of a disabled-looking grey.
+- Every icon is a Material Symbols Rounded glyph; the selected tab shows the filled one. Android avatars are M3
+  Expressive cookies, iOS keeps circles; initials are the surname and the given name.
+- The app speaks Russian on a phone in any language, plurals, notifications, widgets and the QR tile included.
+- Snackbars and banners last 2 s, 5 s with an action.
 
-### Appearance
+### Сегодня and the bell
 
-- Android gets the new shell of the redesign: five tabs Зачётка, Расписание, Сегодня, Спорт, Профиль in the
-  Material 3 Expressive bar, a static header with the tab's name that the content scrolls under (Сегодня shows the
-  date and the bell), the `Пропуск` button on Сегодня that opens the pass in a sheet (code, name, group and ISU, when
-  it was loaded, the last code offline), sheets of three sizes, and `My ITMO` as a row of Профиль.
-- Сегодня on Android replaces the home feed: the hero with the lesson to go to now (the room in large type with the
-  building's address, the time left on a wavy bar, or `Онлайн` with `Подключиться`), the whole day as a timeline
-  (done lessons dimmed, the current one tinted, `далее`, `изменена` with the old room struck through, `отменена`,
-  `очередь`, `записаны`, `Окно 2 ч 10 мин`, the now marker), tomorrow in the evening, and `Нужно сделать` only when
-  there is something (`Войдите в БАРС заново`). The hints and the `Главный экран` settings page are gone.
-- The bell opens a sheet with new marks and their values (`Матанализ: контрольная работа 2`, `9 из 10, итого 74`,
-  `+9`), schedule changes as `было` over `стало`, sport queue results and friend requests with `Принять` and
-  `Отклонить`; each row leads to its subject, lesson, Спорт or person. Opening it reads everything, new events are
-  marked with a dot and bold, the badge counts the unseen ones. The schedule changes history screen is gone; a change
-  notification opens the bell.
-- Сегодня and the bell's sheet are native SwiftUI screens on iOS over the same view models, under the same static
-  header; the notification service leaves sport queue results for the bell, so they show on both
-  platforms.
-- A lesson whose room is a placeholder such as `дистант` counts as online on every lesson list and in the hero: no
-  room line, the `онлайн` pill. The hero's large room or `Онлайн` never clips: the address or `Подключиться` goes
-  under it on a narrow screen or with large text. Prominent buttons on iOS keep a readable label in the dark theme.
-- A marks notification about one subject carries the value in its title (`Матанализ: 9 из 10`); the lock screen
-  still shows `Новые оценки` only.
-- Зачётка is rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one view model): what needs
-  action first, each number over a quiet source (`БАРС`, `My ITMO`, `таблица`, `Спорт`) with a 0-100 bar in the tone
-  of its reason, passed subjects as a result pill, one list with `Сдано N из M` and the average only near the end of
-  the semester and in the session, the period in the header (`3 семестр`). BARS is optional: without it the list is complete from My ITMO
-  with one quiet `Подключить` line that can be hidden; an ended BARS session keeps its numbers dimmed with their date
-  and offers `Войти`. Физкультура shows the sport points in a ring and opens Спорт. A tap on a source opens `Откуда
-  баллы` with every source side by side. The BARS chip and the period sheet are gone.
-- The subject page has the tabs `Баллы` (the points over the grade scale with `до 3D ещё 4,5`, the connected sheet,
-  checkpoints by group with their minimums), `Пары` (teachers as rows with the tone of their reviews in words, the
-  lessons ahead) and `Материалы` (chats, links by category with votes, own links with their review state; a gate
-  without `Подключение к ITMO.Widgets`). The My ITMO LMS link is no longer shown.
-- Расписание is rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one view model): an endless
-  feed of days with sticky day headers under a week strip that swipes by weeks, the month in the header opens a
-  month sheet with a dot per lesson and `Открыть`, `Сегодня` appears off the current week, days without lessons are
-  a short `пар нет`, weekends collapse, a booked sport lesson is a lesson with its status, and a change sits on its
-  lesson. The friends button opens `Чьё расписание`: one tap, avatars, where each friend is now; a friend whose
-  schedule is closed is dimmed. A friend's schedule is the same feed with `Вы` on shared lessons and `Вернуться к
-  своему`. A lesson opens one lesson sheet everywhere: the time, room and building in large type, only the actions
-  that apply (`Видео`, `Друзья`), the teacher with the tone of the reviews in words, a sport queue as a row to Спорт.
-  The old schedule screen, the lesson details sheet and the friend selector with its recent friends are gone.
-- Overlapping lessons on every day timeline: one now marker, a rail that only fills forward, the lessons in start
-  order without an `Окно` between them and a quiet `одновременно с «...»` on the later one. A room booking shows
-  `Бронь помещения` instead of `Пара`. The static root header on Android no longer lets scrolled content show
-  through above it, and the iOS root header is opaque.
-- Спорт is rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one view model per screen): `Моё`
-  and `Запись` as a segmented choice under the static header instead of the pager. `Моё` has the score ring (it
-  opens `Откуда баллы`), bookings and queues as lesson cards by day (`записаны`, `очередь 2 из 5`, `ждём
-  расписание`), `Сделать секцией` under booked lessons and the user's sections. `Запись` has a search by sport or teacher, chips (`Есть места`,
-  `Утро`, `Вечер`, `Друзья`), a week strip that pages by weeks and dense rows with `22 из 24`, friends,
-  a clash with a lesson by name and one action; more filters are in a sheet. The lesson sheet shows the places large,
-  one main action, the conditions and the clash as an orange line that does not block. `Встать в очередь?` is a sheet
-  with the steps, `Пытаться до самого начала` and the queues left. Sections replace the
-  device-local `Мои секции`: a booked lesson becomes a section (in its card or its sheet), and Backend queues the same
-  lesson every two weeks as soon as auto-sign for it opens, in subscription order and while the monthly limit has a
-  free slot; `Моё` lists the sections with the place (`3-й из 7 в секции`), an off switch and the next three dates,
-  each of which can be skipped. `Только мои секции` in the filters sheet of `Запись` keeps the lessons of the sections. `Откуда баллы` shows visits plus the bonus counted up to 40 and My ITMO's
-  awards by month with the day the credit was reached; no forecast. Another user's sport shows lesson cards.
-- Widgets are rebuilt on both platforms (RemoteViews on Android, WidgetKit on iOS, one shared snapshot): `Пара`
-  (small, and medium with the next two lessons) shows the lesson to go to with its room in large type and a live
-  countdown, and tomorrow after the last lesson; `Расписание на день` is the day to scale with the `сейчас` line,
-  the current lesson highlighted, past ones dimmed and gaps labelled `окно 2 ч 10 мин`; the new `Спорт` widget has
-  the score ring (visits and bonus, green and closed once the credit is reached) and, medium, the nearest booking
-  or queue in the words of Спорт. A lesson opens its sheet, a queue or booking its sport lesson. iOS adds Lock
-  Screen widgets and the `Пропуск` Control. `Виджеты` in settings is a gallery of live previews with `Добавить`
-  (Android) or `Как добавить` (iOS) and each format's settings in a sheet; it replaces the `Компактное
-  расписание`, `Полное расписание` and QR pages, and `Завтрашние пары вечером` is now on by default.
-- Профиль, Друзья and the person card are rebuilt on both platforms (Compose on Android, native SwiftUI on iOS, one
-  view model per screen). Профиль is a hub under the one-line header with `Поделиться`: the identity card, `Друзья`
-  as a counter (`3 друга, 1 заявка`) with the requests badge, `Приватность`, then `Подключение и данные` as a status,
-  `Уведомления`, `Виджеты`, `Подключить устройство`, My ITMO, the settings, the project links and `Выйти`; without
-  the connection a gate with `Подключить` stands in place of the people rows and nothing else is hidden. Друзья has
-  the people search on top (the separate search screen is gone), incoming requests with `Принять` and `Отклонить` in
-  the row, sent ones with `Отменить`, the friends and `Поделиться профилем`; removing a friend moved to their card.
-  The person card is one for any ISU: a centred header (avatar, full name, roles such as `Доцент, ПИиКТ` and
-  `Студент, M3206`, the ISU with copy, up to two full-width buttons: `Написать отзыв` first for someone who teaches
-  you, else `Добавить в друзья` or `Пригласить в ITMO.Widgets`), then `Преподавание` (the lesson they give now, once
-  the MyITMO teacher timetable is connected, the subjects they teach you from your own schedule, where to find them, the AI summary and the reviews) and `Учёба` (the groups, then the
-  schedule, sport and friends you may open), in the order of who they are to you. Someone else's hidden data is
-  simply absent; the `Обычно открывается после добавления в друзья` hint is gone. Another user's friends use the same
-  rows. On iOS the review report is a native sheet.
-- `Запись` filters: the sheet shows six sport types first (the ones the student books or attended, then the most
-  booked) with `Ещё` for the rest and a search over them; chosen types stay in sight. The building filter lists every
-  building with lessons, `Другие корпуса` for venues My ITMO's list lacks and `Онлайн`. The week strip runs from this
-  week to the week of the last published or predicted lesson, at least to the next week. The chosen day's
-  indicator slides to a new day on a spring and the colours crossfade (none under reduced motion), and the
-  places bar in the rows is twice as wide.
-- New settings page `Оформление` with a live sample: `Цвет оформления` (`Как
-  обои` on Android 12+, `Фирменный`, six presets or `Свой цвет`), `Стиль
-  палитры`, `Контраст` and `Чёрный фон` for the dark theme. The defaults keep
-  the look of 2.2.
-- Material 3 Expressive: below Android 12 and on iOS the app is painted in
-  the brand blue `#4984E2` instead of the baseline purple, every bottom tab
-  shows its label, a few hero moments get expressive motion, and waits show
-  the morphing loading indicator. Under reduced motion everything shows its
-  end state at once.
-- New switch `Виджеты в цвет темы` (off by default) paints the schedule and QR
-  widgets in the app's colours on Android and iOS; with `Динамические цвета`
-  off the QR code stays black on white.
-- Headers are one line on both platforms: the tab's title and the date on one baseline (the date goes under it when
-  it does not fit), and on a pushed screen such as a subject the title and its subtitle flow as one paragraph that
-  wraps in full instead of being cut. The Сегодня hero joins an online lesson with a small `Войти` next to
-  `Онлайн`. Progress tracks in cards are a soft groove in the card's own colour instead of a dark bar, and tonal
-  buttons such as `Записаться` in Спорт are in the accent colour instead of a grey that looked disabled.
-- Every icon is a Material Symbols Rounded glyph, and the selected bottom tab
-  shows its filled variant. On iOS the shared screens use iOS controls, text
-  styles and haptics.
-- The app speaks Russian on a phone in any language: Russian plurals (`5
-  пар`, `Ещё 2 балла`) and library texts, notifications, widgets and the QR
-  tile included.
+- Сегодня replaces the home feed: a hero with the lesson to go to now (the room in large type with the address, the
+  time left, or `Онлайн` with `Войти`), the day as a timeline (done lessons dimmed, changes, cancellations, queues,
+  gaps like `Окно 2 ч 10 мин`, the now marker), tomorrow in the evening, and `Нужно сделать` only when needed.
+- `Пропуск` on Сегодня opens the pass in a sheet (code, name, group and ISU, the last code offline); `Разделы` can
+  hide it.
+- A placeholder room such as `дистант` counts as online everywhere. Overlapping lessons share one timeline with
+  `одновременно с` on the later one; a room booking shows `Бронь помещения`.
+- The bell opens a sheet with new marks and their values, schedule changes as `было` over `стало`, sport queue
+  results and friend requests (with their time) with `Принять` and `Отклонить`; each row opens what it is about. The
+  schedule changes history screen is gone; a change notification opens the bell.
+- A marks notification about one subject carries the value in its title (`Матанализ: 9 из 10`).
+
+### Расписание
+
+- An endless feed of days with sticky headers under a week strip that swipes by weeks; the month opens a month sheet;
+  `Сегодня` appears off the current week; empty days are `пар нет`, weekends collapse; past days are dimmed. Week
+  parity is gone: `7-я неделя`.
+- A booked sport lesson is a lesson with its status; an own queue shows `очередь 2 из 5`; a change sits on its
+  lesson.
+- `Чьё расписание` (the friends button): one tap, avatars, where each friend is now; a friend's schedule is the same
+  feed with `Вы` on shared lessons. The old friend selector and its recent friends are gone.
+- One lesson sheet everywhere: time, room and building in large type, `Предмет` and `Ссылки` (also for a subject
+  never opened), `Видео`, `Друзья на паре`, the teacher with the tone of their reviews in words, `Маршрут`.
+
+### Зачётка and subjects
+
+- Rebuilt: what needs action first, each number over its source (`БАРС`, `My ITMO`, `таблица`, `Спорт`) with a 0-100
+  bar, passed subjects as a result pill, `Сдано N из M`, the average only near the end of the semester. `Откуда
+  баллы` shows every source side by side.
+- BARS is optional: without it the list is complete from My ITMO; an ended BARS session keeps its numbers dimmed and
+  offers `Войти`. Connecting BARS right after signing in no longer asks for the ITMO.ID password again.
+- The most current source with a value wins (the sheet, then BARS, then a stale sheet, then My ITMO); a source
+  without points never hides one with points.
+- The subject page has tabs `Баллы`, `Пары` and `Материалы` that also turn by a swipe. The LMS link is gone.
+- Connected sheets find the right total far more often (1805 of 1816 students on 13 real sheets); a doubtful total
+  shows `Проверьте итог`, and `Вернуть авто` undoes a hand-picked one.
+- Links and teacher reviews vote with like and dislike thumbs; deleting an own link asks first; a flow link shows
+  `после проверки` while Backend premoderates it.
+
+### Спорт
+
+- `Моё` and `Запись` under the static header, switched by a segmented choice or a swipe. `Моё` has the score ring,
+  bookings and queues as lesson cards by day, and sections.
+- Sections replace the device-local `Мои секции`: a booked lesson becomes a section, and Backend queues the same
+  lesson every two weeks once auto-sign opens, within the monthly limit; each next date can be skipped.
+- `Запись`: search by sport or teacher, chips (`Есть места`, `Утро`, `Вечер`, `Друзья`), a week strip up to the last
+  published or predicted lesson, dense rows with places, friends and clashes; more filters (types, buildings,
+  `Только мои секции`, `Доступные`) in a sheet.
+- The lesson sheet shows the places large with one main action; `Встать в очередь?` explains the steps.
+- `Откуда баллы` shows visits plus bonus up to 40 and My ITMO's awards by month.
+- `Автозапись на спорт` (pending auto-sign in the own schedule and widgets) is on by default.
+- Lessons whose My ITMO end falls on a wrong date end on their own day.
+
+### Профиль, friends and people
+
+- Профиль keeps the identity card, friends (or their gate), `Виджеты`, `Настройки`, the links (`Карта`, My ITMO) and
+  `Выйти`.
+- Друзья has the people search on top, requests with `Принять` and `Отклонить` in the row, sent ones with
+  `Отменить`.
+- One person card for any ISU: roles, the ISU with copy, `Написать отзыв`, `Добавить в друзья` or `Пригласить в
+  ITMO.Widgets`, then `Преподавание` (the lesson they give now, the subjects they teach you, the AI summary and
+  reviews) and `Учёба` (groups, schedule, sport and friends you may open). Someone's hidden data is simply absent.
+- Another user's sport is titled by their given name and shows lesson cards.
+
+### Settings
+
+- The root starts with `Аккаунты` (`Сервер ITMO.Widgets` and `БАРС`), then `Уведомления`, `Виджеты`, `Оформление`,
+  `Разделы` and `О приложении`.
+- `Сервер ITMO.Widgets` has the switch, `Кто видит` and `Устройства` while connected, `Что даёт подключение` before
+  it; what the server keeps opens in a sheet.
+- `Устройства` replaces `Вход на сайт`: `Подключить устройство` signs a browser in or pairs a self-hosted agent from
+  its QR, a pasted link or an App Link, with a verification code; the ITMO session is handed over end-to-end
+  encrypted. `Подключённые устройства` lists web sessions and agents with `Отключить`.
+- `Уведомления` gives every type its own switch, pushes included; a switched-off push is dropped on the device.
+- `Разделы` holds the `Сегодня`, `Расписание` and `Спорт` options.
+- `Версия` shows the build number, the short commit and, for a custom build, its source; a tap copies the details.
+- The sign-in has one main path and `Другие способы входа` in a sheet. The first run has two steps: `Разрешения` with
+  the name and ISU, then `Друзья и очередь` with `Подключить` or `Не сейчас`.
+- Old links and shortcuts to removed pages open their new places.
+
+### Campus map
+
+- A new campus map on both platforms (MapLibre) in ITMO's own style: the lesson's room on its floor, a route between
+  any two rooms across floors, `По городу` in the system Maps between buildings, search across buildings, place
+  chips, dark in the dark theme. `Маршрут` in the lesson sheet and on the Сегодня hero opens it.
+- Plans come from the mirror on map.alllexey.dev and stay on the device (ADR 0033); `Лицензии` names their source.
+
+### Widgets
+
+- Rebuilt on one shared snapshot (RemoteViews on Android, WidgetKit on iOS): `Пара` with the lesson to go to and a
+  live countdown, `Расписание на день` to scale with the `сейчас` line, `Список пар` (the classic list), and the new
+  `Спорт` with the score ring and the nearest booking. `Пара`, `Расписание на день` and `Спорт` are beta.
+- A lesson opens its sheet, a booking or queue its sport lesson.
+- `Виджеты` is a gallery of whole live previews with `Добавить` (Android) or `Как добавить` (iOS) and each format's
+  settings in a sheet; `Завтрашние пары вечером` is on by default.
+- `Виджеты в цвет темы` (off by default) paints the widgets in the app's colours; with dynamic colours off the QR
+  stays black on white.
+- List widgets placed in 2.2 stay lists. Schedule widgets work again on Android 8-11 and follow the launcher's corner
+  radius on Android 12+.
+- Fewer background wake-ups on Android: the 7-minute widget refresh runs only while a sport queue shows, the
+  schedule and sport widgets drop the launcher's hourly update (the hourly work already refreshes them), own lessons
+  and sport bookings go to Backend only when they changed or a day passed.
 
 ### Fixes
 
-- iOS names its channel in `X-App-Version`: `sideload`, `testflight` or
-  `appstore` (`dev` for debug builds) instead of `appstore` for every release
-  build, so the admin tells sideloaded builds from store ones.
-- Android sheets follow the finger when dragged down instead of jittering as
-  they leave the status bar, and no sheet goes under the status bar or a
-  cutout any more.
-- Connecting BARS right after signing in no longer asks for the ITMO.ID
-  password again: the sign-in keeps its ITMO.ID session in the app's browser,
-  and BARS signs in with it on Android and iOS.
-- Зачётка and the subject page show a connected sheet's total again when the subject has an empty BARS journal: the
-  most current source with a value wins (the sheet, then BARS, then a sheet that failed to update, then My ITMO),
-  and a source without points never hides one with points.
-- The schedule widgets show lessons again on Android 8-11; the day-list
-  widget no longer shows an older list after a refresh; on Android 12+ both
-  schedule widgets follow the launcher's corner radius.
-- When ITMO.ID rejects the refresh token while the app runs, the session ends
-  with `Сессия истекла. Войдите снова, чтобы продолжить.`; a timeout or a
-  server error keeps the session.
-- Sign-out also forgets the sport points, auto-sign limits, queues and
-  friends' bookings, so the next account or the demo never sees them.
-- The prediction of a lesson you are booked on no longer shows as booked: it
-  offers auto-sign again.
-- A setting changed while a screen starts watching it is no longer lost until
-  restart.
-- The `Запись` week strip no longer flashes grey when the selection moves to
-  or from a day without lessons.
-- Links and system pages opened from the new screens (privacy policy, account
-  deletion, subject links, calendar settings) work again after 2.3.0-beta.1.
-- Android no longer deletes the stored session when the Keystore or the token
-  file fails for a moment: only content that cannot be parsed or
-  authenticated is discarded, so a transient error no longer signs the user
-  out for good. The file format is unchanged.
-- A schedule or QR cache that cannot be deleted now fails the sign-in instead
-  of being ignored, so the next account never sees the previous user's or a
-  friend's schedule or the previous QR pass.
-- iOS keeps the session and BARS Keychain items on this device only
-  (`AfterFirstUnlockThisDeviceOnly`), so a backup no longer restores them on
-  another device; existing items move over on their next write.
-- The debug refresh-token tool signs in through the session like any other
-  sign-in instead of writing the token file directly.
-- The link editor's `Кто видит` shows `после проверки` under each flow while
-  premoderation is on: Backend publishes a flow link after an ISU check (or a
-  moderator for big flows), no longer at once.
+- When ITMO.ID rejects the refresh token the session ends with a message; a timeout or a server error keeps it.
+- Android no longer deletes the stored session on a transient Keystore or file error.
+- Sign-out forgets sport points, limits, queues and friends' bookings; a cache that cannot be deleted fails the
+  sign-in, so the next account never sees the previous user's data.
+- The prediction of a lesson you are booked on offers auto-sign again instead of showing as booked.
+- A setting changed while a screen starts watching it is no longer lost until restart.
+- Android sheets follow the finger and never go under the status bar or a cutout.
+- iOS shows pull-to-refresh on every tab root until the refresh ends.
 
-### Architecture and build
+### For developers
 
-- 16 shared Kotlin Multiplatform modules with iOS targets hold each feature's
-  domain, data, view models and screens; `:shared:designsystem` is the one
-  source of the look and exports its tokens for iOS and the web app.
-- The data layer runs on MyItmoApi 2.x and Core 2.0 over Ktor; Retrofit,
-  Gson, MyItmoApi 1.x and Core 1.x are no longer app dependencies. Core 2.0 is
-  built in as `:shared:backend-client` and tested against Backend's golden
-  fixtures and OpenAPI snapshot; privacy fields have no wire defaults, so a
-  missing one fails instead of widening access.
-- Every Backend request carries `X-App-Version` (version, build, platform,
-  distribution), and the device registers again once after an update. Every
-  Backend call checks the services opt-in and the demo session in one place.
-- Koin is the only dependency-injection graph; Hilt, Dagger and KSP are gone.
-- `UiText` carries generated string keys and `:shared:core` builds without
-  Compose; `:shared:compose-strings` resolves the keys for Compose.
-- Files and settings stay compatible with 2.2 (caches, change history, widget
-  snapshot, QR pass, tokens); `UpgradeFrom22Test` and
-  `StableIdentifiersTest` guard the upgrade.
-- Gradle 9.7, AGP 9.3, Kotlin 2.4.20, compileSdk 37, minSdk 26, targetSdk 36;
-  MyItmoApi comes from Maven Central (`MYITMOAPI_DIR` builds against a local
-  checkout). The QR encoder is a Kotlin port, Google Sheets parse
-  with Ksoup, avatars load with Coil 3, OkHttp is 5.5.
-- MyItmoApi 2.1.0: MyITMO's HTTP 403 means no access, not an ended session.
-- Release builds ship a baseline and a startup profile generated from the demo
-  session: startup, the tabs, sheets and pushed screens run compiled ahead of
-  time (from install on Google Play, after the first background dexopt for the
-  GitHub APK) instead of interpreted. Frame-timing benchmarks of tab taps and
-  of a push and pop run nightly.
-- `scripts/verify.sh` is the one build entry point. A PR runs the unit and
-  host tests, Konsist, the debug APK and the Roborazzi screenshot baselines of
-  the modules it changes (four Android appearances, plus iOS ones for the
-  design system) in about 10 minutes; both lints and every screenshot run on
-  `master`, the instrumented tests on GitHub's emulators and the release checks
-  nightly, and everything on a PR labelled `full-ci`. The Konsist architecture
-  rules cover the app and every shared module.
-- Developer documentation: `docs/getting-started.md`, `docs/feature-flow.md`,
-  `docs/testing.md`, `docs/troubleshooting.md` and `CONTRIBUTING.md`; the
-  architecture and feature docs describe the Compose, Koin and Navigation 3
-  code.
-- `Подключить устройство` replaces `Вход на сайт` on the profile: the same
-  sheet signs a browser in and connects a self-hosted agent from its
-  `https://<host>/pair#v1...` QR, a pasted link or an Android App Link. The
-  card shows the device's own name, version, permissions, the shared My ITMO
-  session and a verification code; after the screen lock the phone hands its
-  previous ITMO session over HPKE (Tink on Android, CryptoKit on iOS) and
-  Backend sees only ciphertext. Typed codes work only for the site.
-- `Подключённые устройства` (from the sheet, `Настройки → Доступ` and the new
-  push) lists web sessions and agents with `Отключить`. Pushes
-  `DEVICE_CONNECTED_PAYLOAD` and `SPORT_AGENT_BOOKED_PAYLOAD` show on Android
-  (channel `Подключения устройств`) and iOS.
+- 16 shared Kotlin Multiplatform modules; Compose screens live in each feature's `androidMain`, iOS links no Compose
+  (ADRs 0017, 0031, 0035). `:shared:designsystem` is the one source of the look and exports tokens for iOS and the
+  web app.
+- MyItmoApi 2.x and Core 2.0 (`:shared:backend-client`) over Ktor, Koin only; Retrofit, Gson, Hilt, Dagger and KSP
+  are gone. MyItmoApi comes from Maven Central (`MYITMOAPI_DIR` for a local checkout).
+- Every Backend request carries `X-App-Version` and `X-Client` (ADR 0034); every call checks the opt-in and demo.
+- Files and settings stay compatible with 2.2; `UpgradeFrom22Test` and `StableIdentifiersTest` guard the upgrade.
+- Builds name their origin (`official` or `custom`, with source and commit); `dist.yml` builds a self-signed APK and
+  an unsigned `.ipa` with no secrets, also in a fork.
+- `scripts/verify.sh` is the one build entry point; a PR runs the fast checks for what it touches, the rest runs on
+  `master`, nightly or with the `full-ci` label ([testing](docs/testing.md#ci)). Release builds ship baseline profiles.
+- Gradle 9.7, AGP 9.3, Kotlin 2.4.20, compileSdk 37, minSdk 26, targetSdk 36.
 
 ## 2.2 — 2026-10-03
 

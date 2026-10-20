@@ -3,14 +3,12 @@
 One visual language across the application, grown from the screens the user
 already likes: the schedule and the sport cards. Quiet surfaces, compact layout,
 clear hierarchy, small meaningful accents. This is the contract for every
-screen. Screens are Compose Multiplatform: they take every value from
-`ItmoTheme` in `:shared:designsystem` ([Tokens](#tokens)) and their parts from
-its kit ([Shared components](#shared-components)); the redesigned Android screens build from the Material 3
-Expressive kit ([The M3 Expressive kit](#the-m3-expressive-kit)) inside the [shell](#shell). Views remain only where the
-system or a library draws: the home-screen widgets, the quick-settings tile,
-shortcut and notification icons, the WebView slots of the ITMO.ID and BARS
-sign-in pages and the spoiler image crop screen. They keep their look from
-the app theme and `res/values` ([System surfaces](#system-surfaces)).
+screen. Android screens are Compose (in each feature's `androidMain`): they take
+every value from `ItmoTheme` in `:shared:designsystem` ([Tokens](#tokens)) and
+their parts from its kits ([Shared components](#shared-components),
+[The M3 Expressive kit](#the-m3-expressive-kit)) inside the [shell](#shell). iOS
+draws its own SwiftUI screens on the same tokens ([iOS app](ios.md#design-system)).
+Views remain only where the system or a library draws ([System surfaces](#system-surfaces)).
 
 ## Principle
 
@@ -27,42 +25,36 @@ the app theme and `res/values` ([System surfaces](#system-surfaces)).
 ## Tokens
 
 `ItmoTheme` (`shared/designsystem`, package `dev.alllexey.itmowidgets.designsystem`)
-is the one source of design values for Compose. Its schema has the Material 3
-Expressive shape from the start (extended colours, a corner scale with
-`largeIncreased`, emphasized type, `MotionScheme`), so component APIs do not
-change when the values do ([Expressive components](#expressive-components)).
-Components and screens read tokens only through `ItmoTheme.*`. No raw colour,
-`.dp` spacing or font size outside `shared/designsystem`; experimental and
-expressive Material APIs only inside it, behind `Itmo*` wrappers.
+is the one source of design values for Compose: `colorScheme`, `extendedColors`
+(lesson types, recordbook, sport, teacher levels, the kit's `success` and
+`warning` roles), `shapes`, `spacing`, `typography` with `emphasizedTypography`,
+and `motion`. The schema has the Material 3 Expressive shape from the start, so
+component APIs do not change when the values do. The values themselves are in
+the code and in the export below.
 
-| Slot | Contents and values |
-|---|---|
-| `ItmoTheme.colorScheme` | The M3 colour roles. `ColorSource.Platform` (the default of `AppColorSource`): dynamic colour on Android 12+, otherwise, and on iOS, the static brand scheme (`ColorSource.Static`: the TonalSpot variant of the 2021 spec from the brand blue `#4984E2`). `ColorSource.Theme` resolves the stored appearance (`resolveColorScheme`). `ColorSource.Seed` generates MDC's content-based scheme from a seed (previews, tests). On Android 12+ the outline-variant and error roles stay MDC's baseline ones, as the View theme shows them |
-| `ItmoTheme.extendedColors` | The app's own colours beside the scheme, one slot per entry of `res/values{,-night}/colors.xml`: lesson types, recordbook passed, sport scores and conditions, teacher levels; plus the kit's success and warning roles (`success`, `successContainer`, `onSuccessContainer` light `#2E7D32`, `#C8F0C8`, `#0B3D10`, dark `#8BD88E`, `#1F5323`, `#C8F0C8`; `warning` and its pair light `#9A6400`, `#FFDDB0`, `#4A2800`, dark `#FFB951`, `#5C3B00`, `#FFDDB0`), which have no resource. Derived per scheme: sport condition containers (the accent mixed 12 % over `surfaceContainerLowest`) and teacher levels (harmonized towards `primary`). In dark, lesson types keep their light values |
-| `ItmoTheme.shapes` | Corner scale `extraSmall` 4, `small` 8, `medium` 12, `large` 16, `largeIncreased` 20, `extraLarge` 28, `extraLargeIncreased` 32, `extraExtraLarge` 48 dp, `full`; card family `cardContent` 20, `cardSummary` 28, `cardHero` 28, `scheduleDay` 16 dp; connected groups 20 dp outer, 4 dp inner, 2 dp gap; stroke 1 dp, elevation 0 dp |
-| `ItmoTheme.spacing` | `related` 4, `compact` 8, `content` 12, `group` 16, `section` 24, `screenMargin` 16, `cardPadding` 16, `summaryPadding` 20, `touchTarget` 48, `fabClearance` 96, `fabStackClearance` 152, `statePadding` 32, `stateIcon` 64, `stateInlineIcon` 56 dp |
-| `ItmoTheme.typography`, `ItmoTheme.emphasizedTypography` | The 15 M3 type roles at MDC 1.13's `TextAppearance.Material3.*` values on the system font, each with an emphasized twin; pinned, so a material3 bump cannot change a ported screen's text |
-| `ItmoTheme.motion` | Durations `quick` 180, `standard` 220, `emphasis` 260, `reveal` 300, `progress` 700, `progressSlow` 1000 ms; the skeleton pulse 1200 ms down to alpha 0.55; easing `(0.2, 0, 0, 1)`; Material's `MotionScheme.standard()` for components, `MotionScheme.expressive()` only for heroes (`ItmoTheme.heroMotionScheme`) |
-
-- `cardSummary` is `extraLarge` (28 dp) like `cardHero` while the PE sport card
-  is its page's hero; if it stops being the hero it becomes 20 dp.
+- Components and screens read tokens only through `ItmoTheme.*`. No raw colour,
+  `.dp` spacing or font size outside `shared/designsystem`; experimental and
+  expressive Material APIs only inside it, behind `Itmo*` wrappers.
+- The type scale is pinned to MDC 1.13's `TextAppearance.Material3.*` values, so a
+  material3 bump cannot change a screen's text. Components move on
+  `MotionScheme.standard()`; `MotionScheme.expressive()` only for heroes
+  (`ItmoTheme.heroMotionScheme`).
+- `cardSummary` is 28 dp like `cardHero` while the PE sport card is its page's
+  hero; if it stops being the hero it becomes 20 dp.
 - `ItmoTheme(expressive = true)` is the default: the expressive variants of
-  [Expressive components](#expressive-components) are on for every Material
-  screen.
+  [Expressive components](#expressive-components) are on for every screen.
 - Reduced motion: `rememberReducedMotion()` is true when the system animator
-  duration scale is 0 (iOS reports false until its host reads Reduce Motion); a
-  kit animation then shows its end state at once.
+  duration scale is 0; a kit animation then shows its end state at once.
 - Equality with the Android resources the widgets and system surfaces use is
   tested: `DesignTokensParityTest` (`:app`) keeps extended colours, spacing and
   shapes equal to `res/values` except its listed divergences, `ThemeParityTest`
   the dynamic and seeded schemes and the M3 baseline the widgets keep on API
   26-30, and `TypographyParityTest` the type scale.
-- `shared/designsystem/tokens/itmo-tokens.json` exports the tokens (static light
-  and dark schemes by role, extended colours with the derivation rules, shapes,
-  spacing, type, motion; colours `#RRGGBB`, sizes dp or sp, durations ms;
-  `schemaVersion` grows with a breaking change). The iOS client and the web app
-  take their tokens from it instead of copying values. It is generated, never
-  edited or merged by hand: after a token change or a rebase run
+- `shared/designsystem/tokens/itmo-tokens.json` exports the tokens (schemes by
+  role, extended colours with their derivation rules, shapes, spacing, type,
+  motion; `schemaVersion` grows with a breaking change). The iOS client reads it
+  instead of copying values. It is generated, never edited or merged by hand:
+  after a token change or a rebase run
   `./gradlew :shared:designsystem:exportDesignTokens`;
   `DesignTokensExportTest` fails while it is stale.
 
@@ -90,29 +82,22 @@ where the app does ([widgets](features/widgets.md#theme-colours)).
 
 - The seed: `Как обои` the wallpaper's (`system_accent1_500`, the brand blue
   without one), `Фирменный` the brand blue `#4984E2`, `Свой цвет` the user's,
-  and six presets around the brand blue: `Бирюзовый` `#009688`, `Зелёный`
-  `#43A047`, `Янтарный` `#FFA000`, `Красный` `#E53935`, `Розовый` `#D81B60`,
-  `Фиолетовый` `#8E24AA`. TonalSpot keeps only a seed's hue, so no grey preset
-  is offered; `Монохром` is the grey look.
+  and six presets around the brand blue (`ThemeSeeds.kt`). TonalSpot keeps only
+  a seed's hue, so no grey preset is offered; `Монохром` is the grey look.
 - The scheme: MaterialKolor's `dynamicColorScheme` from the seed with the
-  style's `PaletteStyle` and the contrast level (0, 0.5, 1), 2021 spec, which
-  has every style. `Спокойная` at `Обычный` is the brand scheme's recipe, so
-  the defaults and the earlier accent presets draw exactly as before.
-- `Как обои` at `Спокойная` and `Обычный` is the system's dynamic scheme
-  unchanged (with the View theme's baseline outline-variant and error roles);
-  another style or contrast rebuilds it from the wallpaper's seed, because the
-  system's scheme has neither.
+  style's `PaletteStyle` and the contrast level, 2021 spec. `Спокойная` at
+  `Обычный` is the brand scheme's recipe; `Как обои` at `Спокойная` and
+  `Обычный` is the system's dynamic scheme unchanged, any other style or
+  contrast rebuilds it from the wallpaper's seed.
 - `Чёрный фон` sets `background`, `surface`, `surfaceDim` and
-  `surfaceContainerLowest` to black in the dark scheme only (MaterialKolor's
-  `isAmoled` plus the two surfaces under the containers); the containers keep
-  their tones, so cards stay apart from the page.
+  `surfaceContainerLowest` to black in the dark scheme only; the containers
+  keep their tones, so cards stay apart from the page.
 
 Every style and contrast keeps `onSurface` on `surface` at 4.5:1 or more (7:1
 at `Высокий`) and the on-primary pairs at 3:1 or more (`ThemeSchemesTest`).
 The View screens that remain, the QR tile, notifications and the launcher
-icon keep their colours. `AccentSamplesPreview` shows a sample screen in four
-seeds, `ThemeStylesPreview` in every style and `ThemeContrastPreview` at every
-contrast and with the black background, in every appearance.
+icon keep their colours. `AccentSamplesPreview`, `ThemeStylesPreview` and
+`ThemeContrastPreview` show a sample screen across seeds, styles and contrasts.
 
 | Role | Rule |
 |---|---|
@@ -133,30 +118,18 @@ a status is also readable by text or icon, never by colour alone.
 
 The tone of a teacher's AI summary is such a stable colour of meaning:
 `teacher_level_*` from red to green (`very_negative`, `negative`, `mixed`,
-`positive`, `very_positive`, light `#D32F2F`, `#E06C00`, `#B58900`, `#689F38`,
-`#2E7D32`, dark `#FF6E6E`, `#FFA24C`, `#FFD54F`, `#AED581`, `#4CAF50`),
-only harmonized towards the primary colour (`teacherLevel*` in
+`positive`, `very_positive`), only harmonized towards the primary colour (`teacherLevel*` in
 `ItmoTheme.extendedColors`, drawn by the kit's `ToneDot`), so every palette
 keeps five distinct tones. The dot is decorative; its row says the tone in
 words.
 
 ## Geometry and the card family
 
-The grid is 4 dp. Compactness never shrinks the touch target.
-
-| Parameter | Value |
-|---|---|
-| Screen horizontal margin | 16 dp |
-| Compact list gap | 8 dp |
-| Gap between groups | 16–24 dp |
-| Gap between related rows | 4 dp |
-| Card padding | 16 dp; 20 dp for a large summary |
-| Minimum touch target | 48 × 48 dp |
-| Card elevation | 0 dp |
+The grid is 4 dp; the margins, gaps and paddings are `ItmoTheme.spacing`, cards
+have elevation 0 dp. Compactness never shrinks the 48 x 48 dp touch target.
 
 The card family below names the variants the docs and the kit's KDoc refer to;
-their shapes are `ItmoTheme.shapes` tokens. Under the iOS style every card and
-group takes 26 pt ([Platform styles](#platform-styles)).
+their shapes are `ItmoTheme.shapes` tokens.
 
 | Variant | Shape | Use |
 |---|---|---|
@@ -212,15 +185,15 @@ through constraints, wrapping, font metrics and insets, never with a fixed heigh
 - Long titles wrap; secondary metadata may be shortened when the full value is
   in the details; an important status is never shortened into ambiguity.
 - User-visible strings are Russian and live in the owning module's catalog
-  file (`composeResources/values/strings_<file>.xml` once moved; shared ones in
+  file (`composeResources/values/strings_<file>.xml`; shared ones in
   `:shared:core`); one key names a string on every platform. Remote names are
   trimmed at the mapper.
 - Copy is short and says what the user needs, not how the app works: no
   instructions for standard gestures (pull to refresh, tap), no descriptions or
   footers that repeat the title, no internals (matching rules, token handling,
   sync mechanics) outside the consent and privacy screens.
-- Fixed names: the university site is `My ITMO`; the project server opt-in is
-  `Подключение к ITMO.Widgets` (not "сервисы").
+- Fixed names: the university site is `My ITMO`; the project server and its
+  settings page are `Сервер ITMO.Widgets` (not "сервисы").
 - Grade codes are contiguous: `2FX`, `3E`, `3D`. Short status plus number pairs
   do not wrap into ambiguous lines. One number is not repeated in neighbouring views.
 
@@ -299,8 +272,7 @@ description and optional action: the kit's `ContentState` and
 - A refresh error with data on screen keeps the data and shows a snackbar with
   retry. Toasts are not used for recoverable errors.
 - Snackbars go through the kit's `ItmoSnackbarHost`: 2 s for a plain confirmation, 5 s with an action,
-  whatever the call asks; an indefinite one waits for its answer. iOS banners stay
-  `SettingsMessageBanner.lifetime` (2 s).
+  whatever the call asks; an indefinite one waits for its answer.
 - One state drives the whole area, so list and placeholder switch in one frame;
   no message under the previous list on an intermediate frame.
 
@@ -317,8 +289,8 @@ description and optional action: the kit's `ContentState` and
   disappears fades its own alpha; never animate a colour to or from
   `Color.Transparent`, which is transparent black and greys the colour half
   way. Do not animate unchanged text or flash the screen on refresh. `Моё` and
-  `Запись` of sport switch by their `SegmentedChoice` only; the sport week
-  strip pages by weeks.
+  `Запись` of sport switch by their `SegmentedChoice` and by a swipe (a
+  `HorizontalPager`); the sport week strip pages by weeks.
 - Past schedule days fade their card content once to 0.72 (`ScheduleDayCard`);
   today and future days 1.0; inner lesson rows get no second alpha layer.
 - Schedule timeline markers: a hollow neutral circle for a lesson not yet
@@ -350,30 +322,25 @@ description and optional action: the kit's `ContentState` and
 Android only; iOS has its native tab bar and `NavigationStack`s ([iOS app](ios.md#design-system)).
 
 1. The five bottom tabs switch by a tap on the bar only. There is no swipe
-   between tabs on either platform (owner, 2026-10-13); horizontal content in a
-   screen (the sport pager, chip rows) just scrolls.
+   between tabs on either platform; horizontal content in a screen (the sport
+   pager, chip rows) scrolls or pages inside the screen.
 2. A tab switch is an M3 fade through: the old root fades out in 90 ms, the new
    one fades in over 210 ms after it, growing from 92 % (`ShellMotion`). Each
    tab keeps its scroll, saveable state and view models across switches.
 3. A pushed screen comes and goes on the shared X axis: both screens move a
    tenth of the width and fade through, on the standard scheme's spatial spring.
    It covers the bar, which stays in place under it.
-4. Back on a pushed screen is Material's back preview (`ShellBack`), as
-   material3's SearchBar and MDC's main container draw it: under the finger the
-   top screen shrinks to 90 % on the predictive back curve (0.1, 0.1, 0, 1),
-   moves towards the far side until 8 dp from the edge, follows the finger by up
-   to 24 dp vertically and rounds its corners to 28 dp; the screen under it (the
-   previous pushed screen, or the tab root with its bar) is already composed and
-   stands still. On release the top screen dissolves from where the finger left
-   it: transparent over 300 ms (MDC's `hideDurationMax`) and 5 % smaller,
-   whatever the progress, so a long drag or a fling never ends in a blink. A
-   cancel follows the system's progress back to rest. Nothing fades while the
-   finger is down. Back on another tab's root has no preview: the gesture moves
-   nothing and its commit runs the tab fade through to Сегодня; Back on
-   Сегодня's root leaves the app with the system's back-to-home animation.
+4. Back on a pushed screen is Material's back preview (`ShellBack`, as MDC's
+   main container draws it): under the finger the top screen shrinks to 90 %,
+   moves towards the far side and rounds its corners to 28 dp over the already
+   composed screen under it. On release it dissolves from where the finger left
+   it (300 ms, 5 % smaller), whatever the progress, so a fling never ends in a
+   blink; nothing fades while the finger is down. Back on another tab's root has
+   no preview and fades through to Сегодня; Back on Сегодня's root leaves the
+   app with the system's back-to-home animation.
 5. Sheets and dialogs are their own windows with the system's predictive Back.
 6. System gestures win: no gesture exclusion, the back edges stay the system's
-   (`GestureRulesTest`).
+   (`GestureRulesTest` in `konsist/`).
 7. Entry points land on screens: widgets, links, notifications and shortcuts
    open a route with its tab, never a page index.
 8. The system animator scale applies: with animations off every switch is
@@ -386,42 +353,40 @@ Compose screens build from the kit in `shared/designsystem`
 callbacks in; text, icons and formatted dates as parameters; no feature or
 `core` domain types, no network or clock), each with previews (synthetic data,
 long Russian names, only in `@Preview` functions and `designsystem/preview/`)
-and baselines in all four Material appearances and the three iOS ones under
+and baselines in all four Material appearances under
 `shared/designsystem/screenshots/`. A screen uses the kit and grows it instead of
-drawing its own variant. The last column says how a component looks under the
-iOS style ([Platform styles](#platform-styles)); "Same" means one drawing on
-both platforms.
+drawing its own variant.
 
-| Component | Use | On iOS |
-|---|---|---|
-| `AppTopBar`, `AppTopBarAction` | Contextual screen: back or close, a title of up to two lines (one over an optional one-line subtitle, such as the My ITMO page's host), trailing actions | The inline navigation bar: one centred line of headline, the navigation button and the actions in the tint, a hairline when content scrolls under it |
-| `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs: M3E's `ShortNavigationBar`, a label on every tab, the FILL 1 icon on the selected one | Not used: the SwiftUI shell's native tab bar |
-| `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action | The action is a button capsule; loading is the large activity indicator |
-| `Skeleton` | First load without a cache, list or cards | Shapes in `systemFill`, cards with the inset group's corners; geometry and pulse stay |
-| `LoadingPulse` | A shown value that a slower source is about to replace | `itmoLoadingPulse(_:)`, the same pulse |
-| `AppRefreshBox` | Pull-to-refresh that the user asked for | Behaves as `UIRefreshControl`: the content follows the pull, the spinner's spokes above it, the refresh haptic at the threshold |
-| `ProgressButton` | A button with its own progress, same size, second tap ignored | A `UIButton` capsule: filled is prominent, tonal and outlined are bordered, text is plain; a press dims it |
-| `ItmoSwitch` | An on/off switch; with no callback it only shows the state and the row carries the toggle | A `UISwitch` in the accent with the toggle haptic |
-| `ItmoActivityIndicator` | A small inline wait that must not change its slot (a switch's slot, a row) | `UIActivityIndicatorView`, medium or large |
-| `ButtonRow` | Two buttons side by side, stacked at full width when the labels do not fit | Its buttons take the `ProgressButton` capsules |
-| `Pill` | The `моя` badge, a count, a status in its tone over a 12 % wash | Capsules in the iOS type |
-| `ToneDot` | The review tone dot, an empty slot until the tone arrives | Same |
-| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise: surname and given name by `personInitials`, from ITMO.ID's name parts when the caller passes `initials`; M3 Expressive's nine-sided cookie with the expressive switch, a circle otherwise | A circle; `ItmoAvatar` takes the initials from the shared `personInitials` or a model's `initials` |
-| `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet | Cells of an inset group: one 26 pt radius, square inner corners, no gap, hairline separators; the elevated colours in a sheet |
-| `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value | A section header in `secondaryLabel` at UIKit's insets |
-| `GroupActionRow` | The last row of a group that leads further | A cell with the icon in the tint and the disclosure indicator |
-| `LinkRow`, `VotePill` | A link with its own badge; the one vote pill of links and reviews: like and dislike thumbs around the score, the own vote filled and in `primary`, only the score when voting is not allowed | A cell; the vote buttons are 44 pt targets, the pill on `tertiarySystemFill` |
-| `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group | A section of an inset-grouped list with UIKit's rows; the toggle is a `UISwitch` in the accent |
-| `DetailsHeader` | The head of every details sheet | Title 2 semibold, secondary text and icons in `secondaryLabel`, the map button a tinted capsule |
-| `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer | No handle (the host's grabber); the header is the sheet's navigation bar ([Platform styles](#platform-styles)) |
-| `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link | Compose-drawn iOS alerts with capsule buttons; no hero icon |
-| `InfoDialog` | A message with one button | An iOS alert whose one capsule is the preferred action |
-| `SwatchChoiceDialog` | A choice among colours: named swatches in a grid, the picked name under it; a tap applies and the dialog stays until its button | An iOS alert with the same grid and one preferred capsule |
-| `ItmoMenu` | The one menu of actions anchored to its parent, groups with separators, destructive items in the error colour | A context-menu panel drawn in Compose |
-| `ScoreRing` | The sport score ring | Same |
-| `GradeScale` | A 0-100 bar with grade ticks | Same |
-| `TimelineMarker`, `TimelineLine` | The schedule timeline | Same |
-| `StepsIndicator` | Progress dots of a flow | A `UIPageControl` row of equal dots, the current one in the tint |
+| Component | Use |
+|---|---|
+| `AppTopBar`, `AppTopBarAction` | Contextual screen: back or close, a title of up to two lines (one over an optional one-line subtitle, such as the My ITMO page's host), trailing actions |
+| `ItmoNavigationBar`, `ItmoNavigationBarItem` | Root tabs: M3E's `ShortNavigationBar`, a label on every tab, the FILL 1 icon on the selected one |
+| `ContentState`, `ContentStateLoading` | Full and compact loading, empty and error states with an optional action |
+| `Skeleton` | First load without a cache, list or cards |
+| `LoadingPulse` | A shown value that a slower source is about to replace |
+| `AppRefreshBox` | Pull-to-refresh that the user asked for |
+| `ProgressButton` | A button with its own progress, same size, second tap ignored |
+| `ItmoSwitch` | An on/off switch; with no callback it only shows the state and the row carries the toggle |
+| `ItmoActivityIndicator` | A small inline wait that must not change its slot (a switch's slot, a row) |
+| `ButtonRow` | Two buttons side by side, stacked at full width when the labels do not fit |
+| `Pill` | The `моя` badge, a count, a status in its tone over a 12 % wash |
+| `ToneDot` | The review tone dot, an empty slot until the tone arrives |
+| `Avatar` | A photo from the given URL through the host's image loader, initials otherwise: surname and given name by `personInitials`, from ITMO.ID's name parts when the caller passes `initials`; M3 Expressive's nine-sided cookie with the expressive switch, a circle otherwise |
+| `Modifier.connectedGroupItem`, `GroupPosition`, `GroupSurface` | A row of a connected group, drawn by its position, on a screen or in a sheet |
+| `SectionHeading`, `SectionSubheading` | The heading over a group; a sub-heading with its value |
+| `GroupActionRow` | The last row of a group that leads further |
+| `LinkRow`, `VotePill` | A link with its own badge; the one vote pill of links and reviews: like and dislike thumbs around the score, the own vote filled and in `primary`, only the score when voting is not allowed |
+| `SettingsGroup`, `SettingsGroupFooter`, `SettingsRow` and its toggle, choice, navigation, info, action and selection variants | Settings and profile groups, one card per group |
+| `DetailsHeader` | The head of every details sheet |
+| `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer |
+| `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link |
+| `InfoDialog` | A message with one button |
+| `SwatchChoiceDialog` | A choice among colours: named swatches in a grid, the picked name under it; a tap applies and the dialog stays until its button |
+| `ItmoMenu` | The one menu of actions anchored to its parent, groups with separators, destructive items in the error colour |
+| `ScoreRing` | The sport score ring |
+| `GradeScale` | A 0-100 bar with grade ticks |
+| `TimelineMarker`, `TimelineLine` | The schedule timeline |
+| `StepsIndicator` | Progress dots of a flow |
 
 Experimental and expressive Material components reach screens only through
 `Itmo*` wrappers in `shared/designsystem` (`designsystem/components/expressive/`),
@@ -429,19 +394,19 @@ so a material3 line switch stays in the module. `ItmoTheme(expressive)` is the
 one switch; heroes read `ItmoTheme.heroMotionScheme`. Where each is used:
 [Expressive components](#expressive-components).
 
-| Wrapper | Use | On iOS |
-|---|---|---|
-| `ItmoLoadingIndicator` | A wait shorter than about 5 s outside a button; `contained` in pull-to-refresh | `UIActivityIndicatorView` |
-| `ItmoButtonGroup` | A single choice of two to four short options with a selection required; under expressive the kit's `SegmentedChoice` | `UISegmentedControl` with the selection haptic |
-| `ItmoWavyProgress` | Determinate progress of a hero only, linear or circular | A plain `UIProgressView` |
-| `ItmoMarkTile` | The app mark's tile on the sign-in screen, the twelve-sided cookie | A large rounded square |
-| `ServicesConsentSheet`, `StoredDataGroup` | The consent before connecting to ITMO.Widgets and the list of what the server keeps (`ServicesStoredData`), shared by «Сервер ITMO.Widgets» and the first-run flow | SwiftUI `ServicesConsentSheet` |
-| `ItmoSplitButton` | A primary action with a menu of its variants | A capsule with a chevron half that opens `ItmoMenu` |
-| `ItmoFabMenu` | A FAB that opens a menu of actions above it | A round filled toggle that opens `ItmoMenu` |
-| `ItmoFloatingToolbar` | More than two icon actions floating over the content, never docked with the navigation bar | An opaque capsule of tinted icons |
+| Wrapper | Use |
+|---|---|
+| `ItmoLoadingIndicator` | A wait shorter than about 5 s outside a button; `contained` in pull-to-refresh |
+| `ItmoButtonGroup` | A single choice of two to four short options with a selection required; under expressive the kit's `SegmentedChoice` |
+| `ItmoWavyProgress` | Determinate progress of a hero only, linear or circular |
+| `ItmoMarkTile` | The app mark's tile on the sign-in screen, the twelve-sided cookie |
+| `ServicesConsentSheet`, `StoredDataGroup` | The consent before connecting to ITMO.Widgets and the list of what the server keeps (`ServicesStoredData`), shared by «Сервер ITMO.Widgets» and the first-run flow |
+| `ItmoSplitButton` | A primary action with a menu of its variants |
+| `ItmoFabMenu` | A FAB that opens a menu of actions above it |
+| `ItmoFloatingToolbar` | More than two icon actions floating over the content, never docked with the navigation bar |
 
-On Android sheets and dialogs are overlay scenes of the Navigation 3 shell that
-render a `SheetScaffold` body; on iOS a SwiftUI `.sheet` hosts the same body. Shared helpers that are not
+Sheets and dialogs are overlay scenes of the Navigation 3 shell that render a
+`SheetScaffold` body. Shared helpers that are not
 drawing (texts, formatters) belong to `:shared:core`; screen-specific parts to
 the feature's `ui/`. Extract only rules that genuinely repeat; do not build a
 universal renderer.
@@ -454,15 +419,13 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
   Профиль (`AppTab`, which also names each tab's label key and its outlined and FILL 1 icons: `book_2`,
   `calendar_month`, `today`, `sprint`, `person`). The bar is `ItmoNavigationBar` (M3E `ShortNavigationBar`) with
   labels.
-- Every tab root has the root header (`ItmoRootScreen`, `app/shell/entries/TabRootFrames.kt`), one line (owner,
-  2026-10-13, header lab variant 7): the title (`titleLarge`) and its subtitle (`bodyMedium`) on one baseline on the
+- Every tab root has the root header (`ItmoRootScreen`, `app/shell/entries/TabRootFrames.kt`), one line: the title (`titleLarge`) and its subtitle (`bodyMedium`) on one baseline on the
   left, the actions in the same row, centred on the title block; 56 dp. When the subtitle does not fit next to the
   title (a narrow window, a large font) it goes under it; the title never truncates, the header grows instead. It is
-  static (owner, 2026-10-13): it never collapses, the content scrolls under it. Сегодня shows the date
+  static: it never collapses, the content scrolls under it. Сегодня shows the date
   (`понедельник, 7 сентября`, `TodayHeaderViewModel`) and the bell with the count of unseen events, which is in this
-  header only and opens the bell's sheet ([the bell](features/home.md#the-bell)). Расписание and Зачётка draw their own
-  root header (`Сентябрь ▾` over the week; the period); tabs whose new screens come later show their name over their
-  current content.
+  header only and opens the bell's sheet ([the bell](features/home.md#the-bell)). Every other tab draws its own root
+  header (Расписание the month `Сентябрь ▾` over the week, Зачётка the period, Спорт and Профиль their actions).
 - The `Пропуск` extended FAB is on Сегодня only and opens the pass sheet; the widgets, the tile and the shortcut open
   the same sheet.
 - Pushed screens cover the bar: back, a title, no navigation bar. The bar stays in place under them, so the
@@ -472,20 +435,17 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
   sheet, the friend picker), 82 % of the window (`TALL`, the bell's sheet, the sport lesson sheet) or the whole height
   below the status bar (`FULL`, the lesson sheet, so the friends arriving later never resize it); none goes under the
   status bar.
-- Tabs switch by a tap on the bar only, with a fade through; Back is the platform's predictive Back
-  ([Tab switching and Back](#tab-switching-and-back)).
 
 ## The M3 Expressive kit
 
 `designsystem.kit` (`shared/designsystem/.../kit/`) is the kit of the redesigned Android screens, ported from the
-design lab: Material 3 Expressive, Android's only, so its previews are captured in the four Material appearances and
-never in the iOS ones (`materialOnlyPackageTrees` of the kit's screenshot test); iOS draws the same screens in
-SwiftUI ([ADR 0031](decisions/0031-swiftui-ios-screens.md)). Its components take formatted text, icons and colours;
+design lab: Material 3 Expressive, Android's only (its previews are captured only in the four Material appearances,
+`materialOnlyPackageTrees`); iOS draws the same screens in SwiftUI ([ADR 0031](decisions/0031-swiftui-ios-screens.md)). Its components take formatted text, icons and colours;
 what a lesson says and which pills it gets is decided by shared presentation: `core/lesson/LessonTimelines` builds
 `LessonUi` and `TimelineItem` (states, pills, gaps of an hour or more, progress, change notes) for every lesson list;
 a lesson is online by MyITMO's remote format or by a placeholder room (`дистант`, `онлайн`, `DayLesson.isOnline`),
-and the kit's `LessonMapping.kt` draws them. The older components above serve the
-screens that have not moved yet.
+and the kit's `LessonMapping.kt` draws them. Both kits are current: a screen takes a part from `kit` where it has
+one, otherwise from [Shared components](#shared-components).
 
 | Component | Use |
 |---|---|
@@ -511,149 +471,9 @@ screens that have not moved yet.
 
 ## Platform styles
 
-The kit draws in one of two looks, `ItmoPlatformStyle.Material` and
-`ItmoPlatformStyle.Ios` ([ADR 0023](decisions/0023-ios-client.md)). `ItmoTheme`
-picks it once (`platformStyle = defaultPlatformStyle()`: Material on Android,
-iOS on iOS); previews and tests pass it explicitly. Only the kit reads the
-style: every component has one `when` over it, with the same parameters,
-semantics and test tags in both branches, so feature code never learns which
-look drew and never branches on the platform (`ItmoTheme.platformStyle` is
-internal to the kit). Android's look and its baselines do not change with the
-iOS style.
-
-What adapts under `Ios`:
-
-- **Type.** Apple's text styles (`IosTypeScaleTokens`) in place of the M3
-  roles: `bodyLarge` is body 17, `titleMedium` headline, `titleLarge` title 3.
-  `IosTextStyle` carries the tracking that makes CMP's single optical size of
-  SF match UIKit's width; components add no letter spacing.
-- **Spacing and shape.** `ItmoSpacing.Ios` (screen margin 20, row padding 16,
-  touch target 44) and `ItmoShapes.Ios` (every card and group 26, square inner
-  group corners, no group gap); `LocalMinimumInteractiveComponentSize` is 44 pt.
-  UIKit metrics without a Material slot live in `IosMetrics`, each with the
-  UIKit view it was measured on: row height 53, separator 1 pt inset 16 (56
-  with an icon), sheet radius 38, alert 320 wide with radius 34 and 48 pt
-  capsule buttons, menu 250 wide, segmented control 31 high.
-- **Colour.** The scheme stays the static one (iOS has no wallpaper colours);
-  the accent, the tint of buttons, switches, checkmarks and links, is
-  `colorScheme.primary`, as the SwiftUI screens tint their native controls.
-  Grouped backgrounds, cells, separators, labels and fills come from
-  `ItmoTheme.iosColors` by their UIKit names (`groupedBackground`,
-  `groupedCell`, `separator`, `secondaryLabel`, `systemFill`, `systemRed`,
-  `overlay` and the sheet's elevated pair), light and dark.
-- **Controls.** Rows are cells of inset groups with disclosure and checkmark
-  accessories; buttons are `UIButton` capsules that dim when pressed instead of
-  a ripple; the switch is a `UISwitch`, the button group a
-  `UISegmentedControl`, the spinner `UIActivityIndicatorView`'s spokes,
-  progress a flat `UIProgressView`; dialogs are iOS alerts and `ItmoMenu` a
-  context-menu panel, both drawn in Compose.
-- **Sheets.** SwiftUI's `.sheet` hosts a `SheetScaffold` body and owns the
-  grabber, corners, detents, insets and dismissal; the scaffold draws no handle
-  and its header is the sheet's navigation bar.
-- **Expressive off.** `ItmoTheme(expressive = ...)` is ignored under `Ios`;
-  the M3E look is Android's only.
-
-What stays the same: content visuals are one drawing on both platforms (the
-score ring, the grade scale, the timeline marker, the avatar without the
-expressive cookie, the steps indicator's geometry,
-Material Symbols icons, the lesson-type accents and the extended colours);
-only the chrome around them follows the style. Text, icons and behaviour of a
-screen do not change between styles.
-
-- **Haptics.** `rememberItmoHaptics()` inside the kit only, a no-op under
-  Material: selection when a segment or picker value changes, toggle when a
-  switch or checkbox flips, one refresh tick when a pull passes the threshold,
-  success, warning and error when a kit action reports its outcome (a
-  destructive confirmation). Never on plain taps, scrolling or navigation.
-- **No UIKit views in the kit.** The iOS variants draw in Compose only: no
-  `UIKitView`, no UIKit interop, no blur or glass (opaque fills at the measured
-  colours), circular corners at UIKit's radii. Every variant renders under
-  Robolectric, so it has JVM baselines like the Material one.
-- **Baselines.** The harness renders every preview in `ios-light`, `ios-dark`
-  and `ios-narrow` (font scale 1.3 at 320 dp, light) as
-  `<Preview>_ios-<appearance>.png`. The kit records them always; a feature
-  module records them with
-  `scripts/verify.sh shots <module> --record -Pshots.appearance=ios`, and from
-  then on every run verifies them. An
-  iOS change re-records only `_ios-*` files; a changed Material PNG in the same
-  diff is a bug. Accessibility checks assert 44 pt targets under `Ios`.
-- **The JVM font trap.** JVM captures draw the iOS type with Robolectric's
-  fallback font, not SF Pro, which is never committed or bundled. Glyph shapes
-  and exact line breaks are checked only on the simulator:
-  `scripts/ios/screenshots.sh <UITests class>` in light and dark, plus an AX1
-  run, for every screen that gets iOS baselines. A text that wraps or clips
-  with SF but not in the JVM capture is a finding of that screen; the
-  `ios-narrow` baseline is the JVM's guard for long text.
-
-### SwiftUI screens (iOS)
-
-SwiftUI-owned screens (the shell, settings, sign-in, the first-run flow, the
-web sign-in, the update offer) and the system surfaces (widgets, the Control,
-quick actions) follow Apple's HIG for iOS 26: native controls and Liquid Glass
-tinted with the shared tokens (`Tokens.generated.swift`: `ItmoColor`,
-`Font.itmo`, `ItmoSpacing`), Dynamic Type text styles, no fixed sizes. The
-target look is the design lab's (`vibe/design-lab/ux-native/DECISIONS.md`,
-https://design.widgets.alllexey.dev). The Compose screens draw the kit's iOS
-style (`ItmoPlatformStyle.Ios`); M3 Expressive stays Android's only.
-
-- Shell. A glass tab bar with five labelled tabs (Зачётка, Расписание,
-  Сегодня, Спорт, Профиль); pushed screens keep it and show the parent as
-  back. The `QR-пропуск` accessory sits above the bar only while Сегодня is
-  selected and opens the pass sheet.
-- Root header. One line: the title (Title 2 weight) and the subtitle on one
-  baseline on the leading side, the actions (the bell on Сегодня only) in the
-  same row; the subtitle goes under the title when both do not fit, the title
-  never truncates. Static: it never collapses, the content scrolls under it.
-  `.itmoRootHeader(title:subtitle:actions:)`.
-- Pushed header. The system bar keeps back and the toolbar items; under it the
-  title and the subtitle flow as one paragraph that wraps in full (a long
-  subject name), static. `.itmoDetailHeader(title:subtitle:)`.
-- Sheets. A SwiftUI `.sheet` with the grabber, an inline title and the close
-  button; content scrolls. Three heights (`ItmoSheetHeight`): the content's
-  (short content is never cut), 0.82 of the screen draggable to full, or full
-  below the status bar; never under it. A form (an editor, a report) is a
-  `NavigationStack` with a `Form`, cancel and the action in the toolbar.
-- Layout. Side margin `ItmoKit.margin` (16), `ItmoKit.gap` between cards,
-  `ItmoSectionHeader` before a section (closer on a sheet), at most one hero
-  card (`ItmoCard(tone: .primary, hero: true)`), sets of rows in an
-  `ItmoListGroup` (separators inset 56 under icons, 68 under 40 pt avatars).
-  Cards and groups use iOS 26's inset grouped corner, 26 pt.
-- Choices. `ItmoSegmentedChoice` (the native segmented picker) for two to
-  four options and in-screen tabs; filters are chips; more options a list or a
-  sheet. One prominent button per area (`ItmoProminentButton`: `.glassProminent`
-  in the primary role with an `onPrimary` label, readable in light and dark;
-  `.controlSize(.small)` next to a hero's big text, `Войти` on Сегодня),
-  others `.glass` or `.bordered`.
-- Lessons. A day's list is `ItmoLessonTimeline`: a rail with a dot per lesson
-  in its type colour, the elapsed part in the accent colour, the now marker,
-  gap rows for an hour or more, the change note under the lesson. A single
-  lesson is `ItmoLessonCard`. Both say subject; type, teacher; room, building
-  (no line when online); the note; pills.
-- Filters (`ItmoFilters.swift`): `ItmoSearchField` (in the content, with a trailing action and its badge),
-  `ItmoChips`, `ItmoWeekStrip` (a paging scroll view of them pages by weeks), `ItmoSwitchRow` (a group's switch row)
-  and `ItmoOccupancy`, the twins of Android's kit (`ItmoWeekStrip` slides its indicator with
-  `matchedGeometryEffect` on the same spring, off under Reduce Motion).
-- Numbers (`ItmoScores.swift`): `ItmoValueWithSource` (a number over its quiet source), `ItmoProgressBar` (a
-  4 pt capsule in place of `ProgressView`, read as one by VoiceOver), `ItmoPointsMeter`,
-  `ItmoSportRing`, `ItmoGradeScale` (the hero's 100-point bar with the grade ticks) and `ItmoVotePill`, the same
-  pieces as Android's kit. Every track is the environment's `itmoTrack`: a tinted `ItmoCard` sets its tone's colour
-  at `ItmoKit.trackOpacity` (0.16), the screen and neutral cards the label colour at it, so a track is a groove in its
-  container's hue, never the system grey on a light wash.
-- States. Content; empty and error are the system's unavailable view with one
-  glass button (`Повторить` for errors); a gate (`ItmoGateCard`) says what,
-  why and one fix in place of the content; `ItmoActionCard` is something to
-  do; `ItmoLockNote` is closed with no fix; stale content stays dimmed under
-  its date (`ItmoStale`).
-- Tones (`ItmoTone`): neutral (secondary text), primary, tertiary, ok
-  (`success`), warn (`warning`) and bad (`error`), all from the shared roles.
-- Icons: SF Symbols through `AppSymbol` (generated from `docs/design/icons.tsv`)
-  on SwiftUI and system surfaces; Material Symbols Rounded in Compose
-  ([ADR 0028](decisions/0028-strings-and-icons.md)).
-- Chrome: a tab root draws the static root header, a pushed screen keeps the
-  native bar with the edge swipe back.
-- Tabs switch by the native tab bar only, no swipe.
-
-Details: [iOS app](ios.md#design-system).
+`ItmoPlatformStyle` still has an `Ios` value with branches in the kit and `_ios-*` baselines, but only Android renders
+the kit (`defaultPlatformStyle()` is `Material`; iOS draws no Compose, [ADR 0035](decisions/0035-ios-without-compose.md)).
+It is a leftover: a new component needs no `Ios` branch. The SwiftUI look of iOS is in [iOS app](ios.md#design-system).
 
 ## Expressive components
 
@@ -680,21 +500,14 @@ wrappers only; a new screen follows the rules below.
   Onboarding, sign-in, settings, the links and reviews sheets and the schedule
   tab have no hero.
 - **Loading.** `ItmoLoadingIndicator` for a wait shorter than about 5 s outside
-  a button (a section, a sheet, a dialog: the lesson sheet's friends, the
-  privacy audiences, the sign-in session check), the contained one in
-  pull-to-refresh (`AppRefreshBox`). Both are the app's
-  `ItmoMorphingIndicator`: Material's `LoadingIndicator` size and colours,
-  morphing through `ItmoLoadingShapes` (Material's sequence without the
-  odd-symmetric Cookie9Sided and Pentagon) about the shape's centroid, every
-  650 ms one shape and 112.5 degrees on one eased curve `(0.38, 1.21, 0.22, 1)`
-  (the web indicator's), without Material's spring snap. It opens resting on
-  its first shape; under reduced motion it stays on it. In pull-to-refresh the
-  pulled shape is drawn at the turning shape's size, so the handoff keeps size
-  and angle. Never inside a button: `ProgressButton` keeps its small circular
-  indicator, and an inline wait that must keep its slot (the services opt-in
-  switch) keeps `ItmoActivityIndicator`. First loads keep the skeleton.
-  Determinate progress in dense rows (recordbook scores, the people search
-  load-more edge, the My ITMO page load) stays a flat linear bar.
+  a button (a section, a sheet, a dialog), the contained one in pull-to-refresh
+  (`AppRefreshBox`). Both are `ItmoMorphingIndicator`: Material's
+  `LoadingIndicator` size and colours, morphing through `ItmoLoadingShapes` on
+  one eased curve without Material's spring snap; under reduced motion it stays
+  on its first shape. Never inside a button (`ProgressButton` keeps its small
+  circular indicator) and not where an inline wait must keep its slot
+  (`ItmoActivityIndicator`). First loads keep the skeleton; determinate progress
+  in dense rows stays a flat linear bar.
 - **Tabs and toggles.** In-screen tabs are a `SegmentedChoice` (`Моё` /
   `Запись`, the subject's tabs). A segmented toggle becomes
   `ItmoButtonGroup`, single-select with a selection required (the friend
@@ -707,22 +520,14 @@ wrappers only; a new screen follows the rules below.
   each showing its days). A floating toolbar only for more than two actions,
   never docked together with the navigation bar; top bars with up to two
   actions stay top bars. The schedule's FAB pair stays two stacked FABs (below).
-- **Motion in spring terms.** Components take `MotionScheme.standard()`;
-  `MotionScheme.expressive()` only for hero moments; fixed tweens become
-  springs (the schedule's scroll-to-top FAB, the sport week strip and score
-  collapse, the onboarding step change); contextual screens and sheets follow
-  predictive back. Under reduced motion the end state shows at once.
-- **Shapes.** Connected groups already have the expressive connected-list shape
-  (`largeIncreased` 20 dp outside, `extraSmall` 4 dp inside) and keep it.
+- **Motion in spring terms.** Fixed tweens become springs (the schedule's
+  scroll-to-top FAB, the sport week strip and score collapse, the onboarding
+  step change); connected groups keep the expressive connected-list shape.
 - **Flexible bars.** `ShortNavigationBar` is the bar. Both headers are the
-  kit's own, static (header lab variant 7): the large flexible bar puts actions
-  in a row above the title, and the medium one truncates a long subject name. Expressive list items, the `SearchBar` state and
-  `FlexibleBottomAppBar` are not used yet. The material3 alpha line
-  (`1.12.0-alpha03` over Jetpack `1.5.0-alpha22`) is approved for production
-  behind the wrappers.
-- **Out of the look.** Widgets, the quick-settings tile, shortcut and
-  notification icons keep their own palette; WebViews and the ITMO.ID page stay
-  as they are.
+  kit's own and static: the large flexible bar puts actions above the title,
+  and the medium one truncates a long subject name. Expressive list items, the
+  `SearchBar` state and `FlexibleBottomAppBar` are not used. The material3
+  alpha line is approved for production behind the wrappers.
 - **Fixed choices.** Static colours below Android 12 and on iOS use the brand
   blue `#4984E2` (TonalSpot); widgets keep `#6750A4`. The schedule keeps two
   stacked FABs, not a FAB menu; Сегодня has the one extended `Пропуск` button.
@@ -761,120 +566,21 @@ rules do not apply to them.
 
 ## Reference implementations
 
-Compose screens that show a rule of this guide best; the kit parts they use are
-in [Shared components](#shared-components).
+The screens that show a rule of this guide best; read them before building a similar one.
 
-- Schedule day: the feed of `ui/feed/ScheduleFeedScreen.kt` in `:shared:feature-schedule`, a sticky day header over
-  the kit's `LessonTimeline`.
-- Sport: `SportScreen` in `feature/sport/ui/` of `:shared:feature-sport` on the M3 Expressive kit: `Моё` with the
-  score ring card (the flow's hero), bookings as `LessonCard`s under day labels with `Сделать секцией` under the booked ones and the `Секции` groups of `SwitchListRow`s; `Запись`
-  with `SearchField`, `FilterChips`, the paging `WeekStrip` and dense `ListRow`s with `OccupancyBar` and one action;
-  `SportLessonSheetContent`, `SportFiltersSheetContent` and `SportJoinSheetContent` on `SheetScaffold`;
-  `SportPointsScreen` on `ItmoDetailScreen`.
-- Settings and profile groups: `SettingsScreen` in `:shared:feature-settings`
-  (`feature/settings/ui/SettingsScreen.kt`) and `MeScreen` in
-  `:shared:feature-account`, on the kit's `SettingsGroup` and `SettingsRow`.
-- QR pass: the pass sheet `QrPassSheetContent` in `:shared:feature-qr`
-  (`feature/qr/ui/`), the hero reveal of [Expressive components](#expressive-components).
-- Recordbook: `RecordbookScreen` in `feature/recordbook/ui/` of `:shared:feature-recordbook` on the M3 Expressive
-  kit: the root header with the period menu, `SegmentedChoice` of the moment, the session's hero, sections of
-  `ListGroup` rows (name and reason or kind, the 8 dp new-mark dot, the number in `ValueWithSource`, a chevron), the
-  quiet BARS row; `RecordbookSourcesSheetContent` on `SheetScaffold`.
-- Subject page: `RecordbookSubjectScreen` (`ui/subject/`) on `ItmoDetailScreen`: the tabs as `SegmentedChoice`, the
-  hero card with the kit's `GradeScale` and the connected sheet, checkpoint groups of `ListGroup` rows with a thin bar,
-  teacher rows with an `Avatar`, link rows with `VotePill`, the gates as `GateCard`.
-- The «Мои баллы» sheet: `SheetScoresSheet` of `:shared:feature-recordbook`
-  (`ui/sheets/SheetScoresSheet.kt`) on the kit's `SheetScaffold` (handle, title,
-  subject, one bounded area of at least 288 dp for loading, failures and the
-  choices; choice rows with the title in `bodyLarge`, the caption in
-  `bodySmall`; the whole row is the target). The total's review: the value in
-  `headlineMedium`, its column and tab in `bodyMedium`, the reason in `bodySmall` (the warning
-  colour for a total to check), the own row around it as cell tiles (header in
-  `labelSmall` over the value in `titleSmall`, a 48 dp target, the total on
-  `primaryContainer`), the candidates and `Другая ячейка` as chips, `Вернуть
-  авто` for a hand-picked total. Hosted by `app/shell/entries/RecordbookEntries.kt`;
-  on iOS the SwiftUI `SheetScoresSheetView` on `ItmoSheet`.
-- The `.ics` sheet: `IcsExportSheetContent` (`:shared:feature-settings`,
-  `feature/settings/ui/ics`) (handle, title,
-  subtitle, one area of at least 288 dp for the ranges, loading, the file,
-  an empty range and failures; the ranges are connected-group rows: title
-  `bodyLarge`, days `bodySmall`, chevron), hosted by
-  `app/shell/entries/SettingsEntries.kt`.
-- Link sheets: `SubjectLinksSheet` (connected groups per category),
-  `LinkEditorSheet` and `LinkActionsSheet` in `:shared:feature-resources`
-  (`feature/resources/ui/`); rows are the kit's `LinkRow`.
-- Person card: Compose in `:shared:feature-social` (`feature/social/ui/profile/UserProfileScreen.kt`) under
-  `ItmoDetailScreen` with an empty title (the header carries the name, as a contact card): the centred header
-  (96 dp avatar, the name in `headlineSmall`, role pills, the ISU with a copy symbol in a 48 dp target, up to two
-  full-width buttons, the filled one first and an icon only when alone), then `Преподавание` and `Учёба` as kit
-  `ListGroup`s under `SectionHeader`s and `Удалить из друзей` as a danger row. Друзья and another user's friends use
-  `ui/list/UserList.kt`: kit rows with a 40 dp avatar, a pair of actions under the texts (filled, then tonal) or one
-  text button at the end. iOS draws the same states in SwiftUI.
-- Teacher reviews: the own review as a group of its own, the others as one
-  connected group, `feature/social/ui/reviews/TeacherReviewRow.kt` (`subject, date` with
-  `⋮`; the full text; a footer: on the left who wrote it in `bodyMedium`, a
-  named author or the source as a link, otherwise `Анонимный отзыв`, and under
-  it the verification in `bodySmall`, `Вёл у автора` with a 16 dp `ic_check` in
-  `primary` or a muted `Не подтверждён`; on the right the kit's vote pill
-  centred on that column; 12 dp under the footer,
-  16 dp under a row that ends with its text), `OwnTeacherReviewRow.kt` (`мой`,
-  a status pill as a 12 % wash of its tone: content-based palettes make
-  `…Container` colours too dark for the tone as text).
-- AI summary: `feature/social/ui/reviews/TeacherSummaryCard.kt` (`Card.Content.Tonal`, a
-  header with `auto_awesome` and a muted `ИИ`, the tone row with the dot, pros
-  and cons as icon rows, tag chips and five scales
-  collapsed behind the text button `Подробнее`/`Свернуть` whose 48 dp target
-  reaches into the card padding).
-- Tone dot: the kit's `ToneDot`, in the teacher row of the kit's
-  `DetailsHeader` (`DetailsTeacher.tone`) in the lesson sheet (the subject
-  page says the tone in words instead); its place is reserved (`reserveTone`) where a
-  late dot would otherwise move the row.
-- Review editor: Compose in `:shared:feature-reviews` (`feature/reviews/ui/ReviewEditorSheet.kt`),
-  hosted by `app/shell/entries/ReviewsEntries.kt`. A form sheet without a handle
-  that cannot be dragged or dismissed outside: Back and the close button ask
-  `Не сохранять отзыв?` only when something changed. The title has a second line
-  with the teacher's short name; subject suggestions are filter chips that mark
-  the picked one.
-- Clickable teacher fact in details headers: the kit's `DetailsHeader`; only a
-  teacher with an id gets `onClick`, and with it the chevron, the touch target
-  and the TalkBack action.
-- Avatar image failure: the kit's `Avatar` shows the initials until the photo
-  loads and whenever it fails; each URL is its own request, so a late failure
-  of an earlier URL never replaces a newer photo.
-- Расписание: Compose in `:shared:feature-schedule` (`ui/feed/ScheduleFeedScreen.kt`) on the M3 Expressive kit:
-  `ItmoRootScreen` with the title menu (`Сентябрь ▾`), a pager of `WeekStrip`s, sticky day headers over the
-  `LessonTimeline`, quiet `пар нет` and weekend rows on `surfaceContainerLow`; the month sheet, the friend picker
-  (`ListGroup` rows with avatars, a hidden schedule at half opacity) and the lesson sheet (the big room in emphasized
-  `displayMedium` in `primary`, action tiles with the first filled, `ListGroup`s) in `SheetScaffold`; see
-  [Schedule](features/schedule.md).
-- Сегодня: Compose in `:shared:feature-home` (`feature/home/ui/TodayScreen.kt`) on
-  the M3 Expressive kit: the hero `ItmoCard(tone = Primary, hero = true)` (the
-  label and the countdown in `labelLarge`, the subject in emphasized
-  `headlineSmall`, the room in emphasized `displayMedium` beside the full
-  address in `titleMedium`, `ItmoWavyProgress` for the lesson in progress, or
-  emphasized `displaySmall` `Онлайн` with the extra-small `SmallButton`
-  `Войти` next to it, at least a `content` gap apart), a
-  `SectionHeader` with the count over the `LessonTimeline`, `ActionCard`s in
-  `Tone.Warning` under `Нужно сделать`; see [Сегодня](features/home.md#сегодня).
-- The bell's sheet: `BellSheetContent` (`feature/home/ui/BellSheet.kt`) on the
-  `SheetScaffold`: `SectionHeader`s `Новое` (with the count) and `Раньше` over
-  `ListGroup`s of event rows (a 40 dp lead: a mark's `TextTile` `+9` in
-  `Success`, an `IconTile` of the change in `Warning` or of the queue in
-  `Success`/`Error`, the person's `Avatar`; the title in `bodyLarge`, semibold
-  with an 8 dp `primary` dot when new; the details in `bodyMedium`; `было`
-  struck through in `onSurfaceVariant` over `стало` in `warning`; small
-  `Принять` and outlined `Отклонить`), `Ничего нового` with `ic_check_circle`
-  in `success` when nothing is new, and the `Настройки уведомлений` row last,
-  which opens «Уведомления».
-- Settings pages of their own: «Сервер ITMO.Widgets» (`ui/connection/ConnectionScreen.kt` of
-  `:shared:feature-settings`: the status hero with its switch, `ListGroup`s, the stored data sheet, the danger row) and
-  «Уведомления» (`ui/notifications/NotificationSettingsScreen.kt`: switch rows with a notification miniature under
-  each, the gate while denied); the sign-in (`AuthScreen`) and the first-run flow (`OnboardingScreen`) of
-  `:shared:feature-account`.
-- Schedule changes in the schedule: on the lesson itself in the timeline (`изменена`, the old room struck through, the
-  `Изменено вчера в 20:14` note); in the lesson sheet the `Изменения` group, one `было → стало` row per field (the old
-  value struck through in `onSurfaceVariant`, the new one in `warning`), in `ui/lesson/LessonSheet.kt` of
-  `:shared:feature-schedule`.
-- Visual tests: every module's goldens under `<module>/screenshots/`, for
-  example the `RecordbookScreen_*`, `RecordbookSubjectScreen_*`, `Subject*` and
-  `SheetScoresSheet_*` goldens of `:shared:feature-recordbook`.
+- Tab roots on the M3 Expressive kit: `TodayScreen` (`:shared:feature-home`, the hero and `Нужно сделать`),
+  `ScheduleFeedScreen` (`:shared:feature-schedule`, the title menu, `WeekStrip` pager, sticky days over
+  `LessonTimeline`), `SportScreen` (`:shared:feature-sport`, `Моё` / `Запись`, `SearchField`, `FilterChips`,
+  `OccupancyBar`), `RecordbookScreen` (`:shared:feature-recordbook`, `ValueWithSource` rows).
+- Pushed screens on `ItmoDetailScreen`: `RecordbookSubjectScreen` (tabs, the hero with `GradeScale`, `GateCard`),
+  `UserProfileScreen` (`:shared:feature-social`, an empty title under a centred contact header), `SportPointsScreen`.
+- Sheets on `SheetScaffold`: `BellSheetContent`, `SheetScoresSheet` (one bounded area of at least 288 dp for loading,
+  failures and the choices), `IcsExportSheetContent`, `SubjectLinksSheetContent`, the lesson sheet (`ui/lesson/LessonSheet.kt`,
+  the `Изменения` group with `было -> стало` rows).
+- Settings: `SettingsScreen` on `SettingsGroup` and `SettingsRow`, `ConnectionScreen` and
+  `NotificationSettingsScreen` (`:shared:feature-settings`).
+- Reviews: `TeacherReviewRow`, `OwnTeacherReviewRow` (a status pill as a 12 % wash of its tone: content-based palettes
+  make `...Container` colours too dark as text), `TeacherSummaryCard` (`Card.Content.Tonal`), `ReviewEditorSheet`
+  (asks `Не сохранять отзыв?` only when something changed).
+- `Avatar` shows the initials until the photo loads and whenever it fails; each URL is its own request, so a late
+  failure of an earlier URL never replaces a newer photo.

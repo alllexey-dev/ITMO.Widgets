@@ -15,12 +15,8 @@ tokens ITMO.ID issues and never sees a password. See also
   launches `LoginActivity` for a result and plays the demo confirmation.
 - `AuthUiState` follows `SessionRepository.state`; errors map in
   `toAuthText` (a malformed token response counts as `Unauthorized`).
-- The look (DECISIONS.md, Вход): the app mark in its tile, the name, one line on
-  what the app does (or that the session ended), one main path `Войти через
-  ITMO.ID` with `Логин и пароль — только на странице ITMO.ID`, and `Другие
-  способы входа`, which opens a sheet with the refresh token card (`Войти по
-  токену`). The unofficial notice closes the screen. The demo stays on five taps
-  on the mark (ADR 0015); nothing on the screen names it.
+- One main path, `Войти через ITMO.ID`; `Другие способы входа` opens a sheet with the refresh token
+  card. The demo entry is five taps on the mark (ADR 0015); nothing on the screen names it.
 
 ## ITMO.ID page
 
@@ -49,7 +45,6 @@ tokens ITMO.ID issues and never sees a password. See also
   `remember` (SwiftUI `@State`) only, never in saved state, and drops it when it
   closes; `signInWithRefreshToken` refreshes it once via the stateless
   `identity.refresh`, and the current session stays until that succeeds.
-
 - `initialize()`: an active demo restores the demo; no refresh token is
   `SignedOut`; an expired one is `ReauthenticationRequired`; otherwise
   `SignedIn` from the ID token, then the Backend sync.
@@ -87,7 +82,6 @@ Same shared ViewModels and `SessionRepository` under SwiftUI
   retries failures with WorkManager; iOS retries on each `AppForeground` return
   while signed in. Initialization, sign-in and enabling custom services sync on
   both platforms. Demo and disabled custom services send nothing.
-
 - `AuthScreen` (`iosApp/Sources/Features/Auth/`) with the same look; the refresh token
   is `AuthOtherWaysSheet`. `ItmoSignInScreen`: `WKWebView` on the default data store with the same
   `token_refresh_interceptor.js`, accepted only from the main frame of
@@ -95,7 +89,8 @@ Same shared ViewModels and `SessionRepository` under SwiftUI
   fresh page, a retry) first clears WebKit's website data
   (`AppPlatform.removeWebsiteData`) and loads the page only after that; the
   sign-in itself keeps the store.
-- Tokens are one Keychain item, `myitmo_tokens`; `TokenManager` refreshes them
+- Tokens are one Keychain item, `myitmo_tokens` (Android: `myitmo_tokens.enc` in `noBackupFilesDir`,
+  Keystore alias `itmo_widgets_myitmo_tokens_v1`); `TokenManager` refreshes them
   under a cross-process file lock. Sign-out also clears the Keychain, the App
   Group container and WebKit's website data.
 - The demo entry is the same five taps ([demo](demo.md#ios)).
@@ -111,10 +106,3 @@ and the BARS sign-in and renewal use them
 ([ADR 0012](../decisions/0012-bars-background-renewal.md#the-sign-in-keeps-the-itmoid-session)).
 A refresh-token sign-in, the demo, sign-out and a failed sign-in clear it as
 before.
-
-## Stable identifiers
-
-Quoted from `StableIdentifiersTest`: the token file `myitmo_tokens.enc` in
-`noBackupFilesDir`, the Keystore alias `itmo_widgets_myitmo_tokens_v1` with the
-cipher prefix `v1:`, and the DataStore file `app_preferences`, which holds
-`demo_active`.

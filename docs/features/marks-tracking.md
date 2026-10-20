@@ -10,15 +10,10 @@ subjects in one notification.
 - The switches (`Баллы` and its sources) are on «Уведомления»
   ([settings](../settings.md#notifications)).
 - Everything stays on the device: marks, the BARS token and the ITMO.ID cookies never reach Backend;
-  the feature works without `Подключение к ITMO.Widgets`.
+  the feature works without the connection to ITMO.Widgets.
 - BARS is read in the background through the cookie renewal (decision
   [0012](../decisions/0012-bars-background-renewal.md)); storage and delivery follow the schedule
   changes (decision [0013](../decisions/0013-schedule-changes-on-device.md)).
-- Code: `:shared:feature-recordbook` `commonMain` (`MarksCheck`, `MarkDiff`, `MarkNewsRules`,
-  `MarkDigests`, `MarksFileStore`, `MarkTrackingRepositoryImpl`, `DefaultMarkTracking`,
-  `BarsMarksActivation`, `MarksBellSource`, `BarsTodoSource`), Koin `recordbookModule`; Android work in
-  `feature/recordbook/work`, bound in `di/RecordbookModule.kt`. Wall clock is the injected
-  `kotlin.time.Clock`, the date comes from `AcademicTimeProvider`.
 
 ## Background check
 
@@ -119,8 +114,8 @@ the cycle `BarsClient -> repository -> BARS read -> BarsClient`:
 - Any failed request fails the whole read: a partial answer is never a snapshot.
 - `SessionEnded` moves the prompt `NONE -> PENDING`. With `PENDING`/`SHOWN` every run still tries the
   cookies once.
-- A network failure (`isCausedByNetworkFailure` in `core/network`, including a
-  `TokenRefreshException` with a network cause) is `AppError.Network` on every path: retried,
+- A network failure (`isCausedByNetworkFailure` in `core/network`, including a token refresh
+  that failed on the network) is `AppError.Network` on every path: retried,
   snapshots kept, never a prompt. Only ITMO.ID's `LOGIN_REQUIRED` or missing cookies end a session.
 - Xiaomi `Умный режим` cuts background network even with `CONNECTED`; the settings row
   `Работа в фоне` leads to the fix ([settings](../settings.md#background-work)).
@@ -135,35 +130,21 @@ the cycle `BarsClient -> repository -> BARS read -> BarsClient`:
 - A `PENDING` prompt is shown once and becomes `SHOWN`.
 - Pending records count as delivered after the attempt, even without the notification permission.
 - `AndroidMarksNotifier`: channel `marks`. One subject with numbers says them in the title
-  (`MarkNewsTexts.notificationTitle`: `Матанализ: 9 из 10`) and the details under it; otherwise `Новые оценки`
-  with up to three names (`MarkSubjects.split`). The lock screen shows `Новые оценки` only. The tap target is `MarkNewsRules.target` (a single subject's
-  page, else the recordbook); the tap never connects BARS. Ids and routes:
+  (`MarkNewsTexts.notificationTitle`); otherwise `Новые оценки` with up to three names
+  (`MarkSubjects.split`). The lock screen shows `Новые оценки` only. The tap target is
+  `MarkNewsRules.target` (a single subject's page, else the recordbook); the tap never connects BARS. Ids and routes:
   [notifications](notifications.md#marks).
 
 ## In the recordbook
 
-- `RecordbookViewModel` fills `Content.newSubjects` (name keys of the listed period's half-year)
-  without a request; `RecordbookSubjectViewModel` calls `markRead` once with the first content.
+- `RecordbookViewModel` marks unread subjects (name keys of the listed period's half-year) without a
+  request; `RecordbookSubjectViewModel` calls `markRead` once with the first content.
 - The open list advances snapshots: `readStarted()` before requests, then `recordMyItmoSeen` /
   `recordBarsSeen` for the current half-year only, never after an error. What it finds gets a dot,
   never a notification. A source without a snapshot of that half-year is left alone.
-- The bell: `MarksBellSource` shows every record with its value (`Матанализ: контрольная работа 2`,
-  `9 из 10, итого 74`, `+9`) and leads to the subject page ([the bell](home.md#the-bell)).
+- The bell: `MarksBellSource` shows every record with its value and leads to the subject page ([the bell](home.md#the-bell)).
 - Сегодня: `BarsTodoSource` asks to sign in to BARS again while the prompt is not `NONE`
   ([Сегодня](home.md#сегодня)).
-
-## Debug tools
-
-- `Проверить оценки` calls `MarkTracking.checkNow()`: one-off `marks-check-now`
-  (`ExistingWorkPolicy.REPLACE`, network, tag `marks`) on the real account.
-- `Проверить продление БАРС` enqueues `BarsCookieProbeWorker` (`bars-cookie-probe`, 120 s delay):
-  read-only, writes no cookies or BARS header; logcat `BarsCookieProbe` holds only outcome, step,
-  counts and process age. Debug builds only.
-
-## Tests
-
-`shared/feature-recordbook/src/androidHostTest` (2.2 store files in `resources/stores/`), plus the
-instrumented `MarksWorkTest` and `MarksNotificationTest` in `:app`.
 
 ## iOS
 
@@ -182,5 +163,4 @@ Same shared check; `PlatformCapabilities.marks` is on. Platform side:
   prompt).
 - Quiet hours differ: `MarksRefresh` hands night results to the system for 06:00 at once (calendar
   trigger) and counts them delivered.
-- Debug: `-itmoRunRefresh` also posts a fixture digest (`MarksFixture`). Tests in
-  `shared/feature-recordbook` iosTest (`MarksRefreshTest`) and `ITMOWidgetsTests`.
+- Debug: `-itmoRunRefresh` also posts a fixture digest (`MarksFixture`).

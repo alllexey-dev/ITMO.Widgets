@@ -3,32 +3,23 @@
 Part of the [recordbook](recordbook.md): the page a subject row opens.
 Product behaviour: [Как это работает: оценки](../how-it-works/grades.md).
 
-- Key `AppRoutes.RecordbookSubject(args)`, registered in `RecordbookEntries.kt`, which closes a key whose arguments
-  `validOrNull` refuses. `RecordbookSubjectViewModel` (Koin, the arguments as a parameter) drives
-  `RecordbookSubjectRoute` (`ui/subject/`) on Android and `RecordbookSubjectScreen` on iOS; `SubjectPresenter`
-  (pure) puts each tab into words.
-- A pushed screen: the subject's name with `Дифзачёт, 3 семестр`, the tabs `Баллы`, `Пары`, `Материалы`
-  (`SegmentedChoice`) pinned under it, each tab's content on its own page: a tap slides to the page, a horizontal
-  swipe selects the next tab (Android `HorizontalPager`, iOS a page `TabView`), each page keeps its scroll. No `Люди`
-  tab: teachers are rows of `Пары`.
-  It opens on `Баллы`; a key with `materials = true` (the lesson sheet's `Ссылки 3`) opens on `Материалы`.
-- `Баллы`: a BARS notice row (`Войти` or `Повторить`), the hero (the points `из 100`, the grade by points or the
-  final result as a pill over its quiet source, the grade scale, `до 3D ещё 4,5` or `до зачёта ещё 8`), the
-  connected sheet in the hero with its menu (open, `Изменить итог`, disconnect) and `Проверьте итог` for an unsure
-  total, the sport points of Физкультура
-  (a row to Спорт), then the checkpoints by group with their sums (`28 из 30`), each `9 / 10` over a bar, `минимум 6`
-  on the left (red when below) and the date on the right. Without checkpoints: the quiet BARS offer while BARS is not
-  connected and `Мои баллы из таблицы` while a sheet link exists; with BARS connected, a note that there are none.
-  The source of the hero's number follows the list: BARS, a sheet's total while in progress, My ITMO.
-- `Пары`: the schedule question (below), the teachers as rows (`Ершов Н. А.`, `Лабораторные, в основном хвалят`)
-  that open the person, `Отзывы недоступны` with `Подключить` without the connection, `Отзывов пока мало` with
-  `Написать отзыв` when no teacher has a summary, then the three nearest lessons with `Все пары, N`, each the
-  schedule's lesson card (`LessonTimelines.lesson` of `core/lesson`) under its day; a tap opens the lesson sheet.
-- `Материалы`: without `Подключение к ITMO.Widgets` only a gate with `Подключить` (the connection settings). With it:
-  `Чаты`, then the links by category (the pinned one first, then by rank in the order the page first showed them),
-  votes on the right, own links with `моя` and their review state (`на проверке`, `отклонена`, `скрыта`, `только у
-  вас`); a tap opens a link, a long press its actions; `Добавить ссылку` (the FAB on Android, `+` on iOS); links of
-  earlier semesters behind `Все ссылки, N`. The My ITMO LMS link is not shown.
+- Key `AppRoutes.RecordbookSubject(args)`; `RecordbookEntries.kt` closes a key whose arguments
+  `validOrNull` refuses. `RecordbookSubjectViewModel` drives `RecordbookSubjectRoute` on Android and
+  `RecordbookSubjectScreen` on iOS; `SubjectPresenter` (pure) puts each tab into words.
+- A pushed screen with the tabs `Баллы`, `Пары`, `Материалы` (`SegmentedChoice`) pinned under the title;
+  a tap or a horizontal swipe changes the page (Android `HorizontalPager`, iOS a page `TabView`), each page
+  keeps its scroll. It opens on `Баллы`; a key with `materials = true` (the lesson sheet's `Ссылки`) opens
+  on `Материалы`. No `Люди` tab: teachers are rows of `Пары`.
+- `Баллы`: a BARS notice row (`Войти` or `Повторить`), the hero (points, grade or final result, the
+  next grade hint), the connected sheet with its menu ([sheet scores](sheet-scores.md#on-the-subject-page)),
+  the sport points of Физкультура, then the checkpoints by group with their sums and minimums. The source
+  of the hero's number follows the list: BARS, a sheet's total while in progress, My ITMO.
+- `Пары`: the schedule question (below), the teachers as rows that open the person (review gate or
+  `Написать отзыв` when no teacher has a summary), then the three nearest lessons as the schedule's lesson
+  cards (`LessonTimelines.lesson` of `core/lesson`); a tap opens the lesson sheet.
+- `Материалы`: without the connection to ITMO.Widgets only a gate with `Подключить`. With it, chats and
+  links as in [subject links](resources.md#subject-page); earlier semesters behind `Все ссылки, N`. The My
+  ITMO LMS link is not shown.
 - If BARS is connected and the arguments carry no journal (a notification, a new sign-in), the page finds the
   subject in the period's BARS answer; a subject BARS does not have is no error.
 
@@ -56,7 +47,7 @@ controls or a `ControlGroup` in the place of its first control:
 
 - Distinct people from the subject's lessons; without lessons the recordbook teacher stands in.
 - Only a usable teacher ISU opens the person profile; no identifier is guessed by name.
-- With `Подключение к ITMO.Widgets`, rows with an ISU say the review tone in words (`TeacherLevelTone.words`):
+- With the connection to ITMO.Widgets, rows with an ISU say the review tone in words (`TeacherLevelTone.words`):
   `RecordbookSubjectViewModel` asks `TeacherLevelsRepository` whenever the set of ISUs changes
   ([teacher levels](reviews.md#teacher-levels)).
 
@@ -78,11 +69,6 @@ controls or a `ControlGroup` in the place of its first control:
 `RecordbookRepositoryImpl` is a singleton with a memory cache (`cachedPrograms`, `cachedSubjects` per
 `(programId, semester)`, `cachedControls` per entry), a `SessionDataCleaner`. The root and the subject
 page seed `Content(refreshing = true)` from it, so a second visit never shows the skeleton.
-
-## Tests
-
-`RecordbookSubjectViewModelTest` and the Roborazzi references `RecordbookSubjectScreen_*` in
-`:shared:feature-recordbook`; `RecordbookSubjectSnapshotTests` on iOS.
 
 ## iOS
 

@@ -2,34 +2,28 @@
 
 Product behaviour: [Как это работает: аккаунт](../how-it-works/account.md).
 
-`feature/me` is the last bottom-bar tab, the Профиль hub (DECISIONS.md, Профиль): the own identity, entries to the
-social screens and the settings pages, the app rows and sign-out. It owns no data; `MeViewModel`
-(`:shared:feature-account`, Koin) combines the session, the custom-services opt-in and `SocialRepository`, and
-builds every text of the screen (`MeUiState`), so the Compose and SwiftUI views only lay it out. Social screens:
-[Social](social.md); web sign-in: [Web sign-in](web-login.md); settings: [Settings](../settings.md).
+`feature/me` is the last bottom-bar tab, the Профиль hub: the own identity, entries to the social screens and the
+settings, the links and sign-out. It owns no data; `MeViewModel` (`:shared:feature-account`) combines the session,
+the custom-services opt-in and `SocialRepository`, and builds every text of the screen (`MeUiState`), so the Compose
+and SwiftUI views only lay it out. Social screens: [Social](social.md); web sign-in: [Web sign-in](web-login.md);
+settings: [Settings](../settings.md).
 
 ## Screen
 
-- The one-line root header `Профиль` with `Поделиться` (a positive ISU shares `ShareLinkFactory.profile`,
+- The root header with `Поделиться` (a positive ISU shares `ShareLinkFactory.profile`,
   [App Links and sharing](app-links.md#sharing)).
-- The identity card (`MeHeader`): the avatar with `personInitials` of ITMO.ID's family and given name, the name from
-  the ID-token user, else Backend's own profile, else `Профиль не загрузился`; the study group line
-  (`M3205, 2 курс, ФИТиП`) only from Backend's primary group; `ИСУ N`.
-- `Люди`: `Друзья` with `friendsSubtitle` (`3 друга, 1 заявка`, `Пока никого`, loading or error) and the incoming
-  requests as a badge. Without the connection (`MeFriendsSummary.Disabled`) a gate `Друзья недоступны` with
-  `Подключить` stands in its place and opens «Сервер ITMO.Widgets».
-- `Приложение`: `Виджеты` (the widgets gallery), `Настройки`, which hold every setting, the connection, privacy,
-  notifications and devices included ([settings](../settings.md#navigation-and-density)), and developer tools only
-  in Android debug builds ([Debug tools](debug.md)).
-- `Ссылки`: `Карта` (the campus map without a lesson, `AppRoutes.CampusMap()`, [campus map](map.md)), `My ITMO` ([My ITMO in the app](my-itmo-web.md); the demo refuses it), the Telegram channel and GitHub;
-  then `Выйти`.
+- The identity card: the avatar with `personInitials` of ITMO.ID's family and given name, the name from the ID-token
+  user, else Backend's own profile; the study group line only from Backend's primary group; the ISU.
+- `Друзья` with the counts and the incoming requests as a badge. Without the connection
+  (`MeFriendsSummary.Disabled`) a gate with `Подключить` stands in its place and opens «Сервер ITMO.Widgets».
+- `Виджеты` (the gallery), `Настройки` (every setting, the connection, privacy, notifications and devices included)
+  and developer tools only in Android debug builds ([Debug tools](debug.md)).
+- Links: `Карта` (`AppRoutes.CampusMap()`, [campus map](map.md)), `My ITMO` ([My ITMO in the app](my-itmo-web.md); the
+  demo refuses it), the Telegram channel and GitHub; then `Выйти`.
 - The rows name no route themselves: `MeActions` reaches the host, which maps them: the gate to
-  `AppRoutes.Settings(SERVICES)`, widgets to the gallery (`AppRoutes.Settings(WIDGETS)`), settings to the root.
+  `AppRoutes.Settings(SERVICES)`, widgets to `AppRoutes.Settings(WIDGETS)`, settings to the root.
 - The first frame shows the cached state; a recreated tab is never blank. `StoreScreenshotCapture` sets
   `MeHost.releaseLook`, so a debug build shows the release screen without the developer tools row.
-
-Not done yet: the connection's last sync time (`обновлено в 12:20`) and a requests badge on the Профиль tab. The
-notifications and widgets counts live on the settings root.
 
 ## Sign-out
 
@@ -38,26 +32,13 @@ ends; the session returns the app to sign-in ([Sign-in](auth.md#session)).
 
 ## Refresh
 
-`MeViewModel` refreshes once when it is created (the tab's first show), with `RefreshMode.Silent` and so
-`SocialRepository.refresh()`; every opt-in change refreshes again. Coming back from a pushed screen or another tab
-does not: relationship actions fold their answers into the repository, which the summary follows, and Сегодня's
-bell refreshes the friend requests on each return of the app to the foreground (`FriendRequestsBellSource`).
-
-## Android
-
-`MeScreen` (`feature/me/ui`, `ItmoRootScreen` with kit `ListGroup` rows) is stateless; `MeRoute` takes
-`MeViewModel` and wires sign-out and the link snackbar. `MeTabRoot` (`shell/entries/AccountEntries.kt`) passes
-`showDebugTools = BuildConfig.DEBUG` and the `MeActions`, which open the keys through the navigator and share or open
-links through `feature/me/ui/MeHost.kt`.
+`MeViewModel` refreshes once when it is created (the tab's first show), silently; every opt-in change refreshes
+again. Coming back from a pushed screen or another tab does not: relationship actions fold their answers into the
+repository, which the summary follows, and Сегодня's bell refreshes the friend requests on each return of the app to
+the foreground (`FriendRequestsBellSource`).
 
 ## iOS
 
-The tab root is the SwiftUI `MeTabScreen` (`iosApp/Sources/Features/Social/`) over the same `MeViewModel` ([iOS app](../ios.md)). Settings and
-privacy rows open the SwiftUI settings pages, web sign-in is the shell's sheet, sharing goes through `SocialShares`,
-links through `PlatformActions.openLink`; there is no developer tools row.
-
-## Tests
-
-`MeViewModelTest`, `MeScreenTest` (`commonTest`), `AccountEntriesTest` (`app/src/test`), the `MeScreen_*` goldens of
-`AccountScreenshotTest` from `MeSamples`; on iOS the profile snapshots and `SocialUITests`, `ShellUITests`
-(sign-out), `SettingsUITests`.
+The tab root is the SwiftUI `MeTabScreen` (`iosApp/Sources/Features/Social/`) over the same `MeViewModel`
+([iOS app](../ios.md)). Sharing goes through `SocialShares`, links through `PlatformActions.openLink`; there is no
+developer tools row.

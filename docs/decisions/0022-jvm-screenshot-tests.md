@@ -2,6 +2,9 @@
 
 **Amended by [0031](0031-swiftui-ios-screens.md):** the iOS coverage clause below.
 
+**Amended by [0035](0035-ios-without-compose.md):** no iOS route hosts Compose any more, so the clause on
+`ComposeUIViewController` routes below no longer applies.
+
 **Decision (2026-10-03).** Visual verification of Compose screens and kit components
 runs on the JVM: Roborazzi with Robolectric and ComposablePreviewScanner in each
 module's `androidHostTest`, baselines committed in `<module>/screenshots/`. Every

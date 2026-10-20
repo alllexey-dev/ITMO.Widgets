@@ -4,10 +4,9 @@ Part of the [recordbook](recordbook.md).
 Product behaviour: [Как это работает: оценки](../how-it-works/grades.md).
 
 The own total of a subject from a teacher's public Google Sheet. The connection, the downloaded sheet
-and other people's names stay on the device: no Backend, no `Подключение к ITMO.Widgets` (decision
-[0014](../decisions/0014-sheet-scores-on-device.md)). Code: `feature/recordbook` under
-`domain/sheets`, `data/sheets`, `presentation/sheets`, `ui/sheets`; `feature/resources` only offers
-the action.
+and other people's names stay on the device: no Backend, no connection to ITMO.Widgets needed
+(decision [0014](../decisions/0014-sheet-scores-on-device.md)). `feature/resources` only offers the
+action.
 
 ## Connecting
 
@@ -15,8 +14,7 @@ the action.
   (`https://docs.google.com/spreadsheets/d/<id>` or `.../u/<n>/d/<id>`, `gid` from the fragment, then
   the parameter; published `/d/e/...` addresses are not sheets).
 - `Мои баллы` opens `AppRoutes.SheetScores(SheetScoresArgs)` with the link's `ResourceScope`
-  (`discipline_id` and period), registered in `RecordbookEntries.kt` with `SheetScoresViewModel` and
-  `SheetScoresSheet`. One connection per scope; a new one replaces the old after a successful choice.
+  (`discipline_id` and period). One connection per scope; a new one replaces the old after a successful choice.
 - The workbook lives only in the view model, never in saved state; after process death it is
   downloaded again. A failed write keeps the choice.
 - Name search appears for more than 8 student rows. Student rows start at the topmost name or ISU
@@ -78,7 +76,8 @@ the action.
   `Вернуть авто` replaces a hand-picked one with the automatic one.
 - Issue 419 (АК): some students were also in `Copy of Общий список` of an earlier run under `Итого`,
   which beat `∑` of `Общий список`; the copy now loses to the current tab. The 13 sheets of the issue,
-  anonymised, are fixtures in `resources/sheets/real` with the real total of each tab (`truth.tsv`).
+  anonymised, are fixtures in `shared/feature-recordbook/src/androidHostTest/resources/sheets/real`
+  with the real total of each tab (`truth.tsv`); no test opens a sheet over the network.
 - The column is stored as `gid` + header path; a reading finds the same path (nearest to the old index
   when repeated), falls back to the old index while the tab is that wide, else the column is not
   found. Values are shown as the sheet shows them, never recomputed.
@@ -94,11 +93,9 @@ failure adds `Проверьте итог`, which opens the review. Without a co
 
 ## The total's review
 
-`Изменить итог`, `Проверьте итог` and a row without a total header open the review: the total as the
-sheet shows it with its column and tab and the reason (`Столбец «∑», сумма баллов сходится`; a reason
-to check in the warning colour, `Выбрано вручную` for a hand-picked one), the own row around it with
-the headers, the candidate columns with a value as chips (at most 4, the tab's name when two share a
-title) and `Другая ячейка`, which opens every cell of the row by tab. Any tap saves.
+`Изменить итог`, `Проверьте итог` and a row without a total header open the review: the total with its
+column, tab and reason, the own row with the headers, up to 4 candidate columns as chips and
+`Другая ячейка` (every cell of the row by tab). Any tap saves.
 
 ## In the recordbook list
 
@@ -134,18 +131,11 @@ ITMO and BARS.
   file; a reading is written only when the session generation and the whole connection it was taken
   for are unchanged.
 
-## Tests
-
-`shared/feature-recordbook/src/androidHostTest` with synthetic sheets in `resources/sheets/` and the
-anonymised real sheets of issue 419 in `resources/sheets/real` (`SheetRealSheetsTest`: chosen cases
-and every student of every tab against `truth.tsv`); no sheet is opened over the network, names and
-ISUs are made up.
-
 ## iOS
 
 `Мои баллы` is the SwiftUI `SheetScoresSheetView` (`iosApp/Sources/Features/Recordbook/SheetScoresSheet.swift`)
 over the shared `SheetScoresViewModel`, resolved with `SheetScoresIosParameters` (the `SavedStateHandle` Android's
-entry seeds); snapshots in `SheetScoresSnapshotTests`. A failed save shows a banner over the sheet. The client runs on
+entry seeds). A failed save shows a banner over the sheet. The client runs on
 `darwinHttpEngine()` with the same policy; storage is the same `filesDir/sheet_scores`. Links and
 the offer come from the subject's links ([subject page](subject-page.md#ios),
 [subject links](resources.md#ios)).

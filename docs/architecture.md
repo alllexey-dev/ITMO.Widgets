@@ -15,28 +15,19 @@ ITMO.Widgets is a Kotlin Multiplatform app for Android and iOS.
 - `app/` is the Android app: the Navigation 3 shell around the shared screens
   and everything only Android has (RemoteViews widgets, the quick-settings
   tile, WorkManager, FCM, WebView sign-in pages, Koin wiring of Android ports).
-- `iosApp/` is the iOS app: a SwiftUI shell built with XcodeGen. Today it hosts
-  the shared Compose screens through the `Shared` framework, plus Swift-only
-  widgets and a notification service extension.
-
-Direction: iOS screens move to native SwiftUI over the shared Kotlin domain,
-data and view models, and the shared code is refactored substantially during
-that move; Android keeps Compose. See
-[ADR 0031](decisions/0031-swiftui-ios-screens.md). The iOS side of this
-document describes the current state.
+- `iosApp/` is the iOS app, built with XcodeGen: native SwiftUI screens over
+  the shared view models through the `Shared` framework, plus Swift-only
+  widgets and a notification service extension. iOS draws no Compose
+  ([ADR 0031](decisions/0031-swiftui-ios-screens.md),
+  [ADR 0035](decisions/0035-ios-without-compose.md)).
 
 ## Modules
 
-`settings.gradle.kts` includes the projects below. `build-logic/` is an
-included build with the convention plugins (`itmowidgets.kmp.library`,
-`itmowidgets.kmp.android`, `itmowidgets.cmp.kit`, `itmowidgets.cmp.android`,
-`itmowidgets.testing`, `itmowidgets.strings`, `itmowidgets.android.app`);
-versions live in `gradle/libs.versions.toml`. Every feature applies
-`itmowidgets.cmp.android`: Compose UI in `androidMain`, strings from
-`:shared:compose-strings` only, so its iOS klib has no Compose.
-`:shared:designsystem` and `:shared:compose-strings` apply
-`itmowidgets.cmp.kit`: Compose Multiplatform with its resources on the Android
-target only ([ADR 0035](decisions/0035-ios-without-compose.md)).
+`settings.gradle.kts` includes the projects below; the convention plugins are in
+[`build-logic/`](../build-logic/README.md), versions in `gradle/libs.versions.toml`.
+Every feature applies `itmowidgets.cmp.android`: Compose UI in `androidMain`,
+strings from `:shared:compose-strings` only, so its iOS klib has no Compose
+([ADR 0035](decisions/0035-ios-without-compose.md)).
 
 | Module | Holds |
 |---|---|
@@ -146,36 +137,20 @@ into routes; `RouteQueue` holds one until the session and the first-run flow
 allow it.
 
 - **Android.** One activity, `MainActivity`, hosts the Navigation 3 shell in
-  `app/src/main/java/dev/alllexey/itmowidgets/app/shell/`: `ShellHost`,
-  `AppShell` (one `NavDisplay`), `Nav3AppNavigator` (open and close keys,
-  per-tab back stacks in `ShellBackStack`) and `EntryRegistry`. Every key is
-  registered in `app/shell/entries/<Area>Entries.kt`, which renders the
-  feature's `<Name>Route` and turns its lambdas into navigator calls. Each tab
-  root renders inside its frame (`entries/TabRootFrames.kt`): the kit's
-  `ItmoRootScreen` with the static root header, and on Сегодня the date
-  (`TodayHeaderViewModel`), the bell and the `Пропуск` button that opens the
-  `QrPass` sheet ([design](design.md#shell)). `NavDisplay` shows
-  `ShellBackStack.entries`: the start tab's root, the selected tab's root above
-  it, the pushed screens and the sheets and dialogs, and does every transition
-  and the entries' lifecycles itself (`ShellMotion.kt`: fade through between tab
-  roots, shared axis X for pushed screens). The predictive Back is the shell's
-  (`ShellBack.kt`): it takes the system gesture, draws Material's back preview
-  on a pushed screen (entries with `backPreview()` metadata) and hands
-  `NavDisplay` a gesture held at 0 through a private dispatcher, so the release
-  always gets the whole dissolve; Nav3 1.3's gesture and release handoff can
-  replace that once it is stable. Per-tab state follows the Navigation 3 `multiplestacks` recipe:
-  each tab's stack and the contextual stack are decorated on their own
-  (saveable state, `ViewModelStore`, route arguments), so a hidden tab keeps its
-  state and view models. `NavDisplay` disposes a tab root under a pushed screen and
-  caps it at STARTED under a sheet, so a root keeps its scroll in saveable
-  state and starts no work from composition or lifecycle effects: the first
-  load runs in its view model, and revalidation waits for the app's return to
-  the foreground (`AppForeground` in core, `ProcessLifecycleOwner` on Android,
-  `UIApplicationDidBecomeActiveNotification` on iOS). The `ShortNavigationBar` and the demo banner are laid
-  out under `NavDisplay` (`AppShell.kt`); tab roots end above them, pushed
-  screens cover them. Sheets and dialogs are overlay scenes (`ShellScenes.kt`
-  sizes a sheet by its `SheetPolicy`). Only `LoginActivity`, `BarsLoginActivity` and
-  `SpoilerCropActivity` remain separate activities (`app/shell/ActivityRoutes.kt`).
+  `app/src/main/java/dev/alllexey/itmowidgets/app/shell/`: `AppShell` (one
+  `NavDisplay` over `ShellBackStack`, a back stack per tab), `Nav3AppNavigator`
+  and `EntryRegistry`. Every key is registered in
+  `app/shell/entries/<Area>Entries.kt`, which renders the feature's
+  `<Name>Route`; tab roots render in `entries/TabRootFrames.kt`
+  ([design](design.md#shell)). A hidden tab keeps its state and view models
+  (the Nav3 `multiplestacks` recipe). A tab root is disposed under a pushed
+  screen and capped at STARTED under a sheet, so roots start no work from
+  composition or lifecycle effects: the first load runs in the view model and
+  revalidation waits for `AppForeground` (`core/platform`). The bar and the demo
+  banner lie under `NavDisplay`: tab roots end above them, pushed screens cover
+  them. Transitions and the predictive Back are the shell's (`ShellMotion.kt`,
+  `ShellBack.kt`). Only `LoginActivity`, `BarsLoginActivity` and
+  `SpoilerCropActivity` are separate activities (`app/shell/ActivityRoutes.kt`).
 - **iOS.** `iosApp/Sources/App/Router/AppRouter.swift` keeps a SwiftUI
   `NavigationStack` per tab and the sheets; `Routes+<Area>.swift` map each
   shared key to a target (a SwiftUI screen, a sheet or a tab). URLs and App Intents arrive through `RouteURL.swift`
@@ -267,56 +242,42 @@ behind shared ports. Details: [notifications](features/notifications.md).
 
 ## Strings
 
-User-visible text is Russian and lives in catalog files:
-`shared/<module>/src/commonMain/composeResources/values/strings_<file>.xml`.
+User-visible text is Russian and lives in catalog files
+`shared/<module>/src/commonMain/composeResources/values/strings_<file>.xml`
+([ADR 0028](decisions/0028-strings-and-icons.md),
+[ADR 0035](decisions/0035-ios-without-compose.md)).
 `strings_common.xml` (`:shared:core`) holds text two modules share;
 `strings_platform.xml` holds text system surfaces read (manifest, widgets,
 notifications, the tile), with frozen keys in `scripts/strings-frozen-keys.txt`.
 
-- Code outside Compose names a string by its key: `UiText.Res(key, arguments)`
-  and `UiText.Plural(key, count, arguments)` (`core/text/UiText.kt`). The keys
-  are the `const val`s of `<Area>Strings` and `<Area>Plurals`, which
-  `itmowidgets.strings` generates in each module's namespace
-  (`dev.alllexey.itmowidgets.shared.core.CoreStrings`,
-  `dev.alllexey.itmowidgets.shared.feature.sport.SportPlurals`).
-- `:shared:core` compiles no CMP resources. `:shared:compose-strings` compiles
-  a copy of every module's catalog files into one public CMP `Res` and
-  resolves `UiText` in Compose (`asString()`) and in suspend code
-  (`resolve()`); every Compose screen reads its strings from that `Res`.
-  Feature modules compile no `Res` of their own.
-- Android Views, widgets and notifications resolve `UiText` with
-  `resolve(context)` through the generated key -> `R` table
-  (`ExportedStringIds`), Swift with `UiText.resolved` from the `.xcstrings`
-  tables, and iOS Kotlin through the graph's `UiTextResolver`, which Swift
-  implements over the same tables (`IosPlatform.resolveText`). Nothing on iOS
-  reads a CMP resource ([ADR 0035](decisions/0035-ios-without-compose.md)).
+- Keys are never renamed: one key names a string on every platform.
+  `scripts/strings-owners.py --where <id>` tells where a new id belongs.
+- Code outside Compose names a string as `UiText.Res` / `UiText.Plural`
+  (`core/text/UiText.kt`) with the generated `<Area>Strings` / `<Area>Plurals`
+  keys. Compose screens read the one CMP `Res` of `:shared:compose-strings`;
+  feature modules compile no `Res` of their own.
+- Android Views, widgets and notifications resolve `UiText` through the
+  generated key -> `R` table; iOS (Swift and Kotlin) resolves it from the
+  `.xcstrings` tables that `./gradlew :app:exportAppleStrings` writes under
+  `iosApp/Shared/`. Nothing on iOS reads a CMP resource.
 - `:shared:core` and the `data`, `domain` and `presentation` packages import no
-  CMP resource, `Res` or Compose resolver, and common and iOS code imports no
-  Compose at all (`UiTextRulesTest`, `KmpRulesTest`).
-
-The `itmowidgets.strings` plugin exports what Android `res` still needs, and
-`./gradlew :app:exportAppleStrings` writes the `.xcstrings` tables and
-`AppSymbol.swift` under `iosApp/Shared/`. `scripts/strings-owners.py --where <id>`
-tells where a new id belongs. Keys are never renamed: one key names a string
-on every platform.
+  CMP resource or Compose resolver; common and iOS code imports no Compose
+  (`UiTextRulesTest`, `KmpRulesTest`).
 
 ## Distribution variants
 
 The Android flavor dimension `distribution` has `github` (APK on GitHub
 Releases) and `play` (AAB for Google Play), with one `applicationId` and one
-signing key. They differ only in `BuildConfig.DOWNLOAD_URL` and the update
-action bound in `app/src/github` and `app/src/play` (`UpdateActionModule.kt`).
-Debug and `minifiedSmoke` builds call `https://dev.widgets.alllexey.dev`,
-release builds `https://widgets.alllexey.dev`. On iOS the Backend origin is
-`BACKEND_BASE_URL` in `iosApp/Config/Base.xcconfig` (dev for Debug,
-production for Release). iOS has no build variants; `IosClientVersion` reads
-the channel from the installed bundle for `X-App-Version` and `X-Client`: `dev`
-for a debug binary, `sideload` with an embedded provisioning profile (Xcode, a
-free Apple ID, AltStore), `testflight` with a sandbox receipt, else `appstore`.
-Both apps also send `X-Client` (ADR 0034) with the build identity
-([building](building.md#build-identity)), the OS version and a random
-install id kept in `app_preferences` (`InstallIdPreferences`) and replaced on
-every session change ([contract](../shared/backend-client/CONTRACT.md#request-headers)).
+signing key; they differ only in `BuildConfig.DOWNLOAD_URL` and the update
+action (`app/src/{github,play}/.../UpdateActionModule.kt`). Debug and
+`minifiedSmoke` builds call `https://dev.widgets.alllexey.dev`, release builds
+`https://widgets.alllexey.dev`; on iOS the origin is `BACKEND_BASE_URL` in
+`iosApp/Config/Base.xcconfig`. Both apps send `X-App-Version` and `X-Client`
+(ADR 0034): the build identity ([building](building.md#build-identity)), the
+channel (iOS: `dev`, `sideload`, `testflight` or `appstore` from
+`IosClientVersion`), the OS version and a random install id replaced on every
+session change ([contract](../shared/backend-client/CONTRACT.md#request-headers)).
+Release lines and version codes: [releases](product/releases.md).
 
 ## Enforced rules
 
@@ -328,8 +289,8 @@ rule when a new invariant is agreed instead of relying on review.
 
 ## Other repositories
 
-| Repository | Role |
-|---|---|
-| [itmo-widgets-backend](https://github.com/alllexey-dev/itmo-widgets-backend) | Users, friendships, privacy, sport queues, links, reviews, push delivery. Backend changes first; `:shared:backend-client` mirrors its contract (`scripts/sync-backend-contract.sh`, `shared/backend-client/CONTRACT.md`) |
-| [my-itmo-api](https://github.com/alllexey-dev/my-itmo-api) | The only client of official MyITMO and BARS endpoints, a KMP library on Maven Central (`dev.alllexey:my-itmo-api-kmp`). Extend it instead of adding a second client here |
-| [itmo-widgets-web](https://github.com/alllexey-dev/itmo-widgets-web) | Web version and landing; reads the design tokens from `shared/designsystem/tokens/itmo-tokens.json` |
+Backend, MyItmoApi and the web version live in their own repositories
+([docs/README.md](README.md#related-repositories)). Backend changes first and
+`:shared:backend-client` mirrors its contract (`scripts/sync-backend-contract.sh`,
+[CONTRACT.md](../shared/backend-client/CONTRACT.md)); MyItmoApi is the only client
+of MyITMO and BARS, so extend it instead of adding a second one.

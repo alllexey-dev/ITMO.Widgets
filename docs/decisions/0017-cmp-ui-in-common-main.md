@@ -1,6 +1,7 @@
 # 0017 Compose Multiplatform screens in `commonMain` of shared modules
 
-**Amended by [0035](0035-ios-without-compose.md) (proposed):** screens move to `androidMain` of their module.
+**Superseded by [0031](0031-swiftui-ios-screens.md) and [0035](0035-ios-without-compose.md):** iOS screens are
+SwiftUI and Compose screens live in `androidMain` of their module.
 
 **Amended by [0031](0031-swiftui-ios-screens.md):** iOS screens are SwiftUI; Compose
 screens move out of `commonMain` into Android-only code screen by screen.
