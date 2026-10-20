@@ -67,7 +67,10 @@ fun ItmoTheme(
         LocalItmoMotion provides ItmoMotion.Default,
         LocalMinimumInteractiveComponentSize provides platformStyle.minTouchTarget,
     ) {
-        ItmoMaterialTheme(scheme, expressive && platformStyle == ItmoPlatformStyle.Material, content)
+        ItmoMaterialTheme(scheme, expressive && platformStyle == ItmoPlatformStyle.Material) {
+            // Text without a colour of its own reads onSurface, not Compose's default black, also outside a Surface.
+            CompositionLocalProvider(LocalContentColor provides scheme.onSurface, content)
+        }
     }
 }
 

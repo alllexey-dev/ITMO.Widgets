@@ -163,6 +163,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - A setting changed while a screen starts watching it is no longer lost until restart.
 - Android sheets follow the finger and never go under the status bar or a cutout.
 - iOS shows pull-to-refresh on every tab root until the refresh ends.
+- Android text without its own colour is never black in the dark theme: the theme gives every screen `onSurface`,
+  not only the ones inside a `Surface`.
 
 ### For developers
 
