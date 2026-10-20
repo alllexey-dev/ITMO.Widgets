@@ -19,7 +19,8 @@ background change check is in [schedule changes](schedule-changes.md), the phone
   `scheduleModule`, `scheduleDataModule`. `androidMain` also supplies `ScheduleFileSystem`; `iosMain` adds the iOS
   change check, the widget timeline writer and the Koin parameters of the SwiftUI screens (`ScheduleIosParameters.kt`).
 - My ITMO comes through MyItmoApi 2.x, Backend through Core 2.0's `ScheduleApi`: `syncLessons` (best-effort upload
-  of own lessons), `userLessons` (another user's schedule) and `friendsOnLesson`, all behind `BackendGate`. Every
+  of own lessons, skipped while Backend already accepted the same snapshot within 24 h, `BackendUploadPreferences`),
+  `userLessons` (another user's schedule) and `friendsOnLesson`, all behind `BackendGate`. Every
   network call checks `DemoMode` first (`DemoSchedule`).
 - `:app` keeps only Android: the widgets and the list adapter service (`ui/widget`), workers, change notification
   and refresh receiver (`work`), `AndroidPhoneCalendars` and `IcsFileExport` (`data/calendar`),

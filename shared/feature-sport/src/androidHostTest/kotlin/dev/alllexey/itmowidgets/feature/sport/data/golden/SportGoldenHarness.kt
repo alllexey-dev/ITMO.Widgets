@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.data.golden
 
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import kotlin.time.Clock
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.feature.sport.data.bell.SportResultLog
 import dev.alllexey.itmowidgets.testkit.fakeFileSystemOf
@@ -88,7 +91,7 @@ class SportGoldenHarness(
     val score = SportScoreRepositoryImpl(clients.myItmo, noOverride, time, noDemo(), dispatchers)
     val data = SportDataRepositoryImpl(friendRepository, gate, clients.myItmo, sportApi, score, time, noDemo(), dispatchers)
     val schedule = SportScheduleRepositoryImpl(data, clients.myItmo, time, noTemplates, noDemo(), dispatchers)
-    val bookings = SportBookingRepositoryImpl(gate, data, clients.myItmo, sportApi, time, noDemo(), dispatchers)
+    val bookings = SportBookingRepositoryImpl(gate, data, clients.myItmo, sportApi, time, noDemo(), dispatchers, BackendUploadPreferences(InMemoryPreferencesDataStore(), Clock.System))
     val users = UserSportRepositoryImpl(gate, sportApi, time, noDemo(), dispatchers)
     val actions = SportActionRepositoryImpl(gate, clients.myItmo, sportApi, noDemo(), dispatchers)
 

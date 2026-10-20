@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.demo
 
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import kotlin.time.Clock
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoSportSlots
@@ -41,7 +44,7 @@ class ScheduleDemoGateTest {
 
     @Test
     fun `the own week has lessons, the volleyball and no Sunday classes`() = runTest {
-        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo, dispatchers)
+        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo, dispatchers, BackendUploadPreferences(InMemoryPreferencesDataStore(), Clock.System))
 
         val days = remote.getSchedule(null, week.start, week.endInclusive)
 
@@ -53,7 +56,7 @@ class ScheduleDemoGateTest {
 
     @Test
     fun `a friend's schedule and friends on a lesson come from the demo set`() = runTest {
-        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo, dispatchers)
+        val remote = ScheduleRemoteDataSourceImpl(gate, myItmo, backend, time, demo, dispatchers, BackendUploadPreferences(InMemoryPreferencesDataStore(), Clock.System))
         val friends = LessonFriendsRepositoryImpl(gate, backend, demo, dispatchers)
 
         val ivan = remote.getSchedule(DemoPeople.IVAN.isu, week.start, week.endInclusive)

@@ -13,6 +13,8 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.sport.data.demo.DemoSport
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.storage.BackendUpload
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBooking
 import dev.alllexey.itmowidgets.feature.sport.data.mapper.toBookings
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
@@ -34,7 +36,8 @@ class SportBookingRepositoryImpl(
     private val sportApi: SportApi,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
+    private val uploads: BackendUploadPreferences,
 ) : SportBookingRepository, SessionDataCleaner {
 
     private val bookingsFlow = MutableSharedFlow<AppResult<List<SportBooking>>>(replay = 1)
@@ -110,7 +113,10 @@ class SportBookingRepositoryImpl(
 
             if (backend.mayCallBackend()) {
                 try {
-                    withContext(dispatchers.io) { sportApi.syncSportLessons(result.map { it.lessonId }) }
+                    val lessonIds = result.map { it.lessonId }
+                    withContext(dispatchers.io) {
+                        uploads.sendIfChanged(BackendUpload.SPORT_BOOKINGS, lessonIds) { sportApi.syncSportLessons(lessonIds) }
+                    }
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (_: Exception) {

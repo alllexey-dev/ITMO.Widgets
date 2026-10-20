@@ -24,8 +24,9 @@ object FcmWork {
     internal const val PAYLOAD = "payload"
     internal const val RECIPIENT = "recipient_isu"
 
+    /** KEEP: every process start calls this, and a waiting sync reads the current token when it runs anyway. */
     fun syncToken(context: Context) {
-        WorkManager.getInstance(context).enqueueUniqueWork("fcm-token-sync", ExistingWorkPolicy.REPLACE,
+        WorkManager.getInstance(context).enqueueUniqueWork("fcm-token-sync", ExistingWorkPolicy.KEEP,
             OneTimeWorkRequestBuilder<FcmTokenWorker>().build())
     }
 
