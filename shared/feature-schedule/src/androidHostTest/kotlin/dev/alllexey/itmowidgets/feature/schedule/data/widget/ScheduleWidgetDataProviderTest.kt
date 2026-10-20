@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.lesson.LessonDay
+import dev.alllexey.itmowidgets.core.lesson.SportMark
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -76,6 +77,15 @@ class ScheduleWidgetDataProviderTest {
         assertTrue(available().nextUpdateDelay > ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY)
         stores.servicesOptIn.setCustomServicesEnabled(true)
         assertEquals(ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY, available().nextUpdateDelay)
+    }
+
+    @Test
+    fun `without a shown queue the widgets wait for the next lesson boundary`() = runTest {
+        stores.scheduleChecks.setScheduleSportAutoSignEnabled(true)
+        stores.servicesOptIn.setCustomServicesEnabled(true)
+        days.cached = days.cached.map { day -> day.copy(lessons = day.lessons.filter { it.sport != SportMark.QUEUED }) }
+
+        assertTrue(available().nextUpdateDelay > ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY)
     }
 
     @Test

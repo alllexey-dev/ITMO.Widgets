@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import kotlinx.coroutines.CancellationException
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -18,7 +19,8 @@ class CustomServicesRepositoryImpl(
     private val tokenSync: FcmTokenSync,
     private val devices: BackendDeviceSession,
     private val diagnostics: AppDiagnostics,
-    private val demo: DemoMode
+    private val demo: DemoMode,
+    private val uploads: BackendUploadPreferences,
 ) : CustomServicesRepository {
 
     /** The demo session reads as connected, so the social screens show its data; the stored choice is kept. */
@@ -32,6 +34,8 @@ class CustomServicesRepositoryImpl(
         if (demo.isActive()) return
         if (!enabled) bestEffort { devices.unregisterCurrentDevice() }
         servicesOptIn.setCustomServicesEnabled(enabled)
+        // Backend may have lost the user's data meanwhile (a deleted account), so the next uploads go in full.
+        uploads.clearSessionData()
         if (enabled) {
             // Opting in is the first moment the backend may learn who the user is;
             // without this the stored profile stays empty until the next launch.

@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.remote
 
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import kotlin.time.Clock
 import dev.alllexey.itmowidgets.client.schedule.LessonDto
 import dev.alllexey.itmowidgets.client.schedule.LessonSyncRequest
 import dev.alllexey.itmowidgets.feature.schedule.data.Core2Harness
@@ -40,6 +43,7 @@ class ScheduleRemoteDataSourceImplTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val dispatchers = mainDispatcherRule.appDispatchers
+    private val uploads = BackendUploadPreferences(InMemoryPreferencesDataStore(), Clock.System)
 
     private val start = LocalDate(2026, 10, 5)
     private var myItmoAnswer: Pair<HttpStatusCode, String> = HttpStatusCode.OK to ScheduleRemoteFixtures.MY_ITMO_PERSONAL
@@ -74,6 +78,18 @@ class ScheduleRemoteDataSourceImplTest {
         val sync = backendRequests.single()
         assertEquals(HttpMethod.Post, sync.method)
         assertEquals("/api/schedule/lessons/sync", sync.url.encodedPath)
+    }
+
+    @Test
+    fun `an unchanged schedule goes to Backend once`() = runTest {
+        val remote = remote(optedIn = true)
+
+        remote.getSchedule(null, start, LocalDate(2026, 10, 7))
+        remote.getSchedule(null, start, LocalDate(2026, 10, 7))
+        remote.getSchedule(null, start, LocalDate(2026, 10, 8))
+
+        assertEquals(3, myItmoRequests.size)
+        assertEquals(2, backendRequests.size)
     }
 
     @Test
@@ -136,7 +152,7 @@ class ScheduleRemoteDataSourceImplTest {
     private fun remote(optedIn: Boolean) = remote(FakeBackendGate(optedIn))
 
     private fun remote(gate: FakeBackendGate) = ScheduleRemoteDataSourceImpl(
-        gate, harness.myItmo, harness.client.schedule, FixedAcademicTime(), noDemo(), dispatchers
+        gate, harness.myItmo, harness.client.schedule, FixedAcademicTime(), noDemo(), dispatchers, uploads
     )
 
     private suspend fun failure(block: suspend () -> Unit): AppError {

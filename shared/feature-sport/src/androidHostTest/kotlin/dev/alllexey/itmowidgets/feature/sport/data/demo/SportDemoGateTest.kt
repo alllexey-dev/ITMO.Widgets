@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.data.demo
 
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
@@ -92,7 +94,7 @@ class SportDemoGateTest {
 
     @Test
     fun `own bookings, points and limits come from the demo set`() = runTest {
-        val bookings = SportBookingRepositoryImpl(backend, data, myItmo, sportApi, time, demo, dispatchers)
+        val bookings = SportBookingRepositoryImpl(backend, data, myItmo, sportApi, time, demo, dispatchers, BackendUploadPreferences(InMemoryPreferencesDataStore(), Clock.System))
 
         bookings.refreshSportBookings()
         data.refreshSportScore()

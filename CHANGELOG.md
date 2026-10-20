@@ -10,6 +10,10 @@ The app is rebuilt on Kotlin Multiplatform and Compose Multiplatform: Android
 keeps its features and the data of 2.2, and the same shared screens run in a
 new iOS app.
 
+### Fewer background wake-ups (2026-10-20)
+
+- On Android the schedule widgets refresh every 7 minutes only while they show a sport queue, not all day with the auto sign on; the schedule and sport widgets drop the launcher's hourly update, which repeated the hourly periodic work; the own lessons and sport bookings go to Backend only when they changed or a day passed; a process start keeps a waiting FCM token sync instead of replacing it.
+
 ### Settings with one home for every setting (2026-10-19)
 
 - Профиль keeps the friends (or their gate), `Виджеты`, `Настройки`, the links (now with `Карта`, the campus map, above My ITMO) and `Выйти`; `Приватность`, `Подключение и данные`, `Уведомления` and `Подключить устройство` left it, since each was a second way into a settings page.

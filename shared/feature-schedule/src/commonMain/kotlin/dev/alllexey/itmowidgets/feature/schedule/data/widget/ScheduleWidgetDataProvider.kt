@@ -45,8 +45,8 @@ class ScheduleWidgetDataProvider(
             FetchedSchedule.Unavailable -> ScheduleWidgetLoadResult.Unavailable
             is FetchedSchedule.Ready -> ScheduleWidgetLoadResult.Available(
                 selector.select(fetched.days, fetched.now, timeProvider.timeZone, fetched.preferences).let { selection ->
-                    // Queue status can change remotely even before a lesson boundary.
-                    if (pendingEnabled()) {
+                    // A shown queue's position can change remotely before a lesson boundary; its booking arrives by push.
+                    if (selection.snapshot.pendingValidUntil != null && pendingEnabled()) {
                         selection.copy(nextUpdateDelay = minOf(selection.nextUpdateDelay, ScheduleWidgetSelector.PERIODIC_UPDATE_DELAY))
                     } else selection
                 }

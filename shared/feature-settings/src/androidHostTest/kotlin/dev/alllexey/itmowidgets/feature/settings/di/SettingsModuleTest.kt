@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.di
 
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
@@ -72,6 +73,7 @@ class SettingsModuleTest {
 
     private val dataPlatformTypes = listOf(
         ServicesOptInPreferences::class,
+        BackendUploadPreferences::class,
         ScheduleCheckPreferences::class,
         WidgetSettingsPreferences::class,
         QrSettingsPreferences::class,

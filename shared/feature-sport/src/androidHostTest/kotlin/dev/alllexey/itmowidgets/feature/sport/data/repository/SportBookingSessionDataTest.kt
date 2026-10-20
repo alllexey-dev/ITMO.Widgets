@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import kotlin.time.Clock
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
@@ -202,7 +205,7 @@ class SportBookingSessionDataTest {
             flowOf(LoadState.Disabled)
         } as SportDataRepository
 
-        val repository = SportBookingRepositoryImpl(gate, sportData, clients.myItmo, clients.client.sport, FixedAcademicTime(), noDemo(), dispatchers)
+        val repository = SportBookingRepositoryImpl(gate, sportData, clients.myItmo, clients.client.sport, FixedAcademicTime(), noDemo(), dispatchers, BackendUploadPreferences(InMemoryPreferencesDataStore(), Clock.System))
     }
 
     private companion object {

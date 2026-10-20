@@ -3,6 +3,8 @@ package dev.alllexey.itmowidgets.feature.settings.data
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
+import dev.alllexey.itmowidgets.core.storage.BackendUpload
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
@@ -11,11 +13,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 
 class CustomServicesRepositoryImplTest {
     private val settings = ServicesOptInPreferences(InMemoryPreferencesDataStore())
+    private val uploads = BackendUploadPreferences(InMemoryPreferencesDataStore(), Clock.System)
     private val demo = FakeDemoMode()
     private val diagnostics = RecordingDiagnostics()
     private val calls = mutableListOf<String>()
@@ -32,7 +36,8 @@ class CustomServicesRepositoryImplTest {
             override suspend fun unregisterCurrentDevice() = record("unregister")
         },
         diagnostics = diagnostics,
-        demo = demo
+        demo = demo,
+        uploads = uploads
     )
 
     @Test
@@ -80,13 +85,25 @@ class CustomServicesRepositoryImplTest {
                 }
             },
             diagnostics = diagnostics,
-            demo = demo
+            demo = demo,
+            uploads = uploads
         )
 
         repository.setEnabled(false)
 
         assertEquals(true, storedWhenUnregistered)
         assertFalse(settings.getCustomServicesEnabled())
+    }
+
+    @Test
+    fun switchingTheConnectionSendsTheNextUploadsInFull() = runTest {
+        var sent = 0
+        uploads.sendIfChanged(BackendUpload.LESSONS, "lessons") { sent++ }
+
+        repository.setEnabled(true)
+        uploads.sendIfChanged(BackendUpload.LESSONS, "lessons") { sent++ }
+
+        assertEquals(2, sent)
     }
 
     @Test

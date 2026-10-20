@@ -50,6 +50,7 @@ import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.FileCrossProcessLock
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.IosAppDirectories
@@ -152,6 +153,7 @@ fun iosCoreModule(
     singleOf(::MarkSourcePreferences)
     singleOf(::PushCategoryPreferences)
     singleOf(::InstallIdPreferences)
+    singleOf(::BackendUploadPreferences)
     single { UtilityStorage(get(), appVersion) }
     singleOf(::IosBackendGate) { bind<BackendGate>() }
 

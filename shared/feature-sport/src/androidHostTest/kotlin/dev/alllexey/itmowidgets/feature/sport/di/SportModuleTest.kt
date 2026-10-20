@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.sport.di
 
+import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.sport.SportApi
@@ -74,6 +76,7 @@ class SportModuleTest {
                 BackendGate::class,
                 CustomServicesRepository::class,
                 SportSignSelectorPreferences::class,
+                BackendUploadPreferences::class,
                 SportLessonTemplateProvider::class,
                 SportScoreOverrideSource::class,
                 AcademicTimeProvider::class,
@@ -133,6 +136,7 @@ class SportModuleTest {
         single<AppDiagnostics> { RecordingDiagnostics() }
         single<CoroutineScope> { TestScope() }
         single<Clock> { Clock.System }
+        single { BackendUploadPreferences(InMemoryPreferencesDataStore(), get()) }
         single<AppDirectories> {
             object : AppDirectories {
                 override val files = "/files".toPath()

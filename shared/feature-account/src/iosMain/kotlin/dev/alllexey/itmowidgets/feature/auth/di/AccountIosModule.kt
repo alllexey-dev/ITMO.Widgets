@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.core.session.IdTokenCurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -48,6 +49,7 @@ val accountIosModule = module {
     single<SessionLifecycleEffects> { IosSessionLifecycleEffects }
     // Not in iosCoreModule: IosCoreGraph (hosted SessionTests) would open a second DataStore over app_preferences.
     single<SessionDataCleaner>(named("install-id")) { get<InstallIdPreferences>() }
+    single<SessionDataCleaner>(named("backend-uploads")) { get<BackendUploadPreferences>() }
     single { IosPushDevice.fromMainBundle() }
     singleOf(::PushRegistrationPreferences)
     single {

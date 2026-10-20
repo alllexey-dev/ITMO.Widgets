@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.schedule.di
 
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
@@ -59,6 +60,7 @@ class ScheduleModuleTest {
                 BuildingDirectory::class,
                 SessionTokenStore::class,
                 ScheduleCheckPreferences::class,
+                BackendUploadPreferences::class,
                 WidgetSettingsPreferences::class,
                 SchedulePreferencesRepository::class,
                 PendingSportBookingsRepository::class,

@@ -8,6 +8,8 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.schedule.ScheduleUtil
 import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.storage.BackendUpload
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.demo.DemoSchedule
 import dev.alllexey.itmowidgets.feature.schedule.data.mapper.toModel
@@ -20,7 +22,8 @@ import kotlinx.datetime.isoDayNumber
 
 /**
  * The own schedule comes from MyITMO and, with the opt-in, is uploaded to Backend best-effort; another user's
- * schedule exists only on Backend, and `ScheduleRepositoryImpl` refuses it without the opt-in.
+ * schedule exists only on Backend, and `ScheduleRepositoryImpl` refuses it without the opt-in. An upload Backend
+ * already accepted is skipped ([BackendUploadPreferences]).
  */
 class ScheduleRemoteDataSourceImpl(
     private val backend: BackendGate,
@@ -28,7 +31,8 @@ class ScheduleRemoteDataSourceImpl(
     private val backendSchedule: ScheduleApi,
     private val time: AcademicTimeProvider,
     private val demo: DemoMode,
-    private val dispatchers: AppDispatchers
+    private val dispatchers: AppDispatchers,
+    private val uploads: BackendUploadPreferences,
 ) : ScheduleRemoteDataSource {
 
     override suspend fun getSchedule(
@@ -52,13 +56,12 @@ class ScheduleRemoteDataSourceImpl(
         val days = myItmo.schedule.getPersonalSchedule(start, end).requireResult()
         if (backend.mayCallBackend()) {
             try {
-                backendSchedule.syncLessons(
-                    LessonSyncRequest(
-                        lessons = days.flatMap { day -> day.lessons.map { lesson -> lesson.toSyncDto(day.date) } },
-                        from = start,
-                        to = end
-                    )
+                val request = LessonSyncRequest(
+                    lessons = days.flatMap { day -> day.lessons.map { lesson -> lesson.toSyncDto(day.date) } },
+                    from = start,
+                    to = end
                 )
+                uploads.sendIfChanged(BackendUpload.LESSONS, request) { backendSchedule.syncLessons(request) }
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (_: Exception) {

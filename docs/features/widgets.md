@@ -36,8 +36,10 @@ Shared in `shared/feature-schedule` (`domain/widget`, `data/widget`); RemoteView
 - Android draws the snapshot at the moment of drawing: the countdown text and the progress of W1 come from
   `until` and `since` and the clock. While `ScheduleWidgetSnapshot.isLive` (a countdown or the `сейчас` line), a
   non-waking alarm (`ScheduleWidgetWork.scheduleTick`) redraws both widgets every minute from the cache, without a
-  request; the next boundary (a start, an end, the early switch, an hour before a first lesson, a midnight) and
-  the 7-minute queue refresh run the worker with a fetch.
+  request; the next boundary (a start, an end, the early switch, an hour before a first lesson, a midnight), the
+  hourly periodic work and, only while a queue shows (`pendingValidUntil`) with the auto sign and the opt-in on, the
+  7-minute queue refresh run the worker with a fetch. The queue's booking itself arrives by push. The providers set
+  `updatePeriodMillis="0"`: the periodic work is their only hourly source (the QR widget keeps its hourly one).
 - W1 is one provider (`SingleLessonWidgetProvider`) with two layouts: from API 31 a responsive `RemoteViews(Map)`
   (small from 110 dp, medium from 250 dp wide); below it the layout of the widget's narrowest width.
 - W2 (`DayTimelineWidgetProvider`, `widget_day_info`): from API 31 one layout per launcher size (`OPTION_APPWIDGET_SIZES`), the hours,

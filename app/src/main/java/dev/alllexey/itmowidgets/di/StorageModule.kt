@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.core.storage.AndroidKeystoreTokenCipher
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
+import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
@@ -77,6 +78,8 @@ val storageModule = module {
     singleOf(::PushCategoryPreferences)
     singleOf(::InstallIdPreferences)
     single<SessionDataCleaner>(named("install-id")) { get<InstallIdPreferences>() }
+    singleOf(::BackendUploadPreferences)
+    single<SessionDataCleaner>(named("backend-uploads")) { get<BackendUploadPreferences>() }
     single { UtilityStorage(dataStore = get(), appVersionName = androidContext().getString(R.string.app_version)) }
 
     single<SecureStore> { FileSecureStore(get<AppDirectories>().noBackup, get()) }
