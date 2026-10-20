@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation.appearance
 
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
@@ -68,6 +69,11 @@ fun appearanceState(theme: ThemeSpec, capabilities: PlatformCapabilities): Appea
             }
         ),
     )
+}
+
+/** A store of the page that failed, said in a snackbar (a banner on iOS). */
+sealed interface AppearanceEvent {
+    data class ShowError(val error: AppError) : AppearanceEvent
 }
 
 data class AccentOption(val accent: AccentColor, val label: UiText)

@@ -189,7 +189,7 @@ private fun Swatches(state: AppearanceUiState, actions: AppearanceActions) {
         ) {
             state.accents.forEach { option ->
                 val label = option.label.asString()
-                val swatch = accentSwatch(state.theme.copy(accent = option.accent), label)
+                val swatch = accentSwatch(state.theme.copy(accent = option.accent))
                 val selected = option.accent == state.accent
                 Column(
                     Modifier

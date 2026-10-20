@@ -2,14 +2,15 @@ package dev.alllexey.itmowidgets.designsystem.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
-import dev.alllexey.itmowidgets.designsystem.components.dialogs.Swatch
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -42,13 +43,17 @@ internal fun ColorSource.colorScheme(dark: Boolean, wallpaper: WallpaperPalette?
     is ColorSource.Theme -> resolveColorScheme(spec, dark, wallpaper)
 }
 
+/** The fill of a colour swatch and the colour of a check on it. */
+@Immutable
+data class Swatch(val color: Color, val contentColor: Color)
+
 /**
- * The accent of [spec] as a swatch named [label]: the primary of its scheme, checked in its on-primary. Under
- * Монохром every accent is grey, so the swatches show the hues of the default style to stay told apart.
+ * The accent of [spec] as a swatch: the primary of its scheme, checked in its on-primary. Under Монохром every accent
+ * is grey, so the swatches show the hues of the default style to stay told apart.
  */
 @Composable
-fun accentSwatch(spec: ThemeSpec, label: String, dark: Boolean = isSystemInDarkTheme()): Swatch {
+fun accentSwatch(spec: ThemeSpec, dark: Boolean = isSystemInDarkTheme()): Swatch {
     val shown = if (spec.style == ThemeStyle.MONOCHROME) spec.copy(style = ThemeStyle.TONAL_SPOT) else spec
     val scheme = colorSchemeOf(ColorSource.Theme(shown), dark)
-    return Swatch(label, scheme.primary, scheme.onPrimary)
+    return Swatch(scheme.primary, scheme.onPrimary)
 }

@@ -75,7 +75,9 @@ class WidgetsPageProviderTest {
         runTest(main.dispatcher) {
             val local = LocalSettings(
                 qrWidget = QrWidgetSettings(dynamicColors = false, animationType = QrAnimationType.NONE),
-                scheduleWidget = ScheduleWidgetSettings(full = FullScheduleWidgetSettings(hideTeacher = true))
+                scheduleWidget = ScheduleWidgetSettings(full = FullScheduleWidgetSettings(hideTeacher = true)),
+                // The widgets' own colours: the previews carry no theme.
+                widgetsFollowTheme = false
             )
             (SettingsPage.entries - setOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS, SettingsPage.APPEARANCE)).forEach { page ->
                 val fixture = createFixture(page = page, local = local)
@@ -140,7 +142,11 @@ class WidgetsPageProviderTest {
     @Test
     fun theGalleryWaitsForStorageAndFollowsPersistedToggleAndAnimationChanges() =
         runTest(main.dispatcher) {
-            val fixture = createFixture(page = SettingsPage.WIDGETS, localInitiallyAvailable = false)
+            val fixture = createFixture(
+                page = SettingsPage.WIDGETS,
+                local = LocalSettings(widgetsFollowTheme = false),
+                localInitiallyAvailable = false
+            )
             advanceUntilIdle()
             assertEquals(null, fixture.viewModel.uiState.value.gallery)
             fixture.repository.publishLocalSettings()

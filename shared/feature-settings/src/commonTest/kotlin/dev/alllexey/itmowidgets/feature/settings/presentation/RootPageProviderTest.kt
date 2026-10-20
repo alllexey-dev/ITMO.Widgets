@@ -167,13 +167,14 @@ class RootPageProviderTest {
             advanceUntilIdle()
             val toggle = fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME)
             assertEquals(UiText.Res(SettingsStrings.settings_widgets_theme_title), toggle.title)
-            assertFalse(toggle.checked)
+            // On by default: the widgets take the app's colours until the user turns it off.
+            assertTrue(toggle.checked)
 
-            fixture.viewModel.onToggleChanged(SettingRowId.WIDGETS_FOLLOW_THEME, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.WIDGETS_FOLLOW_THEME, false)
             advanceUntilIdle()
 
-            assertEquals(listOf(true), fixture.repository.widgetsFollowThemeRequests)
-            assertTrue(fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME).checked)
+            assertEquals(listOf(false), fixture.repository.widgetsFollowThemeRequests)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME).checked)
             assertEquals(1, fixture.widgetRefresher.refreshCount)
         }
 

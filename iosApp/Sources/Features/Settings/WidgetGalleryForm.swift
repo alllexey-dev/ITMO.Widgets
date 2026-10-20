@@ -37,7 +37,7 @@ struct WidgetGalleryForm: View {
                 WidgetLockScreenCard(entry: previews.next)
             }
             ForEach(Array(sections.enumerated()), id: \.offset) { _, section in
-                WidgetGalleryRows(section: section, pendingToggles: pendingToggles, actions: actions)
+                SettingSectionView(section: section, pendingToggles: pendingToggles, actions: actions)
             }
         }
         .onAppear { if sheet == nil { sheet = openFormat } }
@@ -253,81 +253,6 @@ private struct WidgetLockScreenCard: View {
     }
 }
 
-/// The rows of one section on a card: switches, a segmented choice for two to four options, a menu for more, and
-/// actions; the footer under the card.
-struct WidgetGalleryRows: View {
-    let section: SettingSection
-    var pendingToggles: [SettingRowId: Bool] = [:]
-    var actions = SettingsFormActions()
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ItmoSpacing.compact) {
-            if let title = section.title?.resolved {
-                ItmoSectionHeader(title: title)
-            }
-            if let choice = segmented {
-                ItmoSegmentedChoice(
-                    label: choice.title.resolved,
-                    options: choice.options.map(\.key),
-                    selection: Binding(get: { choice.selectedOptionKey ?? "" }, set: { actions.choose(choice.id, $0) }),
-                    enabled: choice.enabled
-                ) { key in choice.options.first { $0.key == key }?.label.resolved ?? key }
-                .accessibilityIdentifier("settings.row.\(choice.id.key)")
-            } else {
-                ItmoCard {
-                    ForEach(Array(section.items.enumerated()), id: \.offset) { index, item in
-                        if index > 0 { Divider() }
-                        row(item)
-                            .accessibilityIdentifier("settings.row.\(item.id.key)")
-                    }
-                }
-            }
-            if let footer = section.footer?.resolved {
-                Text(verbatim: footer)
-                    .font(.itmo(.bodySmall))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, ItmoSpacing.content)
-            }
-        }
-    }
-
-    /// The section's only row when it is a choice of two to four options.
-    private var segmented: SettingItemChoice? {
-        guard section.items.count == 1, let choice = section.items.first as? SettingItemChoice,
-              (2...4).contains(choice.options.count) else { return nil }
-        return choice
-    }
-
-    @ViewBuilder
-    private func row(_ item: any SettingItem) -> some View {
-        switch onEnum(of: item) {
-        case let .toggle(toggle):
-            ItmoToggleRow(
-                title: toggle.title.resolved,
-                subtitle: toggle.description_?.resolved,
-                isOn: Binding(get: { pendingToggles[toggle.id] ?? toggle.checked }, set: { actions.toggle(toggle.id, $0) })
-            )
-            .disabled(!toggle.enabled || !toggle.stateKnown)
-        case let .choice(choice):
-            Picker(selection: Binding(get: { choice.selectedOptionKey ?? "" }, set: { actions.choose(choice.id, $0) })) {
-                ForEach(choice.options, id: \.key) { option in
-                    Text(verbatim: option.label.resolved).tag(option.key)
-                }
-            } label: {
-                ItmoRowLabel(title: choice.title.resolved, subtitle: choice.description_?.resolved)
-            }
-            .pickerStyle(.menu)
-            .disabled(!choice.enabled)
-        case let .action(action):
-            ItmoActionRow(title: action.title.resolved) { actions.act(action.id) }
-                .disabled(!action.enabled)
-        case .navigation, .customColor, .info:
-            // Not offered by the widget pages.
-            EmptyView()
-        }
-    }
-}
-
 /// A format's sheet: its live preview on the wallpaper, the note, and its rows; every change applies at once and
 /// redraws the preview.
 struct WidgetSettingsSheet: View {
@@ -360,7 +285,7 @@ struct WidgetSettingsSheetContent: View {
                     .padding(.horizontal, ItmoSpacing.content)
             }
             ForEach(Array(card.settings.enumerated()), id: \.offset) { _, section in
-                WidgetGalleryRows(section: section, pendingToggles: pendingToggles, actions: actions)
+                SettingSectionView(section: section, pendingToggles: pendingToggles, actions: actions)
             }
         }
         .accessibilityElement(children: .contain)

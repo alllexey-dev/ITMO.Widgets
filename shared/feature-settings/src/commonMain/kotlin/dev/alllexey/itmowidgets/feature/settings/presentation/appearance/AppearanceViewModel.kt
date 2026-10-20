@@ -66,7 +66,3 @@ class AppearanceViewModel(
         const val OPAQUE = 0xFF000000.toInt()
     }
 }
-
-sealed interface AppearanceEvent {
-    data class ShowError(val error: AppError) : AppearanceEvent
-}

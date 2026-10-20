@@ -10,8 +10,7 @@ struct DiagnosticsScreen: View {
 
     var body: some View {
         DiagnosticsList(state: model.state, formatTime: model.viewModel.formatTime(entry:))
-            .navigationTitle(Text(verbatim: AppStrings.string("diagnostics_title")))
-            .navigationBarTitleDisplayMode(.inline)
+            .itmoDetailHeader(title: AppStrings.string("diagnostics_title"), subtitle: nil)
             .observing(model)
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {

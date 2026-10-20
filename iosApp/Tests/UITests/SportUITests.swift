@@ -143,10 +143,10 @@ final class SportUITests: XCTestCase {
 
     // MARK: Helpers
 
-    /// `DemoPeople.IVAN` (`Кузнецов Иван`), a friend with demo visits, and his sport's title, which names him by his
-    /// given name (`user_sport_title`).
+    /// `DemoPeople.IVAN` (`Кузнецов Иван`), a friend with demo visits, and his given name, which his sport's header
+    /// shows after `user_profile_sport_title`.
     private static let ivan = 999_002
-    private static let ivanTitle = "Спорт: Иван"
+    private static let ivanTitle = "Иван"
     /// `sport_tab_sign`, `sport_filters_title`, `sport_lesson_sign_up` and `error_demo_unavailable`.
     private static let signUpTab = "Запись"
     private static let filtersLabel = "Фильтры"

@@ -144,4 +144,13 @@ class AppearanceViewModelTest {
         assertEquals(UiText.Res(SettingsStrings.settings_theme_style_vibrant_description), fixture.state.style?.description)
         assertEquals(true, fixture.state.blackBackground)
     }
+
+    @Test
+    fun theIosColoursKeepTheHueUnderMonochromeAndFollowThePalette() {
+        val teal = ThemeSpec(accent = AccentColor.TEAL)
+        val mono = teal.copy(style = ThemeStyle.MONOCHROME)
+        assertEquals(AppearanceColors.swatch(teal, dark = false), AppearanceColors.swatch(mono, dark = false))
+        assertEquals(AppearanceColors.roles(teal, dark = true).primary, AppearanceColors.palette(teal, ThemeStyle.TONAL_SPOT, dark = true).first())
+        assertTrue(AppearanceColors.palette(teal, ThemeStyle.MONOCHROME, dark = false) != AppearanceColors.palette(teal, ThemeStyle.VIBRANT, dark = false))
+    }
 }

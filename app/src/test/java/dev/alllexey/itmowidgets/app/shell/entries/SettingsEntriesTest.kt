@@ -192,6 +192,12 @@ class SettingsEntriesTest {
         clickTop(id.key)
     }
 
+    private fun clickTop(tag: String) {
+        val nodes = compose.onAllNodesWithTag(tag)
+        nodes[nodes.fetchSemanticsNodes().size - 1].performClick()
+        compose.waitForIdle()
+    }
+
     /** The back button of the top screen: the last of the stack's `Назад`. */
     private fun clickBack() {
         val nodes = compose.onAllNodesWithContentDescription("Назад")

@@ -44,22 +44,6 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(SettingsFixtures.longValues, named: "long", height: 1500, ax1Height: 3600)
     }
 
-    /// The appearance page (DS-ACC2) with a custom colour picked: the colour well under the accent menu.
-    func testAppearanceWithACustomColour() {
-        let theme = ThemeSpec(
-            accent: .custom,
-            customArgb: Int32(bitPattern: 0xFF5C_6BC0),
-            style: .vibrant,
-            contrast: .high,
-            pureBlack: true
-        )
-        let state = SettingsFixtures.page(
-            .appearance,
-            SettingsFixtures.pageState(notificationsGranted: true, local: SettingsFixtures.localSettings(theme: theme))
-        )
-        assertPage(state, named: "appearance", height: 620, ax1Height: 1100)
-    }
-
     /// The plans' source and the licence texts the map's MapLibre Native and Noto Sans ask for.
     func testLicenses() {
         let state = SettingsFixtures.page(.licenses, SettingsFixtures.pageState(notificationsGranted: false))
@@ -67,7 +51,7 @@ final class SettingsSnapshotTests: XCTestCase {
     }
 
     func testLoading() {
-        let state = SettingsUiState(page: .root, sections: [], loaded: false, themePreview: nil, gallery: nil)
+        let state = SettingsUiState(page: .root, sections: [], loaded: false, gallery: nil)
         assertPage(state, named: "loading", height: 320, ax1Height: 320)
     }
 
@@ -82,8 +66,7 @@ final class SettingsSnapshotTests: XCTestCase {
     ) {
         let view = NavigationStack {
             SettingsForm(state: state, system: SettingsSystemState(backgroundRefresh: .denied))
-                .navigationTitle(Text(verbatim: state.page.title.resolved))
-                .navigationBarTitleDisplayMode(.inline)
+                .itmoDetailHeader(title: state.page.title.resolved, subtitle: nil)
         }
         assertAppearances(
             of: view, named: name, appearances: [.light, .dark], height: height,
@@ -127,8 +110,6 @@ enum SettingsFixtures {
             page: page,
             sections: provider.sections(page: page, state: state),
             loaded: true,
-           
-            themePreview: nil,
             gallery: provider.gallery(page: page, state: state)
         )
     }
@@ -170,7 +151,7 @@ enum SettingsFixtures {
                 contrast: .standard,
                 pureBlack: false
             ),
-            widgetsFollowTheme: false,
+            widgetsFollowTheme: true,
             homePassVisible: true,
             disabledPushes: []
         )
@@ -182,44 +163,43 @@ enum SettingsFixtures {
         let person = SnapshotFixtures.longPersonName
         let items: [any SettingItem] = [
             SettingItemToggle(
-                id: .homePassVisible, title: text(long), description: text(person),
-                checked: true, enabled: true, stateKnown: true
+                id: .homePassVisible, title: text(long), description: text(person), checked: true, enabled: true,
+                icon: .qrCode
             ),
             SettingItemToggle(
-                id: .scheduleSportAutoSign, title: text(long), description: nil,
-                checked: false, enabled: false, stateKnown: true
+                id: .scheduleSportAutoSign, title: text(long), description: nil, checked: false, enabled: false,
+                icon: .sprint
             ),
             SettingItemChoice(
                 id: .compactWidgetTextSize, title: text(long), value: text(person),
-                options: [ChoiceOption(key: "LONG", label: text(person), description: nil)],
-                selectedOptionKey: "LONG", description: text(long), enabled: true
+                options: [ChoiceOption(key: "LONG", label: text(person))],
+                selectedOptionKey: "LONG", description: text(long), enabled: true, icon: nil
             ),
             SettingItemNavigation(
                 id: .pageServices, title: text(long), value: text(person), description: nil,
-                page: .services, enabled: true
+                page: .services, enabled: true, icon: .cloudOff
             ),
             SettingItemAction(
                 id: .diagnostics, title: text(long), description: text(person), value: text("200"),
-                trailingIcon: .chevronRight, enabled: true
+                trailingIcon: .chevronRight, enabled: true, icon: .error
             ),
             SettingItemAction(
-                id: .refreshWidgets, title: text(person), description: nil, value: nil,
-                trailingIcon: .refresh, enabled: false
+                id: .privacyPolicy, title: text(person), description: nil, value: nil,
+                trailingIcon: .openInNew, enabled: false, icon: .lock
             ),
-            SettingItemCustomColor(id: .accentCustom, title: text(long), argb: Int32(bitPattern: 0xFF5C_6BC0), enabled: true),
-            SettingItemInfo(id: .licenseMaplibre, title: text(long), value: text("2.3.0-SNAPSHOT (2026-10-07, debug)")),
+            SettingItemInfo(
+                id: .licenseMaplibre, title: text(long), value: text("2.3.0-SNAPSHOT (2026-10-07, debug)"), icon: nil
+            ),
             // The version row of a fork's build: a tap copies the details.
             SettingItemAction(
-                id: .theVersion, title: text("Версия"), description: nil,
-                value: text("2.3.0 (20292) · a1b2c3d · AlexPer777/ITMO.Widgets"), trailingIcon: nil, enabled: true
+                id: .theVersion, title: text("Версия"), description: text("2.3.0 (20292) · a1b2c3d · AlexPer777/ITMO.Widgets"),
+                value: nil, trailingIcon: nil, enabled: true, icon: .info
             ),
         ]
         return SettingsUiState(
             page: .about,
             sections: [SettingSection(title: text(long), items: items, footer: text(person))],
             loaded: true,
-           
-            themePreview: nil,
             gallery: nil
         )
     }

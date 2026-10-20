@@ -38,9 +38,12 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - Android: one Navigation 3 shell replaces Fragments and XML layouts; pushed screens move over the bar, and the
   predictive Back (Android 13 and later) shows Material's back preview; My ITMO goes back in its web history first.
 - Widget, notification, shortcut and App Link routes go through one parser on both platforms.
-- New `Оформление` page with a live sample: `Цвет оформления` (`Как обои` on Android 12+, `Фирменный`, six presets or
-  `Свой цвет`), `Стиль палитры`, `Контраст` and `Чёрный фон`. The defaults keep the look of 2.2; below Android 12 and
-  on iOS the app is brand blue instead of the baseline purple.
+- New `Оформление` page, every choice on the page and applied at once: a sample of the app in the light and the dark
+  theme, `Цвет` as named circles (`Как обои` on Android 12+, `Фирменный`, six presets, `Свой цвет` with its picker
+  right under them), `Палитра` as small samples with a line on what the picked one does, `Контраст` as a segmented
+  choice and `Чёрный фон`. Under `Монохром` the colours are dimmed with a line why. The defaults keep the look of 2.2;
+  below Android 12 and on iOS the app is brand blue instead of the baseline purple. On iOS the colours reach the
+  widgets only, which the page says.
 - Material 3 Expressive: every bottom tab shows its label, the morphing loading indicator, a little expressive
   motion; reduced motion shows end states at once. Tonal buttons use the accent instead of a disabled-looking grey.
 - Every icon is a Material Symbols Rounded glyph; the selected tab shows the filled one. Android avatars are M3
@@ -112,12 +115,13 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - One person card for any ISU: roles, the ISU with copy, `Написать отзыв`, `Добавить в друзья` or `Пригласить в
   ITMO.Widgets`, then `Преподавание` (the lesson they give now, the subjects they teach you, the AI summary and
   reviews) and `Учёба` (groups, schedule, sport and friends you may open). Someone's hidden data is simply absent.
-- Another user's sport is titled by their given name and shows lesson cards.
+- Another user's sport is titled `Спорт` with their given name after it and shows lesson cards.
 
 ### Settings
 
 - The root starts with `Аккаунты` (`Сервер ITMO.Widgets` and `БАРС`), then `Уведомления`, `Виджеты`, `Оформление`,
-  `Разделы` and `О приложении`.
+  `Разделы` and `О приложении`. Every settings page, `Журнал ошибок` and another user's `Спорт` share the profile's
+  look: the pushed header, rows with icons in connected groups.
 - `Сервер ITMO.Widgets` has the switch, `Кто видит` and `Устройства` while connected, `Что даёт подключение` before
   it; what the server keeps opens in a sheet.
 - `Устройства` replaces `Вход на сайт`: `Подключить устройство` signs a browser in or pairs a self-hosted agent from
@@ -145,7 +149,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - A lesson opens its sheet, a booking or queue its sport lesson.
 - `Виджеты` is a gallery of whole live previews with `Добавить` (Android) or `Как добавить` (iOS) and each format's
   settings in a sheet; `Завтрашние пары вечером` is on by default.
-- `Виджеты в цвет темы` (off by default) paints the widgets in the app's colours; with dynamic colours off the QR
+- `Виджеты в цвет темы` (on by default) paints the widgets in the app's colours; with dynamic colours off the QR
   stays black on white.
 - List widgets placed in 2.2 stay lists. Schedule widgets work again on Android 8-11 and follow the launcher's corner
   radius on Android 12+.

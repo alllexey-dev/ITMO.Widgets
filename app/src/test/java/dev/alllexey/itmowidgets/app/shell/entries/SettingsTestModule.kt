@@ -63,7 +63,7 @@ internal fun settingsTestModule(spoilers: CustomSpoilerRepository = FakeCustomSp
         override fun refreshAll() = Unit
     }
     val pages = SettingsPages(
-        root = RootPageProvider(repository, BarsStatusRepositoryImpl(PreferenceStores().markSources)),
+        root = RootPageProvider(BarsStatusRepositoryImpl(PreferenceStores().markSources)),
         widgets = WidgetsPageProvider(repository, NoQuickSettingsTile),
         sections = SectionsPageProvider(repository, FakeCalendarSync()),
         about = AboutPageProvider(

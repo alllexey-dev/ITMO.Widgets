@@ -84,7 +84,7 @@ private fun SampleScreen(theme: ThemeSpec, dark: Boolean, label: String, modifie
                     horizontalArrangement = Arrangement.spacedBy(SampleGap),
                 ) {
                     IconTile(painterResource(KitRes.drawable.ic_star), Tone.Primary, size = TileSize)
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LineGap)) {
                         Line(colors.onSurface, 0.9f)
                         Line(colors.onSurfaceVariant, 0.6f)
                     }
@@ -114,10 +114,10 @@ private fun Line(color: Color, fraction: Float, height: Dp = 6.dp) {
 @Composable
 private fun SampleSwitch(track: Color, thumb: Color) {
     Box(
-        Modifier.width(SwitchWidth).height(SwitchHeight).clip(CircleShape).background(track).padding(3.dp),
+        Modifier.width(SwitchWidth).height(SwitchHeight).clip(CircleShape).background(track).padding(ThumbInset),
         contentAlignment = Alignment.CenterEnd,
     ) {
-        Box(Modifier.size(SwitchHeight - 6.dp).clip(CircleShape).background(thumb))
+        Box(Modifier.size(SwitchHeight - ThumbInset * 2).clip(CircleShape).background(thumb))
     }
 }
 
@@ -126,3 +126,5 @@ private val SampleGap = 8.dp
 private val TileSize = 28.dp
 private val SwitchWidth = 30.dp
 private val SwitchHeight = 18.dp
+private val ThumbInset = 3.dp
+private val LineGap = 4.dp

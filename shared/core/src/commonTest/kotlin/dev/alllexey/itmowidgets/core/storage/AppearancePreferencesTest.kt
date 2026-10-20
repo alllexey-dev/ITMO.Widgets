@@ -13,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
@@ -101,9 +102,13 @@ class AppearancePreferencesTest {
     }
 
     @Test
-    fun theWidgetsKeepTheirOwnColoursByDefault() = runTest {
+    fun theWidgetsTakeTheAppColoursByDefaultAndKeepTheirOwnOnceTurnedOff() = runTest {
         preferences.updateTheme { it.copy(accent = AccentColor.TEAL) }
 
+        assertTrue(preferences.observeWidgetsFollowTheme().first())
+        assertEquals(ThemeSpec(accent = AccentColor.TEAL), preferences.observeWidgetTheme().first())
+
+        preferences.setWidgetsFollowTheme(false)
         assertFalse(preferences.observeWidgetsFollowTheme().first())
         assertNull(preferences.observeWidgetTheme().first())
     }

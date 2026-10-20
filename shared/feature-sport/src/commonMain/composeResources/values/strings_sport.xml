@@ -41,7 +41,6 @@
     <string name="sport_kind_team_short">Сборная</string>
     <string name="sport_rule_debt_only">Только с задолженностью</string>
     <string name="sport_rule_denied">Ограничение записи</string>
-    <string name="user_sport_title">Спорт: %1$s</string>
     <string name="user_sport_empty_title">Записей нет</string>
     <string name="user_sport_empty_description">Ни подтверждённых занятий, ни ожидающих записей</string>
     <string name="user_sport_hidden_title">Спорт скрыт</string>

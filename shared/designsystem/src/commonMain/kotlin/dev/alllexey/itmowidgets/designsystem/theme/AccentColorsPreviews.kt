@@ -16,10 +16,9 @@ import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
-import dev.alllexey.itmowidgets.designsystem.components.dialogs.SwatchChoiceDialogSurface
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsChoiceRow
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsToggleRow
+import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
+import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.SwitchListRow
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.preview.LocalPreviewAppearance
 
@@ -27,25 +26,6 @@ import dev.alllexey.itmowidgets.designsystem.preview.LocalPreviewAppearance
 private val AccentNames = listOf(
     "Как обои", "Фирменный", "Бирюзовый", "Зелёный", "Янтарный", "Красный", "Розовый", "Фиолетовый", "Свой цвет",
 )
-
-/** The accent colour picker with every preset, a preset picked; its own scheme is the appearance's. */
-@Preview
-@Composable
-private fun AccentPickerPreview() = ItmoPreview {
-    val dark = LocalPreviewAppearance.current.dark || isSystemInDarkTheme()
-    Box(Modifier.padding(ItmoTheme.spacing.section)) {
-        SwatchChoiceDialogSurface(
-            title = "Цвет оформления",
-            swatches = AccentColor.entries.mapIndexed { index, accent ->
-                accentSwatch(ThemeSpec(accent = accent, customArgb = CUSTOM_SAMPLE), AccentNames[index], dark)
-            },
-            selectedIndex = AccentColor.TEAL.ordinal,
-            onSelect = {},
-            onDismiss = {},
-            confirmLabel = "Готово",
-        )
-    }
-}
 
 /** One sample screen per seed: the brand scheme and three presets, so a recipe change shows across hues. */
 @Preview(heightDp = 1400)
@@ -95,9 +75,9 @@ private fun AccentSample(name: String) {
         verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
     ) {
         Text(name, color = ItmoTheme.colorScheme.onSurface, style = ItmoTheme.typography.titleLarge)
-        SettingsGroup {
-            row("toggle") { SettingsToggleRow("Изменения в расписании", checked = true, onCheckedChange = {}) }
-            row("choice") { SettingsChoiceRow("Цвет оформления", value = name, onClick = {}) }
+        ListGroup {
+            item { SwitchListRow("Изменения в расписании", checked = true, onCheckedChange = {}) }
+            item { ListRow("Цвет", trailing = name, chevron = true, onClick = {}) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
             Button(onClick = {}) { Text("Записаться") }
