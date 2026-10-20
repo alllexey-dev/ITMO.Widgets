@@ -20,13 +20,15 @@ class DevicesPageProvider : SettingsPageProvider {
                     id = SettingRowId.PAIR_DEVICE,
                     title = UiText.Res(SettingsStrings.connection_pair),
                     description = UiText.Res(SettingsStrings.connection_pair_text),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                    trailingIcon = AppIcon.CHEVRON_RIGHT,
+                    icon = AppIcon.QR_CODE_SCANNER
                 ),
                 SettingItem.Action(
                     id = SettingRowId.CONNECTED_DEVICES,
                     title = UiText.Res(SettingsStrings.connection_devices_list),
                     description = UiText.Res(SettingsStrings.connection_devices_list_text),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                    trailingIcon = AppIcon.CHEVRON_RIGHT,
+                    icon = AppIcon.DEVICES
                 )
             )
         )

@@ -32,11 +32,6 @@ enum class SettingRowId(val key: String) {
     VERSION("app_version"),
     DIAGNOSTICS("diagnostics"),
     PRIVACY_POLICY("privacy_policy"),
-    ACCENT_COLOR("accent_color"),
-    ACCENT_CUSTOM("accent_custom"),
-    THEME_PALETTE("theme_palette"),
-    THEME_CONTRAST("theme_contrast"),
-    DARK_BLACK("dark_black"),
     WIDGETS_FOLLOW_THEME("widgets_follow_theme"),
     LICENSE_PLANS("license_plans"),
     // No "map" in the key: the settings forbid map-provider rows by that word.

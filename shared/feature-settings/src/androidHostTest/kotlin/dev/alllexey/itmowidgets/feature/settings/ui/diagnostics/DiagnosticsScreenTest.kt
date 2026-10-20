@@ -14,6 +14,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -86,7 +87,7 @@ class DiagnosticsScreenTest {
         state = DiagnosticsUiState.Content(DiagnosticsSamples.entries)
         compose.waitForIdle()
         compose.onNodeWithTag(DiagnosticsTestTags.COPY).assertIsEnabled().performClick()
-        compose.onNodeWithTag(DiagnosticsTestTags.BACK).performClick()
+        compose.onNodeWithContentDescription("Назад").performClick()
         assertEquals(1, copies)
         assertEquals(1, backs)
         assertEquals(0, clears)

@@ -146,10 +146,6 @@ class SettingsViewModelTest {
                     SettingRowId.DIAGNOSTICS,
                     SettingRowId.VERSION,
                     SettingRowId.PRIVACY_POLICY,
-                    SettingRowId.ACCENT_COLOR,
-                    SettingRowId.THEME_PALETTE,
-                    SettingRowId.THEME_CONTRAST,
-                    SettingRowId.DARK_BLACK,
                     SettingRowId.HOME_PASS_VISIBLE,
                     SettingRowId.WIDGETS_FOLLOW_THEME,
                     SettingRowId.LICENSE_PLANS,
@@ -190,6 +186,6 @@ class SettingsViewModelTest {
 
     private companion object {
         /** The pages a [SettingsViewModel] builds; the others are screens of their own. */
-        val BuiltPages = SettingsPage.entries - setOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS)
+        val BuiltPages = SettingsPage.entries - setOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS, SettingsPage.APPEARANCE)
     }
 }

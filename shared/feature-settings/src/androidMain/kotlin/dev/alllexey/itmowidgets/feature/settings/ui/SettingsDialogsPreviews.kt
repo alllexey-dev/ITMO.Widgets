@@ -5,51 +5,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import dev.alllexey.itmowidgets.core.settings.AccentColor
-import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
-import dev.alllexey.itmowidgets.feature.settings.ui.preview.SettingsPreviewData
 
 /*
  * Baselines `SettingsDialog_<dialog>`: as for the pages, each dialog is a function called `SettingsDialog` in a holder
  * class of its own.
  */
 
-/** [dialog] over the rows of [page], on the screen margin as the window centres it. */
+/** [dialog] on the screen margin as the window centres it. */
 @Composable
-private fun SettingsDialogPreview(dialog: SettingsDialog, page: SettingsUiState = SettingsPreviewData.Root) = ItmoPreview {
+private fun SettingsDialogPreview(dialog: SettingsDialog) = ItmoPreview {
     Box(Modifier.padding(ItmoTheme.spacing.section)) {
-        SettingsDialogBody(
-            dialog = dialog,
-            sections = page.sections,
-            windowed = false,
-            onConfirm = {},
-            onDismiss = {},
-            actions = SettingsActions(),
-            theme = page.themePreview,
-        )
+        SettingsDialogBody(dialog = dialog, windowed = false, onConfirm = {}, onDismiss = {}, actions = SettingsActions())
     }
-}
-
-internal class SettingsDialogTextSizePreview {
-    @Preview(name = "text-size")
-    @Composable
-    fun SettingsDialog() = SettingsDialogPreview(
-        SettingsDialog.Choice(SettingRowId.COMPACT_WIDGET_TEXT_SIZE),
-        SettingsPreviewData.Widgets,
-    )
-}
-
-internal class SettingsDialogQrAnimationPreview {
-    @Preview(name = "qr-animation")
-    @Composable
-    fun SettingsDialog() = SettingsDialogPreview(
-        SettingsDialog.Choice(SettingRowId.QR_ANIMATION),
-        SettingsPreviewData.Widgets,
-    )
 }
 
 internal class SettingsDialogCalendarAccessPreview {
@@ -62,33 +31,4 @@ internal class SettingsDialogCalendarAccessLockedPreview {
     @Preview(name = "calendar-access-locked")
     @Composable
     fun SettingsDialog() = SettingsDialogPreview(SettingsDialog.CalendarAccess(locked = true))
-}
-
-internal class SettingsDialogAccentColorPreview {
-    @Preview(name = "accent-color")
-    @Composable
-    fun SettingsDialog() = SettingsDialogPreview(
-        SettingsDialog.Choice(SettingRowId.ACCENT_COLOR),
-        SettingsPreviewData.Appearance,
-    )
-}
-
-/** The accent colour dialog with «Свой цвет» picked: its picker under the swatches. */
-internal class SettingsDialogAccentCustomPreview {
-    @Preview(name = "accent-custom", heightDp = 1000)
-    @Composable
-    fun SettingsDialog() = SettingsDialogPreview(
-        SettingsDialog.Choice(SettingRowId.ACCENT_COLOR),
-        SettingsPreviewData.appearance(ThemeSpec(AccentColor.CUSTOM, customArgb = 0xFF5C6BC0.toInt())),
-    )
-}
-
-/** The palette styles with a line each on what they do. */
-internal class SettingsDialogThemeStylePreview {
-    @Preview(name = "theme-style", heightDp = 900)
-    @Composable
-    fun SettingsDialog() = SettingsDialogPreview(
-        SettingsDialog.Choice(SettingRowId.THEME_PALETTE),
-        SettingsPreviewData.Appearance,
-    )
 }

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -49,20 +48,14 @@ import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
-import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
-import dev.alllexey.itmowidgets.designsystem.kit.ListRow
-import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
-import dev.alllexey.itmowidgets.designsystem.kit.SegmentedChoice
 import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
-import dev.alllexey.itmowidgets.designsystem.kit.SwitchListRow
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetCard
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetCardAction
+import dev.alllexey.itmowidgets.feature.settings.ui.SettingSectionView
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsActions
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
@@ -119,7 +112,7 @@ fun WidgetsGalleryScreen(
             verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
         ) {
             gallery.cards.forEach { card -> GalleryCard(card, galleryActions, widgetPreview, onSettings = { sheet = card.format }) }
-            state.sections.forEach { section -> Section(section, actions) }
+            state.sections.forEach { section -> SettingSectionView(section, actions) }
         }
     }
     gallery.cards.firstOrNull { it.format == sheet }?.let { card ->
@@ -243,74 +236,7 @@ fun WidgetSettingsSheetContent(
         ) {
             Wallpaper { widgetPreview(card.preview, Modifier.fillMaxWidth()) }
             card.settingsNote?.let { ListGroupNote(it.asString()) }
-            card.settings.forEach { section -> Section(section, actions) }
+            card.settings.forEach { section -> SettingSectionView(section, actions) }
         }
     }
 }
-
-@Composable
-private fun ColumnScope.Section(section: SettingSection, actions: SettingsActions) {
-    val choice = section.items.singleOrNull() as? SettingItem.Choice
-    section.title?.let { SectionHeader(it.asString()) }
-    if (choice != null && choice.options.size <= SEGMENTS) {
-        val keys = choice.options.map { it.key }
-        SegmentedChoice(
-            options = choice.options.map { it.label.asString() },
-            selectedIndex = keys.indexOf(choice.selectedOptionKey),
-            onSelect = { actions.onChoice(choice.id, keys[it]) },
-            enabled = choice.enabled,
-            testTags = keys.map { "${choice.id.key}_$it" },
-        )
-    } else {
-        ListGroup {
-            section.items.forEach { item -> item { SettingRow(item, actions) } }
-        }
-    }
-    section.footer?.let { ListGroupNote(it.asString()) }
-}
-
-@Composable
-private fun SettingRow(item: SettingItem, actions: SettingsActions) {
-    val tag = Modifier.testTag(item.id.key)
-    when (item) {
-        is SettingItem.Toggle -> SwitchListRow(
-            title = item.title.asString(),
-            checked = item.checked,
-            onCheckedChange = { actions.onToggle(item.id, it) },
-            modifier = tag,
-            subtitle = item.description?.asString(),
-            enabled = item.enabled,
-        )
-        is SettingItem.Choice -> ChoiceRow(item, actions, tag)
-        is SettingItem.Action -> ListRow(
-            title = item.title.asString(),
-            modifier = tag,
-            subtitle = item.description?.asString(),
-            trailing = item.value?.asString(),
-            onClick = if (item.enabled) ({ actions.onAction(item.id) }) else null,
-        )
-        else -> Unit
-    }
-}
-
-/** A choice with more options than a segmented control holds: its options as a list under the title. */
-@Composable
-private fun ChoiceRow(item: SettingItem.Choice, actions: SettingsActions, modifier: Modifier) {
-    ListRow(
-        title = item.title.asString(),
-        modifier = modifier,
-        below = {
-            item.options.forEach { option ->
-                ListRow(
-                    title = option.label.asString(),
-                    accessory = if (option.key == item.selectedOptionKey) {
-                        { Icon(painterResource(Res.drawable.ic_check), contentDescription = null, tint = ItmoTheme.colorScheme.primary) }
-                    } else null,
-                    onClick = if (item.enabled) ({ actions.onChoice(item.id, option.key) }) else null,
-                )
-            }
-        },
-    )
-}
-
-private const val SEGMENTS = 4

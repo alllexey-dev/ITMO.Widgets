@@ -19,17 +19,19 @@ sealed interface SettingItem {
 
     val id: SettingRowId
 
+    /** The row's leading icon, in a neutral tile as on the profile; null for rows that need none (a licence). */
+    val icon: AppIcon?
+
     data class Toggle(
         override val id: SettingRowId,
         val title: UiText,
         val description: UiText? = null,
         val checked: Boolean,
         val enabled: Boolean = true,
-        /** False while an asynchronous source has not provided the real value yet. */
-        val stateKnown: Boolean = true
+        override val icon: AppIcon? = null
     ) : SettingItem
 
-    /** Opens a single-choice Material dialog and displays the current value. */
+    /** A single choice shown in place: a segmented control for two to four options, a list for more. */
     data class Choice(
         override val id: SettingRowId,
         val title: UiText,
@@ -38,7 +40,8 @@ sealed interface SettingItem {
         /** Null until an asynchronous source has provided the real value. */
         val selectedOptionKey: String?,
         val description: UiText? = null,
-        val enabled: Boolean = true
+        val enabled: Boolean = true,
+        override val icon: AppIcon? = null
     ) : SettingItem
 
     /**
@@ -55,41 +58,31 @@ sealed interface SettingItem {
         val value: UiText? = null,
         val description: UiText? = null,
         val page: SettingsPage,
-        val enabled: Boolean = true
+        val enabled: Boolean = true,
+        override val icon: AppIcon? = null
     ) : SettingItem
 
-    /** Runs an immediate command without leaving the settings screen. */
+    /**
+     * Runs an immediate command without leaving the settings screen. [trailingIcon] says where the row leads: a
+     * chevron to another screen, `open_in_new` to the browser; a command that stays on the page has none.
+     */
     data class Action(
         override val id: SettingRowId,
         val title: UiText,
         val description: UiText? = null,
         val value: UiText? = null,
         val trailingIcon: AppIcon? = null,
-        val enabled: Boolean = true
-    ) : SettingItem
-
-    /**
-     * The user's own colour, opaque [argb]: the custom accent. Android opens the accent colour dialog with its picker,
-     * iOS shows the system colour well; both report the new colour as `#RRGGBB` through the choice callback.
-     */
-    data class CustomColor(
-        override val id: SettingRowId,
-        val title: UiText,
-        val argb: Int,
-        val enabled: Boolean = true
+        val enabled: Boolean = true,
+        override val icon: AppIcon? = null
     ) : SettingItem
 
     /** Read-only fact, such as the application version. */
     data class Info(
         override val id: SettingRowId,
         val title: UiText,
-        val value: UiText
+        val value: UiText,
+        override val icon: AppIcon? = null
     ) : SettingItem
 }
 
-data class ChoiceOption(
-    val key: String,
-    val label: UiText,
-    /** A line under the option in the choice dialog, such as what a palette style does. */
-    val description: UiText? = null
-)
+data class ChoiceOption(val key: String, val label: UiText)

@@ -24,8 +24,8 @@ import kotlinx.coroutines.launch
 /**
  * One settings page. The page's [SettingsPageProvider] builds its rows and handles them; this ViewModel keeps what
  * outlives a page's rows (the notification permission the root shows, the custom spoiler state, the event queue)
- * and hands it over as the [SettingsPageScope]. «Сервер ITMO.Widgets» and «Уведомления» have view models of their
- * own (`ConnectionViewModel`, `NotificationSettingsViewModel`).
+ * and hands it over as the [SettingsPageScope]. «Сервер ITMO.Widgets», «Уведомления» and «Оформление» have view
+ * models of their own (`ConnectionViewModel`, `NotificationSettingsViewModel`, `AppearanceViewModel`).
  */
 class SettingsViewModel(
     private val pages: SettingsPages,
@@ -69,7 +69,6 @@ class SettingsViewModel(
                 page = page,
                 sections = provider.sections(page, state),
                 loaded = true,
-                themePreview = provider.themePreview(page, state.local),
                 gallery = provider.gallery(page, state)
             )
         }

@@ -34,6 +34,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPageState
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.appearance.AppearanceViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsViewModel
 import kotlin.random.Random
@@ -77,13 +78,14 @@ class SettingsIosModuleTest {
 
         definitions.forEach { definition -> koin.get<Any>(definition.primaryType, definition.qualifier) }
 
-        // SERVICES, PRIVACY and NOTIFICATIONS are screens of their own, with their own ViewModels.
+        // SERVICES, PRIVACY, NOTIFICATIONS and APPEARANCE are screens of their own, with their own ViewModels.
         (SettingsPage.entries - OWN_SCREENS).forEach { page ->
             val viewModel = koin.get<SettingsViewModel> { parametersOf(*settingsPageParameters(page.name).toTypedArray()) }
             assertEquals(page, viewModel.uiState.value.page)
         }
         koin.get<ConnectionViewModel>()
         koin.get<NotificationSettingsViewModel>()
+        koin.get<AppearanceViewModel>()
         koin.get<DiagnosticsViewModel>()
         assertSame(IosPlatformCapabilities, koin.get<PlatformCapabilities>())
         assertFalse(koin.get<QuickSettingsTileAccess>().canRequestAdd())
@@ -196,6 +198,6 @@ class SettingsIosModuleTest {
     private companion object {
         const val ORIGIN = "https://dev.widgets.alllexey.dev"
         const val VERSION = "2.3-test"
-        val OWN_SCREENS = setOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS)
+        val OWN_SCREENS = setOf(SettingsPage.SERVICES, SettingsPage.NOTIFICATIONS, SettingsPage.APPEARANCE)
     }
 }

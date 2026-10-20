@@ -7,8 +7,8 @@ import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
 
 /**
  * One settings destination per back-stack entry, restored from its navigation argument. [SERVICES] («Сервер
- * ITMO.Widgets») and [NOTIFICATIONS] are screens of their own, `ConnectionViewModel` and
- * `NotificationSettingsViewModel`; the hosts route them before a `SettingsViewModel` is made. The keys are the routes
+ * ITMO.Widgets»), [NOTIFICATIONS] and [APPEARANCE] are screens of their own, `ConnectionViewModel`,
+ * `NotificationSettingsViewModel` and `AppearanceViewModel`; the hosts route them before a `SettingsViewModel` is made. The keys are the routes
  * other screens link to (the profile, the gates, the bell), so they never change; [fromArgument] maps the keys of the
  * pages that were merged away.
  */

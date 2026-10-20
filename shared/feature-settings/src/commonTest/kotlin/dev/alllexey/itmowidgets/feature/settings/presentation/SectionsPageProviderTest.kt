@@ -53,7 +53,6 @@ class SectionsPageProviderTest {
             assertEquals(UiText.Res(SettingsStrings.settings_schedule_sport_auto_sign_description), toggle.description)
             assertEquals(UiText.Res(SettingsStrings.settings_schedule_footer), section.footer)
             assertTrue(toggle.enabled)
-            assertTrue(toggle.stateKnown)
             assertFalse(toggle.checked)
             assertEquals(0, fixture.widgetRefresher.refreshCount)
 
@@ -209,7 +208,7 @@ class SectionsPageProviderTest {
         val export = fixture.viewModel.action(SettingRowId.ICS_EXPORT)
         assertEquals(UiText.Res(SettingsStrings.settings_ics_export_title), export.title)
         assertEquals(UiText.Res(SettingsStrings.settings_ics_export_description), export.description)
-        assertEquals(AppIcon.DOWNLOAD, export.trailingIcon)
+        assertEquals(AppIcon.DOWNLOAD, export.icon)
         assertTrue(export.enabled)
 
         fixture.calendarSync.state.value = CalendarSyncState(enabled = true)

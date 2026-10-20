@@ -8,11 +8,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
@@ -22,7 +20,6 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -30,7 +27,6 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -55,10 +51,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * `SettingsScreen`'s row rules: the whole row is the target, unknown and disabled rows cannot change, restoring state
- * emits no user action, rows keep their identity across updates, the scroll position survives recreation, and long text
- * fits at 320 dp and font 1.3. Its dialogs show their copy and buttons, survive recreation and never move a switch off
- * its state.
+ * `SettingsScreen`'s row rules: the whole row is the target, disabled rows cannot change, restoring state emits no user
+ * action, rows keep their identity across updates, the scroll position survives recreation, and long text fits at
+ * 320 dp and font 1.3. The calendar dialogs hand their buttons to the host and never move a switch off its state.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp")
@@ -83,7 +78,7 @@ class SettingsScreenTest {
     private var colors: ColorSource by mutableStateOf(ColorSource.Platform)
 
     @Test
-    fun `title value and footer changes keep the rows and a choice opens the latest item`() {
+    fun `title value and footer changes keep the rows and a choice shows the latest item in place`() {
         val original = choice()
         val section = SettingSection(text("Раздел"), listOf(toggle(), original), text("Подсказка"))
         show(page(section))
@@ -92,7 +87,7 @@ class SettingsScreenTest {
         val updated = original.copy(value = text("Круг"), selectedOptionKey = "circle")
 
         update(page(section.copy(title = text("Новый раздел"), items = listOf(toggle(true), updated), footer = null)))
-        compose.onNodeWithTag(SettingsTestTags.FOOTER).assertDoesNotExist()
+        compose.onNodeWithTag(SettingSectionTags.FOOTER).assertDoesNotExist()
         update(
             page(
                 section.copy(
@@ -108,25 +103,20 @@ class SettingsScreenTest {
         compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertIsOn()
         compose.onNodeWithText("Новый раздел").assertExists()
         compose.onNodeWithText("Новая подсказка").assertExists()
-        compose.onNodeWithTag(SettingRowId.QR_ANIMATION.key).assert(hasText("Круг"))
-        compose.onNodeWithTag(SettingRowId.QR_ANIMATION.key).performClick()
-        // The dialog shows the latest row: its options with the current one marked.
-        compose.onNode(dialogOption("Круг")).assertIsSelected()
-        compose.onNode(dialogOption("Плавное исчезновение")).assertIsNotSelected().performClick()
+        // The options sit under the title with the current one marked.
+        compose.onNodeWithTag(option("circle")).assertIsSelected()
+        compose.onNodeWithTag(option("fade")).assertIsNotSelected().performClick()
         compose.onNode(isDialog()).assertDoesNotExist()
         assertEquals(listOf(SettingRowId.QR_ANIMATION to "fade"), choices)
         assertTrue(toggles.isEmpty())
     }
 
     @Test
-    fun `unknown and disabled toggle rows cannot change state`() {
-        show(page(SettingSection(null, listOf(toggle().copy(stateKnown = false)))))
-        for (item in listOf(toggle().copy(stateKnown = false), toggle().copy(enabled = false))) {
-            update(page(SettingSection(null, listOf(item))))
-            val row = compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key)
-            row.assertIsNotEnabled()
-            row.performClick()
-        }
+    fun `a disabled toggle row cannot change state`() {
+        show(page(SettingSection(null, listOf(toggle().copy(enabled = false)))))
+        val row = compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key)
+        row.assertIsNotEnabled()
+        row.performClick()
         compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertIsOff()
 
         assertTrue(toggles.isEmpty())
@@ -171,8 +161,8 @@ class SettingsScreenTest {
                 ),
             ),
         )
-        for (id in listOf(SettingRowId.PAGE_SERVICES, SettingRowId.QR_ANIMATION, SettingRowId.REFRESH_WIDGETS)) {
-            compose.onNodeWithTag(id.key).assertIsNotEnabled().performClick()
+        for (tag in listOf(SettingRowId.PAGE_SERVICES.key, option("circle"), SettingRowId.REFRESH_WIDGETS.key)) {
+            compose.onNodeWithTag(tag).assertHasNoClickAction()
         }
         assertEquals(1, pages.size)
         compose.onNode(isDialog()).assertDoesNotExist()
@@ -203,7 +193,7 @@ class SettingsScreenTest {
         compose.setContent { Themed { SettingsScreen(state, actions) } }
 
         compose.onNodeWithTag(SettingRowId.HOME_PASS_VISIBLE.key).assertIsOn()
-        compose.onNodeWithTag(SettingRowId.QR_ANIMATION.key).assert(hasText("Плавное исчезновение", substring = true))
+        compose.onNodeWithTag(option("fade")).assertIsSelected()
         assertTrue(toggles.isEmpty())
     }
 
@@ -243,7 +233,12 @@ class SettingsScreenTest {
                 SettingSection(
                     null,
                     listOf(
-                        choice().copy(title = text(LONG_TITLE), value = text(LONG_VALUE)),
+                        SettingItem.Navigation(
+                            SettingRowId.PAGE_SERVICES,
+                            text(LONG_TITLE),
+                            value = text(LONG_VALUE),
+                            page = SettingsPage.SERVICES,
+                        ),
                         toggle().copy(title = text(LONG_TOGGLE)),
                     ),
                 ),
@@ -326,60 +321,6 @@ class SettingsScreenTest {
         assertTrue(toggles.isEmpty())
     }
 
-    @Test
-    fun `an open choice survives recreation and shows the current value`() {
-        val restoration = StateRestorationTester(compose)
-        state = SettingsPreviewData.Appearance
-        restoration.setContent { Themed { SettingsScreen(state, actions) } }
-        compose.onNodeWithTag(SettingRowId.THEME_CONTRAST.key).performScrollTo().performClick()
-        compose.onNode(dialogOption("Обычный")).assertIsSelected()
-
-        restoration.emulateSavedInstanceStateRestore()
-
-        compose.onNode(dialogOption("Обычный")).assertIsSelected()
-        compose.onNode(dialogButton(CANCEL)).performClick()
-        compose.onNode(isDialog()).assertDoesNotExist()
-        assertTrue(choices.isEmpty())
-    }
-
-    @Test
-    fun `the colour row opens named swatches that apply on tap and close with done`() {
-        show(SettingsPreviewData.Appearance)
-        compose.onNodeWithTag(SettingRowId.ACCENT_COLOR.key).performClick()
-
-        compose.onNode(swatch("Как обои")).assertIsSelected()
-        compose.onNode(swatch("Бирюзовый")).assertIsNotSelected().performClick()
-        compose.onNode(isDialog()).assertExists()
-        compose.assertTouchTargets()
-        compose.onNode(dialogButton("Готово")).performClick()
-
-        compose.onNode(isDialog()).assertDoesNotExist()
-        assertEquals(listOf(SettingRowId.ACCENT_COLOR to "TEAL"), choices)
-    }
-
-    @Test
-    fun `the palette styles say what they do and a pick closes the dialog`() {
-        show(SettingsPreviewData.Appearance)
-        compose.onNodeWithTag(SettingRowId.THEME_PALETTE.key).performClick()
-
-        compose.onNode(dialogOption("Спокойная")).assertIsSelected()
-        compose.onNode(hasText("Самые насыщенные цвета из выбранного") and hasAnyAncestor(isDialog())).assertExists()
-        compose.onNode(dialogOption("Яркая")).performClick()
-
-        compose.onNode(isDialog()).assertDoesNotExist()
-        assertEquals(listOf(SettingRowId.THEME_PALETTE to "VIBRANT"), choices)
-    }
-
-    @Test
-    fun `only the appearance page shows the sample, as one element`() {
-        show(SettingsPreviewData.Appearance)
-        compose.onNodeWithTag(SettingsTestTags.THEME_SAMPLE).assert(hasContentDescription("Пример оформления"))
-        compose.onNodeWithText("Записаться").assertDoesNotExist()
-
-        update(SettingsPreviewData.Root)
-        compose.onNodeWithTag(SettingsTestTags.THEME_SAMPLE).assertDoesNotExist()
-    }
-
     private fun show(initial: SettingsUiState, fontScale: Float = 1f) {
         state = initial
         compose.setContent {
@@ -399,14 +340,8 @@ class SettingsScreenTest {
         compose.waitForIdle()
     }
 
-    /** A radio row of the open dialog. */
-    private fun dialogOption(label: String) =
-        hasText(label) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton) and hasAnyAncestor(isDialog())
-
-    /** A colour swatch of the open dialog, named for TalkBack. */
-    private fun swatch(label: String) =
-        hasContentDescription(label) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton) and
-            hasAnyAncestor(isDialog())
+    /** The option [key] of the choice row. */
+    private fun option(key: String) = "${SettingRowId.QR_ANIMATION.key}_$key"
 
     private fun dialogButton(label: String) = hasText(label) and hasClickAction() and hasAnyAncestor(isDialog())
 
@@ -439,11 +374,9 @@ class SettingsScreenTest {
         const val LONG_TITLE = "Анимация скрытия и раскрытия изображения QR-кода"
         const val LONG_VALUE = "Плавное исчезновение пользовательского изображения"
         const val LONG_TOGGLE = "Показывать расписание следующего дня после окончания сегодняшних занятий"
-        const val CANCEL = "Отмена"
         const val LATER = "Не сейчас"
         const val LARGE_FONT = 1.3f
         const val SCROLLED_PX = 420f
         const val GREEN_SEED = 0xFF087F5B.toInt()
-        val IsSwitch = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)
     }
 }

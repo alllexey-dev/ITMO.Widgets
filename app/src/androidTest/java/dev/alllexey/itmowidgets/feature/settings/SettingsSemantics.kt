@@ -10,6 +10,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.TextLayoutResult
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
+import dev.alllexey.itmowidgets.feature.settings.ui.SettingSectionTags
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsTestTags
 import org.junit.Assert.assertTrue
 
@@ -78,10 +79,17 @@ object SettingsSemantics {
         assertTrue("$title has no click action", row.config[SemanticsActions.OnClick].action?.invoke() == true)
     }
 
-    fun back(root: View) = click(root, SettingsTestTags.BACK)
+    /** The header's back button: the innermost clickable node that holds the `Назад` description. */
+    fun back(root: View) {
+        val button = nodes(root).lastOrNull { node ->
+            node.config.getOrNull(SemanticsActions.OnClick) != null &&
+                node.depthFirst().any { it.config.getOrNull(SemanticsProperties.ContentDescription)?.contains(BACK) == true }
+        }
+        assertTrue("No back button", checkNotNull(button) { "No back button" }.config[SemanticsActions.OnClick].action?.invoke() == true)
+    }
 
     fun footer(root: View): String? =
-        node(root, SettingsTestTags.FOOTER)?.let { texts(it).firstOrNull() }
+        node(root, SettingSectionTags.FOOTER)?.let { texts(it).firstOrNull() }
 
     fun hasScroll(root: View): Boolean = node(root, SettingsTestTags.SCROLL) != null
 
@@ -112,4 +120,6 @@ object SettingsSemantics {
     }
 
     private val SemanticsNode.tag: String? get() = config.getOrNull(SemanticsProperties.TestTag)
+
+    private const val BACK = "Назад"
 }

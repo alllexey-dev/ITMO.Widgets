@@ -47,30 +47,33 @@ class AboutPageProvider(
                 SettingItem.Action(
                     id = SettingRowId.REFRESH_WIDGETS,
                     title = UiText.Res(SettingsStrings.settings_refresh_widgets_title),
-                    trailingIcon = AppIcon.REFRESH
+                    icon = AppIcon.REFRESH
                 ),
                 SettingItem.Action(
                     id = SettingRowId.RESTART_ONBOARDING,
                     title = UiText.Res(SettingsStrings.settings_restart_onboarding_title),
                     description = UiText.Res(SettingsStrings.settings_restart_onboarding_description),
-                    trailingIcon = AppIcon.REFRESH
+                    icon = AppIcon.HISTORY
                 ),
                 SettingItem.Action(
                     id = SettingRowId.DIAGNOSTICS,
                     title = UiText.Res(SettingsStrings.settings_diagnostics_title),
                     value = UiText.Res(SettingsStrings.settings_diagnostics_count, listOf(state.diagnosticsCount)),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                    trailingIcon = AppIcon.CHEVRON_RIGHT,
+                    icon = AppIcon.ERROR
                 ),
                 SettingItem.Action(
                     id = SettingRowId.PRIVACY_POLICY,
                     title = UiText.Res(SettingsStrings.settings_privacy_policy_title),
-                    trailingIcon = AppIcon.OPEN_IN_NEW
+                    trailingIcon = AppIcon.OPEN_IN_NEW,
+                    icon = AppIcon.LOCK
                 ),
-                SettingRows.navigation(SettingsPage.LICENSES),
+                SettingRows.navigation(SettingsPage.LICENSES, icon = AppIcon.MENU_BOOK),
                 SettingItem.Action(
                     id = SettingRowId.VERSION,
                     title = UiText.Res(SettingsStrings.settings_version_title),
-                    value = versionSummary(appBuild)
+                    description = versionSummary(appBuild),
+                    icon = AppIcon.INFO
                 )
             ),
             footer = UiText.Res(CoreStrings.app_unofficial_notice)

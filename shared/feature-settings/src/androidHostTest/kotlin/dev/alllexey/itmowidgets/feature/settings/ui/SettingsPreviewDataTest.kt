@@ -39,7 +39,6 @@ class SettingsPreviewDataTest {
             SettingsPage.DEVICES to SettingsPreviewData.Devices,
             SettingsPage.ABOUT to SettingsPreviewData.About,
             SettingsPage.LICENSES to SettingsPreviewData.Licenses,
-            SettingsPage.APPEARANCE to SettingsPreviewData.Appearance,
         )
         for ((page, preview) in pages) {
             assertEquals(preview, built(page), "$page")

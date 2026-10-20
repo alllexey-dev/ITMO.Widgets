@@ -1,11 +1,11 @@
 package dev.alllexey.itmowidgets.feature.sport.ui.user
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -17,8 +17,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
 import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
@@ -30,6 +28,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.user.UserSportUiState
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.sportDayLabel
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.toLessonUi
 import dev.alllexey.itmowidgets.feature.sport.ui.DayLabel
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
 import dev.alllexey.itmowidgets.designsystem.kit.LessonCard
 import dev.alllexey.itmowidgets.designsystem.kit.toLessonView
 import kotlinx.datetime.toLocalDateTime
@@ -42,8 +41,6 @@ import dev.alllexey.itmowidgets.shared.compose.strings.user_profile_sport_title
 import dev.alllexey.itmowidgets.shared.compose.strings.user_sport_empty_description
 import dev.alllexey.itmowidgets.shared.compose.strings.user_sport_empty_title
 import dev.alllexey.itmowidgets.shared.compose.strings.user_sport_hidden_title
-import dev.alllexey.itmowidgets.shared.compose.strings.user_sport_title
-import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_exercise
 import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
@@ -71,7 +68,7 @@ object UserSportScreenTestTags {
 
 /**
  * Another user's confirmed lessons and pending queues, read-only: a card opens nothing and offers no cancellation, only
- * the building's map. The title names the user by [givenName] (`Спорт: Иван`), or reads `Спорт` without one. The
+ * the building's map. The title is `Спорт` with the user's [givenName] after it, like their friends' page. The
  * first load shows placeholder cards; a list follows a pull; no bookings, privacy (`Forbidden`: the lock, nothing to
  * retry) and errors (a retry) take the list's place. Stateless; [UserSportRoute] feeds it.
  */
@@ -83,57 +80,47 @@ fun UserSportScreen(
     actions: UserSportActions,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier
-            .fillMaxSize()
-            .background(ItmoTheme.colorScheme.surface),
-    ) {
-        AppTopBar(
-            title = if (givenName.isBlank()) {
-                stringResource(Res.string.user_profile_sport_title)
-            } else {
-                stringResource(Res.string.user_sport_title, givenName)
-            },
-            navigation = {
-                AppTopBarAction(
-                    painterResource(KitRes.drawable.ic_arrow_back),
-                    stringResource(Res.string.common_back),
-                    onClick = actions.onBack,
-                )
-            },
-        )
-        val body = Modifier
-            .fillMaxWidth()
-            .weight(1f)
-        when (state) {
-            UserSportUiState.Loading ->
-                Skeleton(SkeletonStyle.Cards, body.testTag(UserSportScreenTestTags.LOADING))
-            is UserSportUiState.Error -> if (state.error == AppError.Forbidden) {
-                UserSportState(
-                    painterResource(KitRes.drawable.ic_lock),
-                    stringResource(Res.string.user_sport_hidden_title),
-                    stringResource(Res.string.user_profile_hidden),
-                    body,
-                )
-            } else {
-                UserSportState(
-                    painterResource(KitRes.drawable.ic_error),
-                    stringResource(Res.string.common_load_error_title),
-                    state.error.toUiText().asString(),
-                    body,
-                    ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
-                )
-            }
-            is UserSportUiState.Content -> if (state.bookings.isEmpty()) {
-                UserSportState(
-                    painterResource(KitRes.drawable.ic_exercise),
-                    stringResource(Res.string.user_sport_empty_title),
-                    stringResource(Res.string.user_sport_empty_description),
-                    body,
-                )
-            } else {
-                AppRefreshBox(state.refreshing, actions.onRefresh, body) {
-                    Bookings(state.bookings, time, actions)
+    ItmoDetailScreen(
+        title = stringResource(Res.string.user_profile_sport_title),
+        onBack = actions.onBack,
+        backLabel = stringResource(Res.string.common_back),
+        modifier = modifier,
+        subtitle = givenName.takeIf { it.isNotBlank() },
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            val body = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+            when (state) {
+                UserSportUiState.Loading ->
+                    Skeleton(SkeletonStyle.Cards, body.testTag(UserSportScreenTestTags.LOADING))
+                is UserSportUiState.Error -> if (state.error == AppError.Forbidden) {
+                    UserSportState(
+                        painterResource(KitRes.drawable.ic_lock),
+                        stringResource(Res.string.user_sport_hidden_title),
+                        stringResource(Res.string.user_profile_hidden),
+                        body,
+                    )
+                } else {
+                    UserSportState(
+                        painterResource(KitRes.drawable.ic_error),
+                        stringResource(Res.string.common_load_error_title),
+                        state.error.toUiText().asString(),
+                        body,
+                        ContentStateAction(stringResource(Res.string.common_retry), actions.onRetry),
+                    )
+                }
+                is UserSportUiState.Content -> if (state.bookings.isEmpty()) {
+                    UserSportState(
+                        painterResource(KitRes.drawable.ic_exercise),
+                        stringResource(Res.string.user_sport_empty_title),
+                        stringResource(Res.string.user_sport_empty_description),
+                        body,
+                    )
+                } else {
+                    AppRefreshBox(state.refreshing, actions.onRefresh, body) {
+                        Bookings(state.bookings, time, actions)
+                    }
                 }
             }
         }
