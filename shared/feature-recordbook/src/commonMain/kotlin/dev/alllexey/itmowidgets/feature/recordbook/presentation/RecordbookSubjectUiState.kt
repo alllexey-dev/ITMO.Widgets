@@ -125,7 +125,13 @@ data class SubjectLessons(
 )
 
 /** `Ершов Н. А.` with `Лабораторные, в основном хвалят`; [isu] opens the person, null when none is known. */
-data class SubjectTeacherRow(val name: String, val initials: String, val detail: UiText?, val isu: Int?)
+data class SubjectTeacherRow(
+    val name: String,
+    val initials: String,
+    val detail: UiText?,
+    val isu: Int?,
+    val pictureUrl: String? = null,
+)
 
 sealed interface SubjectReviews {
     /** Rows say the tone; nothing more. */

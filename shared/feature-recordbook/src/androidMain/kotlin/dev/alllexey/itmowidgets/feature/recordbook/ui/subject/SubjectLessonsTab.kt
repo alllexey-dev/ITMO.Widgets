@@ -63,7 +63,7 @@ internal fun LazyListScope.lessonsTab(lessons: SubjectLessons, actions: Recordbo
                     item {
                         PersonListRow(
                             teacher.name,
-                            pictureUrl = null,
+                            pictureUrl = teacher.pictureUrl,
                             Modifier.testTag(SubjectTestTags.teacher(index)),
                             subtitle = teacher.detail?.asString(),
                             chevron = teacher.isu != null,

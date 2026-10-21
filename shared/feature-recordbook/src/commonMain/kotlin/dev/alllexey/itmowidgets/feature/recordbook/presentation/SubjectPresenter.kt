@@ -242,7 +242,12 @@ internal object SubjectPresenter {
 
     // Пары ----------------------------------------------------------------------------------------------------------
 
-    fun teachers(teachers: List<SubjectTeacher>, levels: Map<Long, TeacherLevel>, connected: Boolean): List<SubjectTeacherRow> =
+    fun teachers(
+        teachers: List<SubjectTeacher>,
+        levels: Map<Long, TeacherLevel>,
+        connected: Boolean,
+        photos: Map<Int, String?>,
+    ): List<SubjectTeacherRow> =
         teachers.map { teacher ->
             val tone = teacher.isu?.let(levels::get)?.takeIf { connected }?.tone()?.words
             val roles = teacher.roles.take(MAX_ROLES).mapIndexed { index, role ->
@@ -254,6 +259,7 @@ internal object SubjectPresenter {
                 initials = personInitials(teacher.name),
                 detail = (roles + listOfNotNull(tone)).takeIf { it.isNotEmpty() }?.let { UiText.Joined(it, ", ") },
                 isu = UserScreenArgs.profileIsu(teacher.isu),
+                pictureUrl = UserScreenArgs.profileIsu(teacher.isu)?.let(photos::get),
             )
         }
 

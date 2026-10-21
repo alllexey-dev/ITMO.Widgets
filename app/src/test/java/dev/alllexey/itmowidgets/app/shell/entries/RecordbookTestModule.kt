@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
+import dev.alllexey.itmowidgets.core.testing.FakePersonPhotosRepository
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
@@ -106,6 +107,7 @@ internal class RecordbookTestGraph(var barsEnabled: Boolean = false) {
                 SubjectSheetLoader(NoSheets, time),
                 SubjectTeacherLevelsLoader(NoLevels),
                 FakeBackendGate(optedIn = false),
+                FakePersonPhotosRepository(),
             )
         }
         viewModel { SheetScoresViewModel(get<SavedStateHandle>(), NoSheets) }

@@ -33,6 +33,10 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 ### Shell and look
 
+- Android and iOS show teacher photos in the lesson sheet and subject page without opening a profile first. Shared
+  ViewModels resolve directory URLs through a core port, reuse the session's person cache and coalesce lookups
+  (up to four at once); the platforms keep their standard avatar loaders and initials as a fallback.
+
 - Five tabs `Зачётка`, `Расписание`, `Сегодня`, `Спорт`, `Профиль` with a static one-line header the content scrolls
   under; on Android the Material 3 Expressive bar, tabs switch by a tap only and keep their scroll and state.
 - Android: one Navigation 3 shell replaces Fragments and XML layouts; pushed screens move over the bar, and the

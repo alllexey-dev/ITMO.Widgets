@@ -3,10 +3,12 @@ package dev.alllexey.itmowidgets.feature.social.di
 import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.friend.FriendRepository
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.social.PersonPhotosRepository
 import dev.alllexey.itmowidgets.core.social.PeopleSearchRepository
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.social.data.FriendRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PeopleSearchRepositoryImpl
+import dev.alllexey.itmowidgets.feature.social.data.PersonPhotosRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.PersonRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.SocialRepositoryImpl
 import dev.alllexey.itmowidgets.feature.social.data.bell.FriendRequestsBellSource
@@ -39,6 +41,7 @@ val socialModule = module {
     singleOf(::SocialRepositoryImpl) { bind<SocialRepository>() }
     single<SessionDataCleaner>(named("social")) { get<SocialRepositoryImpl>() }
     singleOf(::PersonRepositoryImpl) { bind<PersonRepository>() }
+    singleOf(::PersonPhotosRepositoryImpl) { bind<PersonPhotosRepository>() }
     single<SessionDataCleaner>(named("person")) { get<PersonRepositoryImpl>() }
     singleOf(::PeopleSearchRepositoryImpl) { bind<PeopleSearchRepository>() }
     singleOf(::FriendRepositoryImpl) { bind<FriendRepository>() }

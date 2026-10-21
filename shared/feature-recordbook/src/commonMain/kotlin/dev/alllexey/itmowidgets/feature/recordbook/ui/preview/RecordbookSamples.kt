@@ -272,7 +272,7 @@ object RecordbookSamples {
                 ),
             ),
             lessons = SubjectLessons(
-                teachers = SubjectPresenter.teachers(teachers, levels, connected),
+                teachers = SubjectPresenter.teachers(teachers, levels, connected, emptyMap()),
                 reviews = SubjectPresenter.reviews(teachers, levels, connected),
                 binding = null,
                 list = SubjectLessonList.Content(

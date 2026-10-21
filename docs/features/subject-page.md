@@ -47,6 +47,11 @@ controls or a `ControlGroup` in the place of its first control:
 
 - Distinct people from the subject's lessons; without lessons the recordbook teacher stands in.
 - Only a usable teacher ISU opens the person profile; no identifier is guessed by name.
+- `RecordbookSubjectViewModel` resolves directory photos through `core/social/PersonPhotosRepository` when the
+  set of known ISUs changes, seeds cached URLs and publishes each answer in `SubjectTeacherRow.pictureUrl`.
+  Loading a photo never holds the subject or its lessons, needs no Backend connection and is cancelled when the
+  teachers change. Android and iOS render the same state with their standard avatar components; without a known
+  ISU or photo, initials remain. See [social data](social.md).
 - With the connection to ITMO.Widgets, rows with an ISU say the review tone in words (`TeacherLevelTone.words`):
   `RecordbookSubjectViewModel` asks `TeacherLevelsRepository` whenever the set of ISUs changes
   ([teacher levels](reviews.md#teacher-levels)).

@@ -24,6 +24,7 @@ import dev.alllexey.itmowidgets.core.schedule.LessonOccurrence
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChange
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeKind
 import dev.alllexey.itmowidgets.core.schedule.lessonTypeName
+import dev.alllexey.itmowidgets.core.social.PersonPhotosRepository
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -74,6 +75,7 @@ class LessonSheetViewModel(
     private val subjects: List<LessonSubjectSource>,
     private val buildings: BuildingDirectory,
     private val time: AcademicTimeProvider,
+    private val photos: PersonPhotosRepository,
 ) : ViewModel() {
 
     private val lesson: LessonDetailsArgs? = savedStateHandle.get<String>(ARG_LESSON)?.let(LessonSheetArgs::lesson)
@@ -82,6 +84,8 @@ class LessonSheetViewModel(
 
     private val friends = MutableStateFlow(if (lesson == null) Friends.Off else Friends.Unknown)
     private val level = MutableStateFlow<TeacherLevel?>(null)
+    private val teacherPictureUrl = MutableStateFlow(sheet.teacherIsu?.let(photos::cachedPhotoUrl))
+    private val teacherState = combine(level, teacherPictureUrl, ::teacher)
     private val subject = MutableStateFlow(
         if (lesson?.subjectId == null || subjects.isEmpty()) SubjectLookup.Found(null) else SubjectLookup.Pending,
     )
@@ -100,17 +104,20 @@ class LessonSheetViewModel(
         }
     }
 
-    val uiState: StateFlow<LessonSheetUiState> = combine(clock, change, friends, level, subject) { now, change, friends, level, subject ->
-        state(now, change, friends, level, subject)
+    val uiState: StateFlow<LessonSheetUiState> = combine(clock, change, friends, teacherState, subject) { now, change, friends, teacher, subject ->
+        state(now, change, friends, teacher, subject)
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-        state(time.localNow(), null, friends.value, null, subject.value),
+        state(time.localNow(), null, friends.value, teacher(null, teacherPictureUrl.value), subject.value),
     )
 
     init {
         viewModelScope.launch { loadFriends() }
         viewModelScope.launch { loadLevel() }
+        viewModelScope.launch {
+            sheet.teacherIsu?.let { teacherPictureUrl.value = photos.photoUrl(it) }
+        }
         viewModelScope.launch { loadSubject() }
         viewModelScope.launch {
             delay(SUBJECT_WAIT)
@@ -146,7 +153,7 @@ class LessonSheetViewModel(
         now: LocalDateTime,
         change: ScheduleChange?,
         friends: Friends,
-        level: TeacherLevel?,
+        teacher: LessonTeacher?,
         subject: SubjectLookup,
     ): LessonSheetUiState {
         val cancelled = change?.kind == ScheduleChangeKind.CANCELLED
@@ -178,16 +185,19 @@ class LessonSheetViewModel(
             },
             note = sheet.note,
             password = lesson?.zoomPassword,
-            teacher = sheet.teacher?.let { name ->
-                LessonTeacher(
-                    name = name,
-                    isu = sheet.teacherIsu,
-                    tone = level?.tone()?.words ?: UiText.Res(ScheduleStrings.schedule_sheet_teacher),
-                )
-            },
+            teacher = teacher,
             flow = lesson?.flowName,
             sport = sportRow(),
             friends = (friends as? Friends.Found)?.people.orEmpty(),
+        )
+    }
+
+    private fun teacher(level: TeacherLevel?, pictureUrl: String?): LessonTeacher? = sheet.teacher?.let { name ->
+        LessonTeacher(
+            name = name,
+            isu = sheet.teacherIsu,
+            tone = level?.tone()?.words ?: UiText.Res(ScheduleStrings.schedule_sheet_teacher),
+            pictureUrl = pictureUrl,
         )
     }
 

@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import kotlin.test.Test
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -36,6 +37,7 @@ class SocialModuleTest {
                 TeacherReviewsRepository::class,
                 TeacherLessonsGateway::class,
                 CurrentUserProvider::class,
+                SessionTokenStore::class,
                 AcademicTimeProvider::class,
                 SavedStateHandle::class,
             )

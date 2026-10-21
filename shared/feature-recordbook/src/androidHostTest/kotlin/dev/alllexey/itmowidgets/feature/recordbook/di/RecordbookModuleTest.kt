@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
+import dev.alllexey.itmowidgets.core.social.PersonPhotosRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
@@ -102,6 +103,7 @@ class RecordbookModuleTest {
                 ScheduleRefreshGateway::class,
                 SubjectLinksRepository::class,
                 TeacherLevelsRepository::class,
+                PersonPhotosRepository::class,
                 AcademicTimeProvider::class,
                 SavedStateHandle::class,
                 RecordbookSubjectArgs::class,
