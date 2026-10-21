@@ -106,6 +106,26 @@ final class ScheduleUITests: XCTestCase {
         XCTAssertTrue(element(app, "shell.root.schedule").exists)
     }
 
+    /// An entry route clears and opens the sheet in the same turn, without waiting for a dismissal animation.
+    /// This deterministically exercises the retained @State that fast close/reopen taps can expose.
+    func testReplacingALessonBeforeDismissalSettlesShowsTheNewDetails() throws {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        openSchedule(app)
+        for (pairId, room, start) in [(1, "101", "08:20"), (2, "202", "10:00"), (3, "303", "11:40"), (1, "101", "08:20")] {
+            try app.open(lessonURL(pairId: pairId, room: room, start: start))
+            let sheet = element(app, "schedule.lessonSheet")
+            XCTAssertTrue(sheet.waitForExistence(timeout: stepTimeout))
+            let current = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                let shownRoom = self.element(app, "lessonSheet.room")
+                let shownTime = self.element(app, "lessonSheet.time")
+                return shownRoom.exists && shownRoom.label == room && shownTime.exists && shownTime.label.contains(start)
+            }, object: app)
+            XCTAssertEqual(XCTWaiter.wait(for: [current], timeout: stepTimeout), .completed,
+                           "lesson \(pairId) must replace the preceding lesson, even with the same subject")
+        }
+    }
+
     /// Reopening details must not re-anchor the underlying day section, either on Today or mid-scroll.
     func testRepeatedLessonSheetsKeepTheFeedPosition() throws {
         let app = XCUIApplication.itmo()
@@ -307,6 +327,21 @@ final class ScheduleUITests: XCTestCase {
         let sheet = element(app, "schedule.lessonSheet")
         XCTAssertTrue(sheet.waitForExistence(timeout: stepTimeout))
         return sheet
+    }
+
+    private func lessonURL(pairId: Int, room: String, start: String) throws -> URL {
+        var args: [String: Any] = [
+            "pairId": pairId, "date": Self.today, "subjectName": "Same subject", "typeId": 1, "format": "",
+            "start": start, "end": "13:10", "room": room,
+        ]
+        for key in ["teacherFio", "teacherIsu", "building", "buildingId", "mainBuildingId", "note", "zoomUrl",
+                    "zoomPassword", "zoomInfo", "flowName", "subjectId"] {
+            args[key] = NSNull()
+        }
+        let json = try JSONSerialization.data(withJSONObject: args)
+        let encoded = json.base64EncodedString().replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
+        return try XCTUnwrap(URL(string: "itmowidgets://route/lesson?args=\(encoded)"))
     }
 
     private func assertLessonSheetsKeepPosition(_ app: XCUIApplication) throws {

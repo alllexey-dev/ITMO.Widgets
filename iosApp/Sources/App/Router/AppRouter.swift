@@ -49,15 +49,9 @@ enum ShellSheet: Hashable, Identifiable {
     /// A feature's sheet key whose `RouteTarget` is `.swiftUISheet`.
     case route(ShellDestination)
 
-    /// Also the sheet's accessibility identifier, `shell.sheet.<id>`, for the shell's own sheets; a route's content
-    /// names itself.
-    var id: String {
-        switch self {
-        case .linkUnavailable: "linkUnavailable"
-        case .webLogin: "webLogin"
-        case let .route(destination): "route.\(String(describing: type(of: destination.route)))"
-        }
-    }
+    /// The complete route, including its arguments, owns the presentation. A route-type ID would let a quickly
+    /// reopened lesson sheet keep the previous lesson's @State ViewModel while dismissal is still finishing.
+    var id: Self { self }
 }
 
 /// What an in-app `open` did.

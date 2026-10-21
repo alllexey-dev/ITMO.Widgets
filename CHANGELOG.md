@@ -11,6 +11,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 ### iOS app
 
+- Quickly opening another lesson resets the sheet's ViewModel to the new route's arguments instead of retaining
+  the preceding lesson's details during dismissal.
+
 - iOS schedule scrolling: visible days are observed without a scroll-position binding; explicit date jumps target
   a concrete header and are cancelled when opening lesson details. Sheet layout changes do not trigger edge
   pagination or change the selected date.

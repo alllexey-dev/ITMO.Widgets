@@ -182,6 +182,11 @@ pagination follow real vertical drags/deceleration, not layout changes during a 
 `ScheduleUITests.testRepeatedLessonSheetsKeepTheFeedPosition` checks three open/close cycles on today and after a
 partial scroll, measuring the same lesson's frame each time.
 
+The shell identifies a sheet by its complete route, including arguments, and keys its content by that identity.
+Quickly closing one lesson and opening another therefore recreates the sheet's `@State` ViewModel even when the
+dismissal has not finished. The UI regression also replaces lesson entry routes without an intervening empty
+presentation and checks both room and time, including different pairs of the same subject.
+
 SwiftUI over the same view models ([iOS app](../ios.md)): `ScheduleScreen.swift` has the feed, `ScheduleSheets.swift`
 the lesson sheet, the month sheet and the friend picker (`Routes+Schedule.swift`). The week strip stays a few points
 off the bar above it: a scroll view touching the bar's edge takes the bar's height as a vertical content inset and

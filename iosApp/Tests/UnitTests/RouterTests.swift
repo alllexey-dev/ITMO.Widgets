@@ -292,6 +292,34 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.sheet, .linkUnavailable)
     }
 
+    func testQuickLessonReopeningHasTheNewLessonsPresentationIdentity() throws {
+        let router = readyRouter()
+        let first = lessonRoute(pairId: 1)
+        let second = lessonRoute(pairId: 2)
+        XCTAssertEqual(router.open(first), .opened)
+        let firstID = try XCTUnwrap(router.sheet?.id)
+
+        // No intervening render of nil: this can happen while the previous dismissal is still animating.
+        router.sheet = nil
+        XCTAssertEqual(router.open(second), .opened)
+        XCTAssertNotEqual(router.sheet?.id, firstID)
+        XCTAssertEqual(router.sheet, .route(ShellDestination(second)))
+
+        router.sheet = nil
+        XCTAssertEqual(router.open(first), .opened)
+        XCTAssertEqual(router.sheet?.id, firstID)
+    }
+
+    func testLessonSheetIdentityIncludesTheDateAndDisplayArguments() {
+        let first = ShellSheet.route(ShellDestination(lessonRoute(pairId: 1)))
+        let equal = ShellSheet.route(ShellDestination(lessonRoute(pairId: 1)))
+        let anotherDate = ShellSheet.route(ShellDestination(lessonRoute(pairId: 1, date: "2026-10-13")))
+        let updatedRoom = ShellSheet.route(ShellDestination(lessonRoute(pairId: 1, room: "3309")))
+
+        XCTAssertEqual(first.id, equal.id, "equal Kotlin routes keep a stable identity")
+        XCTAssertEqual(Set([first.id, equal.id, anotherDate.id, updatedRoom.id]).count, 3)
+    }
+
     /// A links sheet that leads on opens the next one in its place, where a plain open is ignored.
     func testReplaceSheetOpensTheNextSheetInThePlaceOfTheShownOne() {
         let router = readyRouter()
@@ -478,6 +506,14 @@ final class RouterTests: XCTestCase {
 
     private let signedIn = ShellSessionState.signedIn.sessionState
     private let qrPass = ShellDestination(AppRoutes.QrPass.shared)
+
+    private func lessonRoute(pairId: Int64, date: String = "2026-10-06", room: String = "2202") -> AppRoutes.LessonDetails {
+        AppRoutes.LessonDetails(args: LessonDetailsArgs(
+            pairId: pairId, date: date, subjectName: "Subject", typeId: 1, format: "", start: "10:00", end: "11:30",
+            teacherFio: nil, teacherIsu: nil, room: room, building: nil, buildingId: nil, mainBuildingId: nil, note: nil,
+            zoomUrl: nil, zoomPassword: nil, zoomInfo: nil, flowName: nil, subjectId: nil
+        ))
+    }
 
     private let qrPassEntry = EntryRoute(
         tab: .home, overlay: AppRoutes.QrPass.shared, request: nil, activity: nil, alert: nil, shortcutId: "qr_pass"
