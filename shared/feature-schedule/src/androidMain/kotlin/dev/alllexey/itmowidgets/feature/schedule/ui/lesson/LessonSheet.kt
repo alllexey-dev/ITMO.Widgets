@@ -331,7 +331,7 @@ private fun Details(state: LessonSheetUiState, actions: LessonSheetActions) {
             item {
                 PersonListRow(
                     teacher.name,
-                    pictureUrl = null,
+                    pictureUrl = teacher.pictureUrl,
                     Modifier.testTag(LessonSheetTestTags.TEACHER),
                     subtitle = teacher.tone.asString(),
                     chevron = teacher.isu != null,

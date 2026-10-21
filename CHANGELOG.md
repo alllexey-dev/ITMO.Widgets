@@ -116,6 +116,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   ITMO.Widgets`, then `Преподавание` (the lesson they give now, the subjects they teach you, the AI summary and
   reviews) and `Учёба` (groups, schedule, sport and friends you may open). Someone's hidden data is simply absent.
 - Another user's sport is titled `Спорт` with their given name after it and shows lesson cards.
+- Teachers in the lesson sheet and on the subject page show their My ITMO photo, initials without one.
 
 ### Settings
 

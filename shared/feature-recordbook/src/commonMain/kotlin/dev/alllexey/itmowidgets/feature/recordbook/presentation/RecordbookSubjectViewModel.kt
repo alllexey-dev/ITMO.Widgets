@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.social.PersonPhotosRepository
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -33,6 +34,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.withBars
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -58,6 +60,7 @@ class RecordbookSubjectViewModel(
     private val sheetLoader: SubjectSheetLoader,
     private val levelsLoader: SubjectTeacherLevelsLoader,
     private val backendGate: BackendGate,
+    private val photos: PersonPhotosRepository,
 ) : ViewModel() {
     private val period = RecordbookPeriod(studyYear = args.studyYear, semester = args.semester, course = 0, actual = false)
     private var journal: BarsJournalReference? = args.barsPlan?.let { plan ->
@@ -86,6 +89,7 @@ class RecordbookSubjectViewModel(
     private var lessonsExpanded = false
     private var teachers: List<SubjectTeacher> = emptyList()
     private var levels: Map<Long, TeacherLevel> = emptyMap()
+    private var teacherPhotos: Map<Int, String?> = emptyMap()
     private var links: SubjectLinksState? = null
     private var canVote = false
     private var sheet: SubjectSheetState? = null
@@ -95,6 +99,8 @@ class RecordbookSubjectViewModel(
     private var linksJob: Job? = null
     private var levelsJob: Job? = null
     private var levelIsus: Set<Int> = emptySet()
+    private var photosJob: Job? = null
+    private var photoIsus: Set<Int> = emptySet()
     private val proposalRejected = MutableStateFlow(false)
     /** One vote at a time: a tap while one is sent is ignored. */
     private val voting = BusyKeys<Unit>(viewModelScope)
@@ -250,6 +256,7 @@ class RecordbookSubjectViewModel(
         lessonsJob?.cancel()
         val fallback = listOfNotNull(subject.teacherName?.let { SubjectTeacher(it, isu = null, roles = emptyList()) })
         teachers = fallback
+        loadTeacherPhotos()
         if (!period.isCurrent() || subject.isPhysicalEducation) {
             lessons = SubjectLessonsState.Hidden
             return publish()
@@ -260,6 +267,7 @@ class RecordbookSubjectViewModel(
             lessonsLoader.observe(subject, proposalRejected, fallback).collect { update ->
                 lessons = update.lessons
                 update.teachers?.let { teachers = it }
+                loadTeacherPhotos()
                 publish()
                 loadTeacherLevels()
             }
@@ -297,6 +305,26 @@ class RecordbookSubjectViewModel(
         }
     }
 
+    /** Photos are official directory data, so they load even with the Backend connection off. */
+    private fun loadTeacherPhotos() {
+        val isus = levelsLoader.isusOf(teachers)
+        if (isus == photoIsus) return
+        photoIsus = isus
+        photosJob?.cancel()
+        teacherPhotos = isus.associateWith(photos::cachedPhotoUrl)
+        if (isus.isEmpty()) return
+        photosJob = viewModelScope.launch {
+            isus.forEach { isu ->
+                launch {
+                    val url = photos.photoUrl(isu)
+                    ensureActive()
+                    teacherPhotos = teacherPhotos + (isu to url)
+                    publish()
+                }
+            }
+        }
+    }
+
     private fun publish() {
         val subject = shown
         val base = official
@@ -326,7 +354,7 @@ class RecordbookSubjectViewModel(
                 ),
             ),
             lessons = SubjectLessons(
-                teachers = SubjectPresenter.teachers(teachers, levels, connected),
+                teachers = SubjectPresenter.teachers(teachers, levels, connected, teacherPhotos),
                 reviews = SubjectPresenter.reviews(teachers, levels, connected),
                 binding = when (val current = lessons) {
                     is SubjectLessonsState.Proposed -> listOf(current.candidate)

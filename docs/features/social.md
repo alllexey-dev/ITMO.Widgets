@@ -61,6 +61,12 @@ each `Все`, `Друзья` or `Никто`.
   this endpoint's HTTP 400 with numeric `error_code=100` and explicit
   `result=null`, a successful null result, or a mismatched result ISU. Other
   400s stay errors; MyItmoApi itself keeps the HTTP error unchanged.
+- `core/social/PersonPhotosRepository` is the cross-feature directory-photo port. Its shared implementation,
+  `PersonPhotosRepositoryImpl`, reuses `PersonRepository`'s session cache (including people without a photo),
+  coalesces concurrent lookups by ISU and limits them to four. Failures leave initials and can retry on the next
+  screen visit; the demo follows `DemoSocial`, and a signed-out real session makes no lookup. It stores no second
+  photo cache. The lesson sheet and subject page ViewModels put `pictureUrl` into their state on both platforms;
+  Android uses `PersonListRow`, iOS the standard `ItmoAvatar`/`AsyncImage`, with no directory calls from a View.
 - One `SocialRepositoryImpl` serves the screens, the bell's friend requests, the
   schedule's friend picker (through `core/friend/FriendRepository`), the profile
   tab, `FriendshipPushHandler` and sport.

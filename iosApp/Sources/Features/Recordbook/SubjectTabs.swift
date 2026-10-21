@@ -205,7 +205,7 @@ struct SubjectLessonsTab: View {
                         chevron: teacher.isu != nil,
                         action: teacher.isu.map { isu in { actions.openTeacher(isu.int32Value) } }
                     ) {
-                        ItmoAvatar(initials: teacher.initials)
+                        ItmoAvatar(initials: teacher.initials, pictureUrl: teacher.pictureUrl)
                     }
                     .accessibilityIdentifier("subject.teacher.\(index)")
                 }

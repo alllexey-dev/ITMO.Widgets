@@ -27,6 +27,7 @@ import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
+import dev.alllexey.itmowidgets.core.social.PersonPhotosRepository
 import dev.alllexey.itmowidgets.core.sport.SportScorePeriod
 import dev.alllexey.itmowidgets.core.sport.SportScoreRepository
 import dev.alllexey.itmowidgets.core.sport.SportScoreSummary
@@ -34,6 +35,7 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.testing.FakePersonPhotosRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.InMemorySecureStore
@@ -257,8 +259,8 @@ class RecordbookIosModuleTest {
 
     /**
      * What the subject page reads from other features' graphs in the app: the own lessons and their refresh
-     * (`scheduleDataModule`), the sport score (`sportModule`), the teacher tones (`reviewsModule`) and the subject
-     * links (`resourcesModule`).
+     * (`scheduleDataModule`), the sport score (`sportModule`), the teacher tones (`reviewsModule`), the teacher
+     * photos (`socialModule`) and the subject links (`resourcesModule`).
      */
     private fun subjectPagePorts(): Module = module {
         single<SubjectLessonsGateway> {
@@ -287,6 +289,7 @@ class RecordbookIosModuleTest {
                 override suspend fun levels(isus: Set<Int>): Map<Int, TeacherLevel> = emptyMap()
             }
         }
+        single<PersonPhotosRepository> { FakePersonPhotosRepository() }
         single<SubjectLinksRepository> { FakeSubjectLinksRepository() }
     }
 

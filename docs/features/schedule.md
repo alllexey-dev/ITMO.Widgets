@@ -164,8 +164,11 @@ otherwise; iOS always opens this sheet.
   memory cache, the links are the ones stored on the device. Only a subject whose links the device has never loaded
   gets one links request (`SubjectLinksRepository.refresh`, behind the opt-in) when its sheet opens.
 - The newest found [change](schedule-changes.md) of the occurrence, field by field.
-- The teacher with the tone of the reviews in words (`TeacherLevelsRepository`, behind the opt-in), which opens the
-  person; an own queue or a booked sport lesson as a row that leads to Спорт.
+- The teacher with a directory photo (`core/social/PersonPhotosRepository`, no Backend opt-in) and the tone of
+  the reviews in words (`TeacherLevelsRepository`, behind the opt-in), which opens the person; an own queue or a
+  booked sport lesson as a row that leads to Спорт. `LessonSheetViewModel` seeds the cached photo URL and loads it
+  independently of the lesson's other content, publishing `LessonTeacher.pictureUrl`; both platforms use their
+  standard avatar components, falling back to initials without a photo or a known ISU.
 - `Друзья на паре`: `GET /api/schedule/lessons/{pairId}/friends?date=`; Backend returns accepted friends who attend
   and share their schedule with the viewer. Absent without the opt-in or on an error.
 

@@ -25,5 +25,5 @@ val scheduleModule = module {
     viewModelOf(::ScheduleFeedViewModel)
     viewModelOf(::ScheduleMonthViewModel)
     viewModelOf(::FriendPickerViewModel)
-    viewModel { LessonSheetViewModel(get(), get(), get(), get(), get(), getAll(), get(), get()) }
+    viewModel { LessonSheetViewModel(get(), get(), get(), get(), get(), getAll(), get(), get(), get()) }
 }

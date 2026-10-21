@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.sport.PendingSportBooking
 import dev.alllexey.itmowidgets.core.sport.PendingSportBookingsRepository
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import kotlinx.coroutines.Dispatchers
+import dev.alllexey.itmowidgets.core.testing.FakePersonPhotosRepository
 import dev.alllexey.itmowidgets.core.testing.FakeAppForeground
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -61,7 +62,7 @@ internal fun scheduleTestModule(schedules: FakeScheduleRepository = ScheduleSamp
     viewModel {
         LessonSheetViewModel(
             get<SavedStateHandle>(), NobodyOnLessons, ServicesOff, NoLevels, FakeScheduleChangesRepository(), emptyList(),
-            get(), get(),
+            get(), get(), FakePersonPhotosRepository(),
         )
     }
 }

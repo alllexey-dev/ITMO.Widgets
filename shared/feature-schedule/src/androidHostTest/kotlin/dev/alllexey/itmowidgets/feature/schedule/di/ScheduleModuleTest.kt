@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.platform.AppForeground
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.schedule.SchedulePreferencesRepository
+import dev.alllexey.itmowidgets.core.social.PersonPhotosRepository
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
@@ -66,6 +67,7 @@ class ScheduleModuleTest {
                 PendingSportBookingsRepository::class,
                 CustomServicesRepository::class,
                 TeacherLevelsRepository::class,
+                PersonPhotosRepository::class,
                 SavedStateHandle::class,
                 FriendRepository::class,
                 CalendarSync::class,

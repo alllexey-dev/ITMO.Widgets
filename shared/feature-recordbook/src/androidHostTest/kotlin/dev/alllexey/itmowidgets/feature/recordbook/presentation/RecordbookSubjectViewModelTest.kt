@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.resources.title
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
+import dev.alllexey.itmowidgets.core.testing.FakePersonPhotosRepository
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
@@ -68,6 +69,7 @@ class RecordbookSubjectViewModelTest {
     private val preference = FakeBarsPreference()
     private val resources = FakeSubjectLinksRepository()
     private val levels = FakeTeacherLevelsRepository()
+    private val photos = FakePersonPhotosRepository()
     private val marks = FakeMarkTrackingRepository()
     private val lessons = FakeSubjectLessonsGateway()
     private val scheduleRefresh = FakeScheduleRefreshGateway()
@@ -96,7 +98,7 @@ class RecordbookSubjectViewModelTest {
         val time = FixedAcademicTime(LocalDate(2026, 9, 7))
         return RecordbookSubjectViewModel(args, repository, bars, preference, RecordbookSportResolver(FakeSportScoreRepository()), time,
             marks, SubjectLessonsLoader(lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), time),
-            SubjectLinksLoader(resources), SubjectSheetLoader(sheets, time), SubjectTeacherLevelsLoader(levels), gate)
+            SubjectLinksLoader(resources), SubjectSheetLoader(sheets, time), SubjectTeacherLevelsLoader(levels), gate, photos)
     }
 
     private val RecordbookSubjectViewModel.content get() = uiState.value as RecordbookSubjectUiState.Content
@@ -404,6 +406,55 @@ class RecordbookSubjectViewModelTest {
         val all = vm.lessonsTab.list as SubjectLessonList.Content
         assertEquals((1L..5L).toList(), all.items.map { it.pairId })
         assertEquals(0, all.more)
+    }
+
+    @Test fun `teacher photos load into state without opening a profile or connecting the Backend`() = runTest {
+        gate.optedIn.value = false
+        lessons.lessons.value = listOf(
+            subjectLesson(1, "2026-09-08", subjectId = 1L, teacherIsu = 123456, teacherFio = "Лектор Л. Л."),
+            subjectLesson(2, "2026-09-09", subjectId = 1L, teacherIsu = 123456, teacherFio = "Лектор Л. Л."),
+        )
+        val answer = CompletableDeferred<String?>()
+        photos.cached = mapOf(123456 to "https://example.test/cached.jpg")
+        photos.lookup = { answer.await() }
+        val vm = currentPeriodModel()
+        runCurrent()
+        assertEquals("https://example.test/cached.jpg", vm.lessonsTab.teachers.single().pictureUrl)
+        assertEquals(listOf(123456), photos.calls)
+        assertTrue(vm.lessonsTab.list is SubjectLessonList.Content)
+        assertEquals(SubjectReviews.Off, vm.lessonsTab.reviews)
+
+        answer.complete("https://example.test/teacher.jpg")
+        advanceUntilIdle()
+        assertEquals("https://example.test/teacher.jpg", vm.lessonsTab.teachers.single().pictureUrl)
+        vm.selectTab(SubjectTab.LESSONS)
+        vm.showAllLessons()
+        assertEquals(listOf(123456), photos.calls)
+    }
+
+    @Test fun `changing teachers drops the previous photo and cancels its lookup`() = runTest {
+        val oldAnswer = CompletableDeferred<String?>()
+        var oldCancelled = false
+        photos.lookup = { isu ->
+            if (isu == 123456) {
+                try { oldAnswer.await() } finally { oldCancelled = true }
+            } else "https://example.test/$isu.jpg"
+        }
+        lessons.lessons.value = listOf(subjectLesson(1, "2026-09-08", subjectId = 1L, teacherIsu = 123456))
+        val vm = currentPeriodModel()
+        runCurrent()
+        lessons.lessons.value = listOf(subjectLesson(1, "2026-09-08", subjectId = 1L, teacherIsu = 234567))
+        advanceUntilIdle()
+        assertTrue(oldCancelled)
+        assertEquals(listOf(234567), vm.lessonsTab.teachers.map { it.isu })
+        assertEquals("https://example.test/234567.jpg", vm.lessonsTab.teachers.single().pictureUrl)
+    }
+
+    @Test fun `a recordbook teacher known only by name makes no photo lookup`() = runTest {
+        val vm = model()
+        advanceUntilIdle()
+        assertNull(vm.lessonsTab.teachers.single().pictureUrl)
+        assertTrue(photos.calls.isEmpty())
     }
 
     // --- Материалы

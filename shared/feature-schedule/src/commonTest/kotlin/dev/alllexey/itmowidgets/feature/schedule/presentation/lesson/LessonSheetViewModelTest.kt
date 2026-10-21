@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeField
+import dev.alllexey.itmowidgets.core.testing.FakePersonPhotosRepository
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.testing.scheduleChange
@@ -62,6 +63,7 @@ class LessonSheetViewModelTest {
         services: Boolean = true,
         changes: FakeScheduleChangesRepository = FakeScheduleChangesRepository(),
         subjects: List<LessonSubjectSource> = emptyList(),
+        photos: FakePersonPhotosRepository = FakePersonPhotosRepository(),
         friendsOnLessons: LessonFriendsRepository = OneFriendOnLessons,
     ) = LessonSheetViewModel(
         SavedStateHandle(LessonSheetArgs.of(route)),
@@ -72,6 +74,7 @@ class LessonSheetViewModelTest {
         subjects,
         BuildingDirectory(listOf(KRONVA)),
         FixedAcademicTime(LocalDateTime(date, at)),
+        photos,
     )
 
     @Test
@@ -198,6 +201,38 @@ class LessonSheetViewModelTest {
 
         assertFalse(states.last().actionsPending)
         assertEquals(listOf(LessonActionKind.ROUTE, LessonActionKind.FRIENDS), states.last().actions.map { it.kind })
+    }
+
+    @Test
+    fun theTeacherPhotoIsScreenStateAndDoesNotHoldTheLessonOrRequireBackendServices() = runTest(main.dispatcher) {
+        val answer = CompletableDeferred<String?>()
+        val photos = FakePersonPhotosRepository().apply {
+            cached = mapOf(TEACHER_ISU to "https://example.test/cached.jpg")
+            lookup = { answer.await() }
+        }
+        val vm = viewModel(AppRoutes.LessonDetails(LESSON), services = false, photos = photos)
+        assertEquals("https://example.test/cached.jpg", vm.uiState.value.teacher?.pictureUrl)
+        val states = mutableListOf<LessonSheetUiState>()
+        backgroundScope.launch { vm.uiState.collect(states::add) }
+        runCurrent()
+        assertEquals(listOf(TEACHER_ISU), photos.calls)
+        assertFalse(states.last().actionsPending)
+        assertEquals(LESSON.subjectName, states.last().subject)
+
+        answer.complete("https://example.test/teacher.jpg")
+        runCurrent()
+        assertEquals("https://example.test/teacher.jpg", states.last().teacher?.pictureUrl)
+        assertEquals(LESSON.teacherFio, states.last().teacher?.name)
+        assertEquals(UiText.Res(ScheduleStrings.schedule_sheet_teacher), states.last().teacher?.tone)
+    }
+
+    @Test
+    fun aTeacherWithoutAKnownIsuKeepsInitialsWithoutADirectoryLookup() = runTest(main.dispatcher) {
+        val photos = FakePersonPhotosRepository()
+        val vm = viewModel(AppRoutes.LessonDetails(LESSON.copy(teacherIsu = 0)), photos = photos)
+        runCurrent()
+        assertNull(vm.uiState.value.teacher?.pictureUrl)
+        assertTrue(photos.calls.isEmpty())
     }
 
     private object OneFriendOnLessons : LessonFriendsRepository {

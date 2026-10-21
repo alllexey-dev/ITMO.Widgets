@@ -227,7 +227,9 @@ struct LessonSheetContent: View {
                         chevron: teacher.isu != nil,
                         action: teacher.isu.map { isu in { actions.profile(isu.int32Value) } }
                     ) {
-                        ItmoAvatar(initials: UserNamesKt.personInitials(name: teacher.name))
+                        ItmoAvatar(
+                            initials: UserNamesKt.personInitials(name: teacher.name), pictureUrl: teacher.pictureUrl
+                        )
                     }
                     .accessibilityIdentifier("lessonSheet.teacher")
                 }

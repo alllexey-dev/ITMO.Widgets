@@ -54,7 +54,7 @@ data class LessonAction(
 data class LessonSheetChanges(val summary: UiText?, val lines: List<ScheduleChangeLine>, val note: UiText)
 
 /** The teacher's full [name], the [isu] their card opens with, the review [tone] in words. */
-data class LessonTeacher(val name: String, val isu: Int?, val tone: UiText)
+data class LessonTeacher(val name: String, val isu: Int?, val tone: UiText, val pictureUrl: String? = null)
 
 /** A sport queue or booking: a row that leads to Спорт. */
 data class LessonSport(val title: UiText, val text: UiText)
