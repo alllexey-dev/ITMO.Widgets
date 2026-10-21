@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.navigation.AppRoute
 import dev.alllexey.itmowidgets.core.result.AppError
-import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.text.UiText
 
 /**
@@ -13,8 +12,6 @@ data class SettingsUiState(
     val page: SettingsPage,
     val sections: List<SettingSection> = emptyList(),
     val loaded: Boolean = false,
-    /** The appearance a sample above the rows shows; null on pages without one. */
-    val themePreview: ThemeSpec? = null,
     /** The widgets gallery above the rows of [SettingsPage.WIDGETS]; null on every other page. */
     val gallery: WidgetGallery? = null,
 )

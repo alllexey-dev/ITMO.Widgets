@@ -2,9 +2,10 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// One settings page as the shared page model describes it (`SettingsUiState`): one SwiftUI row per
-/// `SettingItem` subtype in the sections the page provider built. Stateless, so snapshot tests render it from fixture
-/// states; `SettingsScreen` owns the ViewModel and passes its state and actions in.
+/// One settings page as the shared page model describes it (`SettingsUiState`), on the kit as the notifications and
+/// connection pages: a `SettingSectionView` per section, an untitled group after another a little apart. Stateless, so
+/// snapshot tests render it from fixture states; `SettingsScreen` owns the ViewModel and passes its state and actions
+/// in.
 struct SettingsForm: View {
     let state: SettingsUiState
     /// What iOS says about itself where the shared copy names Android (`SettingsIosCopy`).
@@ -15,108 +16,133 @@ struct SettingsForm: View {
 
     var body: some View {
         if state.loaded {
-            Form {
-                ForEach(Array(state.sections.enumerated()), id: \.offset) { _, section in
-                    ItmoFormSection(header: section.title?.resolved, footer: section.footer?.resolved) {
-                        ForEach(section.items.map(SettingsRow.init)) { row in
-                            self.row(row.item)
-                                .accessibilityIdentifier("settings.row.\(row.id)")
-                        }
-                    }
+            ItmoScreenStack {
+                ForEach(Array(state.sections.enumerated()), id: \.offset) { index, section in
+                    SettingSectionView(
+                        section: section, copy: SettingsIosCopy(system: system), pendingToggles: pendingToggles,
+                        actions: actions
+                    )
+                    .padding(.top, index > 0 && section.title == nil ? ItmoSpacing.compact : 0)
                 }
             }
-            .itmoTint()
         } else {
             // No made-up defaults while the stored values load (`SettingsUiState.loaded`).
             ItmoLoadingView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
+}
+
+/// One `SettingSection` on the kit, as every settings page and the widgets gallery draw it: the section header, a lone
+/// choice of two to four options as a segmented control, any other rows in one `ItmoListGroup` with their icons in
+/// neutral tiles (as on the profile), the footer as an `ItmoGroupNote`.
+struct SettingSectionView: View {
+    let section: SettingSection
+    var copy = SettingsIosCopy(system: SettingsSystemState())
+    var pendingToggles: [SettingRowId: Bool] = [:]
+    var actions = SettingsFormActions()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ItmoKit.gap) {
+            if let title = section.title {
+                ItmoSectionHeader(title: copy.text(title))
+            }
+            if let choice = segmented {
+                ItmoSegmentedChoice(
+                    label: copy.text(choice.title),
+                    options: choice.options.map(\.key),
+                    selection: Binding(get: { choice.selectedOptionKey ?? "" }, set: { actions.choose(choice.id, $0) }),
+                    enabled: choice.enabled
+                ) { key in choice.options.first { $0.key == key }.map { copy.text($0.label) } ?? key }
+                .accessibilityIdentifier("settings.row.\(choice.id.key)")
+            } else {
+                ItmoListGroup {
+                    ForEach(section.items.map(SettingsRow.init)) { row in
+                        self.row(row.item)
+                            .accessibilityIdentifier("settings.row.\(row.id)")
+                    }
+                }
+            }
+            if let footer = section.footer {
+                ItmoGroupNote(text: copy.text(footer))
+            }
+        }
+    }
+
+    /// The section's only row when it is a choice of two to four options.
+    private var segmented: SettingItemChoice? {
+        guard section.items.count == 1, let choice = section.items.first as? SettingItemChoice,
+              (2...4).contains(choice.options.count) else { return nil }
+        return choice
+    }
 
     @ViewBuilder
     private func row(_ item: any SettingItem) -> some View {
-        let copy = SettingsIosCopy(system: system)
+        let symbol = item.icon?.symbol
+        let tone: ItmoTone? = symbol == nil ? nil : .neutral
         switch onEnum(of: item) {
         case let .toggle(toggle):
-            ItmoToggleRow(
+            ItmoSwitchRow(
                 title: copy.text(toggle.title),
                 subtitle: toggle.description_.map(copy.text),
-                isOn: Binding(
-                    get: { pendingToggles[toggle.id] ?? toggle.checked },
-                    set: { actions.toggle(toggle.id, $0) }
-                )
+                symbol: symbol,
+                tone: tone,
+                enabled: toggle.enabled,
+                isOn: Binding(get: { pendingToggles[toggle.id] ?? toggle.checked }, set: { actions.toggle(toggle.id, $0) })
             )
-            .disabled(!toggle.enabled || !toggle.stateKnown)
         case let .choice(choice):
-            // A menu over the options, with the row laid out as every other value row.
+            // More options than a segmented control holds: a menu over them, the row laid out as every other.
             Menu {
-                Picker(
-                    selection: Binding(
-                        get: { choice.selectedOptionKey ?? "" },
-                        set: { actions.choose(choice.id, $0) }
-                    )
-                ) {
+                Picker(selection: Binding(get: { choice.selectedOptionKey ?? "" }, set: { actions.choose(choice.id, $0) })) {
                     ForEach(choice.options, id: \.key) { option in
-                        // A second text is the menu item's subtitle: what a palette style does.
-                        VStack {
-                            Text(verbatim: copy.text(option.label))
-                            if let description = option.description_ {
-                                Text(verbatim: copy.text(description))
-                            }
-                        }
-                        .tag(option.key)
+                        Text(verbatim: copy.text(option.label)).tag(option.key)
                     }
                 } label: {
                     Text(verbatim: copy.text(choice.title))
                 }
                 .pickerStyle(.inline)
             } label: {
-                SettingsValueLabel(
+                ItmoRow(
                     title: copy.text(choice.title),
                     subtitle: choice.description_.map(copy.text),
-                    value: copy.text(choice.value),
-                    trailing: .expandMore
+                    symbol: symbol,
+                    tone: tone,
+                    trailing: copy.text(choice.value)
                 )
             }
             .tint(.primary)
             .disabled(!choice.enabled || choice.selectedOptionKey == nil)
         case let .navigation(navigation):
-            NavigationLink(value: ShellDestination(AppRoutes.Settings(page: navigation.page.name))) {
-                SettingsValueLabel(
-                    title: copy.text(navigation.title),
-                    subtitle: navigation.description_.map(copy.text),
-                    value: navigation.value.map(copy.text)
-                )
-            }
+            ItmoRow(
+                title: copy.text(navigation.title),
+                subtitle: (navigation.description_ ?? navigation.value).map(copy.text),
+                symbol: symbol,
+                tone: tone,
+                trailing: navigation.description_ == nil ? nil : navigation.value.map(copy.text),
+                chevron: true,
+                action: { actions.open(navigation.page) }
+            )
             .disabled(!navigation.enabled)
         case let .action(action):
-            Button {
-                actions.act(action.id)
-            } label: {
-                SettingsValueLabel(
-                    title: copy.text(action.title),
-                    subtitle: action.description_.map(copy.text),
-                    value: action.value.map(copy.text),
-                    trailing: action.trailingIcon?.symbol
-                )
+            ItmoRow(
+                title: copy.text(action.title),
+                subtitle: (action.description_ ?? action.value).map(copy.text),
+                symbol: symbol,
+                tone: tone,
+                trailing: action.description_ == nil ? nil : action.value.map(copy.text),
+                chevron: action.trailingIcon == .chevronRight,
+                action: { actions.act(action.id) }
+            )
+            .accessory {
+                if let trailing = action.trailingIcon, trailing != .chevronRight {
+                    trailing.symbol.image
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                }
             }
-            // A row that opens or runs something reads as a row, as on Android, not as a tinted command.
-            .tint(.primary)
             .disabled(!action.enabled)
-        case let .customColor(custom):
-            // The system colour well; the shared row takes the pick as `#RRGGBB`, like Android's picker.
-            ColorPicker(
-                selection: Binding(
-                    get: { Color(uiColor: UIColor(rgb: UInt32(bitPattern: custom.argb) & 0xFFFFFF)) },
-                    set: { actions.choose(custom.id, $0.hexRGB) }
-                ),
-                supportsOpacity: false
-            ) {
-                ItmoRowLabel(title: copy.text(custom.title))
-            }
-            .disabled(!custom.enabled)
         case let .info(info):
-            SettingsValueLabel(title: copy.text(info.title), value: copy.text(info.value))
+            ItmoRow(title: copy.text(info.title), subtitle: copy.text(info.value), symbol: symbol, tone: tone)
                 .textSelection(.enabled)
         }
     }
@@ -134,6 +160,7 @@ struct SettingsFormActions {
     var toggle: (SettingRowId, Bool) -> Void = { _, _ in }
     var choose: (SettingRowId, String) -> Void = { _, _ in }
     var act: (SettingRowId) -> Void = { _ in }
+    var open: (SettingsPage) -> Void = { _ in }
 }
 
 /// A row label with a value and an optional trailing symbol, in the colors of a plain row. The value sits at the
@@ -210,15 +237,5 @@ struct SettingsIosCopy {
             system.backgroundRefresh == .restricted ? "ios_background_refresh_restricted" : "ios_background_refresh_off"
         default: nil
         }
-    }
-}
-
-private extension Color {
-    /// `#RRGGBB` of the colour in sRGB, the form the shared custom colour row reads.
-    var hexRGB: String {
-        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
-        UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-        func channel(_ value: CGFloat) -> Int { Int((min(max(value, 0), 1) * 255).rounded()) }
-        return String(format: "#%02X%02X%02X", channel(red), channel(green), channel(blue))
     }
 }

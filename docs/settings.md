@@ -14,12 +14,15 @@ Every setting has exactly one home:
   only says so.
 - `Приложение`: `Уведомления` (`включено N из M`, or `запрещены в системе`),
   `Виджеты` (the gallery; `2 на главном экране` once widgets are placed),
-  `Оформление` (the accent's name) and `Разделы` (the settings of Сегодня,
+  `Оформление` (the colour's name) and `Разделы` (the settings of Сегодня,
   Расписание and Спорт).
 - An untitled group with `О приложении`.
 
 Each category is a pushed screen with its own back-stack entry, title and
-scroll position; like every pushed screen it covers the bottom bar, and Back
+scroll position, on the same kit as the profile: the detail header
+(`ItmoDetailScreen`, `itmoDetailHeader` on iOS), `SectionHeader` titles, rows in
+connected `ListGroup`s with their icon in a neutral tile, footers as
+`ListGroupNote`; like every pushed screen it covers the bottom bar, and Back
 returns one level at a time ([shell](design.md#shell)). Selecting or
 reselecting a tab closes the whole stack. Back after a widget, notification,
 tile or shortcut route leads home, not to the tab that was open before. Pages
@@ -38,8 +41,8 @@ and old links name them (`SettingsPage.fromArgument`): `PRIVACY` opens
 ### iOS
 
 The iOS app renders the same pages from the same page model
-(`SettingsViewModel`, one page per `AppRoutes.Settings` key) as SwiftUI forms
-on the Me tab's stack ([iOS app](ios.md#settings-and-diagnostics)). Nothing
+(`SettingsViewModel`, one page per `AppRoutes.Settings` key) with the SwiftUI
+kit (`ItmoListGroup`, `ItmoRow`, `ItmoSwitchRow`) on the Me tab's stack ([iOS app](ios.md#settings-and-diagnostics)). Nothing
 renders until the page is loaded, so stored values never animate in. Rows a
 platform does not offer are hidden through `PlatformCapabilities`: on iOS the
 quick settings tile, the spoiler animation and the custom spoiler image. The
@@ -50,25 +53,39 @@ launch, Swift crashes are not recorded.
 
 ## Appearance
 
-`Оформление` has a sample (a switch row and a filled and a tonal button) above
-its rows, unscrolled; every choice recolours it and the app at once.
+`Оформление` is a screen of its own (`AppearanceViewModel`, `AppearanceScreen`
+on Android, `AppearanceScreen.swift` on iOS). Every choice is on the page, not
+in a dialog, and applies to the app and the widgets at once. From the top:
 
-| Row | Key | Choices | Default |
+- A sample of the app in the picked colours, once in the light and once in the
+  dark theme, whichever the phone shows now, so contrast and `Чёрный фон` show
+  too. It is a picture: TalkBack and VoiceOver read it as one element.
+- `Цвет`: every colour as a named circle of the primary it gives, three to a
+  row; the picked one is ringed and checked. `Свой цвет` puts its picker under
+  the circles. A line says what `Как обои` does; under `Монохром` the circles
+  are dimmed and inert with a line why.
+- `Палитра`: every style as a card with three dots of what it makes of the
+  colour (primary, its container, tertiary); the row scrolls sideways and opens
+  on the picked one, whose plain description is under it.
+- `Контраст`: a segmented choice with a line on what it does.
+- `Чёрный фон`: a switch, on Android only.
+- A line on the widgets (below).
+
+| Choice | Key | Values | Default |
 |---|---|---|---|
-| `Цвет оформления` | `app_accent_color` | `Как обои` (Android 12+ only), `Фирменный`, `Бирюзовый`, `Зелёный`, `Янтарный`, `Красный`, `Розовый`, `Фиолетовый`, `Свой цвет` | `Как обои` on Android 12+, `Фирменный` elsewhere |
-| `Свой цвет` (only while it is the accent) | `app_accent_custom` | any opaque colour (ARGB int) | `#4984E2`, the brand blue |
-| `Стиль палитры` | `app_theme_style` | `Спокойная` (TonalSpot), `Яркая` (Vibrant), `Выразительная` (Expressive), `Точная` (Fidelity), `Насыщенная` (Content), `Нейтральная` (Neutral), `Монохром` (Monochrome) | `Спокойная` |
+| `Цвет` | `app_accent_color` | `Как обои` (Android 12+ only), `Фирменный`, `Бирюзовый`, `Зелёный`, `Янтарный`, `Красный`, `Розовый`, `Фиолетовый`, `Свой цвет` | `Как обои` on Android 12+, `Фирменный` elsewhere |
+| `Свой цвет` | `app_accent_custom` | any opaque colour (ARGB int); kept while another colour is picked | `#4984E2`, the brand blue |
+| `Палитра` | `app_theme_style` | `Спокойная` (TonalSpot), `Яркая` (Vibrant), `Выразительная` (Expressive), `Точная` (Fidelity), `Насыщенная` (Content), `Нейтральная` (Neutral), `Монохром` (Monochrome) | `Спокойная` |
 | `Контраст` | `app_theme_contrast` | `Обычный`, `Средний`, `Высокий` (M3 contrast 0, 0.5, 1) | `Обычный` |
 | `Чёрный фон` | `app_dark_black` | on, off | off |
 
-- `Цвет оформления` opens a picker of swatches, each the primary of the scheme
-  it gives in the current style (under `Монохром` the default style's, so the
-  hues stay apart); a tap applies at once. TalkBack reads each swatch by its
-  name and selection.
-- With `Свой цвет` the picker shows a `HEX` field and three sliders (`Оттенок`,
+- The circles show each colour's primary in the current palette (under
+  `Монохром` the default palette's, so the hues stay apart).
+- With `Свой цвет` the picker has a `HEX` field and three sliders (`Оттенок`,
   `Насыщенность`, `Яркость`). A valid `#RRGGBB` applies as typed, a slider
   when let go; an unfinished value shows an error once the field loses focus.
-- With `Как обои`, a style other than `Спокойная` or a contrast other than
+  iOS shows the system colour well instead.
+- With `Как обои`, a palette other than `Спокойная` or a contrast other than
   `Обычный` rebuilds the palette from the wallpaper's colour
   (`system_accent1_500`) instead of using the system's scheme.
 - `Чёрный фон` turns the dark theme's background and surfaces black; cards and
@@ -76,27 +93,28 @@ its rows, unscrolled; every choice recolours it and the app at once.
 - Absent or unknown values read as the defaults; the choices are device
   settings that sign-out keeps. Without wallpaper colours (below Android 12,
   iOS) the stored default draws as `Фирменный`.
-- Widgets keep their own colours unless `Виджеты в цвет темы` is on; the QR
-  tile, notifications and the launcher icon always do. The presets, their seeds
-  and how the choices become a scheme: [design guide](design.md#colour-and-surfaces).
+- The QR tile, notifications and the launcher icon keep their colours. The
+  presets, their seeds and how the choices become a scheme:
+  [design guide](design.md#colour-and-surfaces).
 
 ### Widgets in the app's colours
 
-`Виджеты в цвет темы` (the widgets gallery, below the cards) is off by default:
-stored in `widgets_follow_app_theme` (absent reads as off), row key
-`widgets_follow_theme`. On, the widgets draw with the scheme `Оформление`
-gives, without `Чёрный фон`; the rules, the QR widget's precedence and the
-Android versions are in [widgets](features/widgets.md#theme-colours).
+`Виджеты в цвет темы` (the widgets gallery, below the cards) is on by default:
+stored in `widgets_follow_app_theme` (absent reads as on, a stored off stays
+off), row key `widgets_follow_theme`. On, the widgets draw with the scheme
+`Оформление` gives, without `Чёрный фон`; the rules, the QR widget's precedence
+and the Android versions are in [widgets](features/widgets.md#theme-colours).
 
 ### iOS
 
-The same page in the SwiftUI form, without `Как обои` and without a sample:
-the choices are menus, `Чёрный фон` a switch, `Свой цвет` the system colour
-well (it reports `#RRGGBB` like Android's picker). iOS reads and writes the
-same keys of its own `app_preferences` file. `Виджеты в цвет темы` is the same
-switch in the SwiftUI gallery; the app writes the palette into the widgets'
-App Group files ([iOS widgets](ios.md#widgets)). The tinted and clear home
-screens and the Lock Screen keep the system's rendering.
+The iOS app's own screens keep the system's colours
+(`PlatformCapabilities.appColors` is off): the choices reach only the widgets
+that follow the theme. So the iOS page has no `Как обои` and no `Чёрный фон`,
+its sample is a widget in the picked colours, and its last line says that only
+the widgets take them. iOS reads and writes the same keys of its own
+`app_preferences` file; the app writes the palette into the widgets' App Group
+files ([iOS widgets](ios.md#widgets)). The tinted and clear home screens and
+the Lock Screen keep the system's rendering.
 
 ## Sections
 

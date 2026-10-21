@@ -36,8 +36,8 @@ class AppearancePreferences(dataStore: DataStore<Preferences>) : DataStorePrefer
         }
     }
 
-    /** «Виджеты в цвет темы»; absent reads as off, the widgets' own colours. */
-    fun observeWidgetsFollowTheme(): Flow<Boolean> = observe { it[WIDGETS_FOLLOW_THEME] ?: false }
+    /** «Виджеты в цвет темы»; absent reads as on, the app's colours. */
+    fun observeWidgetsFollowTheme(): Flow<Boolean> = observe { it[WIDGETS_FOLLOW_THEME] ?: FOLLOW_THEME_DEFAULT }
 
     suspend fun setWidgetsFollowTheme(enabled: Boolean) {
         write(WIDGETS_FOLLOW_THEME, enabled)
@@ -45,7 +45,7 @@ class AppearancePreferences(dataStore: DataStore<Preferences>) : DataStorePrefer
 
     /** The appearance the widgets draw with, or null while they keep their own colours. */
     fun observeWidgetTheme(): Flow<ThemeSpec?> =
-        observe { if (it[WIDGETS_FOLLOW_THEME] == true) themeOf(it) else null }
+        observe { if (it[WIDGETS_FOLLOW_THEME] ?: FOLLOW_THEME_DEFAULT) themeOf(it) else null }
 
     private fun themeOf(preferences: Preferences) = ThemeSpec(
         accent = safeEnumOf(preferences[ACCENT_COLOR], AccentColor.WALLPAPER),
@@ -63,5 +63,8 @@ class AppearancePreferences(dataStore: DataStore<Preferences>) : DataStorePrefer
         val DARK_BLACK = booleanPreferencesKey("app_dark_black")
         val WIDGETS_FOLLOW_THEME = booleanPreferencesKey("widgets_follow_app_theme")
         const val OPAQUE = 0xFF000000.toInt()
+
+        /** The widgets take the app's colours until the user turns it off; a stored `false` stays off. */
+        const val FOLLOW_THEME_DEFAULT = true
     }
 }

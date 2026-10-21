@@ -65,6 +65,8 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsEvent
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.appearance.AppearanceEvent
+import dev.alllexey.itmowidgets.feature.settings.presentation.appearance.AppearanceViewModel
 import dev.alllexey.itmowidgets.feature.settings.ui.CALENDAR_PERMISSIONS
 import dev.alllexey.itmowidgets.feature.settings.ui.CalendarAccessAnswer
 import dev.alllexey.itmowidgets.feature.settings.ui.CalendarAccessStep
@@ -72,6 +74,8 @@ import dev.alllexey.itmowidgets.feature.settings.ui.SettingsActions
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsDialog
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsDialogState
 import dev.alllexey.itmowidgets.feature.settings.ui.SettingsScreen
+import dev.alllexey.itmowidgets.feature.settings.ui.appearance.AppearanceActions
+import dev.alllexey.itmowidgets.feature.settings.ui.appearance.AppearanceScreen
 import dev.alllexey.itmowidgets.feature.settings.ui.calendarAccessAnswer
 import dev.alllexey.itmowidgets.feature.settings.ui.calendarAccessStep
 import dev.alllexey.itmowidgets.feature.settings.ui.canOpenIcs
@@ -105,6 +109,7 @@ internal fun EntryRegistry.Builder.settingsEntries() {
         when (SettingsPage.fromArgument(key.page)) {
             SettingsPage.SERVICES -> ConnectionEntry(key, navigator)
             SettingsPage.NOTIFICATIONS -> NotificationSettingsEntry(key, navigator)
+            SettingsPage.APPEARANCE -> AppearanceEntry(onBack = { navigator.close(key) })
             else -> SettingsEntry(key, navigator)
         }
     }
@@ -314,6 +319,35 @@ private val DialogsSaver = Saver<SettingsDialogState, String>(
     save = { it.save() },
     restore = { SettingsDialogState.restore(it) },
 )
+
+/** «Оформление»: every choice applies at once; a failed store says so in a snackbar. */
+@Composable
+private fun AppearanceEntry(onBack: () -> Unit) {
+    val view = LocalView.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val viewModel: AppearanceViewModel = entryViewModel()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(viewModel, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.events.collect { event ->
+                when (event) {
+                    is AppearanceEvent.ShowError -> snackbar(view, event.error.messageRes(), Snackbar.LENGTH_LONG)
+                }
+            }
+        }
+    }
+    val actions = remember(viewModel, onBack) {
+        AppearanceActions(
+            onBack = onBack,
+            onAccent = viewModel::selectAccent,
+            onCustomColor = viewModel::setCustomColor,
+            onStyle = viewModel::selectStyle,
+            onContrast = viewModel::selectContrast,
+            onBlackBackground = viewModel::setBlackBackground,
+        )
+    }
+    AppearanceScreen(state, actions)
+}
 
 /** «Журнал ошибок»: the journal goes to the clipboard; Android 13 and later confirm a copy themselves. */
 @Composable

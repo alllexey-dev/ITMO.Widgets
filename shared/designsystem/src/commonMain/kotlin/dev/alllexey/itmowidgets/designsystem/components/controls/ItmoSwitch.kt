@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 
 /**
  * An on/off switch: material3's `Switch` as the settings rows draw it today. With [onCheckedChange] null the switch
- * only shows [checked] and the caller's row carries the toggle (and its semantics), as `SettingsToggleRow` does.
+ * only shows [checked] and the caller's row carries the toggle (and its semantics), as a toggleable row does.
  */
 @Composable
 fun ItmoSwitch(

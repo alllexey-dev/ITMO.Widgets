@@ -60,7 +60,7 @@ internal fun createFixture(
     val onboarding = FakeOnboardingRepository(completed = true)
     val bars = MutableStateFlow(BarsConnection.NOT_CONNECTED)
     val pages = SettingsPages(
-        root = RootPageProvider(repository, { bars }, capabilities),
+        root = RootPageProvider({ bars }, capabilities),
         widgets = WidgetsPageProvider(repository, tileAccess, capabilities),
         sections = SectionsPageProvider(repository, calendarSync, capabilities),
         about = AboutPageProvider(refresher, onboarding, TEST_BUILD, RecordingDiagnostics())

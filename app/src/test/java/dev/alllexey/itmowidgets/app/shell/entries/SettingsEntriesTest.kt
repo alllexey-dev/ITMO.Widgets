@@ -1,16 +1,15 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
@@ -93,7 +92,7 @@ class SettingsEntriesTest {
             navigator.state.overlays,
         )
 
-        clickTop(SettingsTestTags.BACK)
+        clickBack()
         assertEquals(listOf(AppRoutes.Settings()), navigator.state.overlays)
     }
 
@@ -107,7 +106,7 @@ class SettingsEntriesTest {
         assertEquals(AppRoutes.Diagnostics, navigator.state.overlays.last())
         compose.onNodeWithTag(DiagnosticsTestTags.EMPTY).assertIsDisplayed()
 
-        clickTop(DiagnosticsTestTags.BACK)
+        clickBack()
         assertEquals(listOf(AppRoutes.Settings(SettingsPage.ABOUT.name)), navigator.state.overlays)
     }
 
@@ -195,6 +194,13 @@ class SettingsEntriesTest {
 
     private fun clickTop(tag: String) {
         val nodes = compose.onAllNodesWithTag(tag)
+        nodes[nodes.fetchSemanticsNodes().size - 1].performClick()
+        compose.waitForIdle()
+    }
+
+    /** The back button of the top screen: the last of the stack's `Назад`. */
+    private fun clickBack() {
+        val nodes = compose.onAllNodesWithContentDescription("Назад")
         nodes[nodes.fetchSemanticsNodes().size - 1].performClick()
         compose.waitForIdle()
     }

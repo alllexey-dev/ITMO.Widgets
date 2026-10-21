@@ -1,7 +1,6 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
 import dev.alllexey.itmowidgets.core.schedule.CalendarSyncState
-import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
@@ -26,9 +25,6 @@ interface SettingsPageProvider {
      * waits on that source.
      */
     fun observeState(page: SettingsPage, state: Flow<SettingsPageState>): Flow<SettingsPageState> = state
-
-    /** The appearance [page] shows a sample of above its rows. */
-    fun themePreview(page: SettingsPage, local: LocalSettings): ThemeSpec? = null
 
     /** The widgets gallery [page] shows above its rows. */
     fun gallery(page: SettingsPage, state: SettingsPageState): WidgetGallery? = null

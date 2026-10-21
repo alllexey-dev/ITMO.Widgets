@@ -1105,18 +1105,6 @@
         }
       }
     },
-    "settings_accent_color_done" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Готово"
-          }
-        }
-      }
-    },
     "settings_accent_color_green" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1177,18 +1165,6 @@
         }
       }
     },
-    "settings_accent_color_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Цвет оформления"
-          }
-        }
-      }
-    },
     "settings_accent_color_wallpaper" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -1201,26 +1177,74 @@
         }
       }
     },
-    "settings_appearance_group_colors" : {
+    "settings_appearance_color" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Цвета"
+            "value" : "Цвет"
           }
         }
       }
     },
-    "settings_appearance_group_contrast" : {
+    "settings_appearance_contrast_note" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Контраст и фон"
+            "value" : "Высокий контраст делает текст и кнопки заметнее"
+          }
+        }
+      }
+    },
+    "settings_appearance_dark" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тёмная тема"
+          }
+        }
+      }
+    },
+    "settings_appearance_light" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Светлая тема"
+          }
+        }
+      }
+    },
+    "settings_appearance_monochrome_note" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В палитре «Монохром» цвет не используется — выберите другую палитру"
+          }
+        }
+      }
+    },
+    "settings_appearance_palette" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Палитра"
           }
         }
       }
@@ -1232,7 +1256,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Пример оформления"
+            "value" : "Пример оформления в светлой и тёмной теме"
           }
         }
       }
@@ -1261,14 +1285,38 @@
         }
       }
     },
-    "settings_appearance_wallpaper_footer" : {
+    "settings_appearance_wallpaper_note" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "С цветом «Как обои» другой стиль или контраст строят палитру заново из цвета обоев"
+            "value" : "Цвет берётся из обоев телефона и меняется вместе с ними"
+          }
+        }
+      }
+    },
+    "settings_appearance_widgets_note" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виджеты берут эти цвета, если в разделе «Виджеты» включено «Виджеты в цвет темы»"
+          }
+        }
+      }
+    },
+    "settings_appearance_widgets_only_note" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На iPhone приложение остаётся в системных цветах. Эти цвета получают виджеты, если в разделе «Виджеты» включено «Виджеты в цвет темы»"
           }
         }
       }
@@ -1460,7 +1508,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "В тёмной теме, карточки остаются видны"
+            "value" : "Только в тёмной теме: фон чёрный, карточки остаются видны"
           }
         }
       }
@@ -2120,7 +2168,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выбранный цвет и созвучные ему оттенки"
+            "value" : "Выбранный цвет и близкие к нему оттенки"
           }
         }
       }
@@ -2144,7 +2192,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Смещает оттенки ради неожиданных сочетаний"
+            "value" : "Добавляет неожиданные оттенки"
           }
         }
       }
@@ -2168,7 +2216,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Основной цвет почти как выбранный"
+            "value" : "Кнопки почти точно в выбранном цвете"
           }
         }
       }
@@ -2221,18 +2269,6 @@
         }
       }
     },
-    "settings_theme_style_title" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Стиль палитры"
-          }
-        }
-      }
-    },
     "settings_theme_style_tonal_spot" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -2276,7 +2312,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Самые насыщенные цвета из выбранного"
+            "value" : "Ярче и насыщеннее"
           }
         }
       }

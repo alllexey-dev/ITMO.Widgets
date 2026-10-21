@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.settings.domain.BarsConnection
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
@@ -59,7 +60,8 @@ class RootPageProviderTest {
             assertEquals(UiText.Res(SettingsStrings.settings_services_enabled), navigation(fixture, SettingsPage.SERVICES).value)
             assertEquals(UiText.Res(SettingsStrings.settings_accent_color_wallpaper), navigation(fixture, SettingsPage.APPEARANCE).value)
             assertEquals(null, navigation(fixture, SettingsPage.SECTIONS).value)
-            assertEquals(null, fixture.viewModel.uiState.value.themePreview)
+            // Every row has its icon, as on the profile.
+            assertTrue(fixture.viewModel.allItems().all { it.icon != null })
             assertEquals(0, fixture.repository.refreshSharingCount)
         }
 
@@ -82,7 +84,15 @@ class RootPageProviderTest {
         fixture.bars.value = BarsConnection.CONNECTED
         advanceUntilIdle()
         val connected = fixture.viewModel.allItems().single { it.id == SettingRowId.BARS }
-        assertEquals(SettingItem.Info(SettingRowId.BARS, UiText.Res(SettingsStrings.settings_bars_title), UiText.Res(SettingsStrings.settings_bars_connected)), connected)
+        assertEquals(
+            SettingItem.Info(
+                SettingRowId.BARS,
+                UiText.Res(SettingsStrings.settings_bars_title),
+                UiText.Res(SettingsStrings.settings_bars_connected),
+                icon = AppIcon.GRADING,
+            ),
+            connected,
+        )
     }
 
     @Test
@@ -119,10 +129,17 @@ class RootPageProviderTest {
     }
 
     @Test
+    fun withoutWallpaperColoursTheAppearanceRowNamesTheBrandColour() = runTest(main.dispatcher) {
+        val fixture = createFixture(capabilities = EveryPlatformCapability.copy(wallpaperColors = false))
+        advanceUntilIdle()
+        assertEquals(UiText.Res(SettingsStrings.settings_accent_color_brand), navigation(fixture, SettingsPage.APPEARANCE).value)
+    }
+
+    @Test
     fun theAboutPageShowsTheVersion() = runTest(main.dispatcher) {
         val about = createFixture(page = SettingsPage.ABOUT)
         advanceUntilIdle()
-        assertEquals(versionSummary(TEST_BUILD), about.viewModel.action(SettingRowId.VERSION).value)
+        assertEquals(versionSummary(TEST_BUILD), about.viewModel.action(SettingRowId.VERSION).description)
         assertEquals(UiText.Res(SettingsStrings.connection_title), SettingsPage.SERVICES.title)
         assertEquals(UiText.Res(SettingsStrings.notifications_title), SettingsPage.NOTIFICATIONS.title)
     }
@@ -150,13 +167,14 @@ class RootPageProviderTest {
             advanceUntilIdle()
             val toggle = fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME)
             assertEquals(UiText.Res(SettingsStrings.settings_widgets_theme_title), toggle.title)
-            assertFalse(toggle.checked)
+            // On by default: the widgets take the app's colours until the user turns it off.
+            assertTrue(toggle.checked)
 
-            fixture.viewModel.onToggleChanged(SettingRowId.WIDGETS_FOLLOW_THEME, true)
+            fixture.viewModel.onToggleChanged(SettingRowId.WIDGETS_FOLLOW_THEME, false)
             advanceUntilIdle()
 
-            assertEquals(listOf(true), fixture.repository.widgetsFollowThemeRequests)
-            assertTrue(fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME).checked)
+            assertEquals(listOf(false), fixture.repository.widgetsFollowThemeRequests)
+            assertFalse(fixture.viewModel.toggle(SettingRowId.WIDGETS_FOLLOW_THEME).checked)
             assertEquals(1, fixture.widgetRefresher.refreshCount)
         }
 

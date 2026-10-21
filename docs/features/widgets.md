@@ -116,7 +116,7 @@ Settings: the `Пропуск` sheet of the gallery ([settings](../settings.md#q
 
 ## Theme colours
 
-`Виджеты в цвет темы` (`widgets_follow_app_theme`, off by default,
+`Виджеты в цвет темы` (`widgets_follow_app_theme`, on by default,
 [settings](../settings.md#widgets-in-the-apps-colours)).
 
 - On, the next-lesson, day, sport and QR widgets draw with the scheme `Оформление` gives (accent or `Свой цвет`,

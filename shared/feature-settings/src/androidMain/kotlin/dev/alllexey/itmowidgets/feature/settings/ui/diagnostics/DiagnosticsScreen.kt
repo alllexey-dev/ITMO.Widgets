@@ -29,14 +29,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticEntry
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticLevel
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarBack
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialogSurface
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsUiState
@@ -68,7 +67,6 @@ class DiagnosticsActions(
 
 /** Tags for host and instrumented tests. */
 object DiagnosticsTestTags {
-    const val BACK = "back_button"
     const val COPY = "copy_button"
     const val CLEAR = "clear_button"
     const val LIST = "recycler_view"
@@ -95,56 +93,52 @@ fun DiagnosticsScreen(
     var confirmClear by rememberSaveable { mutableStateOf(false) }
     val entries = (state as? DiagnosticsUiState.Content)?.entries
     val hasEntries = !entries.isNullOrEmpty()
-    Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
-        Column(Modifier.fillMaxSize()) {
-            AppTopBar(
-                title = stringResource(Res.string.diagnostics_title),
-                navigation = {
-                    AppTopBarBack(
-                        stringResource(Res.string.common_back),
-                        actions.onBack,
-                        Modifier.testTag(DiagnosticsTestTags.BACK),
+    Box(modifier.fillMaxSize()) {
+        ItmoDetailScreen(
+            title = stringResource(Res.string.diagnostics_title),
+            onBack = actions.onBack,
+            backLabel = stringResource(Res.string.common_back),
+        ) { padding ->
+            Column(Modifier.fillMaxSize().padding(padding)) {
+                Row(
+                    Modifier
+                        .padding(horizontal = ItmoTheme.spacing.screenMargin)
+                        .padding(bottom = ItmoTheme.spacing.related),
+                    horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
+                ) {
+                    ProgressButton(
+                        stringResource(Res.string.diagnostics_copy),
+                        onClick = actions.onCopy,
+                        modifier = Modifier.testTag(DiagnosticsTestTags.COPY),
+                        style = ProgressButtonStyle.Tonal,
+                        enabled = hasEntries,
                     )
-                },
-            )
-            Row(
-                Modifier
-                    .padding(horizontal = ItmoTheme.spacing.screenMargin)
-                    .padding(bottom = ItmoTheme.spacing.related),
-                horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
-            ) {
-                ProgressButton(
-                    stringResource(Res.string.diagnostics_copy),
-                    onClick = actions.onCopy,
-                    modifier = Modifier.testTag(DiagnosticsTestTags.COPY),
-                    style = ProgressButtonStyle.Tonal,
-                    enabled = hasEntries,
-                )
-                ProgressButton(
-                    stringResource(Res.string.diagnostics_clear),
-                    onClick = { confirmClear = true },
-                    modifier = Modifier.testTag(DiagnosticsTestTags.CLEAR),
-                    style = ProgressButtonStyle.Text,
-                    enabled = hasEntries,
-                )
-            }
-            Text(
-                stringResource(Res.string.diagnostics_description),
-                Modifier
-                    .padding(horizontal = ItmoTheme.spacing.screenMargin)
-                    .padding(bottom = ItmoTheme.spacing.compact),
-                color = ItmoTheme.colorScheme.onSurfaceVariant,
-                style = ItmoTheme.typography.bodyMedium,
-            )
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                when {
-                    entries == null -> ContentStateLoading(Modifier.testTag(DiagnosticsTestTags.LOADING))
-                    entries.isEmpty() -> ContentState(
-                        title = stringResource(Res.string.diagnostics_empty_title),
-                        modifier = Modifier.testTag(DiagnosticsTestTags.EMPTY),
-                        icon = painterResource(KitRes.drawable.ic_check),
+                    ProgressButton(
+                        stringResource(Res.string.diagnostics_clear),
+                        onClick = { confirmClear = true },
+                        modifier = Modifier.testTag(DiagnosticsTestTags.CLEAR),
+                        style = ProgressButtonStyle.Text,
+                        enabled = hasEntries,
                     )
-                    else -> DiagnosticsList(entries, timeLabel)
+                }
+                Text(
+                    stringResource(Res.string.diagnostics_description),
+                    Modifier
+                        .padding(horizontal = ItmoTheme.spacing.screenMargin)
+                        .padding(bottom = ItmoTheme.spacing.compact),
+                    color = ItmoTheme.colorScheme.onSurfaceVariant,
+                    style = ItmoTheme.typography.bodyMedium,
+                )
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    when {
+                        entries == null -> ContentStateLoading(Modifier.testTag(DiagnosticsTestTags.LOADING))
+                        entries.isEmpty() -> ContentState(
+                            title = stringResource(Res.string.diagnostics_empty_title),
+                            modifier = Modifier.testTag(DiagnosticsTestTags.EMPTY),
+                            icon = painterResource(KitRes.drawable.ic_check),
+                        )
+                        else -> DiagnosticsList(entries, timeLabel)
+                    }
                 }
             }
         }

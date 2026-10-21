@@ -179,11 +179,13 @@ struct ItmoWeekStrip: View {
     }
 }
 
-/// A row of a group with a trailing switch; the whole row toggles.
+/// A row of a group with a trailing switch; the whole row toggles. The symbol sits in a tile of `tone`, or bare in the
+/// primary colour without one, as in `ItmoRow`.
 struct ItmoSwitchRow: View {
     let title: String
     var subtitle: String?
     var symbol: AppSymbol?
+    var tone: ItmoTone?
     var enabled = true
     @Binding var isOn: Bool
 
@@ -191,7 +193,7 @@ struct ItmoSwitchRow: View {
         Toggle(isOn: $isOn) {
             HStack(spacing: ItmoSpacing.content) {
                 if let symbol {
-                    symbol.image.foregroundStyle(ItmoColor.primary).frame(width: 30).accessibilityHidden(true)
+                    ItmoRowIcon(symbol: symbol, tone: tone)
                 }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(verbatim: title).font(.itmo(.bodyLarge))

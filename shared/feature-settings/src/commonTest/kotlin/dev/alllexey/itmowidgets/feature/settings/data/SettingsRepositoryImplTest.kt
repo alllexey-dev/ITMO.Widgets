@@ -143,14 +143,14 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
-    fun theWidgetsKeepTheirOwnColoursUntilTheThemeSwitchIsStored() = runTest {
+    fun theWidgetsTakeTheAppColoursUntilTheThemeSwitchIsTurnedOff() = runTest {
         val fixture = createRepository()
-        assertFalse(fixture.repository.observeLocalSettings().first().widgetsFollowTheme)
+        assertTrue(fixture.repository.observeLocalSettings().first().widgetsFollowTheme)
 
-        fixture.repository.setWidgetsFollowTheme(true)
+        fixture.repository.setWidgetsFollowTheme(false)
 
-        assertEquals(LocalSettings(widgetsFollowTheme = true), fixture.repository.observeLocalSettings().first())
-        assertTrue(fixture.stores.appearance.observeWidgetsFollowTheme().first())
+        assertEquals(LocalSettings(widgetsFollowTheme = false), fixture.repository.observeLocalSettings().first())
+        assertFalse(fixture.stores.appearance.observeWidgetsFollowTheme().first())
     }
 
     @Test

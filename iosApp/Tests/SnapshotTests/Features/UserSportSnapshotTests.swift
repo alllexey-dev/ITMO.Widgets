@@ -34,7 +34,7 @@ final class UserSportSnapshotTests: XCTestCase {
     ) {
         let screen = NavigationStack {
             UserSportContent(state: state, time: samples.time)
-                .itmoDetailHeader(title: UserSportScreen.title(givenName: givenName), subtitle: nil)
+                .itmoDetailHeader(title: AppStrings.string("user_profile_sport_title"), subtitle: givenName)
         }
         assertScreenAppearances(of: screen, named: name, appearances: appearances, settle: 1, testName: testName)
     }

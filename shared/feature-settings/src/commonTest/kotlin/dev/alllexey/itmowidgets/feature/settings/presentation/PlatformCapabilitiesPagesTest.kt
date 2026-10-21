@@ -37,6 +37,7 @@ class PlatformCapabilitiesPagesTest {
         qrWidgetAnimation = false,
         qrCustomSpoiler = false,
         wallpaperColors = false,
+        appColors = false,
         pinWidgets = false,
         lockScreenWidgets = false,
         pushSwitches = false,

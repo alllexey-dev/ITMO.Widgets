@@ -50,7 +50,8 @@ class SectionsPageProvider(
                 SettingItem.Toggle(
                     id = SettingRowId.HOME_PASS_VISIBLE,
                     title = UiText.Res(SettingsStrings.settings_home_pass_title),
-                    checked = state.local.homePassVisible
+                    checked = state.local.homePassVisible,
+                    icon = AppIcon.QR_CODE
                 )
             ),
             footer = UiText.Res(SettingsStrings.settings_home_pass_description)
@@ -61,7 +62,8 @@ class SectionsPageProvider(
                 id = SettingRowId.SCHEDULE_SPORT_AUTO_SIGN,
                 title = UiText.Res(SettingsStrings.settings_schedule_sport_auto_sign_title),
                 description = UiText.Res(SettingsStrings.settings_schedule_sport_auto_sign_description),
-                checked = state.local.showSportAutoSign
+                checked = state.local.showSportAutoSign,
+                icon = AppIcon.SPRINT
             ),
             footer = UiText.Res(SettingsStrings.settings_schedule_footer)
         ),
@@ -71,12 +73,14 @@ class SectionsPageProvider(
                 SettingItem.Toggle(
                     id = SettingRowId.SPORT_TEACHER_FILTER,
                     title = UiText.Res(SettingsStrings.settings_sport_teacher_filter_title),
-                    checked = !state.local.sport.hideTeacherSelector
+                    checked = !state.local.sport.hideTeacherSelector,
+                    icon = AppIcon.PERSON
                 ),
                 SettingItem.Toggle(
                     id = SettingRowId.SPORT_TIME_FILTER,
                     title = UiText.Res(SettingsStrings.settings_sport_time_filter_title),
-                    checked = !state.local.sport.hideTimeSelector
+                    checked = !state.local.sport.hideTimeSelector,
+                    icon = AppIcon.SCHEDULE
                 )
             )
         )
@@ -131,13 +135,14 @@ class SectionsPageProvider(
                     null -> SettingsStrings.settings_calendar_sync_description
                 }
             ),
-            checked = calendar.enabled
+            checked = calendar.enabled,
+            icon = AppIcon.EVENT_REPEAT
         ),
         SettingItem.Action(
             id = SettingRowId.ICS_EXPORT,
             title = UiText.Res(SettingsStrings.settings_ics_export_title),
             description = UiText.Res(SettingsStrings.settings_ics_export_description),
-            trailingIcon = AppIcon.DOWNLOAD
+            icon = AppIcon.DOWNLOAD
         )
     )
 }

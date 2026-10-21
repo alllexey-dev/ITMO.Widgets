@@ -3,8 +3,8 @@ import SwiftUI
 
 /// Another user's sport (`AppRoutes.UserSport`, from a profile) over the shared `UserSportViewModel`, pushed on the
 /// stack, read-only: the confirmed lessons and pending queues by day as lesson cards, a card opens its building in
-/// Apple Maps. The title names the user (`user_sport_title`). Privacy shows the lock with nothing to retry, an error the
-/// retry, no bookings the empty state; a pull refreshes.
+/// Apple Maps. The title is `user_profile_sport_title` with the user's given name after it, as their friends' page.
+/// Privacy shows the lock with nothing to retry, an error the retry, no bookings the empty state; a pull refreshes.
 struct UserSportScreen: View {
     @State private var model: ObservableViewModel<UserSportViewModel, any UserSportUiState>
 
@@ -31,17 +31,13 @@ struct UserSportScreen: View {
                 ($0.uiState.value as? UserSportUiStateContent)?.refreshing == true
             })
         }
-        .itmoDetailHeader(title: Self.title(givenName: model.viewModel.givenName), subtitle: nil)
+        .itmoDetailHeader(
+            title: AppStrings.string("user_profile_sport_title"),
+            subtitle: model.viewModel.givenName.isEmpty ? nil : model.viewModel.givenName
+        )
         .observing(model)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("sport.user")
-    }
-
-    /// `user_sport_title` with the given name, or `user_profile_sport_title` without one.
-    static func title(givenName: String) -> String {
-        givenName.isEmpty
-            ? AppStrings.string("user_profile_sport_title")
-            : AppStrings.string("user_sport_title", [givenName])
     }
 
     private static var time: AcademicTimeProvider {

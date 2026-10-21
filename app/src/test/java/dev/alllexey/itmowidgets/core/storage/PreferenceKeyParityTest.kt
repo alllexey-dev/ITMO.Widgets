@@ -79,7 +79,7 @@ class PreferenceKeyParityTest {
         assertFalse(stores.deviceHints.observeQrTileAdded().first())
         assertFalse(stores.demoPreferences.getDemoActive())
         assertEquals(ThemeSpec(), stores.appearance.observeTheme().first())
-        assertFalse(stores.appearance.observeWidgetsFollowTheme().first())
+        assertTrue(stores.appearance.observeWidgetsFollowTheme().first())
         for (channel in AppNotificationChannels.PUSHES) assertTrue(stores.pushCategories.isEnabled(channel))
         assertTrue(stores.pushCategories.observeDisabled().first().isEmpty())
     }

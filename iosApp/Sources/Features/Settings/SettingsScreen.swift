@@ -4,8 +4,8 @@ import UIKit
 import UserNotifications
 import WidgetKit
 
-/// One settings page: the page's `SettingsViewModel` rendered by `SettingsForm` under the stack's navigation
-/// bar. Android's Compose pages are not used on iOS.
+/// One settings page: the page's `SettingsViewModel` rendered by `SettingsForm` under the kit's pushed header
+/// (`itmoDetailHeader`). Android's Compose pages are not used on iOS.
 ///
 /// The screen feeds the ViewModel what only iOS knows, on appear and on every return to the app: the notification
 /// permission and Background App Refresh. It answers the page's events with system pages, the router and a short
@@ -43,10 +43,8 @@ struct SettingsScreen: View {
 
     var body: some View {
         page
-        .navigationTitle(Text(verbatim: model.state.page.title.resolved))
-        .navigationSubtitle(Text(verbatim: model.state.gallery?.subtitle?.resolved ?? ""))
-        // The root under it is inline (`itmoRootHeader`); a settings page keeps its large title.
-        .toolbarTitleDisplayMode(.large)
+        // The pushed header of the kit, as the notifications and the connection pages.
+        .itmoDetailHeader(title: model.state.page.title.resolved, subtitle: model.state.gallery?.subtitle?.resolved)
         .observing(model)
         .onEvents(of: model, \.events) { event in
             handle(event)
@@ -114,7 +112,8 @@ struct SettingsScreen: View {
                 viewModel.onToggleChanged(id: id, checked: checked)
             },
             choose: { id, key in viewModel.onChoiceChanged(id: id, optionKey: key) },
-            act: { id in viewModel.onAction(id: id) }
+            act: { id in viewModel.onAction(id: id) },
+            open: { page in router.open(AppRoutes.Settings(page: page.name)) }
         )
     }
 

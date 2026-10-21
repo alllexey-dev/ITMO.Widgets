@@ -133,17 +133,22 @@ Swift reaches Kotlin through `Shared` and SKIE (`shared/ios/build.gradle.kts`): 
 ## Settings and diagnostics
 
 Settings are SwiftUI: `Routes+Settings.swift` maps each `AppRoutes.Settings(page)` key to `SettingsScreen`, which owns
-the page's shared `SettingsViewModel` and renders it with `SettingsForm` (toggle, menu, navigation, action and value
-rows). Page providers hide what `PlatformCapabilities` does not offer. `SettingsIosCopy` replaces texts that name
+the page's shared `SettingsViewModel` and renders it with `SettingsForm` under `itmoDetailHeader`: each section is a
+`SettingSectionView` (`ItmoSectionHeader`, `ItmoListGroup` of `ItmoRow` / `ItmoSwitchRow` with the row's icon in a
+neutral tile, `ItmoSegmentedChoice` for a lone short choice, `ItmoGroupNote`), as on the profile and the notifications
+page; the widgets gallery draws its rows with the same view. Page providers hide what `PlatformCapabilities` does not offer. `SettingsIosCopy` replaces texts that name
 Android with `strings_ios*.xml` rows; the background work row is Background App Refresh. The screen reports the
 notification permission and Background App Refresh to the ViewModel on appear and on every return to the app. The
 calendar switch asks EventKit for access in Swift (`Features/Calendar/`). `DiagnosticsScreen` lists `AppDiagnostics`
 records and shares the journal.
 
 The `SERVICES` key (and the old `PRIVACY`) opens `ConnectionDataScreen` (`Features/Connection/`, with
-`ServicesConsentSheet`, shared with the first-run flow) and `NOTIFICATIONS` opens `NotificationSettingsScreen`, which
-without the filtering entitlement lists no push switch ([Degradations](#degradations)). Both report the system state as
-`SettingsScreen` does.
+`ServicesConsentSheet`, shared with the first-run flow), `NOTIFICATIONS` opens `NotificationSettingsScreen`, which
+without the filtering entitlement lists no push switch ([Degradations](#degradations)), and `APPEARANCE` opens
+`AppearanceScreen` over `AppearanceViewModel`. The first two report the system state as `SettingsScreen` does. The
+app's own screens keep the system's colours (`PlatformCapabilities.appColors` is off), so `AppearanceScreen` draws its
+sample as a widget, the one thing the colours reach, from `AppearanceColors` (the widgets' scheme, without Compose),
+and offers no black background ([settings](settings.md#ios-1)).
 
 ## Strings and icons
 

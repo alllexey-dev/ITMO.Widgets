@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SectionsPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPages
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsViewModel
+import dev.alllexey.itmowidgets.feature.settings.presentation.appearance.AppearanceViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.connection.ConnectionViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.NotificationSettingsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetsPageProvider
@@ -52,7 +53,7 @@ val settingsDataModule = module {
  * a constructor reference would make ambiguous.
  */
 val settingsModule = module {
-    factory { RootPageProvider(get(), get(), get()) }
+    factory { RootPageProvider(get(), get()) }
     factory { WidgetsPageProvider(get(), get(), get()) }
     factory { SectionsPageProvider(get(), get(), get()) }
     factoryOf(::AboutPageProvider)
@@ -62,6 +63,7 @@ val settingsModule = module {
     viewModelOf(::SettingsViewModel)
     viewModelOf(::ConnectionViewModel)
     viewModelOf(::NotificationSettingsViewModel)
+    viewModelOf(::AppearanceViewModel)
     viewModelOf(::IcsExportViewModel)
     viewModelOf(::DiagnosticsViewModel)
     viewModelOf(::CustomSpoilerViewModel)

@@ -1,13 +1,13 @@
 package dev.alllexey.itmowidgets.feature.settings.ui
 
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -17,34 +17,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.Dp
-import dev.alllexey.itmowidgets.core.settings.HexColor
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
-import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarBack
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsActionRow
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsChoiceRow
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroup
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsGroupFooter
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsInfoRow
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsNavigationRow
-import dev.alllexey.itmowidgets.designsystem.components.settings.SettingsToggleRow
-import dev.alllexey.itmowidgets.designsystem.icons.drawable
+import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsUiState
-import dev.alllexey.itmowidgets.shared.compose.strings.Res
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_back
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 
 /**
  * What a settings page asks its host to do: leave, change a row, open another page, run a row's own command
- * ([onAction]) or the button of a host dialog. The screen opens its dialogs itself, so a choice arrives as the picked
- * option.
+ * ([onAction]) or the button of a host dialog. A choice arrives as the picked option.
  */
 data class SettingsActions(
     val onBack: () -> Unit = {},
@@ -58,21 +42,16 @@ data class SettingsActions(
     val onOpenAppSettings: () -> Unit = {},
 )
 
-/**
- * Tags for host and instrumented tests. Every row is tagged with its `SettingRowId.key`.
- */
+/** Tags for host and instrumented tests. Every row is tagged with its `SettingRowId.key`. */
 object SettingsTestTags {
-    const val BACK = "back_button"
     const val SCROLL = "settings_scroll"
-    const val FOOTER = "setting_section_footer"
-    const val THEME_SAMPLE = "settings_theme_sample"
 }
 
 /**
- * One settings page: the top bar with the page title, the appearance page's sample in the colours the app draws now
- * (above the scrolling rows and never scrolled), and the page's [SettingSection]s as compact settings groups.
- * Stateless: a switch shows what [state] says, so a refused, cancelled or failed change never needs undoing on
- * screen. The page's one dialog is [dialogs]: a choice row opens its own, the host opens the calendar one.
+ * One settings page as a pushed screen of the kit, like «Уведомления» and «Сервер ITMO.Widgets»: the page title in
+ * the detail header, then its [SettingSectionView]s; an untitled group after another keeps a group's gap. Stateless:
+ * a switch shows what [state] says, so a refused, cancelled or failed change never needs undoing on screen. The
+ * page's one dialog is the host's calendar rationale in [dialogs].
  */
 @Composable
 fun SettingsScreen(
@@ -82,122 +61,30 @@ fun SettingsScreen(
     scrollState: ScrollState = rememberScrollState(),
     dialogs: SettingsDialogState = rememberSettingsDialogState(),
 ) {
-    Column(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
-        AppTopBar(
-            title = state.page.title.asString(),
-            navigation = {
-                AppTopBarBack(
-                    stringResource(Res.string.settings_back),
-                    actions.onBack,
-                    Modifier.testTag(SettingsTestTags.BACK),
-                )
-            },
-        )
-        if (state.themePreview != null) {
-            AppearanceSample(
-                Modifier
-                    .padding(horizontal = ItmoTheme.spacing.screenMargin)
-                    .padding(bottom = ItmoTheme.spacing.compact)
-                    .testTag(SettingsTestTags.THEME_SAMPLE),
-            )
-        }
-        Box(Modifier.weight(1f).fillMaxWidth()) {
-            // The scroll column appears only with rows, so a restored position is not clamped to an empty page.
-            if (state.sections.isNotEmpty()) SettingsSections(state.sections, actions, dialogs, scrollState)
-        }
-    }
-    SettingsDialogs(dialogs, state.sections, actions, state.themePreview)
-}
-
-@Composable
-private fun SettingsSections(
-    sections: List<SettingSection>,
-    actions: SettingsActions,
-    dialogs: SettingsDialogState,
-    scrollState: ScrollState,
-) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .testTag(SettingsTestTags.SCROLL)
-            .verticalScroll(scrollState)
-            .padding(horizontal = ItmoTheme.spacing.screenMargin)
-            .padding(bottom = ItmoTheme.spacing.group)
-            .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
-    ) {
-        sections.forEachIndexed { index, section ->
-            val top = section.topSpacing(first = index == 0)
-            SettingsGroup(
-                modifier = if (top == null) Modifier else Modifier.padding(top = top),
-                title = section.title?.asString(),
-                footer = section.footer?.let { footer ->
-                    { SettingsGroupFooter(footer.asString(), Modifier.testTag(SettingsTestTags.FOOTER)) }
-                },
-            ) {
-                section.items.forEach { item -> row(item.id) { SettingRow(item, actions, dialogs) } }
+    ItmoDetailScreen(
+        title = state.page.title.asString(),
+        onBack = actions.onBack,
+        backLabel = UiText.Res(CoreStrings.settings_back).asString(),
+        modifier = modifier,
+    ) { padding ->
+        // The scroll column appears only with rows, so a restored position is not clamped to an empty page.
+        if (state.sections.isEmpty()) return@ItmoDetailScreen
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .testTag(SettingsTestTags.SCROLL)
+                .verticalScroll(scrollState)
+                .padding(horizontal = ItmoTheme.spacing.screenMargin)
+                .padding(top = ItmoTheme.spacing.related, bottom = ItmoTheme.spacing.group)
+                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
+            verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+        ) {
+            state.sections.forEachIndexed { index, section ->
+                if (index > 0 && section.title == null) Spacer(Modifier.height(ItmoTheme.spacing.compact))
+                SettingSectionView(section, actions)
             }
         }
     }
-}
-
-/**
- * The gap above a group: a titled group keeps its label's margin (8 dp on the first one), an untitled group after
- * another keeps the group gap itself, and an untitled first group starts right under the bar or the preview.
- */
-@Composable
-private fun SettingSection.topSpacing(first: Boolean): Dp? = when {
-    title != null && first -> ItmoTheme.spacing.compact
-    title != null || !first -> ItmoTheme.spacing.group
-    else -> null
-}
-
-@Composable
-private fun SettingRow(item: SettingItem, actions: SettingsActions, dialogs: SettingsDialogState) {
-    val tag = Modifier.testTag(item.id.key)
-    when (item) {
-        is SettingItem.Toggle -> SettingsToggleRow(
-            title = item.title.asString(),
-            checked = item.checked.takeIf { item.stateKnown },
-            onCheckedChange = { checked ->
-                actions.onToggle(item.id, checked)
-            },
-            modifier = tag,
-            description = item.description?.asString(),
-            enabled = item.enabled,
-        )
-        is SettingItem.Choice -> SettingsChoiceRow(
-            title = item.title.asString(),
-            value = item.value.asString(),
-            onClick = { dialogs.show(SettingsDialog.Choice(item.id)) },
-            modifier = tag,
-            description = item.description?.asString(),
-            enabled = item.enabled,
-        )
-        is SettingItem.Navigation -> SettingsNavigationRow(
-            title = item.title.asString(),
-            onClick = { actions.onNavigate(item.page) },
-            modifier = tag,
-            description = item.description?.asString(),
-            value = item.value?.asString(),
-            enabled = item.enabled,
-        )
-        is SettingItem.Action -> SettingsActionRow(
-            title = item.title.asString(),
-            onClick = { actions.onAction(item.id) },
-            modifier = tag,
-            description = item.description?.asString(),
-            value = item.value?.asString(),
-            trailingIcon = item.trailingIcon?.let { icon -> painterResource(icon.drawable) },
-            enabled = item.enabled,
-        )
-        // The picker lives in the accent colour dialog, next to the presets.
-        is SettingItem.CustomColor -> SettingsChoiceRow(
-            title = item.title.asString(),
-            value = HexColor.format(item.argb),
-            onClick = { dialogs.show(SettingsDialog.Choice(SettingRowId.ACCENT_COLOR)) },
-            modifier = tag,
-            enabled = item.enabled,
-        )
-        is SettingItem.Info -> SettingsInfoRow(item.title.asString(), item.value.asString(), tag)
-    }
+    SettingsDialogs(dialogs, actions)
 }

@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.settings.ui
 
-import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -10,9 +9,6 @@ class SettingsDialogStateTest {
     @Test
     fun `every dialog comes back from its saved string`() {
         val dialogs = listOf(
-            SettingsDialog.Choice(SettingRowId.FULL_WIDGET_TEXT_SIZE),
-            SettingsDialog.Choice(SettingRowId.QR_ANIMATION),
-            SettingsDialog.Choice(SettingRowId.ACCENT_COLOR),
             SettingsDialog.CalendarAccess(locked = false),
             SettingsDialog.CalendarAccess(locked = true),
         )
@@ -26,7 +22,8 @@ class SettingsDialogStateTest {
     @Test
     fun `nothing shown saves nothing and an unknown value restores nothing`() {
         assertNull(SettingsDialogState().save())
-        for (saved in listOf(null, "", "choice:", "choice:REMOVED_ROW", "calendar")) {
+        // `choice:` was the choice dialog before the choices moved onto the page.
+        for (saved in listOf(null, "", "choice:", "choice:QR_ANIMATION", "calendar")) {
             assertNull(SettingsDialogState.restore(saved).dialog)
         }
     }

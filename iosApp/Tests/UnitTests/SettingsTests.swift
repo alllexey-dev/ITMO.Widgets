@@ -30,7 +30,7 @@ final class SettingsTests: XCTestCase {
         }
     }
 
-    func testTheConnectionAndNotificationPagesAreScreensOfTheirOwn() {
+    func testTheConnectionNotificationAndAppearancePagesAreScreensOfTheirOwn() {
         for page in Self.ownScreens {
             XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Settings(page: page.name)), page.name)
         }
@@ -38,6 +38,8 @@ final class SettingsTests: XCTestCase {
         XCTAssertNotNil(connection.state)
         let notifications = ObservableViewModel(NotificationSettingsViewModel.self, state: \.uiState)
         XCTAssertNotNil(notifications.state)
+        let appearance = ObservableViewModel(AppearanceViewModel.self, state: \.uiState)
+        XCTAssertNotNil(appearance.state)
     }
 
     func testAnUnknownPageNameOpensTheRoot() {
@@ -77,7 +79,7 @@ final class SettingsTests: XCTestCase {
     }
 
     /// The pages with view models of their own; `SettingsViewModel` builds none of them.
-    private static let ownScreens: Set<SettingsPage> = [.services, .notifications]
+    private static let ownScreens: Set<SettingsPage> = [.services, .notifications, .appearance]
 
     private static func isSwiftUIScreen(_ route: any AppRoute) -> Bool {
         if case .swiftUI = Routes.target(for: route) { return true }

@@ -2231,18 +2231,6 @@
         }
       }
     },
-    "user_sport_title" : {
-      "comment" : "Generated from strings_sport.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Спорт: %1$@"
-          }
-        }
-      }
-    },
     "widget_preview_sport_swimming" : {
       "comment" : "Generated from strings_sport.xml",
       "extractionState" : "manual",

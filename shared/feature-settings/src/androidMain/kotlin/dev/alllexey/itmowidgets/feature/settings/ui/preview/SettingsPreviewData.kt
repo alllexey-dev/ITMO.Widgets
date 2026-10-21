@@ -2,20 +2,15 @@ package dev.alllexey.itmowidgets.feature.settings.ui.preview
 
 import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
-import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.presentation.EveryPlatformCapability
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPageState
 import dev.alllexey.itmowidgets.feature.settings.presentation.WidgetGalleryRows
 import dev.alllexey.itmowidgets.core.settings.QrAnimationType
-import dev.alllexey.itmowidgets.core.settings.ThemeContrast
-import dev.alllexey.itmowidgets.core.settings.ThemeSpec
-import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.core.settings.WidgetTextSize
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.feature.settings.presentation.ChoiceOption
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingItem
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingRowId
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingSection
@@ -30,39 +25,6 @@ import dev.alllexey.itmowidgets.shared.compose.strings.settings_widget_text_size
 import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_group_colors
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_group_contrast
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_wallpaper_footer
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_contrast_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_dark_black_title
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_dark_black_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_tonal_spot
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_vibrant
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_expressive
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_fidelity
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_content
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_neutral
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_monochrome
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_tonal_spot_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_vibrant_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_expressive_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_fidelity_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_content_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_neutral_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_style_monochrome_description
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_contrast_standard
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_contrast_medium
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_theme_contrast_high
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_amber
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_brand
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_custom
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_green
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_pink
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_purple
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_red
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_teal
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_title
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_accent_color_wallpaper
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_calendar_sync_description
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_calendar_sync_title
@@ -109,79 +71,34 @@ internal object SettingsPreviewData {
         SettingSection(
             title = UiText.Res(SettingsStrings.settings_group_accounts),
             items = listOf(
-                navigation(SettingsPage.SERVICES, value = res(Res.string.settings_services_enabled)),
+                navigation(SettingsPage.SERVICES, value = res(Res.string.settings_services_enabled), icon = AppIcon.CLOUD_DONE),
                 SettingItem.Action(
                     id = SettingRowId.BARS,
                     title = UiText.Res(SettingsStrings.settings_bars_title),
                     value = UiText.Res(SettingsStrings.settings_bars_off),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                    trailingIcon = AppIcon.CHEVRON_RIGHT,
+                    icon = AppIcon.GRADING
                 )
             )
         ),
         SettingSection(
             title = res(Res.string.me_group_app),
             items = listOf(
-                navigation(SettingsPage.NOTIFICATIONS, value = UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(5, 5))),
-                navigation(SettingsPage.WIDGETS),
-                navigation(SettingsPage.APPEARANCE, value = res(Res.string.settings_accent_color_wallpaper)),
-                navigation(SettingsPage.SECTIONS)
+                navigation(
+                    SettingsPage.NOTIFICATIONS,
+                    value = UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(5, 5)),
+                    icon = AppIcon.NOTIFICATION
+                ),
+                navigation(SettingsPage.WIDGETS, icon = AppIcon.WIDGETS),
+                navigation(SettingsPage.APPEARANCE, value = res(Res.string.settings_accent_color_wallpaper), icon = AppIcon.PALETTE),
+                navigation(SettingsPage.SECTIONS, icon = AppIcon.TUNE)
             )
         ),
         SettingSection(
             title = null,
-            items = listOf(navigation(SettingsPage.ABOUT))
+            items = listOf(navigation(SettingsPage.ABOUT, icon = AppIcon.INFO))
         )
     )
-
-    val Appearance = appearance(ThemeSpec())
-
-    /** The appearance page for [theme] where the wallpaper has colours, with the sample above its rows. */
-    fun appearance(theme: ThemeSpec): SettingsUiState {
-        val colors = SettingSection(
-            title = res(Res.string.settings_appearance_group_colors),
-            items = listOfNotNull(
-                SettingItem.Choice(
-                    id = SettingRowId.ACCENT_COLOR,
-                    title = res(Res.string.settings_accent_color_title),
-                    value = theme.accent.label(),
-                    options = AccentColor.entries.map { ChoiceOption(it.name, it.label()) },
-                    selectedOptionKey = theme.accent.name
-                ),
-                SettingItem.CustomColor(
-                    id = SettingRowId.ACCENT_CUSTOM,
-                    title = res(Res.string.settings_accent_color_custom),
-                    argb = theme.customArgb
-                ).takeIf { theme.accent == AccentColor.CUSTOM },
-                SettingItem.Choice(
-                    id = SettingRowId.THEME_PALETTE,
-                    title = res(Res.string.settings_theme_style_title),
-                    value = theme.style.label(),
-                    options = ThemeStyle.entries.map { ChoiceOption(it.name, it.label(), it.description()) },
-                    selectedOptionKey = theme.style.name
-                )
-            ),
-            footer = res(Res.string.settings_appearance_wallpaper_footer).takeIf { theme.accent == AccentColor.WALLPAPER }
-        )
-        val contrast = SettingSection(
-            title = res(Res.string.settings_appearance_group_contrast),
-            items = listOf(
-                SettingItem.Choice(
-                    id = SettingRowId.THEME_CONTRAST,
-                    title = res(Res.string.settings_theme_contrast_title),
-                    value = theme.contrast.label(),
-                    options = ThemeContrast.entries.map { ChoiceOption(it.name, it.label()) },
-                    selectedOptionKey = theme.contrast.name
-                ),
-                SettingItem.Toggle(
-                    id = SettingRowId.DARK_BLACK,
-                    title = res(Res.string.settings_dark_black_title),
-                    description = res(Res.string.settings_dark_black_description),
-                    checked = theme.pureBlack
-                )
-            )
-        )
-        return state(SettingsPage.APPEARANCE, colors, contrast).copy(themePreview = theme)
-    }
 
     /** The gallery with every format, one placed widget and the pass under its spoiler. */
     val Widgets = widgets(placed = mapOf(WidgetFormat.DAY to 1))
@@ -211,6 +128,7 @@ internal object SettingsPreviewData {
                     id = SettingRowId.HOME_PASS_VISIBLE,
                     title = UiText.Res(SettingsStrings.settings_home_pass_title),
                     checked = true,
+                    icon = AppIcon.QR_CODE,
                 )
             ),
             footer = UiText.Res(SettingsStrings.settings_home_pass_description),
@@ -222,19 +140,21 @@ internal object SettingsPreviewData {
                     id = SettingRowId.CALENDAR_SYNC,
                     title = res(Res.string.settings_calendar_sync_title),
                     description = res(Res.string.settings_calendar_sync_description),
-                    checked = false
+                    checked = false,
+                    icon = AppIcon.EVENT_REPEAT
                 ),
                 SettingItem.Action(
                     id = SettingRowId.ICS_EXPORT,
                     title = res(Res.string.settings_ics_export_title),
                     description = res(Res.string.settings_ics_export_description),
-                    trailingIcon = AppIcon.DOWNLOAD
+                    icon = AppIcon.DOWNLOAD
                 ),
                 SettingItem.Toggle(
                     id = SettingRowId.SCHEDULE_SPORT_AUTO_SIGN,
                     title = res(Res.string.settings_schedule_sport_auto_sign_title),
                     description = res(Res.string.settings_schedule_sport_auto_sign_description),
-                    checked = true
+                    checked = true,
+                    icon = AppIcon.SPRINT
                 )
             ),
             footer = res(Res.string.settings_schedule_footer)
@@ -245,12 +165,14 @@ internal object SettingsPreviewData {
                 SettingItem.Toggle(
                     id = SettingRowId.SPORT_TEACHER_FILTER,
                     title = res(Res.string.settings_sport_teacher_filter_title),
-                    checked = false
+                    checked = false,
+                    icon = AppIcon.PERSON
                 ),
                 SettingItem.Toggle(
                     id = SettingRowId.SPORT_TIME_FILTER,
                     title = res(Res.string.settings_sport_time_filter_title),
-                    checked = false
+                    checked = false,
+                    icon = AppIcon.SCHEDULE
                 )
             )
         )
@@ -265,13 +187,15 @@ internal object SettingsPreviewData {
                     id = SettingRowId.PAIR_DEVICE,
                     title = UiText.Res(SettingsStrings.connection_pair),
                     description = UiText.Res(SettingsStrings.connection_pair_text),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                    trailingIcon = AppIcon.CHEVRON_RIGHT,
+                    icon = AppIcon.QR_CODE_SCANNER
                 ),
                 SettingItem.Action(
                     id = SettingRowId.CONNECTED_DEVICES,
                     title = UiText.Res(SettingsStrings.connection_devices_list),
                     description = UiText.Res(SettingsStrings.connection_devices_list_text),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                    trailingIcon = AppIcon.CHEVRON_RIGHT,
+                    icon = AppIcon.DEVICES
                 )
             )
         )
@@ -285,30 +209,33 @@ internal object SettingsPreviewData {
                 SettingItem.Action(
                     id = SettingRowId.REFRESH_WIDGETS,
                     title = res(Res.string.settings_refresh_widgets_title),
-                    trailingIcon = AppIcon.REFRESH
+                    icon = AppIcon.REFRESH
                 ),
                 SettingItem.Action(
                     id = SettingRowId.RESTART_ONBOARDING,
                     title = res(Res.string.settings_restart_onboarding_title),
                     description = res(Res.string.settings_restart_onboarding_description),
-                    trailingIcon = AppIcon.REFRESH
+                    icon = AppIcon.HISTORY
                 ),
                 SettingItem.Action(
                     id = SettingRowId.DIAGNOSTICS,
                     title = res(Res.string.settings_diagnostics_title),
                     value = UiText.Res(SettingsStrings.settings_diagnostics_count, listOf(0)),
-                    trailingIcon = AppIcon.CHEVRON_RIGHT
+                    trailingIcon = AppIcon.CHEVRON_RIGHT,
+                    icon = AppIcon.ERROR
                 ),
                 SettingItem.Action(
                     id = SettingRowId.PRIVACY_POLICY,
                     title = res(Res.string.settings_privacy_policy_title),
-                    trailingIcon = AppIcon.OPEN_IN_NEW
+                    trailingIcon = AppIcon.OPEN_IN_NEW,
+                    icon = AppIcon.LOCK
                 ),
-                navigation(SettingsPage.LICENSES),
+                navigation(SettingsPage.LICENSES, icon = AppIcon.MENU_BOOK),
                 SettingItem.Action(
                     id = SettingRowId.VERSION,
                     title = res(Res.string.settings_version_title),
-                    value = versionSummary(BUILD)
+                    description = versionSummary(BUILD),
+                    icon = AppIcon.INFO
                 )
             ),
             footer = res(Res.string.app_unofficial_notice)
@@ -340,7 +267,7 @@ internal object SettingsPreviewData {
         )
     )
 
-    /** Every row kind with long Russian text, a locked switch, a switch still loading and a disabled row. */
+    /** Every row kind with long Russian text, a switch that cannot change now and a disabled row. */
     val LongText = SettingsUiState(
         page = SettingsPage.SECTIONS,
         loaded = true,
@@ -365,15 +292,17 @@ internal object SettingsPreviewData {
                     ),
                     SettingItem.Toggle(
                         id = SettingRowId.QR_SPOILER,
-                        title = UiText.Dynamic("Переключатель, значение которого ещё загружается с сервера"),
+                        title = UiText.Dynamic("Выключенный переключатель, который сейчас нельзя изменить"),
                         checked = false,
-                        stateKnown = false
+                        enabled = false,
+                        icon = AppIcon.LOCK
                     ),
                     SettingItem.Navigation(
                         id = SettingRowId.PAGE_SERVICES,
                         title = UiText.Dynamic("Подключение к ITMO.Widgets и удаление аккаунта"),
                         value = UiText.Dynamic("Не подключено, друзья и автозапись недоступны"),
-                        page = SettingsPage.SERVICES
+                        page = SettingsPage.SERVICES,
+                        icon = AppIcon.CLOUD_OFF
                     ),
                     SettingItem.Action(
                         id = SettingRowId.QR_RESET_IMAGE,
@@ -393,8 +322,8 @@ internal object SettingsPreviewData {
         )
     )
 
-    private fun navigation(page: SettingsPage, title: UiText = page.title, value: UiText? = null) =
-        SettingItem.Navigation(SettingRowId.navigation(page), title, value, page = page)
+    private fun navigation(page: SettingsPage, value: UiText? = null, icon: AppIcon? = null) =
+        SettingItem.Navigation(SettingRowId.navigation(page), page.title, value, page = page, icon = icon)
 
     private fun state(page: SettingsPage, vararg sections: SettingSection) =
         SettingsUiState(page, sections.toList(), loaded = true)
@@ -406,52 +335,6 @@ internal object SettingsPreviewData {
             WidgetTextSize.NORMAL -> Res.string.settings_widget_text_size_normal
             WidgetTextSize.LARGE -> Res.string.settings_widget_text_size_large
             WidgetTextSize.EXTRA_LARGE -> Res.string.settings_widget_text_size_extra_large
-        }
-    )
-
-    private fun AccentColor.label() = res(
-        when (this) {
-            AccentColor.WALLPAPER -> Res.string.settings_accent_color_wallpaper
-            AccentColor.BRAND -> Res.string.settings_accent_color_brand
-            AccentColor.TEAL -> Res.string.settings_accent_color_teal
-            AccentColor.GREEN -> Res.string.settings_accent_color_green
-            AccentColor.AMBER -> Res.string.settings_accent_color_amber
-            AccentColor.RED -> Res.string.settings_accent_color_red
-            AccentColor.PINK -> Res.string.settings_accent_color_pink
-            AccentColor.PURPLE -> Res.string.settings_accent_color_purple
-            AccentColor.CUSTOM -> Res.string.settings_accent_color_custom
-        }
-    )
-
-    private fun ThemeStyle.label() = res(
-        when (this) {
-            ThemeStyle.TONAL_SPOT -> Res.string.settings_theme_style_tonal_spot
-            ThemeStyle.VIBRANT -> Res.string.settings_theme_style_vibrant
-            ThemeStyle.EXPRESSIVE -> Res.string.settings_theme_style_expressive
-            ThemeStyle.FIDELITY -> Res.string.settings_theme_style_fidelity
-            ThemeStyle.CONTENT -> Res.string.settings_theme_style_content
-            ThemeStyle.NEUTRAL -> Res.string.settings_theme_style_neutral
-            ThemeStyle.MONOCHROME -> Res.string.settings_theme_style_monochrome
-        }
-    )
-
-    private fun ThemeStyle.description() = res(
-        when (this) {
-            ThemeStyle.TONAL_SPOT -> Res.string.settings_theme_style_tonal_spot_description
-            ThemeStyle.VIBRANT -> Res.string.settings_theme_style_vibrant_description
-            ThemeStyle.EXPRESSIVE -> Res.string.settings_theme_style_expressive_description
-            ThemeStyle.FIDELITY -> Res.string.settings_theme_style_fidelity_description
-            ThemeStyle.CONTENT -> Res.string.settings_theme_style_content_description
-            ThemeStyle.NEUTRAL -> Res.string.settings_theme_style_neutral_description
-            ThemeStyle.MONOCHROME -> Res.string.settings_theme_style_monochrome_description
-        }
-    )
-
-    private fun ThemeContrast.label() = res(
-        when (this) {
-            ThemeContrast.STANDARD -> Res.string.settings_theme_contrast_standard
-            ThemeContrast.MEDIUM -> Res.string.settings_theme_contrast_medium
-            ThemeContrast.HIGH -> Res.string.settings_theme_contrast_high
         }
     )
 
