@@ -174,6 +174,14 @@ otherwise; iOS always opens this sheet.
 
 ## iOS
 
+The vertical feed observes visible target IDs with `onScrollTargetVisibilityChange`; it has no `scrollPosition`
+binding that could retarget a lazy section during sheet layout. Headers and timelines have separate IDs, and an
+explicit date jump targets the concrete header, never the union of a section's views. That jump stays pending
+until its rows finish loading, and a vertical drag or lesson tap cancels it. Visible-date updates and edge
+pagination follow real vertical drags/deceleration, not layout changes during a sheet transition.
+`ScheduleUITests.testRepeatedLessonSheetsKeepTheFeedPosition` checks three open/close cycles on today and after a
+partial scroll, measuring the same lesson's frame each time.
+
 SwiftUI over the same view models ([iOS app](../ios.md)): `ScheduleScreen.swift` has the feed, `ScheduleSheets.swift`
 the lesson sheet, the month sheet and the friend picker (`Routes+Schedule.swift`). The week strip stays a few points
 off the bar above it: a scroll view touching the bar's edge takes the bar's height as a vertical content inset and
