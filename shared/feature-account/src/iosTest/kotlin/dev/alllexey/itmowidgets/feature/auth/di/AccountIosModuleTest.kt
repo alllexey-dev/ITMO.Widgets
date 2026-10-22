@@ -25,6 +25,7 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AppGroupDirectory
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
+import dev.alllexey.itmowidgets.core.storage.WidgetReloader
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
@@ -196,7 +197,8 @@ class AccountIosModuleTest {
         UnconfinedTestDispatcher()
     ) {
         val session = FakeSessionRepository(SessionState.Initializing)
-        val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = {}))
+        val reloaded = mutableListOf<String>()
+        val writer = SessionSnapshotWriter(AppGroupSnapshotWriter(appGroup, reloader = { reloaded += it }))
         SessionSnapshotSync(
             session, MutableStateFlow(false), MutableStateFlow(false), MutableStateFlow(emptySet()), { INSTALL_ID }, writer, log,
         )
@@ -208,6 +210,8 @@ class AccountIosModuleTest {
             SessionSnapshot(isu = DemoPeople.ME.isu, demo = true, alertsAllowed = false, servicesEnabled = false),
             writer.read()
         )
+        // Widgets placed while signed out leave their signed-out timeline at once.
+        assertEquals(WidgetReloader.ALL_KINDS, reloaded)
 
         // Sign-out: the App Group cleaner removes the file, no state writes it.
         session.mutableState.value = SessionState.SigningOut

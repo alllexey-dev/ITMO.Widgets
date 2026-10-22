@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.storage.WidgetReloader
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
@@ -24,7 +25,6 @@ import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
-import dev.alllexey.itmowidgets.feature.settings.data.IosWidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
 import dev.alllexey.itmowidgets.feature.settings.domain.QuickSettingsTileAccess
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
@@ -128,7 +128,7 @@ class SettingsIosModuleTest {
 
         koin.get<WidgetRefreshRequester>().refreshAll()
 
-        assertEquals(IosWidgetRefreshRequester.WIDGET_KINDS, host.reloaded)
+        assertEquals(WidgetReloader.ALL_KINDS, host.reloaded)
         koin.close()
     }
 

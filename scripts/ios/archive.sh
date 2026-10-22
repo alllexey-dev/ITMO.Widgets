@@ -245,8 +245,9 @@ package_unsigned() {
   if [ -n "$app_groups" ] && [ "$app_groups" = "$widget_groups" ]; then
     printf 'Widgets: real data. App and widget request the App Group %s; AltStore and SideStore re-sign it\n' \
       "$app_groups"
-    printf '  into <group>.<TEAMID> and list it under ALTAppGroups, which AppGroupDirectory and AppGroupSnapshot try\n'
-    printf '  after AppGroupID. Confirm on a device in a free-team session before an unsigned prerelease;\n'
+    printf '  into <group>.<TEAMID>; AppGroupDirectory and AppGroupSnapshot try ALTAppGroups (AltStore) and the\n'
+    printf '  groups of embedded.mobileprovision (SideStore writes no ALTAppGroups) after AppGroupID. Confirm on a\n'
+    printf '  device in a free-team session before an unsigned prerelease;\n'
     printf '  if no container resolves there, the widgets stay in the signed-out state.\n'
   else
     printf 'Widgets: demo data. App and widget do not request one App Group (%s / %s), so no container resolves\n' \

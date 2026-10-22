@@ -127,6 +127,20 @@ final class SnapshotReaderTests: XCTestCase {
         XCTAssertEqual(AppGroupSnapshot.groupCandidates(of: try infoBundle([:])), [])
     }
 
+    /// SideStore re-signs `group.example.own` into `group.example.own.TEAMID` and writes no `ALTAppGroups`; only the
+    /// bundle's provisioning profile names the group the signature grants.
+    func testAProvisionedGroupIsTriedAfterTheInfoPlistOnes() throws {
+        let bundle = try infoBundle(["AppGroupID": "group.example.own"])
+        let entitlements = ["Entitlements": ["com.apple.security.application-groups": ["group.example.own.TEAMID"]]]
+        let plist = try PropertyListSerialization.data(fromPropertyList: entitlements, format: .xml, options: 0)
+        // The CMS envelope around the plist: binary bytes before and after it.
+        try (Data([0x30, 0x82, 0x3c, 0x00, 0xff]) + plist + Data([0xa0, 0x82, 0x00]))
+            .write(to: bundle.bundleURL.appendingPathComponent("embedded.mobileprovision"))
+
+        XCTAssertEqual(AppGroupSnapshot.groupCandidates(of: bundle), ["group.example.own", "group.example.own.TEAMID"])
+        XCTAssertEqual(AppGroupSnapshot.provisionedGroups(profile: Data("not a profile".utf8)), [])
+    }
+
     private func write(_ text: String, to name: String) throws {
         try Data(text.utf8).write(to: container.appendingPathComponent(name))
     }

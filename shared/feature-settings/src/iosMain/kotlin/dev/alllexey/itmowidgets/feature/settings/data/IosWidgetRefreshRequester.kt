@@ -9,16 +9,5 @@ import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
  */
 class IosWidgetRefreshRequester(private val reloader: WidgetReloader) : WidgetRefreshRequester {
 
-    override fun refreshAll() = WIDGET_KINDS.forEach(reloader::reload)
-
-    companion object {
-        /** The kinds of the widget extension (`StableIdentifiersTests`). */
-        val WIDGET_KINDS = listOf(
-            "dev.alllexey.itmowidgets.widget.qr",
-            "dev.alllexey.itmowidgets.widget.single-lesson",
-            "dev.alllexey.itmowidgets.widget.day-schedule",
-            "dev.alllexey.itmowidgets.widget.day-timeline",
-            "dev.alllexey.itmowidgets.widget.sport",
-        )
-    }
+    override fun refreshAll() = WidgetReloader.ALL_KINDS.forEach(reloader::reload)
 }
