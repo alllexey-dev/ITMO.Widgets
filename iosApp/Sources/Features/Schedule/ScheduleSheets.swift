@@ -133,6 +133,7 @@ struct LessonSheetContent: View {
         }
         VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: state.time.resolved).font(.itmo(.titleSmall, emphasized: true)).monospacedDigit()
+                .accessibilityIdentifier("lessonSheet.time")
             if let address = state.address {
                 Text(verbatim: address).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
             }

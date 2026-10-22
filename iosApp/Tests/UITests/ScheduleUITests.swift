@@ -106,6 +106,47 @@ final class ScheduleUITests: XCTestCase {
         XCTAssertTrue(element(app, "shell.root.schedule").exists)
     }
 
+    /// An entry route clears and opens the sheet in the same turn, without waiting for a dismissal animation.
+    /// This deterministically exercises the retained @State that fast close/reopen taps can expose.
+    func testReplacingALessonBeforeDismissalSettlesShowsTheNewDetails() throws {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        openSchedule(app)
+        for (pairId, room, start) in [(1, "101", "08:20"), (2, "202", "10:00"), (3, "303", "11:40"), (1, "101", "08:20")] {
+            try app.open(lessonURL(pairId: pairId, room: room, start: start))
+            let sheet = element(app, "schedule.lessonSheet")
+            XCTAssertTrue(sheet.waitForExistence(timeout: stepTimeout))
+            let current = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                let shownRoom = self.element(app, "lessonSheet.room")
+                let shownTime = self.element(app, "lessonSheet.time")
+                return shownRoom.exists && shownRoom.label == room && shownTime.exists && shownTime.label.contains(start)
+            }, object: app)
+            XCTAssertEqual(XCTWaiter.wait(for: [current], timeout: stepTimeout), .completed,
+                           "lesson \(pairId) must replace the preceding lesson, even with the same subject")
+        }
+    }
+
+    /// Reopening details must not re-anchor the underlying day section, either on Today or mid-scroll.
+    func testRepeatedLessonSheetsKeepTheFeedPosition() throws {
+        let app = XCUIApplication.itmo()
+        app.launch()
+        openSchedule(app)
+        XCTAssertTrue(waitUntilHittable(todayRow(app)))
+        try assertLessonSheetsKeepPosition(app)
+
+        let first = try XCTUnwrap(lessonOnScreen(app))
+        let firstY = first.frame.minY
+        let list = element(app, "schedule.list")
+        let start = list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
+        let end = list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+        start.press(forDuration: 0.01, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0)
+        let moved = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in !first.exists || first.frame.minY < firstY - 20 }, object: app
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [moved], timeout: stepTimeout), .completed, "the second case must actually scroll")
+        try assertLessonSheetsKeepPosition(app)
+    }
+
     func testFriendPickerAnswersTheScheduleAndTheOwnScheduleComesBack() {
         let app = XCUIApplication.itmo()
         app.launch()
@@ -266,14 +307,21 @@ final class ScheduleUITests: XCTestCase {
         lessons(app).firstMatch
     }
 
-    /// The first lesson wholly inside the feed, so a tap lands on it.
+    /// The first lesson wholly inside the feed, so a tap lands on it. Lesson ids repeat from day to day: the element
+    /// is looked up inside its day, so it resolves to the same lesson later.
     private func lessonOnScreen(_ app: XCUIApplication) -> XCUIElement? {
         XCTAssertTrue(firstLesson(app).waitForExistence(timeout: stepTimeout))
         let list = element(app, "schedule.list").frame
-        let rows = lessons(app)
-        return (0..<min(rows.count, 20)).lazy
-            .map { rows.element(boundBy: $0) }
-            .first { list.contains($0.frame) && $0.isHittable }
+        let days = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'schedule.day.'"))
+        for dayIndex in 0..<min(days.count, 10) {
+            let day = element(app, days.element(boundBy: dayIndex).identifier)
+            let rows = day.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'timeline.lesson.'"))
+            for index in 0..<rows.count {
+                let lesson = day.descendants(matching: .any)[rows.element(boundBy: index).identifier].firstMatch
+                if list.contains(lesson.frame) && lesson.isHittable { return lesson }
+            }
+        }
+        return nil
     }
 
     private func openLessonSheet(_ app: XCUIApplication) -> XCUIElement {
@@ -286,6 +334,57 @@ final class ScheduleUITests: XCTestCase {
         let sheet = element(app, "schedule.lessonSheet")
         XCTAssertTrue(sheet.waitForExistence(timeout: stepTimeout))
         return sheet
+    }
+
+    private func lessonURL(pairId: Int, room: String, start: String) throws -> URL {
+        var args: [String: Any] = [
+            "pairId": pairId, "date": Self.today, "subjectName": "Same subject", "typeId": 1, "format": "",
+            "start": start, "end": "13:10", "room": room,
+        ]
+        for key in ["teacherFio", "teacherIsu", "building", "buildingId", "mainBuildingId", "note", "zoomUrl",
+                    "zoomPassword", "zoomInfo", "flowName", "subjectId"] {
+            args[key] = NSNull()
+        }
+        let json = try JSONSerialization.data(withJSONObject: args)
+        let encoded = json.base64EncodedString().replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
+        return try XCTUnwrap(URL(string: "itmowidgets://route/lesson?args=\(encoded)"))
+    }
+
+    private func assertLessonSheetsKeepPosition(_ app: XCUIApplication) throws {
+        let lesson = try XCTUnwrap(lessonOnScreen(app), "a lesson wholly inside the feed is needed")
+        let original = try XCTUnwrap(stableFrame(of: lesson), "the feed did not settle")
+        for cycle in 1...3 {
+            // Tap the same lesson, without the helper's swipe fallback: scrolling here would mask the regression.
+            XCTAssertTrue(lesson.isHittable, "the original lesson moved off screen before cycle \(cycle)")
+            lesson.tap()
+            let sheet = element(app, "schedule.lessonSheet")
+            XCTAssertTrue(sheet.waitForExistence(timeout: stepTimeout))
+            app.buttons[Self.close].firstMatch.tap()
+            XCTAssertTrue(sheet.waitForNonExistence(timeout: stepTimeout))
+            let restored = try XCTUnwrap(stableFrame(of: lesson), "the lesson did not settle after dismissal")
+            XCTAssertEqual(restored.minY, original.minY, accuracy: 2, "cycle \(cycle) moved the lesson")
+            XCTAssertEqual(restored.height, original.height, accuracy: 2)
+        }
+    }
+
+    /// Wait for the actual frame to settle, so a dismissal's first animation frame cannot hide a later jump.
+    private func stableFrame(of lesson: XCUIElement) -> CGRect? {
+        let deadline = Date().addingTimeInterval(stepTimeout)
+        var previous: CGRect?
+        var stableSince = Date()
+        while Date() < deadline {
+            guard lesson.exists && lesson.isHittable else { return nil }
+            let frame = lesson.frame
+            if let previous, abs(frame.minY - previous.minY) < 1 && abs(frame.height - previous.height) < 1 {
+                if Date().timeIntervalSince(stableSince) >= 0.5 { return frame }
+            } else {
+                previous = frame
+                stableSince = Date()
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        return nil
     }
 
     /// Opens the picker and chooses `isu` with one tap.

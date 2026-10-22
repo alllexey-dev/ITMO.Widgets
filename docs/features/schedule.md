@@ -180,3 +180,11 @@ off the bar above it: a scroll view touching the bar's edge takes the bar's heig
 draws its days outside its clip (`ScheduleUITests.testWeekStripIsDrawnOnLaunchAndAfterATabSwitch` checks the
 pixels). iOS animates programmatic week changes unless Reduce Motion is on. See also
 [schedule changes](schedule-changes.md#ios), [calendar](calendar.md#ios), [widgets](widgets.md#timeline-widgetkit).
+
+The feed has no `scrollPosition` binding: it reads the visible rows with `onScrollTargetVisibilityChange`, so a sheet
+presenting or dismissing never re-anchors a lazy section. A date jump scrolls to the day's header (`jump-<key>`, the
+timeline has its own id) and stays pending until the rows above it load; a vertical drag or a lesson tap cancels it.
+The visible date and edge loading follow only the user's own scrolling. A sheet's identity is its whole route with
+the arguments, so another lesson opened while the last one is still closing gets its own view model
+(`ScheduleUITests.testRepeatedLessonSheetsKeepTheFeedPosition`,
+`testReplacingALessonBeforeDismissalSettlesShowsTheNewDetails`).

@@ -29,6 +29,7 @@ struct ShellView: View {
             .sheet(item: $router.sheet) { sheet in
                 // Route sheets open further routes and answer their opener through the router.
                 ShellSheetView(sheet: sheet)
+                    .id(sheet.id)
                     .environment(router)
             }
     }
@@ -143,6 +144,6 @@ struct ShellSheetView: View {
                 description: AppStrings.string("app_link_unavailable_text")
             )
         }
-        .accessibilityIdentifier("shell.sheet.\(sheet.id)")
+        .accessibilityIdentifier("shell.sheet.linkUnavailable")
     }
 }

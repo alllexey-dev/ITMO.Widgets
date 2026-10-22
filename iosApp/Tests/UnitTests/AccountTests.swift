@@ -25,7 +25,8 @@ final class AccountTests: XCTestCase {
     func testWebLoginOpensAsASheetWithItsLinkCode() {
         XCTAssertEqual(target(AppRoutes.WebLogin(code: nil)), .sheet(.webLogin(code: nil)))
         XCTAssertEqual(target(AppRoutes.WebLogin(code: "ABCD2345")), .sheet(.webLogin(code: "ABCD2345")))
-        XCTAssertEqual(ShellSheet.webLogin(code: "ABCD2345").id, "webLogin")
+        XCTAssertEqual(ShellSheet.webLogin(code: "ABCD2345").id, .webLogin(code: "ABCD2345"))
+        XCTAssertNotEqual(ShellSheet.webLogin(code: "ABCD2345").id, ShellSheet.webLogin(code: nil).id)
     }
 
     // MARK: My ITMO web

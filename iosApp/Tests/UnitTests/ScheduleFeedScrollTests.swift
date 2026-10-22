@@ -36,4 +36,34 @@ final class ScheduleFeedScrollTests: XCTestCase {
         XCTAssertEqual(newPositions, 2)
         XCTAssertEqual(newCompletions, 1)
     }
+
+    func testOpeningDetailsInvalidatesTheJumpBeforeItsSwiftUITaskIsCancelled() async {
+        let positioned = expectation(description: "First positioning pass")
+        var positions = 0
+        var completions = 0
+        var current = true
+        let jump = Task {
+            await ScheduleFeedScroll.settle(
+                scroll: { positions += 1; positioned.fulfill() },
+                completed: { completions += 1 },
+                isCurrent: { current }
+            )
+        }
+        await fulfillment(of: [positioned], timeout: 2)
+        // Model-state observation crosses Kotlin/Swift asynchronously. A lesson tap cancels the local intent now.
+        current = false
+        await jump.value
+        XCTAssertEqual(positions, 1)
+        XCTAssertEqual(completions, 0)
+    }
+
+    func testAnAlreadyInvalidatedJumpNeverScrolls() async {
+        var positions = 0
+        var completions = 0
+        await ScheduleFeedScroll.settle(
+            scroll: { positions += 1 }, completed: { completions += 1 }, isCurrent: { false }
+        )
+        XCTAssertEqual(positions, 0)
+        XCTAssertEqual(completions, 0)
+    }
 }
