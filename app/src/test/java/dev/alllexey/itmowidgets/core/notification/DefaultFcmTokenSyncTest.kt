@@ -123,6 +123,7 @@ class DefaultFcmTokenSyncTest {
         val sync get() = DefaultFcmTokenSync(FirebaseTokenProvider { token }, utility, DefaultBackendGate(settings, demo),
             object : SessionTokenStore {
                 override fun hasRefreshToken() = signedIn
+                override fun getRefreshToken(): String? = null
                 override fun getIdToken(): String? = null
                 override fun replaceWithRefreshToken(refreshToken: String) = Unit
                 override fun clearTokens() = Unit

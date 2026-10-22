@@ -11,7 +11,7 @@ class FakeSessionTokenStore(
     private val idToken: String? = null,
     private val clearOrder: MutableList<String>? = null,
 ) : SessionTokenStore {
-    var refreshToken: String? = if (signedIn) STORED_REFRESH_TOKEN else null
+    private var refreshToken: String? = if (signedIn) STORED_REFRESH_TOKEN else null
     var cleared = false
 
     var signedIn: Boolean
@@ -21,6 +21,8 @@ class FakeSessionTokenStore(
         }
 
     override fun hasRefreshToken(): Boolean = refreshToken != null
+
+    override fun getRefreshToken(): String? = refreshToken
 
     override fun getIdToken(): String? = idToken
 

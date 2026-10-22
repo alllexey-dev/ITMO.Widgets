@@ -213,7 +213,7 @@ class DebugToolsViewModelTest {
 
         override suspend fun signInWithRefreshToken(refreshToken: String): AppResult<Unit> {
             lastToken = refreshToken
-            tokenStore.refreshToken = refreshToken.trim()
+            tokenStore.replaceWithRefreshToken(refreshToken.trim())
             return AppResult.Success(Unit)
         }
     }

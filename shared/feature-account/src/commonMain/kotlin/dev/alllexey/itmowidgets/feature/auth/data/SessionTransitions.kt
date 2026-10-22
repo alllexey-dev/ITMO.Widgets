@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.auth.data
 import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
@@ -13,6 +14,8 @@ import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.session.WebStoreDataCleaner
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The side effects of every session change, in a fixed order. [SessionRepositoryImpl] decides which
@@ -31,6 +34,7 @@ class SessionTransitions(
     private val fcmTokenSync: FcmTokenSync,
     private val diagnostics: AppDiagnostics,
     private val demoPreferences: DemoPreferences,
+    private val demo: DemoMode,
     private val dispatchers: AppDispatchers
 ) {
 
@@ -84,8 +88,12 @@ class SessionTransitions(
         // No Backend identity, FCM token, device or background work: the demo stays on the device.
     }
 
-    /** Runs after `SigningOut` is published, so no screen renders its caches emptied. */
-    suspend fun signOut() {
+    /**
+     * Runs after `SigningOut` is published, so no screen renders its caches emptied. [refreshToken] ends its ITMO.ID
+     * session first, while the tokens and the web store still hold it.
+     */
+    suspend fun signOut(refreshToken: String?) {
+        refreshToken?.let { endItmoIdSession(it) }
         runCatching { backendDeviceSession.unregisterCurrentDevice() }
         runCatching { lifecycleEffects.prepareForSessionChange() }
         clearSessionDataIgnoringFailures()
@@ -100,11 +108,23 @@ class SessionTransitions(
         runCatching { lifecycleEffects.onSignedOut() }
     }
 
+    /** Best effort: a failed or slow logout leaves the session to expire at ITMO.ID and never holds the sign-out. */
+    private suspend fun endItmoIdSession(refreshToken: String) {
+        if (demo.isActive()) return
+        runCatching {
+            withTimeout(LOGOUT_BUDGET) { withContext(dispatchers.io) { myItmo.identity.logout(refreshToken) } }
+        }.onFailure { diagnostics.warn("Session", "ITMO.ID logout failed", it) }
+    }
+
     private suspend fun clearTokens() {
         withContext(dispatchers.io) { myItmo.tokens.replaceTokens(null) }
     }
 
     private suspend fun clearSessionDataIgnoringFailures() {
         dataCleaners.current().forEach { cleaner -> runCatching { cleaner.clearSessionData() } }
+    }
+
+    private companion object {
+        val LOGOUT_BUDGET = 5.seconds
     }
 }

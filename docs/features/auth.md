@@ -69,8 +69,15 @@ tokens ITMO.ID issues and never sees a password. See also
   the sign-in). A failure before that clears tokens and data and ends
   `SignedOut`.
 - `signOut()` publishes `SigningOut` first (no screen renders cleared caches),
-  then unregisters the device, prepares widgets, runs the cleaners, clears
-  tokens, runs signed-out effects, ends `SignedOut` (confirm: [profile](me.md)).
+  then ends the ITMO.ID session, unregisters the device, prepares widgets, runs
+  the cleaners, clears tokens, runs signed-out effects, ends `SignedOut`
+  (confirm: [profile](me.md)).
+- Ending the session is MyItmoApi's `ItmoIdClient.logout` with the stored
+  refresh token (OIDC logout), so the session leaves `id.itmo.ru/activity` and
+  its refresh tokens and SSO cookies die; other sessions of the account live.
+  Best effort: a failure or no answer within 5 seconds is logged and the
+  sign-out goes on, leaving the session to expire at ITMO.ID. The demo holds no
+  tokens and never calls it.
 
 ## iOS
 

@@ -27,7 +27,9 @@ import dev.alllexey.itmowidgets.testkit.FakeClock
 import dev.alllexey.itmowidgets.testkit.bodyText
 import dev.alllexey.itmowidgets.testkit.respondJson
 import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockEngineConfig
 import io.ktor.client.engine.mock.MockRequestHandleScope
+import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpStatusCode
@@ -40,6 +42,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.IOException
@@ -191,9 +194,12 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun unregistersDeviceAndClearsPrivateDataBeforeTokensOnLogout() = runTest(dispatcher) {
+    fun endsTheItmoIdSessionUnregistersDeviceAndClearsPrivateDataBeforeTokensOnLogout() = runTest(dispatcher) {
         val order = mutableListOf<String>()
-        val fixture = fixture(session = stored(), order = order)
+        val fixture = fixture(session = stored(), order = order) {
+            order += "logout"
+            respond("", HttpStatusCode.NoContent)
+        }
         fixture.cleaner.onClear = {
             assertEquals(SessionState.SigningOut, fixture.repository.state.value)
         }
@@ -201,19 +207,46 @@ class SessionRepositoryImplTest {
         fixture.repository.signOut()
 
         assertEquals(
-            listOf("unregister", "prepare", "clean", "tokens", "signed-out"),
+            listOf("logout", "unregister", "prepare", "clean", "tokens", "signed-out"),
             order
         )
         assertEquals(SessionState.SignedOut, fixture.repository.state.value)
         assertFalse(fixture.storage.hasRefreshToken())
+        val logout = fixture.requests.single()
+        assertTrue(logout.url.encodedPath.endsWith("/protocol/openid-connect/logout"))
+        assertTrue("refresh_token=stored-refresh" in logout.bodyText())
     }
 
     @Test
-    fun localLogoutSucceedsWhenBackendIsUnavailable() = runTest(dispatcher) {
+    fun signOutFinishesWhenItmoIdRejectsTheLogout() = runTest(dispatcher) {
+        val fixture = fixture(session = stored()) {
+            respondJson("""{"error":"invalid_grant"}""", HttpStatusCode.BadRequest)
+        }
+
+        fixture.repository.signOut()
+
+        assertEquals(SessionState.SignedOut, fixture.repository.state.value)
+        assertNull(fixture.storage.read())
+        assertEquals(1, fixture.requests.size)
+    }
+
+    @Test
+    fun aHangingItmoIdLogoutHoldsTheSignOutForFiveSecondsAtMost() = runTest(dispatcher) {
+        val fixture = fixture(session = stored()) { awaitCancellation() }
+
+        fixture.repository.signOut()
+
+        assertEquals(5_000, testScheduler.currentTime)
+        assertEquals(SessionState.SignedOut, fixture.repository.state.value)
+        assertNull(fixture.storage.read())
+    }
+
+    @Test
+    fun localLogoutSucceedsWhenItmoIdAndBackendAreUnavailable() = runTest(dispatcher) {
         val fixture = fixture(
             session = stored(),
             unregisterError = IOException("offline")
-        )
+        ) { throw IOException("offline") }
 
         fixture.repository.signOut()
 
@@ -253,9 +286,9 @@ class SessionRepositoryImplTest {
     }
 
     @Test
-    fun signingOutOfTheDemoKeepsTheDeviceRegistrationAlone() = runTest(dispatcher) {
+    fun signingOutOfTheDemoKeepsTheDeviceRegistrationAndItmoIdAlone() = runTest(dispatcher) {
         val order = mutableListOf<String>()
-        val fixture = fixture(session = null, order = order)
+        val fixture = fixture(session = stored(), order = order)
         fixture.repository.startDemo()
         order.clear()
 
@@ -317,7 +350,7 @@ class SessionRepositoryImplTest {
         assertFailsWith<MyItmoException.Auth> { fixture.client.tokens.validAccessToken() }
 
         assertEquals(SessionState.ReauthenticationRequired, fixture.repository.state.value)
-        assertEquals("stored-refresh", fixture.storage.refreshToken)
+        assertEquals("stored-refresh", fixture.storage.getRefreshToken())
         assertEquals(0, fixture.cleaner.requests)
     }
 
@@ -402,10 +435,14 @@ class SessionRepositoryImplTest {
         val storage = InMemoryTokenFile()
         storage.write(session)
         val requests = mutableListOf<HttpRequestData>()
-        val engine = MockEngine { request ->
-            requests += request
-            answer(request)
-        }
+        // On the test dispatcher, so the sign-out's logout budget runs in virtual time after the answer.
+        val engine = MockEngine(MockEngineConfig().apply {
+            dispatcher = this@SessionRepositoryImplTest.dispatcher
+            addHandler { request ->
+                requests += request
+                answer(request)
+            }
+        })
         val rejections = RefreshRejections()
         val client = MyItmoClient(
             MyItmoConfiguration.DEFAULT,
@@ -433,6 +470,7 @@ class SessionRepositoryImplTest {
             fcmTokenSync = tokenSync,
             diagnostics = RecordingDiagnostics(),
             demoPreferences = settings,
+            demo = DataStoreDemoMode(settings),
             dispatchers = dispatchers
         )
         val repository = SessionRepositoryImpl(
@@ -482,7 +520,7 @@ class SessionRepositoryImplTest {
         fun assertStoredTokens() {
             assertEquals("access", storage.accessToken)
             assertEquals((clock.now() + 300.seconds).toEpochMilliseconds(), storage.accessExpiresAt)
-            assertEquals("refresh", storage.refreshToken)
+            assertEquals("refresh", storage.getRefreshToken())
             assertEquals((clock.now() + 600.seconds).toEpochMilliseconds(), storage.refreshExpiresAt)
             assertEquals("header.payload.signature", storage.getIdToken())
         }
@@ -490,7 +528,7 @@ class SessionRepositoryImplTest {
         fun assertSessionKept() {
             assertEquals(0, cleaner.requests)
             assertEquals("stored-access", storage.accessToken)
-            assertEquals("stored-refresh", storage.refreshToken)
+            assertEquals("stored-refresh", storage.getRefreshToken())
             assertTrue(effects.events.isEmpty())
         }
     }
