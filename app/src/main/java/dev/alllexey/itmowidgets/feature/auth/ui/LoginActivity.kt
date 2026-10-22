@@ -29,6 +29,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import dev.alllexey.itmowidgets.core.connections.SignInLabel
+import dev.alllexey.itmowidgets.core.connections.appSignInUserAgent
+import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.designsystem.host.ItmoComposeHost
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.auth.domain.ItmoAuthUrlPolicy
@@ -38,6 +41,8 @@ import dev.alllexey.itmowidgets.feature.auth.presentation.InteractiveLoginViewMo
 import dev.alllexey.itmowidgets.feature.auth.presentation.LoginPage
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
@@ -49,6 +54,8 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class LoginActivity : AppCompatActivity() {
 
     private val viewModel: InteractiveLoginViewModel by viewModel()
+    private val signInLabel: SignInLabel by inject()
+    private val appBuild: AppBuild by inject()
     private val authBridge = ItmoAuthBridge()
     private val interceptorScript by lazy {
         assets.open(TOKEN_INTERCEPTOR_ASSET).bufferedReader().use { it.readText() }
@@ -220,9 +227,18 @@ class LoginActivity : AppCompatActivity() {
             runOnUiThread {
                 if (isFinishing || isDestroyed) return@runOnUiThread
                 CookieManager.getInstance().flush()
-                browser?.loadUrl(ItmoAuthUrlPolicy.LOGIN_URL)
+                lifecycleScope.launch { loadWithLabel() }
             }
         }
+    }
+
+    /** The page with the User-Agent of «Выглядеть как обычный браузер»: it fixes this sign-in's id.itmo.ru label. */
+    private suspend fun loadWithLabel() {
+        val browserLike = signInLabel.isBrowserLike()
+        val page = browser ?: return
+        page.settings.userAgentString =
+            appSignInUserAgent(WebSettings.getDefaultUserAgent(this), appBuild.version, browserLike)
+        page.loadUrl(ItmoAuthUrlPolicy.LOGIN_URL)
     }
 
     private fun openExternal(uri: Uri) {

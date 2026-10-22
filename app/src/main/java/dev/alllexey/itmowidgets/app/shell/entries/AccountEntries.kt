@@ -73,34 +73,40 @@ import dev.alllexey.itmowidgets.feature.update.ui.toBundle
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoBrowser
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebContent
 import dev.alllexey.itmowidgets.feature.web.ui.openExternalPage
-import dev.alllexey.itmowidgets.feature.weblogin.data.BiometricDeviceUnlock
-import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlock
-import dev.alllexey.itmowidgets.feature.weblogin.domain.DeviceUnlockResult
-import dev.alllexey.itmowidgets.feature.weblogin.presentation.ConnectionsViewModel
-import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
-import dev.alllexey.itmowidgets.feature.weblogin.ui.ConnectionsRoute
-import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginSheetRoute
-import dev.alllexey.itmowidgets.feature.weblogin.ui.scanWebLoginCode
+import dev.alllexey.itmowidgets.feature.connections.data.BiometricDeviceUnlock
+import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
+import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
+import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectionViewModel
+import dev.alllexey.itmowidgets.feature.connections.presentation.DevicesViewModel
+import dev.alllexey.itmowidgets.feature.connections.presentation.PairingViewModel
+import dev.alllexey.itmowidgets.feature.connections.ui.ConnectionRoute
+import dev.alllexey.itmowidgets.feature.connections.ui.DevicesRoute
+import dev.alllexey.itmowidgets.feature.connections.ui.PairingSheetRoute
+import dev.alllexey.itmowidgets.feature.connections.ui.scanPairingLink
 import kotlinx.coroutines.launch
 import org.koin.core.parameter.parametersOf
 
 /**
  * The account keys: sign-in and the first-run flow (the gate
- * surfaces), the «Подключить устройство» sheet and «Подключённые устройства», My ITMO in the browser, the update offer keyed by the feature's
+ * surfaces), «Устройства», a client's screen and the «Подключить устройство» sheet, My ITMO in the browser, the update offer keyed by the feature's
  * [UpdateRoutes.AppUpdate], and the debug tools when [debugTools] (debug builds only, as the Me row that opens them).
- * The shell's guard refuses the web sign-in and My ITMO in the demo session before they open.
+ * The shell's guard refuses pairing, «Устройства» and My ITMO in the demo session before they open.
  */
 internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
     entry<AppRoutes.Auth> { _, _ -> AuthEntry() }
     entry<AppRoutes.Onboarding> { _, _ -> OnboardingEntry() }
-    entry<AppRoutes.WebLogin> { key, navigator ->
-        WebLoginEntry(
-            key.code,
-            onOpenConnections = { navigator.open(AppRoutes.Connections) },
-            onClose = { navigator.close(key) },
+    entry<AppRoutes.Pairing> { key, navigator -> PairingEntry(key.link, onClose = { navigator.close(key) }) }
+    entry<AppRoutes.Devices> { key, navigator ->
+        val viewModel: DevicesViewModel = entryViewModel()
+        DevicesRoute(
+            viewModel = viewModel,
+            onBack = { navigator.close(key) },
+            onConnect = { navigator.open(AppRoutes.Pairing()) },
+            onEnableServer = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
+            onOpenClient = { navigator.open(AppRoutes.Connection(it)) },
         )
     }
-    entry<AppRoutes.Connections> { key, navigator -> ConnectionsEntry(onBack = { navigator.close(key) }) }
+    entry<AppRoutes.Connection> { key, navigator -> ConnectionEntry(key.id, navigator, onBack = { navigator.close(key) }) }
     entry<AppRoutes.MyItmoWeb> { key, navigator -> MyItmoWebEntry(onClose = { navigator.close(key) }) }
     entry<UpdateRoutes.AppUpdate>(args = { it.args.toBundle() }) { key, navigator ->
         AppUpdateEntry(onClose = { navigator.close(key) })
@@ -112,7 +118,7 @@ internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
 
 /**
  * The Me tab's root: `MeRoute` with its ViewModel in the root's own store. Its rows open the
- * social screens, the settings (the privacy page for the privacy row), the web sign-in sheet and, in debug builds,
+ * social screens, the settings (the privacy page for the privacy row), «Устройства» and, in debug builds,
  * the debug tools through [navigator]; sharing and the project pages go through the Android helpers of `MeHost.kt`.
  */
 @Composable
@@ -126,6 +132,7 @@ internal fun MeTabRoot(navigator: Nav3AppNavigator) {
 private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions(
     onOpenFriends = { navigator.open(AppRoutes.Friends) },
     onOpenConnection = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
+    onOpenDevices = { navigator.open(AppRoutes.Devices) },
     onOpenWidgets = { navigator.open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) },
     onOpenMap = { navigator.open(AppRoutes.CampusMap()) },
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
@@ -200,19 +207,14 @@ private fun OnboardingEntry() {
 }
 
 /**
- * The «Подключить устройство» sheet: Google's code scanner runs in Play services, the screen lock is `BiometricPrompt`
- * on this activity. A [link] from an App Link (a pairing link) is read once as a scan, not again after recreation.
+ * «Подключить устройство»: Google's code scanner runs in Play services, the screen lock is `BiometricPrompt` on this
+ * activity. A [link] from an App Link or a client's renewal is read once as a scan, not again after recreation.
  */
 @Composable
-private fun WebLoginEntry(link: String?, onOpenConnections: () -> Unit, onClose: () -> Unit) {
+private fun PairingEntry(link: String?, onClose: () -> Unit) {
     val context = LocalContext.current
-    val activity = LocalActivity.current
-    // MainActivity is a FragmentActivity; a host without fragments (a test) has no screen lock to ask.
-    val unlock = remember(activity) {
-        (activity as? FragmentActivity)?.let { BiometricDeviceUnlock(it, UiTextResolver { text -> text.resolve() }) }
-            ?: DeviceUnlock { DeviceUnlockResult.NOT_SET_UP }
-    }
-    val viewModel: WebLoginViewModel = entryViewModel()
+    val unlock = rememberDeviceUnlock()
+    val viewModel: PairingViewModel = entryViewModel()
     var linkRead by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(link) {
         if (link != null && !linkRead) {
@@ -220,20 +222,38 @@ private fun WebLoginEntry(link: String?, onOpenConnections: () -> Unit, onClose:
             viewModel.onScanned(link)
         }
     }
-    WebLoginSheetRoute(
-        onScan = { scanWebLoginCode(context, viewModel) },
-        onOpenConnections = onOpenConnections,
-        onClose = onClose,
-        unlock = unlock,
+    PairingSheetRoute(
         viewModel = viewModel,
+        unlock = unlock,
+        onScan = { scanPairingLink(context, viewModel::onScanned, viewModel::onScannerUnavailable) },
+        onClose = onClose,
     )
 }
 
-/** «Подключённые устройства», opened from the sheet and from the settings. */
+/** A connected client; its renewal scans the client's QR and continues in the pairing sheet. */
 @Composable
-private fun ConnectionsEntry(onBack: () -> Unit) {
-    val viewModel: ConnectionsViewModel = entryViewModel()
-    ConnectionsRoute(onBack = onBack, viewModel = viewModel)
+private fun ConnectionEntry(id: String, navigator: Nav3AppNavigator, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val unlock = rememberDeviceUnlock()
+    val viewModel: ConnectionViewModel = viewModel {
+        KoinStarter.ensureStarted(context).get<ConnectionViewModel> { parametersOf(id) }
+    }
+    ConnectionRoute(
+        viewModel = viewModel,
+        unlock = unlock,
+        onBack = onBack,
+        onScan = { scanPairingLink(context, { navigator.open(AppRoutes.Pairing(link = it)) }, {}) },
+    )
+}
+
+/** The screen lock on this activity; MainActivity is a FragmentActivity, a host without fragments (a test) has none. */
+@Composable
+private fun rememberDeviceUnlock(): DeviceUnlock {
+    val activity = LocalActivity.current
+    return remember(activity) {
+        (activity as? FragmentActivity)?.let { BiometricDeviceUnlock(it, UiTextResolver { text -> text.resolve() }) }
+            ?: DeviceUnlock { DeviceUnlockResult.NOT_SET_UP }
+    }
 }
 
 /**

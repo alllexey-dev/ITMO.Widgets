@@ -21,6 +21,8 @@ import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DemoPreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
+import dev.alllexey.itmowidgets.core.storage.SignInLabelPreferences
+import dev.alllexey.itmowidgets.core.connections.SignInLabel
 import dev.alllexey.itmowidgets.core.storage.BellPreferences
 import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
@@ -73,6 +75,7 @@ val storageModule = module {
     singleOf(::MarkSourcePreferences)
     singleOf(::BellPreferences)
     singleOf(::DeviceHintPreferences)
+    singleOf(::SignInLabelPreferences) { bind<SignInLabel>() }
     singleOf(::AppearancePreferences)
     singleOf(::DemoPreferences)
     singleOf(::PushCategoryPreferences)

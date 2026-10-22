@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.core.connections.DevicesSummary
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
@@ -37,6 +38,7 @@ import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
+import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
@@ -51,6 +53,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_language
 import dev.alllexey.itmowidgets.shared.designsystem.ic_logout
 import dev.alllexey.itmowidgets.shared.designsystem.ic_map
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
+import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
 import dev.alllexey.itmowidgets.shared.designsystem.ic_share
 import dev.alllexey.itmowidgets.shared.designsystem.ic_widgets
@@ -70,6 +73,8 @@ data class MeActions(
     /** «Сервер ITMO.Widgets», the gate's `Подключить`. */
     val onOpenConnection: () -> Unit = {},
     val onOpenWidgets: () -> Unit = {},
+    /** «Устройства»: app installs, connected clients and ITMO.ID sessions. */
+    val onOpenDevices: () -> Unit = {},
     /** The campus map, without a lesson to show. */
     val onOpenMap: () -> Unit = {},
     /** The official site in the app's web view. */
@@ -95,6 +100,7 @@ object MeTestTags {
     const val MAP_ROW = "map_row"
     const val MY_ITMO_ROW = "my_itmo_row"
     const val SETTINGS_ROW = "settings_row"
+    const val DEVICES_ROW = "devices_row"
     const val DEBUG_TOOLS_ROW = "debug_tools_row"
     const val TELEGRAM = "telegram_row"
     const val GITHUB = "github_row"
@@ -146,7 +152,7 @@ fun MeScreen(
                 item(key = "people:title") { SectionHeader(text(AccountStrings.me_group_people)) }
                 item(key = "people") { People(state, actions) }
                 item(key = "app:title") { SectionHeader(text(CoreStrings.me_group_app)) }
-                item(key = "app") { App(showDebugTools, actions) }
+                item(key = "app") { App(state.devices, showDebugTools, actions) }
                 item(key = "links:title") { SectionHeader(text(AccountStrings.me_group_links)) }
                 item(key = "links") { Links(actions) }
                 item(key = "sign-out") {
@@ -238,9 +244,9 @@ private fun People(state: MeUiState, actions: MeActions) {
     }
 }
 
-/** The widgets gallery, the settings and, in debug builds, the developer tools. */
+/** The widgets gallery, «Устройства», the settings and, in debug builds, the developer tools. */
 @Composable
-private fun App(showDebugTools: Boolean, actions: MeActions) {
+private fun App(devices: DevicesSummary, showDebugTools: Boolean, actions: MeActions) {
     ListGroup {
         item {
             ListRow(
@@ -250,6 +256,18 @@ private fun App(showDebugTools: Boolean, actions: MeActions) {
                 iconTone = Tone.Primary,
                 chevron = true,
                 onClick = actions.onOpenWidgets,
+            )
+        }
+        item {
+            ListRow(
+                text(AccountStrings.devices_title),
+                Modifier.testTag(MeTestTags.DEVICES_ROW),
+                icon = painterResource(Res.drawable.ic_devices),
+                iconTone = Tone.Neutral,
+                trailing = devices.count?.toString(),
+                chevron = true,
+                below = devices.warning?.let { warning -> { StatusPill(warning.asString(), tone = Tone.Warning) } },
+                onClick = actions.onOpenDevices,
             )
         }
         item {

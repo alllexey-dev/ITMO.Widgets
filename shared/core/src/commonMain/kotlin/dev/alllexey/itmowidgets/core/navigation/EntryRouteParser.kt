@@ -14,7 +14,8 @@ object EntryRouteParser {
     /**
      * An intent replayed from Recents ([launchedFromHistory]) already ran its route and opens the app as it was.
      * A [ACTION_VIEW] intent carries an app [link]; links that are not the app's open nothing. A widget's [lesson] is
-     * the JSON of its [LessonDetailsArgs] (malformed: the schedule alone), [sportLesson] a positive sport lesson id.
+     * the JSON of its [LessonDetailsArgs] (malformed: the schedule alone), [sportLesson] a positive sport lesson id,
+     * [connection] a connection id (blank: «Устройства» alone).
      */
     fun parse(
         action: String?,
@@ -25,6 +26,7 @@ object EntryRouteParser {
         lesson: String? = null,
         sportLesson: Long? = null,
         sportPredicted: Boolean = false,
+        connection: String? = null,
     ): EntryRoute? = if (launchedFromHistory) null else when (action) {
         ACTION_VIEW -> linkRoute(AppLinks.parse(link))
         AppEntryIntents.ACTION_OPEN_SCHEDULE -> EntryRoute(AppTab.SCHEDULE)
@@ -42,7 +44,9 @@ object EntryRouteParser {
             overlay = subject?.validOrNull()?.let(AppRoutes::RecordbookSubject)
         )
         AppEntryIntents.ACTION_OPEN_BARS_LOGIN -> EntryRoute(AppTab.RECORDBOOK, activity = ActivityRoute.BARS_LOGIN)
-        AppEntryIntents.ACTION_OPEN_CONNECTIONS -> CONNECTIONS
+        AppEntryIntents.ACTION_OPEN_DEVICES -> DEVICES
+        AppEntryIntents.ACTION_OPEN_CONNECTION ->
+            connection?.takeIf { it.isNotBlank() }?.let { EntryRoute(AppTab.ME, overlay = AppRoutes.Connection(it)) } ?: DEVICES
         AppEntryIntents.ACTION_OPEN_QR_PASS ->
             EntryRoute(AppTab.HOME, overlay = AppRoutes.QrPass, shortcutId = EntryShortcuts.QR_PASS)
         AppEntryIntents.ACTION_OPEN_TODAY ->
@@ -55,8 +59,8 @@ object EntryRouteParser {
         is AppLink.SportLesson -> EntryRoute(AppTab.SPORT, request = TabRequest.SportLesson(link.lessonId))
         is AppLink.PredictedSportLesson ->
             EntryRoute(AppTab.SPORT, request = TabRequest.SportLesson(link.prototypeLessonId, predicted = true))
-        // The web sign-in sheet reads the link as a scan; it becomes «Подключить устройство».
-        is AppLink.Pair -> EntryRoute(AppTab.ME, overlay = AppRoutes.WebLogin(code = link.link.toUrl()))
+        // The pairing sheet reads the link as a scan.
+        is AppLink.Pair -> EntryRoute(AppTab.ME, overlay = AppRoutes.Pairing(link = link.link.toUrl()))
         AppLink.Malformed -> EntryRoute(AppTab.HOME, alert = AppRoutes.LinkUnavailable)
         null -> null
     }
@@ -71,6 +75,6 @@ object EntryRouteParser {
 
     private fun profileRoute(isu: Int) = EntryRoute(AppTab.ME, overlay = AppRoutes.UserProfile(isu))
 
-    /** «Подключённые устройства» over the Me tab: a new-connection notification opens it. */
-    val CONNECTIONS = EntryRoute(AppTab.ME, overlay = AppRoutes.Connections)
+    /** «Устройства» over the Me tab: a new-connection notification opens it. */
+    val DEVICES = EntryRoute(AppTab.ME, overlay = AppRoutes.Devices)
 }

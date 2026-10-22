@@ -76,7 +76,6 @@ internal fun ConnectionEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigato
             onAudience = viewModel::setAudience,
             onRetryPrivacy = viewModel::retryPrivacy,
             onSource = { openLink(platform, view, ProjectLinks.SERVICES_SOURCE_URL) },
-            onDevices = { navigator.open(AppRoutes.Settings(SettingsPage.DEVICES.name)) },
             onDeleteAccount = viewModel::deleteAccount,
         )
     }

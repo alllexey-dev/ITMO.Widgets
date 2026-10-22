@@ -52,6 +52,7 @@ import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeDevicesOverview
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
@@ -154,7 +155,7 @@ class AccountEntriesTest {
                 settingsTestModule(),
                 module {
                     viewModel { AuthViewModel(sessions, TimeSource.Monotonic) }
-                    viewModel { MeViewModel(sessions, EmptySocial, FakeCustomServicesRepository(enabled = true)) }
+                    viewModel { MeViewModel(sessions, EmptySocial, FakeCustomServicesRepository(enabled = true), FakeDevicesOverview()) }
                     viewModel {
                         WebLoginViewModel(get<SavedStateHandle>(), OneBrowser, NoPairing, NoHandoff, FixedAcademicTime())
                     }

@@ -27,12 +27,6 @@ internal class SettingsScreenSectionsPreview {
     fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Sections)
 }
 
-internal class SettingsScreenDevicesPreview {
-    @Preview(name = "devices")
-    @Composable
-    fun SettingsScreen() = SettingsPreview(SettingsPreviewData.Devices)
-}
-
 internal class SettingsScreenAboutPreview {
     @Preview(name = "about")
     @Composable

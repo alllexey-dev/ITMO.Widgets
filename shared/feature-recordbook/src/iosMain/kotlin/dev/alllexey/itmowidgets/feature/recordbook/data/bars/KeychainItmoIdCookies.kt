@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url

@@ -14,7 +14,6 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.CustomSpoilerViewM
 import dev.alllexey.itmowidgets.feature.settings.presentation.DiagnosticsViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.IcsExportViewModel
 import dev.alllexey.itmowidgets.feature.settings.presentation.AboutPageProvider
-import dev.alllexey.itmowidgets.feature.settings.presentation.DevicesPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.LicensesPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.RootPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SectionsPageProvider
@@ -57,7 +56,6 @@ val settingsModule = module {
     factory { WidgetsPageProvider(get(), get(), get()) }
     factory { SectionsPageProvider(get(), get(), get()) }
     factoryOf(::AboutPageProvider)
-    factoryOf(::DevicesPageProvider)
     factoryOf(::LicensesPageProvider)
     factoryOf(::SettingsPages)
     viewModelOf(::SettingsViewModel)

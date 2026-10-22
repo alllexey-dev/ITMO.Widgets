@@ -42,10 +42,10 @@ import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
-import dev.alllexey.itmowidgets.feature.weblogin.data.PairingHost
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginIosModule
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
+import dev.alllexey.itmowidgets.feature.connections.data.PairingHost
+import dev.alllexey.itmowidgets.feature.connections.di.webLoginDataModule
+import dev.alllexey.itmowidgets.feature.connections.di.webLoginIosModule
+import dev.alllexey.itmowidgets.feature.connections.di.webLoginModule
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError

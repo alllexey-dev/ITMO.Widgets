@@ -137,21 +137,27 @@ object AppRoutes {
     }
 
     /**
-     * Approves a browser's sign-in to the web version; refused in the demo session. [code] is what the sheet reads as a
-     * scan: an iOS Universal Link's `/app/login?code=` or a pairing App Link (`PairLink`), whose fragment holds a
-     * device key, so [toString] hides it.
+     * «Подключить устройство»: pairs an agent, an MCP server or a browser; refused in the demo session. [link] is what
+     * the sheet reads as a scan (a pairing App Link, `PairLink`), whose fragment holds the client's key, so [toString]
+     * hides it.
      */
     @Serializable
-    data class WebLogin(val code: String? = null) : AppRoute {
+    data class Pairing(val link: String? = null) : AppRoute {
         override val kind get() = RouteKind.SHEET
         override val sheetPolicy get() = SheetPolicy(textInput = true)
 
-        override fun toString(): String = "WebLogin(code=${if (code == null) "null" else "redacted"})"
+        override fun toString(): String = "Pairing(link=${if (link == null) "null" else "redacted"})"
     }
 
-    /** «Подключённые устройства»: web sessions and agents with access; refused in the demo session. */
+    /** «Устройства»: app installs, connected clients and other ITMO.ID sessions; refused in the demo session. */
     @Serializable
-    data object Connections : AppRoute {
+    data object Devices : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
+    /** One connected client of «Устройства» by its connection [id]; refused in the demo session. */
+    @Serializable
+    data class Connection(val id: String) : AppRoute {
         override val kind get() = RouteKind.SCREEN
     }
 
@@ -254,8 +260,9 @@ object AppRoutes {
         subclass(FriendSelector::class)
         subclass(ScheduleMonth::class)
         subclass(SheetScores::class)
-        subclass(WebLogin::class)
-        subclass(Connections::class)
+        subclass(Pairing::class)
+        subclass(Devices::class)
+        subclass(Connection::class)
         subclass(ReviewEditor::class)
         subclass(SubjectLinks::class)
         subclass(LinkEditor::class)

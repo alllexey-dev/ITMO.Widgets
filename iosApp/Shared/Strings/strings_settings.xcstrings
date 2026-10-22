@@ -229,42 +229,6 @@
         }
       }
     },
-    "connection_devices" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Устройства"
-          }
-        }
-      }
-    },
-    "connection_devices_list" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключённые устройства"
-          }
-        }
-      }
-    },
-    "connection_devices_list_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сайт и агенты с доступом к аккаунту"
-          }
-        }
-      }
-    },
     "connection_friends" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -321,30 +285,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сейчас хранятся только на этом устройстве"
-          }
-        }
-      }
-    },
-    "connection_pair" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключить устройство"
-          }
-        }
-      }
-    },
-    "connection_pair_text" : {
-      "comment" : "Generated from strings_settings.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сайт или агент ITMO.Widgets по QR-коду"
           }
         }
       }

@@ -272,7 +272,6 @@ class SettingsScreenTest {
         val details = listOf(
             SettingsPreviewData.Root,
             SettingsPreviewData.Sections,
-            SettingsPreviewData.Devices,
         )
         for ((night, source) in schemes) for (detail in details) {
             dark = night

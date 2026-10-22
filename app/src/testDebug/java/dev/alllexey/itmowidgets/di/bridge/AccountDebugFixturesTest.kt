@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeDevicesOverview
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
@@ -87,6 +88,7 @@ class AccountDebugFixturesTest {
             FakeSessionRepository(SessionState.SignedOut),
             FakeSocialRepository(),
             FakeCustomServicesRepository(false),
+            FakeDevicesOverview(),
         )
         val onboarding = OnboardingViewModel(
             FakeOnboardingRepository(),

@@ -21,7 +21,9 @@ object AppEntryIntents {
     const val ACTION_OPEN_BARS_LOGIN = "dev.alllexey.itmowidgets.action.OPEN_BARS_LOGIN"
     const val ACTION_OPEN_QR_PASS = "dev.alllexey.itmowidgets.action.OPEN_QR_PASS"
     const val ACTION_OPEN_TODAY = "dev.alllexey.itmowidgets.action.OPEN_TODAY"
-    const val ACTION_OPEN_CONNECTIONS = "dev.alllexey.itmowidgets.action.OPEN_CONNECTIONS"
+    const val ACTION_OPEN_DEVICES = "dev.alllexey.itmowidgets.action.OPEN_DEVICES"
+    /** One connected client over «Устройства», its connection id in [EXTRA_CONNECTION]. */
+    const val ACTION_OPEN_CONNECTION = "dev.alllexey.itmowidgets.action.OPEN_CONNECTION"
     /** A widget's lesson: the lesson sheet over the schedule, its [LessonDetailsArgs] as JSON in [EXTRA_LESSON]. */
     const val ACTION_OPEN_LESSON = "dev.alllexey.itmowidgets.action.OPEN_LESSON"
 
@@ -29,4 +31,5 @@ object AppEntryIntents {
     /** With [ACTION_OPEN_SPORT]: the sport lesson to show, and [EXTRA_SPORT_PREDICTED] for a predicted one. */
     const val EXTRA_SPORT_LESSON = "dev.alllexey.itmowidgets.extra.SPORT_LESSON"
     const val EXTRA_SPORT_PREDICTED = "dev.alllexey.itmowidgets.extra.SPORT_PREDICTED"
+    const val EXTRA_CONNECTION = "dev.alllexey.itmowidgets.extra.CONNECTION"
 }

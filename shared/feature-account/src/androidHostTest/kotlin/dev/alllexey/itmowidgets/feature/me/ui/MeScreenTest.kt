@@ -16,6 +16,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeDevicesOverview
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
@@ -48,7 +49,7 @@ class MeScreenTest {
     @Test
     fun aReturnToTheTabRefreshesNothingAfterTheFirstShow() = runComposeUiTest {
         val social = FakeSocialRepository()
-        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true))
+        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true), FakeDevicesOverview())
         var shown by mutableStateOf(true)
         setContent { ItmoTheme { if (shown) MeRoute(MeActions(), showDebugTools = false, viewModel = viewModel) } }
         waitForIdle()

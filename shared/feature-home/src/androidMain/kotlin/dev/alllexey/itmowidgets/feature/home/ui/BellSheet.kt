@@ -59,6 +59,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_calendar
 import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
+import dev.alllexey.itmowidgets.shared.designsystem.ic_key
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -248,6 +249,7 @@ private fun Lead(item: BellItem) {
         BellKind.SCHEDULE_CHANGE -> IconTile(painterResource(KitRes.drawable.ic_edit_calendar), Tone.Warning)
         BellKind.SPORT -> IconTile(painterResource(KitRes.drawable.ic_sprint), if (item.failed) Tone.Error else Tone.Success)
         BellKind.FRIEND_REQUEST -> Avatar(item.lead, item.pictureUrl, size = PersonAvatarSize, initials = item.initials)
+        BellKind.CONNECTION -> IconTile(painterResource(KitRes.drawable.ic_key), if (item.failed) Tone.Error else Tone.Warning)
     }
 }
 

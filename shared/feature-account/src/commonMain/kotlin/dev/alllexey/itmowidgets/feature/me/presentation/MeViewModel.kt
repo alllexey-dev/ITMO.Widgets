@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.me.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.core.connections.DevicesOverview
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.model.primaryGroup
@@ -34,7 +35,8 @@ import kotlinx.coroutines.launch
 class MeViewModel(
     private val sessionRepository: SessionRepository,
     private val socialRepository: SocialRepository,
-    private val customServices: CustomServicesRepository
+    private val customServices: CustomServicesRepository,
+    private val devicesOverview: DevicesOverview,
 ) : ViewModel() {
 
     private val signOutInProgress = MutableStateFlow(false)
@@ -48,12 +50,13 @@ class MeViewModel(
         socialRepository.observeCurrentUser(),
         socialRepository.observeFriends(),
         socialRepository.observeRequests(),
-        signOutInProgress
-    ) { session, backendUser, friends, requests, signingOut ->
+        combine(signOutInProgress, devicesOverview.observe(), ::Pair),
+    ) { session, backendUser, friends, requests, (signingOut, devices) ->
         MeUiState(
             header = header((session as? SessionState.SignedIn)?.user, backendUser),
             friends = summarize(friends, requests),
             signOutInProgress = signingOut,
+            devices = devices,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, MeUiState())
 

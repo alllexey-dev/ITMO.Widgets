@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond

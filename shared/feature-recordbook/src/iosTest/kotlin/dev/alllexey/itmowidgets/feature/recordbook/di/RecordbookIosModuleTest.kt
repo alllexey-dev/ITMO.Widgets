@@ -54,7 +54,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebLoad
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebNavigation
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookieExport
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookieExportOnSignIn
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.KeychainItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebKitCookie

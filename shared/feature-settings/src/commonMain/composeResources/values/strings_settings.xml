@@ -167,11 +167,6 @@
     <string name="connection_audience_friends">Список друзей</string>
     <string name="connection_audience_note">Имя, группу и ИСУ видят все в ITMO.Widgets: это официальные данные ИТМО.</string>
     <string name="connection_audience_failed">Сервер не ответил</string>
-    <string name="connection_devices">Устройства</string>
-    <string name="connection_pair">Подключить устройство</string>
-    <string name="connection_pair_text">Сайт или агент ITMO.Widgets по QR-коду</string>
-    <string name="connection_devices_list">Подключённые устройства</string>
-    <string name="connection_devices_list_text">Сайт и агенты с доступом к аккаунту</string>
     <string name="connection_delete">Удалить аккаунт ITMO.Widgets</string>
     <string name="connection_delete_text">Всё с сервера, без возврата</string>
     <string name="connection_delete_note">Откроется страница удаления на сайте ITMO.Widgets. Данные ИТМО это не затронет.</string>

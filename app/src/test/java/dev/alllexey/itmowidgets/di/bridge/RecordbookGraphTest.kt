@@ -12,7 +12,7 @@ import org.junit.Assert.assertTrue
 import org.koin.core.qualifier.named
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksCheck
 import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
