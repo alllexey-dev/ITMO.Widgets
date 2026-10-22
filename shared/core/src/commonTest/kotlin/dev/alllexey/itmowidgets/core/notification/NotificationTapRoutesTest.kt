@@ -85,6 +85,7 @@ class NotificationTapRoutesTest {
             NotificationDestination.Recordbook,
             NotificationDestination.RecordbookSubject(subject),
             NotificationDestination.RecordbookSubject(subjectWithoutJournal),
+            NotificationDestination.RecordbookSubject(subject.copy(disciplineId = 77, controlType = "Курсовая работа")),
             NotificationDestination.BarsLogin,
             NotificationDestination.Connections,
         )

@@ -179,11 +179,11 @@ final class DeviceRegistrationTests: XCTestCase {
 
     private let subject = RecordbookSubjectArgs(
         entryId: 11, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: nil, barsType: nil,
-        barsIdentifier: nil
+        barsIdentifier: nil, disciplineId: nil, controlType: nil
     )
     private let subjectWithJournal = RecordbookSubjectArgs(
         entryId: 11, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: KotlinLong(value: 7),
-        barsType: "flow", barsIdentifier: "7"
+        barsType: "flow", barsIdentifier: "7", disciplineId: nil, controlType: nil
     )
 
     private func userInfo(_ kind: NotificationFixtures.Kind) -> [AnyHashable: Any] {

@@ -160,6 +160,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 ### Fixes
 
+- Recordbook exams and coursework sharing a My ITMO entry ID keep their own labels, scores, attention state and
+  subject pages on Android and iOS.
 - When ITMO.ID rejects the refresh token the session ends with a message; a timeout or a server error keeps it.
 - Android no longer deletes the stored session on a transient Keystore or file error.
 - Sign-out forgets sport points, limits, queues and friends' bookings; a cache that cannot be deleted fails the

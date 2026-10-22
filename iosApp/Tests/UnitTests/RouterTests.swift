@@ -226,11 +226,11 @@ final class RouterTests: XCTestCase {
         router.selectedTab = .recordbook
         let subject = AppRoutes.RecordbookSubject(args: RecordbookSubjectArgs(
             entryId: 11, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: nil, barsType: nil,
-            barsIdentifier: nil
+            barsIdentifier: nil, disciplineId: nil, controlType: nil
         ), materials: false)
         let invalid = AppRoutes.RecordbookSubject(args: RecordbookSubjectArgs(
             entryId: 0, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: nil, barsType: nil,
-            barsIdentifier: nil
+            barsIdentifier: nil, disciplineId: nil, controlType: nil
         ), materials: false)
         let scores = AppRoutes.SheetScores(args: SheetScoresArgs(
             subjectId: 5, subjectName: "Subject", periodKey: "2026/2027:1", url: "https://example.com/s", step: .total
@@ -563,7 +563,7 @@ final class RouterTests: XCTestCase {
         let teacher = TeacherReviewArgs(teacherIsu: 100_002, teacherName: "Teacher")
         let subject = RecordbookSubjectArgs(
             entryId: 11, programId: 1, semester: 3, studyYear: "2026/2027", barsPlan: nil, barsType: nil,
-            barsIdentifier: nil
+            barsIdentifier: nil, disciplineId: nil, controlType: nil
         )
         let lesson = LessonDetailsArgs(
             pairId: 9, date: "2026-10-06", subjectName: "Subject", typeId: 1, format: "Format", start: "10:00",

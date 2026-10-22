@@ -62,6 +62,64 @@ class RecordbookViewModelTest {
         assertEquals(0, sport.periodRequests)
     }
 
+    @Test fun `exam and coursework sharing est id retain their own labels scores keys and routes`() = runTest {
+        val exam = recordbookSubject(name = "Информационные системы").copy(rate = null, score = 41.0)
+        val coursework = exam.copy(controlType = "Курсовая работа", score = 28.0)
+        repository.subjects = AppResult.Success(listOf(exam, coursework))
+        val vm = loaded(); advanceUntilIdle()
+        val rows = vm.uiState.value.rows
+
+        assertEquals(listOf(UiText.Dynamic("Экзамен"), UiText.Dynamic("Курсовая работа")), rows.map { it.meta })
+        assertEquals(listOf("41", "28"), rows.map { (it.value as RecordbookValue.Points).text })
+        assertEquals(2, rows.map { it.key }.distinct().size)
+        val targets = rows.map { (it.target as RecordbookTarget.Subject).args }
+        assertEquals(listOf(42L, 42L), targets.map { it.entryId })
+        assertEquals(listOf("Экзамен", "Курсовая работа"), targets.map { it.controlType })
+        assertEquals(listOf(1L, 1L), targets.map { it.disciplineId })
+
+        repository.subjects = AppResult.Success(listOf(coursework, exam))
+        vm.refresh(RefreshMode.Pull); advanceUntilIdle()
+        assertEquals(rows.map { it.key }.reversed(), vm.uiState.value.rows.map { it.key })
+    }
+
+    @Test fun `unassigned entry ids do not overwrite other curriculum disciplines`() = runTest {
+        val first = recordbookSubject(id = 0, name = "Первый предмет").copy(rate = null)
+        val second = first.copy(name = "Второй предмет", disciplineId = 2)
+        repository.subjects = AppResult.Success(listOf(first, second))
+        val vm = loaded(); advanceUntilIdle()
+
+        assertEquals(listOf(first.name, second.name), vm.uiState.value.rows.map { it.name })
+        assertEquals(2, vm.uiState.value.rows.map { it.key }.distinct().size)
+    }
+
+    @Test fun `a failed exam does not put coursework with the same est id into attention`() = runTest {
+        val exam = recordbookSubject().copy(rate = "2/FX")
+        val coursework = exam.copy(controlType = "Курсовая работа", rate = null, score = null)
+        repository.subjects = AppResult.Success(listOf(exam, coursework))
+        val vm = loaded(); advanceUntilIdle()
+        val sections = vm.uiState.value.content.sections
+
+        assertEquals(listOf(exam.key), sections[0].rows.map { it.key })
+        assertEquals(listOf(coursework.key), sections[1].rows.map { it.key })
+        assertEquals(UiText.Dynamic("Курсовая работа"), sections[1].rows.single().meta)
+    }
+
+    @Test fun `sources sheet selects the requested assessment when est ids repeat`() = runTest {
+        val exam = recordbookSubject().copy(rate = null, score = 41.0)
+        val coursework = exam.copy(controlType = "Курсовая работа", score = 28.0)
+        repository.subjects = AppResult.Success(listOf(exam, coursework))
+        val vm = loaded(); advanceUntilIdle()
+
+        for (subject in listOf(coursework, exam)) {
+            vm.openSources(subject.key)
+            val sources = vm.uiState.value.content.sources!!
+            assertEquals(subject.key, sources.id)
+            assertEquals(subject.controlType, sources.target.args.controlType)
+            assertEquals(subject.disciplineId, sources.target.args.disciplineId)
+            assertEquals(if (subject == exam) "41" else "28", sources.rows.single { it.source == RecordbookSource.MY_ITMO }.value)
+        }
+    }
+
     @Test fun `the header says the course and year and offers every period newest first`() = runTest {
         val vm = loaded(); advanceUntilIdle()
         val state = vm.uiState.value
@@ -325,7 +383,7 @@ class RecordbookViewModelTest {
         val sheets = FakeSheetScoresRepository(sheetScore(scope = ResourceScope(1, "Тестовый предмет", "2026-1"), value = "41,5"))
         val vm = loaded(model(sheets = sheets)); advanceUntilIdle()
 
-        vm.openSources(42)
+        vm.openSources(vm.uiState.value.row(42).key)
         val sources = vm.uiState.value.content.sources!!
         assertEquals(listOf(RecordbookSource.SHEET, RecordbookSource.BARS, RecordbookSource.MY_ITMO), sources.rows.map { it.source })
         assertEquals(listOf("41,5", null, "35"), sources.rows.map { it.value })

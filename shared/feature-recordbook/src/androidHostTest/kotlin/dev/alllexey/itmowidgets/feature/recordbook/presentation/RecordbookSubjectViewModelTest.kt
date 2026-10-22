@@ -124,6 +124,34 @@ class RecordbookSubjectViewModelTest {
         assertEquals(SubjectTab.MATERIALS, vm.content.tab)
     }
 
+    @Test fun `a requested assessment is selected from both cache and network when est ids repeat`() = runTest {
+        val exam = recordbookSubject(details = false).copy(rate = null, score = 41.0)
+        val coursework = exam.copy(controlType = "Курсовая работа", score = 28.0)
+        repository.cachedSubjects = listOf(exam, coursework)
+        val answer = CompletableDeferred<AppResult<List<RecordbookSubject>>>()
+        repository.subjectLoader = { answer.await() }
+        val requested = args(semester = 3, year = "2026/2027").copy(
+            disciplineId = coursework.disciplineId, controlType = coursework.controlType,
+        )
+        val vm = subjectModel(requested, FakeSheetScoresRepository())
+        runCurrent()
+
+        val subtitle = UiText.Res(RecordbookStrings.subject_subtitle, listOf("Курсовая работа", 3))
+        assertEquals(subtitle, vm.content.subtitle)
+        assertEquals("28", vm.scores.hero.points)
+        answer.complete(AppResult.Success(listOf(exam, coursework.copy(score = 35.0))))
+        advanceUntilIdle()
+        assertEquals(subtitle, vm.content.subtitle)
+        assertEquals("35", vm.scores.hero.points)
+    }
+
+    @Test fun `an explicit assessment is not replaced by another one when absent`() = runTest {
+        repository.subjects = AppResult.Success(listOf(recordbookSubject()))
+        val requested = args(semester = 3, year = "2026/2027").copy(disciplineId = 1, controlType = "Курсовая работа")
+        val vm = subjectModel(requested, FakeSheetScoresRepository()); advanceUntilIdle()
+        assertEquals(RecordbookSubjectUiState.Failed(AppError.NotFound, retrying = false), vm.uiState.value)
+    }
+
     // --- Баллы
 
     @Test fun `a BARS journal lays its values over My ITMO and supplies the checkpoints`() = runTest {

@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -137,7 +138,7 @@ data class RecordbookActions(
     val onRetry: () -> Unit = {},
     val onSelectPeriod: (programId: Long, semester: Int) -> Unit = { _, _ -> },
     val onHideOffer: () -> Unit = {},
-    val onOpenSources: (id: Long) -> Unit = {},
+    val onOpenSources: (key: String) -> Unit = {},
     val onCloseSources: () -> Unit = {},
 )
 
@@ -257,7 +258,7 @@ private fun Content(body: RecordbookBody.Content, actions: RecordbookActions, li
         body.sections.forEach { section ->
             item(key = "title-${section.title}") { SectionHeader(section.title.asString()) }
             item(key = "section-${section.title}") {
-                ListGroup { section.rows.forEach { row -> item { RecordRow(row, actions) } } }
+                ListGroup { section.rows.forEach { row -> item { key(row.key) { RecordRow(row, actions) } } } }
             }
         }
         if (body.barsOffer) item(key = "bars-offer") { BarsOffer(actions) }
@@ -439,7 +440,7 @@ private fun RecordValue(row: RecordbookRow, actions: RecordbookActions) {
                 source = source,
                 modifier = Modifier.testTag(RecordbookTestTags.source(row.id)),
                 stale = row.stale,
-                onSourceClick = if (row.hasSources) ({ actions.onOpenSources(row.id) }) else null,
+                onSourceClick = if (row.hasSources) ({ actions.onOpenSources(row.key) }) else null,
                 sourceLabel = stringResource(Res.string.recordbook_sources_action, source),
             ) { RowValue(row.value) }
         }

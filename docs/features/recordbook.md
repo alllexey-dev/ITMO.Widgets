@@ -13,13 +13,16 @@ the feature works without `Подключение к ITMO.Widgets`; only the sub
 | Data | Endpoint | Identity |
 |---|---|---|
 | Programmes and periods | `/api/record_book/specializations` | `main_plan` selects the programme; `semester` is through-numbered (1/2 first year, 3/4 second) |
-| Recordbook entries | `/api/record_book/{main_plan}/{semester}` | `est_id` is one entry, `discipline_id` the curriculum discipline |
+| Recordbook entries | `/api/record_book/{main_plan}/{semester}` | `est_id` requests details; row identity also includes `discipline_id` and `control_type` |
 | Control events | `/api/record_book/{est_id}` | only when `have_tree = true`; server order and `parent_id` kept |
 | Sport semesters | `/api/sport/semesters/list`, `/current` | own `id` and labels like `Осень YYYY/YYYY`, not the recordbook semester |
 | Sport score | `/api/sport/personal/score?semester_id={id}` | `sum.attendances`, `sum.other` |
 
 Rules the mapper relies on:
 
+- Exam and coursework rows can share `est_id`; keep both assessments with their own label, score, attention state
+  and sources. Both UIs use the composite row key. Subject routes carry the discipline and control type too;
+  old notifications without them retain the entry-id lookup.
 - The catalog contains future semesters; an empty result or unset grade is not an error. The initial
   period follows `AcademicTimeProvider`; an explicit choice is restored separately.
 - `current_score` and `rate` are independent (PE has a credit with `current_score = null`). Never

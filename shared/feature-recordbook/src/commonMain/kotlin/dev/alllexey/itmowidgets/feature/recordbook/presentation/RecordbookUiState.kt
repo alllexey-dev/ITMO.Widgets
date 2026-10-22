@@ -86,6 +86,7 @@ data class RecordbookSection(val title: UiText, val rows: List<RecordbookRow>)
  */
 data class RecordbookRow(
     val id: Long,
+    val key: String,
     val name: String,
     val meta: UiText,
     val metaTone: RecordbookTone,
@@ -124,7 +125,7 @@ sealed interface RecordbookTarget {
  * marked, the [note] on why that one, and the subject page to open.
  */
 data class RecordbookSources(
-    val id: Long,
+    val id: String,
     val caption: UiText,
     val rows: List<RecordbookSourceRow>,
     val note: UiText,

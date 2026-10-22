@@ -54,7 +54,7 @@ class RecordbookViewModel(
     private var official: List<RecordbookSubject> = emptyList()
     private var barsData: RecordbookBarsData = RecordbookBarsData.Off
     private var sport: RecordbookSportState? = null
-    private var sourcesId: Long? = null
+    private var sourcesKey: String? = null
     private var refreshing = false
     private var refreshError: AppError? = null
     private var barsEnabled = false
@@ -109,7 +109,7 @@ class RecordbookViewModel(
         val selected = RecordbookSelection(program, period)
         if (selection == selected) return
         selection = selected
-        sourcesId = null
+        sourcesKey = null
         load(silent = true)
     }
 
@@ -127,14 +127,14 @@ class RecordbookViewModel(
         publish()
     }
 
-    /** `Откуда баллы` of the subject [id]. */
-    fun openSources(id: Long) {
-        sourcesId = id
+    /** `Откуда баллы` of one assessment, even when several share a My ITMO entry id. */
+    fun openSources(key: String) {
+        sourcesKey = key
         publish()
     }
 
     fun closeSources() {
-        sourcesId = null
+        sourcesKey = null
         publish()
     }
 
@@ -255,12 +255,12 @@ class RecordbookViewModel(
             bars = shownBars,
             sport = sport,
             attention = shown.mapNotNull { subject ->
-                attentionReason(subject, sport, knownControls(subject), time.now())?.let { subject.entryId to it }
+                attentionReason(subject, sport, knownControls(subject), time.now())?.let { subject.key to it }
             }.toMap(),
             unread = selected.period.studyHalf()?.let(newsByHalf::get).orEmpty(),
             sheets = sheetTotals(selected),
             offerHidden = offerHidden,
-            sourcesId = sourcesId,
+            sourcesKey = sourcesKey,
             today = time.today(),
             timeZone = time.timeZone,
         )

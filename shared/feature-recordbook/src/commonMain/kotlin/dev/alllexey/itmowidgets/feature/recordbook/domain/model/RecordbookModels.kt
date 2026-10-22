@@ -57,6 +57,9 @@ data class RecordbookSubject(
     /** MyITMO LMS link; usually empty. */
     val lmsLink: String? = null
 ) {
+    /** My ITMO can reuse est_id for an exam and coursework; it is a request id, not a unique row identity. */
+    val key: String get() = "$entryId:$disciplineId:${controlType.trim()}"
+
     val assessmentKind: RecordbookAssessmentKind
         get() = when {
             controlType.contains("экзамен", ignoreCase = true) ->

@@ -58,6 +58,8 @@ class RecordbookLessonSubjects(
             programId = match.programId,
             semester = match.period.semester,
             studyYear = match.period.studyYear,
+            disciplineId = match.subject.disciplineId,
+            controlType = match.subject.controlType.trim(),
         ).validOrNull() ?: return null
         return LessonSubject(
             page = AppRoutes.RecordbookSubject(args),
