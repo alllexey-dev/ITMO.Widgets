@@ -1,0 +1,8 @@
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "message": "Turn the ITMO.Widgets services on in the app first",
+    "code": "not_enrolled"
+  }
+}

@@ -10,7 +10,6 @@ import dev.alllexey.itmowidgets.client.users.SyntheticUsers.profile
 import dev.alllexey.itmowidgets.client.users.SyntheticUsers.profileJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.Instant
 
 /** What every [UsersApi] call returns for a synthetic Backend answer. */
 class UsersDecodeTest {
@@ -79,30 +78,12 @@ class UsersDecodeTest {
     }
 
     @Test
-    fun webLoginPreview() = runSuspend {
-        val body = """{"challengeId":"00000000-0000-0000-0000-000000000077","userAgent":"Synthetic browser",
-            "createdAt":"2026-09-24T10:00:00Z","expiresAt":"2026-09-24T10:02:00Z"}"""
-
-        val result = answering(body).client.users.webLoginPreview("K7M2QX9P")
-
-        assertEquals(
-            WebLoginPreview(
-                challengeId = UsersRouteCases.challengeId,
-                userAgent = "Synthetic browser",
-                createdAt = Instant.parse("2026-09-24T10:00:00Z"),
-                expiresAt = Instant.parse("2026-09-24T10:02:00Z"),
-            ),
-            result,
-        )
-    }
-
-    @Test
-    fun approveWebLoginNeedsNoData() = runSuspend {
+    fun updateConsentNeedsNoData() = runSuspend {
         // Backend answers ApiResponse<Unit>, which Jackson writes as `{}`; an absent `data` is fine as well.
         for (body in listOf(SyntheticUsers.envelope("{}"), """{"success":true}""")) {
             val backend = MockBackend { ok(body) }
 
-            backend.client.users.approveWebLogin(UsersRouteCases.challengeId)
+            backend.client.users.updateConsent(ConsentRequest(1))
 
             assertEquals(1, backend.requests.size)
         }

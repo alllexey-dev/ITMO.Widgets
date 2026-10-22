@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "data": {
+    "challengeId": "00000000-0000-4000-8000-000000000501",
+    "kind": "RENEW",
+    "client": "agent",
+    "name": "nas",
+    "version": "1.2.0",
+    "platform": "linux",
+    "requestedScopes": [
+      {
+        "id": "sport",
+        "title": "Запись на физкультуру",
+        "description": "Записывается по очередям вместо телефона"
+      },
+      {
+        "id": "friends:read",
+        "title": "Друзья",
+        "description": "Видит список друзей"
+      }
+    ],
+    "keyCommitment": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+    "connectionId": "00000000-0000-4000-8000-000000000601",
+    "expiresAt": "2026-10-05T09:10:00Z"
+  },
+  "error": null
+}

@@ -1,0 +1,75 @@
+{
+  "success": true,
+  "data": {
+    "kinds": [
+      {
+        "kind": "ANDROID",
+        "active1d": 410,
+        "active7d": 620,
+        "active30d": 700,
+        "builds": [
+          {
+            "custom": false,
+            "version": "2.3.0",
+            "channel": "play",
+            "source": "alllexey-dev/ITMO.Widgets",
+            "active7d": 500,
+            "active30d": 560
+          },
+          {
+            "custom": true,
+            "version": "2.3.0",
+            "channel": "custom",
+            "source": "someone/ITMO.Widgets",
+            "active7d": 3,
+            "active30d": 4
+          }
+        ],
+        "platforms": [
+          {
+            "name": "36",
+            "active30d": 400
+          },
+          {
+            "name": null,
+            "active30d": 20
+          }
+        ]
+      },
+      {
+        "kind": "WEB",
+        "active1d": 12,
+        "active7d": 30,
+        "active30d": 41,
+        "builds": [
+          {
+            "custom": false,
+            "version": "1a2b3c4",
+            "channel": "web",
+            "source": null,
+            "active7d": 30,
+            "active30d": 41
+          }
+        ],
+        "platforms": [
+          {
+            "name": "chrome/131",
+            "active30d": 30
+          }
+        ]
+      }
+    ],
+    "history": [
+      {
+        "day": "2026-10-04",
+        "kind": "ANDROID",
+        "custom": false,
+        "version": "2.3.0",
+        "active1d": 400,
+        "active7d": 600,
+        "active30d": 690
+      }
+    ]
+  },
+  "error": null
+}

@@ -33,10 +33,7 @@ class UsersVendoredFixturesTest {
             users.updateIdTokenData(IdTokenRequest("synthetic.id.token"))
         },
         ResponseClaim("http/users/myUserData.json", UserData.serializer()) { users.myUserData() },
-        ResponseClaim("http/users/webLoginPreview.json", WebLoginPreview.serializer()) {
-            users.webLoginPreview("K7M2QX9P")
-        },
-        ResponseClaim("http/users/approveWebLogin.json", null) { users.approveWebLogin(UsersRouteCases.challengeId) },
+        ResponseClaim("http/users/updateConsent.json", null) { users.updateConsent(ConsentRequest(1)) },
         ResponseClaim("http/users/deleteMyAccount.json", null) { users.deleteMe() },
     )
 

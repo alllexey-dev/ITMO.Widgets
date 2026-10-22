@@ -2,7 +2,7 @@
   "success": false,
   "data": null,
   "error": {
-    "message": "Sign in again to use admin routes",
+    "message": "Confirm this browser on the phone again to use admin routes",
     "code": "reauth_required"
   }
 }

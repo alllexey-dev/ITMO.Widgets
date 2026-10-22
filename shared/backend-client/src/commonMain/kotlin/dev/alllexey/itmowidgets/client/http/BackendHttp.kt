@@ -30,7 +30,7 @@ import kotlin.coroutines.cancellation.CancellationException
  * The HTTP core every `Ktor<Area>Api` calls. It owns the status-first decoding: a non-2xx status becomes a typed
  * [BackendException] before the body is decoded, so an HTML 502 or an empty 401 never crashes the decoder. Every
  * request carries [version] as [ClientVersion.HEADER] and [clientHeader] as [ClientHeader.HEADER] when the holder
- * gave them.
+ * gave them, and [language] as `Accept-Language`.
  */
 internal class BackendHttp(
     baseUrl: String,
@@ -38,6 +38,7 @@ internal class BackendHttp(
     engine: HttpClientEngine,
     private val version: ClientVersion?,
     private val clientHeader: ClientHeader?,
+    private val language: (() -> String?)? = null,
 ) {
     private val origin = URLBuilder(baseUrl).build()
 
@@ -59,13 +60,19 @@ internal class BackendHttp(
     private suspend fun send(route: BackendRoute): String {
         val token = transport { tokens.accessToken() }?.trim()?.takeIf(String::isNotEmpty)
         val clientValue = clientHeader?.value()
-        val response = transport { execute(route, token, clientValue) }
+        val languageValue = language?.invoke()?.trim()?.takeIf(String::isNotEmpty)
+        val response = transport { execute(route, token, clientValue, languageValue) }
         val text = transport { response.bodyAsText() }
         if (!response.status.isSuccess()) throw statusException(response.status.value, errorCode(text))
         return text
     }
 
-    private suspend fun execute(route: BackendRoute, token: String?, clientValue: String?): HttpResponse =
+    private suspend fun execute(
+        route: BackendRoute,
+        token: String?,
+        clientValue: String?,
+        languageValue: String?,
+    ): HttpResponse =
         try {
             client.request {
                 method = route.method
@@ -78,6 +85,7 @@ internal class BackendHttp(
                 if (token != null) header(HttpHeaders.Authorization, "Bearer $token")
                 if (version != null) header(ClientVersion.HEADER, version.headerValue)
                 if (clientValue != null) header(ClientHeader.HEADER, clientValue)
+                if (languageValue != null) header(HttpHeaders.AcceptLanguage, languageValue)
                 route.body?.let {
                     contentType(ContentType.Application.Json)
                     setBody(it.value, it.type)

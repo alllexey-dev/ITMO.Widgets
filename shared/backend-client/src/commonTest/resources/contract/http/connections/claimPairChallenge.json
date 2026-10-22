@@ -1,0 +1,52 @@
+{
+  "success": true,
+  "data": {
+    "status": "CLAIMED",
+    "token": "iwc_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "connection": {
+      "id": "00000000-0000-4000-8000-000000000601",
+      "client": "agent",
+      "name": "nas",
+      "version": "1.2.0",
+      "platform": "linux",
+      "scopes": [
+        {
+          "scope": {
+            "id": "sport",
+            "title": "Запись на физкультуру",
+            "description": "Записывается по очередям вместо телефона"
+          },
+          "granted": true
+        },
+        {
+          "scope": {
+            "id": "friends:read",
+            "title": "Друзья",
+            "description": "Видит список друзей"
+          },
+          "granted": true
+        },
+        {
+          "scope": {
+            "id": "schedule:write",
+            "title": "Расписание для друзей",
+            "description": "Отправляет ваше расписание, чтобы друзья видели его без телефона"
+          },
+          "granted": false
+        }
+      ],
+      "createdAt": "2026-10-01T09:00:00Z",
+      "approvedAt": "2026-10-01T09:00:00Z",
+      "lastUsedAt": "2026-10-05T08:59:00Z",
+      "live": true,
+      "itmo": {
+        "sid": "8d1f0c2e-1b6a-4c55-9a43-0f2d7e6b1a01",
+        "expiresAt": "2026-12-30T09:00:00Z"
+      },
+      "itmoStatus": "ok",
+      "revokedAt": null
+    },
+    "sealedBundle": "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcH"
+  },
+  "error": null
+}

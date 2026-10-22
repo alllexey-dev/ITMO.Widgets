@@ -2,23 +2,22 @@ package dev.alllexey.itmowidgets.client.push
 
 import dev.alllexey.itmowidgets.client.json.UuidSerializer
 import dev.alllexey.itmowidgets.client.json.WireInstantSerializer
-import dev.alllexey.itmowidgets.client.pairing.PairingKind
+import dev.alllexey.itmowidgets.client.connections.ConnectionClient
 import dev.alllexey.itmowidgets.client.sport.model.SportLessonDto
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 /**
- * `DEVICE_CONNECTED_PAYLOAD`, sent after every claim of a pairing or a web login. [connectionId] is the row of the
- * connections list; [name] is an agent's, [userAgent] a browser's. A [kind] this client does not know is
- * [PairingKind.UNKNOWN] and shows as a generic device. Expires 12 hours after [connectedAt].
+ * `DEVICE_CONNECTED_PAYLOAD`, sent after every claim of a new connection. [connectionId] is the row of «Устройства»;
+ * [name] is the client's own. A [client] this app does not know is [ConnectionClient.UNKNOWN] and shows as a generic
+ * device. Expires 12 hours after [connectedAt].
  */
 @Serializable
 data class DeviceConnectedPayload(
     @Serializable(with = UuidSerializer::class) val connectionId: Uuid,
-    val kind: PairingKind,
-    val name: String?,
-    val userAgent: String?,
+    val client: ConnectionClient,
+    val name: String,
     @Serializable(with = WireInstantSerializer::class) val connectedAt: Instant,
 ) {
     companion object {

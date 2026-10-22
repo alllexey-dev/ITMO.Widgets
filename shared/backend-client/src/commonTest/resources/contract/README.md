@@ -11,29 +11,35 @@ are.
 | Path | Content |
 |---|---|
 | `http/<area>/<operation>.json` | The whole response body (`ApiResponse`) of one app route; `<operation>` is the Core 1.7.0 method name |
-| `http/{admin,weblogin}/<operationId>.json` | The response body of one `/api/admin/` or `/api/web/` route; named after its `docs/openapi.json` operationId |
+| `http/admin/<operationId>.json` | The response body of one `/api/admin/` route; named after its `docs/openapi.json` operationId |
 | `requests/<Type>.json` | A request body as Core's Gson writes it: declaration order, `null` fields omitted, `LocalTime` as `08:20` |
 | `fcm/<TYPE>.json` | The FCM data map of one `type`: `recipient_isu` as sent, `data` parsed from its JSON string |
 | `errors/<code>.json` | An error body any route answers with, recorded from the real security chain (`ErrorContractTest`) |
 | `index.json` | One entry per fixture, sorted by `id`: `id`, `kind` (`http`, `request`, `fcm`, `error`), `method`, `path`, `file`, `minCore` |
 
-- The 62 routes are the 56 `ItmoWidgetsApi` and 6 `ItmoWidgetsModerationApi` methods of Core 1.7.0:
-  every Backend route except `/api/admin/**` and `/api/web/**`. A test fails when a controller
-  outside those prefixes gains a route that has no fixture.
-- The 31 admin and web sign-in routes (`AdminWebContractTest`) record the response shape Web reads:
+- The app routes are the 56 `ItmoWidgetsApi` and 6 `ItmoWidgetsModerationApi` methods of Core 1.7.0
+  but the 2 retired web-login routes ([connections](../../../../docs/contracts/connections.md)),
+  plus the routes of the shared client and the connected clients (`minCore` `1.8.0`): every Backend
+  route except `/api/admin/**`. A test fails when a controller outside that prefix gains a route
+  that has no fixture. The decode suites list the retired routes in `CoreDecodeSuite.RETIRED_ROUTES`.
+- The 29 admin routes (`AdminWebContractTest`) record the response shape Web reads:
   one fixture per route, no request fixtures, and no rule to cover every enum value or nullable
-  field. A test fails when an admin or web sign-in controller gains a route that has no fixture.
+  field. A test fails when an admin controller gains a route that has no fixture.
 - `minCore` is the oldest decoded Core release (`1.2.0` or `1.7.0`) that calls the route or sends
   the body; a suite for an older Core skips newer entries. `1.8.0` marks a fixture no released Core
   reads: `appVersionInfoIos` (`GET /api/app/version-info?platform=IOS`, the same route as
-  `appVersionInfo` with another query, for the shared client) and the admin and web sign-in
-  routes. `method` and `path` are `null` outside `http`; `path` never carries the query.
+  `appVersionInfo` with another query, for the shared client), the connections and client routes
+  and the admin routes. `method` and `path` are `null` outside `http`; `path` never carries the query.
 - `unauthorized` (kind `error`) is the 401 body of every protected route called without valid
   credentials. Released apps tell errors apart by the HTTP status alone, so it carries `1.8.0` and
   no decode suite reads it; the shared client and Web do.
 - `reauth_required` (kind `error`) is the 401 body of an admin or moderation route called with a
-  web session signed in longer ago than the admin max age ([web](../../../../docs/contracts/web.md)).
-  Only Web reads it.
+  web connection approved longer ago than the admin max age
+  ([connections](../../../../docs/contracts/connections.md#fresh-approval-for-admin-routes)). Only Web
+  reads it.
+- `not_enrolled` and `client_session` (kind `error`) are the 403 bodies of an ITMO.ID bearer of a
+  user who has not enrolled, and of a connected client's own ITMO.ID session
+  ([connections](../../../../docs/contracts/connections.md)).
 - `SportLessonIds` is the bare `List<Long>` body of `POST /api/sport/sign/sync`.
 - Together the app fixtures set every optional field, show every nullable field as `null` at least
   once, carry both sport entry subtypes and every value of the enums the routes return. The values

@@ -1,0 +1,144 @@
+{
+  "success": true,
+  "data": {
+    "connections": [
+      {
+        "id": "00000000-0000-4000-8000-000000000601",
+        "client": "agent",
+        "name": "nas",
+        "version": "1.2.0",
+        "platform": "linux",
+        "scopes": [
+          {
+            "scope": {
+              "id": "sport",
+              "title": "Запись на физкультуру",
+              "description": "Записывается по очередям вместо телефона"
+            },
+            "granted": true
+          },
+          {
+            "scope": {
+              "id": "friends:read",
+              "title": "Друзья",
+              "description": "Видит список друзей"
+            },
+            "granted": true
+          },
+          {
+            "scope": {
+              "id": "schedule:write",
+              "title": "Расписание для друзей",
+              "description": "Отправляет ваше расписание, чтобы друзья видели его без телефона"
+            },
+            "granted": false
+          }
+        ],
+        "createdAt": "2026-10-01T09:00:00Z",
+        "approvedAt": "2026-10-01T09:00:00Z",
+        "lastUsedAt": "2026-10-05T08:59:00Z",
+        "live": true,
+        "itmo": {
+          "sid": "8d1f0c2e-1b6a-4c55-9a43-0f2d7e6b1a01",
+          "expiresAt": "2026-12-30T09:00:00Z"
+        },
+        "itmoStatus": "ok",
+        "revokedAt": null
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000603",
+        "client": "web",
+        "name": "Chrome, macOS",
+        "version": "abc123",
+        "platform": null,
+        "scopes": [
+          {
+            "scope": {
+              "id": "user",
+              "title": "Всё, что видно в приложении",
+              "description": "Кроме входа в ИТМО"
+            },
+            "granted": true
+          }
+        ],
+        "createdAt": "2026-10-02T09:00:00Z",
+        "approvedAt": "2026-10-04T09:00:00Z",
+        "lastUsedAt": "2026-10-05T08:30:00Z",
+        "live": false,
+        "itmo": null,
+        "itmoStatus": "none",
+        "revokedAt": null
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000602",
+        "client": "mcp",
+        "name": "MacBook Air",
+        "version": "0.4.0",
+        "platform": null,
+        "scopes": [
+          {
+            "scope": {
+              "id": "reviews:read",
+              "title": "Отзывы о преподавателях",
+              "description": "Читает отзывы и их сводки"
+            },
+            "granted": false
+          },
+          {
+            "scope": {
+              "id": "links:read",
+              "title": "Ссылки предметов",
+              "description": "Читает ссылки и чаты предметов"
+            },
+            "granted": true
+          },
+          {
+            "scope": {
+              "id": "sport:queue",
+              "title": "Очереди на физкультуру",
+              "description": "Может вставать в очереди и выходить из них"
+            },
+            "granted": false
+          }
+        ],
+        "createdAt": "2026-09-20T09:00:00Z",
+        "approvedAt": "2026-09-20T09:00:00Z",
+        "lastUsedAt": null,
+        "live": false,
+        "itmo": {
+          "sid": "8d1f0c2e-1b6a-4c55-9a43-0f2d7e6b1a02",
+          "expiresAt": "2026-12-19T09:00:00Z"
+        },
+        "itmoStatus": "closed",
+        "revokedAt": "2026-10-04T09:00:00Z"
+      }
+    ],
+    "installs": [
+      {
+        "instanceId": "00000000-0000-4000-8000-000000000701",
+        "platform": "ANDROID",
+        "deviceName": "Google Pixel 8",
+        "os": "36",
+        "version": "2.4.0",
+        "firstSeenAt": "2026-09-01T09:00:00Z",
+        "lastSeenAt": "2026-10-05T09:00:00Z",
+        "pushEnabled": true,
+        "sid": "8d1f0c2e-1b6a-4c55-9a43-0f2d7e6b1a03",
+        "current": true
+      },
+      {
+        "instanceId": "00000000-0000-4000-8000-000000000702",
+        "platform": "IOS",
+        "deviceName": null,
+        "os": null,
+        "version": "2.4.0",
+        "firstSeenAt": "2026-09-10T09:00:00Z",
+        "lastSeenAt": "2026-10-03T21:40:00Z",
+        "pushEnabled": false,
+        "sid": null,
+        "current": false
+      }
+    ]
+  },
+  "error": null
+}

@@ -153,7 +153,7 @@ class VendoredContractTest {
             VendoredContract.claims(area).map { "claims/$area.txt" to it }
         }
         val notMirroredClaims = NotMirrored.all.flatMap { route -> route.fixtures.map { "NotMirrored $route" to it } }
-        val ownClaims = (META_FILES + ERROR_FIXTURES).map { "VendoredContractTest" to it }
+        val ownClaims = (META_FILES + ERROR_FIXTURES + FORBIDDEN_FIXTURES.keys).map { "VendoredContractTest" to it }
 
         val problems =
             ContractConformance.claimProblems(VendoredContract.files(), areaClaims + notMirroredClaims + ownClaims)
@@ -178,11 +178,27 @@ class VendoredContractTest {
         }
     }
 
+    @Test
+    fun everyForbiddenBodyKeepsItsCode() = runSuspend {
+        for ((path, code) in FORBIDDEN_FIXTURES) {
+            val backend = MockBackend { json(HttpStatusCode.Forbidden, VendoredContract.read(path)) }
+
+            val error = assertFailsWith<BackendException.Forbidden>(path) { backend.client.users.myUserData() }
+            assertEquals(code, error.code, path)
+        }
+    }
+
     private companion object {
         /** Read by this package, `README.md` by people; `index.json` lists every other file. */
         val META_FILES = listOf("BACKEND_COMMIT", "README.md", "index.json", "openapi.json")
 
         /** 401 bodies, checked here: any protected route's, and an admin or moderation route's (Web only). */
         val ERROR_FIXTURES = listOf("errors/unauthorized.json", "errors/reauth_required.json")
+
+        /** 403 bodies of the connections contract: a user before consent, a client's own ITMO.ID session. */
+        val FORBIDDEN_FIXTURES = mapOf(
+            "errors/not_enrolled.json" to "not_enrolled",
+            "errors/client_session.json" to "client_session",
+        )
     }
 }

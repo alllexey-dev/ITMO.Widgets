@@ -49,21 +49,15 @@ object NotMirrored {
         ),
         NotMirroredRoute(
             method = null,
-            path = "/api/web/**",
-            reason = "Web only: the browser sign-in and its session cookie; the apps approve through /api/users",
-            fixtures = listOf("http/weblogin/"),
-        ),
-        NotMirroredRoute(
-            method = null,
             path = "/api/pair/**",
-            reason = "the target device's side of pairing (create and poll); the apps open and approve",
-            fixtures = listOf("http/pairing/createPairing.json", "http/pairing/pollPairing.json"),
+            reason = "the client's side of pairing (create and claim); the apps open and approve under /api/users",
+            fixtures = listOf("http/connections/createPairChallenge.json", "http/connections/claimPairChallenge.json"),
         ),
         NotMirroredRoute(
             method = null,
-            path = "/api/agent/**",
-            reason = "the self-hosted agent's routes and its manual token; no app screen uses them yet",
-            fixtures = listOf("http/agent/", "http/pairing/createSessionPairing.json"),
+            path = "/api/client/**",
+            reason = "the connected clients' own routes (agent, MCP, web); the app's bearer is refused there",
+            fixtures = listOf("http/client/"),
         ),
         NotMirroredRoute(
             method = HttpMethod.Get,
