@@ -86,7 +86,7 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   which returns `.swiftUI` (pushed under the native bar), `.sheet`, `.swiftUISheet`, a tab,
   the gate or `.notOnIOS`. `RouterTests` fails for a key no feature claims.
 - Debug launch arguments replace Android's debug tools: `-itmoDemo`, `-itmoSignedOut`, `-itmoShellSession <state>`,
-  `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoWebLoginFixture`, `-itmoBarsLogin`,
+  `-itmoOnboarding`, `-itmoRunRefresh`, `-itmoNotificationFixture <kind>`, `-itmoBarsLogin`,
   `-itmoAcademicDate <yyyy-mm-dd>` (the academic date at the real wall time, Android's test academic date),
   `-itmoSlowRefresh` (a pull's spinner stays 5 s).
 
@@ -149,6 +149,22 @@ without the filtering entitlement lists no push switch ([Degradations](#degradat
 app's own screens keep the system's colours (`PlatformCapabilities.appColors` is off), so `AppearanceScreen` draws its
 sample as a widget, the one thing the colours reach, from `AppearanceColors` (the widgets' scheme, without Compose),
 and offers no black background ([settings](settings.md#ios-1)).
+
+## Connected clients
+
+The profile's `Устройства` row (`AppRoutes.Devices`) pushes `DevicesScreen` (`Features/Connections/`) over the shared
+`DevicesViewModel`; a client pushes `ConnectedClientScreen` (`AppRoutes.Connection`) over `ConnectionViewModel`
+(Koin parameters `ConnectionsIosParameters.connection(id)`), and `AppRoutes.Pairing` is the route sheet
+`PairingSheet` over `PairingViewModel` ([connected clients](features/connections.md)).
+
+- The scanner is VisionKit's `DataScannerViewController` (`PairingScanner`), behind the camera permission; without it
+  the sheet takes a pasted link.
+- The screen lock (`DeviceUnlock`) and HPKE are the app's `PairingHost` (`Pairing.swift`: LocalAuthentication,
+  CryptoKit), bound in Koin by `connectionsIosModule`.
+- A client's ITMO.ID sign-in (`ClientSignInPage`) is a full-screen `WKWebView` on `WKWebsiteDataStore.nonPersistent()`
+  with the ViewModel's User-Agent; every main-frame navigation goes to `onSignInNavigation` first, and only https
+  loads. The app's own sign-in page (`ItmoSignInBrowser`) sets its User-Agent with `appSignInUserAgent` from the
+  `devices_browser_like` switch.
 
 ## Strings and icons
 
