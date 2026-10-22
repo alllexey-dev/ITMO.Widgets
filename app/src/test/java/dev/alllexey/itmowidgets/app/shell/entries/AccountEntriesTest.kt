@@ -20,7 +20,6 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
@@ -44,8 +43,6 @@ import dev.alllexey.itmowidgets.core.navigation.appRouteSerializersModule
 import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
-import dev.alllexey.itmowidgets.core.session.CurrentUser
-import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.social.FriendRequests
@@ -63,9 +60,6 @@ import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.time.AcademicTimeOverrideController
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreview
 import dev.alllexey.itmowidgets.core.ui.widget.WidgetPreviewFactory
-import dev.alllexey.itmowidgets.core.weblogin.PairLink
-import dev.alllexey.itmowidgets.core.weblogin.WebLoginPreview
-import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.auth.presentation.AuthViewModel
@@ -89,19 +83,8 @@ import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateTestTags
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebTestTags
-import dev.alllexey.itmowidgets.feature.weblogin.domain.AgentScope
-import dev.alllexey.itmowidgets.feature.weblogin.domain.Connection
-import dev.alllexey.itmowidgets.feature.weblogin.domain.HpkeSender
-import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingHandoff
-import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingRepository
-import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingRequest
-import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingResult
-import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingSealer
-import dev.alllexey.itmowidgets.feature.weblogin.presentation.WebLoginViewModel
-import dev.alllexey.itmowidgets.feature.weblogin.ui.WebLoginSheetTestTags
 import kotlin.time.Instant
 import kotlin.time.TimeSource
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -127,9 +110,9 @@ import org.robolectric.shadows.ShadowToast
 
 /**
  * The account keys in the Compose shell with the real [shellEntries] and Koin ViewModels on synthetic data: sign-in
- * and the first-run flow fill the window, the Me tab root opens its route-map routes, the web sign-in sheet, My ITMO
- * in the browser, the update offer and the debug tools render and close themselves, the demo session refuses the web
- * sign-in and My ITMO, the update key survives saving, and a release registry has no debug tools.
+ * and the first-run flow fill the window, the Me tab root opens its route-map routes, pairing and «Устройства» have
+ * entries, My ITMO in the browser, the update offer and the debug tools render and close themselves, the demo session
+ * refuses pairing, «Устройства» and My ITMO, the update key survives saving, and a release registry has no debug tools.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = PreviewHostApplication::class)
@@ -156,9 +139,6 @@ class AccountEntriesTest {
                 module {
                     viewModel { AuthViewModel(sessions, TimeSource.Monotonic) }
                     viewModel { MeViewModel(sessions, EmptySocial, FakeCustomServicesRepository(enabled = true), FakeDevicesOverview()) }
-                    viewModel {
-                        WebLoginViewModel(get<SavedStateHandle>(), OneBrowser, NoPairing, NoHandoff, FixedAcademicTime())
-                    }
                     viewModel { AppUpdateViewModel(updates, get<SavedStateHandle>()) }
                     viewModel {
                         OnboardingViewModel(
@@ -234,19 +214,11 @@ class AccountEntriesTest {
     }
 
     @Test
-    fun theWebSignInSheetApprovesACodeAndClosesItself() {
-        show()
-        act { open(AppRoutes.WebLogin()) }
-
-        compose.onNodeWithTag(WebLoginSheetTestTags.SCAN).assertExists()
-        compose.onNodeWithTag(WebLoginSheetTestTags.CODE).performTextInput(CODE)
-        compose.onNodeWithTag(WebLoginSheetTestTags.CONTINUE).performClick()
-        compose.waitForIdle()
-        compose.onNodeWithTag(WebLoginSheetTestTags.APPROVE).performClick()
-        compose.waitForIdle()
-        compose.onNodeWithTag(WebLoginSheetTestTags.RESULT_ACTION).performClick()
-        compose.waitForIdle()
-        assertTrue(navigator.state.floating.isEmpty())
+    fun pairingTheDevicesAndAClientHaveEntries() {
+        val entries = shellEntries(debugTools = false)
+        listOf(AppRoutes.Pairing(), AppRoutes.Devices, AppRoutes.Connection("conn-1")).forEach { route ->
+            assertTrue("$route", entries.isRegistered(route))
+        }
     }
 
     @Test
@@ -300,21 +272,18 @@ class AccountEntriesTest {
     }
 
     @Test
-    fun theDemoSessionRefusesTheWebSignInAndMyItmo() {
+    fun theDemoSessionRefusesPairingTheDevicesAndMyItmo() {
         navigator.guard = { route -> ShellGate.check(route, SessionState.SignedIn(user = null, demo = true), PASSED) }
         navigator.onRefusedInDemo = { refuseInDemo(compose.activity) }
         surface = ShellSurface.Tabs(demoBanner = true)
         show()
 
-        ShadowToast.reset()
-        act { open(AppRoutes.WebLogin()) }
-        assertEquals(ShellBackStack(AppTab.ME), navigator.state)
-        assertEquals(compose.activity.getString(R.string.error_demo_unavailable), ShadowToast.getTextOfLatestToast())
-
-        ShadowToast.reset()
-        act { open(AppRoutes.MyItmoWeb) }
-        assertEquals(ShellBackStack(AppTab.ME), navigator.state)
-        assertEquals(compose.activity.getString(R.string.error_demo_unavailable), ShadowToast.getTextOfLatestToast())
+        listOf(AppRoutes.Pairing(), AppRoutes.Devices, AppRoutes.Connection("conn-1"), AppRoutes.MyItmoWeb).forEach { route ->
+            ShadowToast.reset()
+            act { open(route) }
+            assertEquals("$route", ShellBackStack(AppTab.ME), navigator.state)
+            assertEquals("$route", compose.activity.getString(R.string.error_demo_unavailable), ShadowToast.getTextOfLatestToast())
+        }
     }
 
     @Test
@@ -420,40 +389,6 @@ class AccountEntriesTest {
         override suspend fun removeFriend(isu: Int): AppResult<UserProfile> = error("not on the Me tab")
     }
 
-    /** Knows one browser waiting under [CODE] and approves it. */
-    private object OneBrowser : WebLoginRepository {
-        private val preview = WebLoginPreview(
-            challengeId = Uuid.parse("00000000-0000-0000-0000-000000000001"),
-            userAgent = null,
-            createdAt = Instant.fromEpochMilliseconds(0),
-            expiresAt = Instant.fromEpochMilliseconds(120_000),
-        )
-
-        override suspend fun preview(code: String): AppResult<WebLoginPreview> =
-            if (code == CODE) AppResult.Success(preview) else error("unknown code $code")
-
-        override suspend fun approve(challengeId: Uuid): AppResult<Unit> = AppResult.Success(Unit)
-    }
-
-    /** The Me tab's sheet pairs no device here. */
-    private object NoPairing : PairingRepository {
-        override suspend fun open(code: String, link: PairLink?): PairingResult<PairingRequest> = error("no pairing")
-        override suspend fun approve(request: PairingRequest, sealedBundle: String, scopes: Set<AgentScope>) =
-            error("no pairing")
-        override suspend fun reject(challengeId: Uuid): AppResult<Unit> = error("no pairing")
-        override suspend fun connections(): AppResult<List<Connection>> = AppResult.Success(emptyList())
-        override suspend fun revoke(id: Uuid): AppResult<Unit> = error("no pairing")
-    }
-
-    private val NoHandoff = PairingHandoff(
-        session = { error("no hand-off") },
-        sealer = PairingSealer(HpkeSender { _, _, _ -> error("no seal") }),
-        users = object : CurrentUserProvider {
-            override suspend fun getCurrentUser(): CurrentUser? = null
-        },
-        clock = kotlin.time.Clock.System,
-    )
-
     /** The widgets gallery gets empty views. */
     private object NoPreviews : WidgetPreviewFactory {
         override fun create(context: Context, scope: CoroutineScope, settings: WidgetPreviewSettings): WidgetPreview =
@@ -490,7 +425,6 @@ class AccountEntriesTest {
 
     private companion object {
         const val DEMO_TAPS = 5
-        const val CODE = "ABCD2345"
         const val SECOND_PAGE = "https://my.itmo.ru/test/second"
         val PASSED = OnboardingStatus.PASSED
         val UPDATE = AppUpdate(AppVersionName("2.2.0"), AppVersionName("2.3.0"), note = "", unsupported = false)

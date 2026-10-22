@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.feature.connections.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.alllexey.itmowidgets.core.connections.SignInLabel
-import dev.alllexey.itmowidgets.core.notification.PushDevice
+import dev.alllexey.itmowidgets.core.connections.ThisPhone
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
@@ -40,7 +40,7 @@ class DevicesViewModel(
     private val logins: ItmoLoginsRepository,
     private val gate: BackendGate,
     private val label: SignInLabel,
-    private val phone: PushDevice,
+    private val phone: ThisPhone,
     private val time: AcademicTimeProvider,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DevicesUiState())
@@ -208,7 +208,7 @@ class DevicesViewModel(
                     title = current?.let(::installTitle) ?: UiText.Dynamic(phone.name),
                     subtitle = lines(
                         current?.let(::installLine)
-                            ?: UiText.Res(AccountStrings.devices_install_app, listOf(phone.appVersion.orEmpty())),
+                            ?: UiText.Res(AccountStrings.devices_install_app, listOf(phone.appVersion)),
                         phoneSession?.let { UiText.Res(AccountStrings.devices_sign_in_until_line, listOf(dayMonth(it.expires, zone))) },
                     ),
                 ),

@@ -57,14 +57,14 @@ FEATURE_UNITS = {
     "auth": "auth",
     "onboarding": "onboarding",
     "me": "me",
-    "weblogin": "weblogin",
+    "connections": "connections",
     "web": "web",
     "update": "update",
     "debug": "debug",
 }
 FILES = (
     "app", "common", "platform", "debug", "qr", "home", "schedule", "sport", "recordbook", "social", "settings",
-    "resources", "reviews", "auth", "onboarding", "me", "weblogin", "web", "update",
+    "resources", "reviews", "auth", "onboarding", "me", "connections", "web", "update",
 )
 CORE = "core"
 

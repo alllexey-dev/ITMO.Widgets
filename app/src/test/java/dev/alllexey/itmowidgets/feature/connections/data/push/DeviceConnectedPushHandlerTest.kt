@@ -1,4 +1,4 @@
-package dev.alllexey.itmowidgets.feature.weblogin.data.push
+package dev.alllexey.itmowidgets.feature.connections.data.push
 
 import dev.alllexey.itmowidgets.core.notification.AppNotification
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
@@ -30,7 +30,7 @@ class DeviceConnectedPushHandlerTest {
     }
     private val handler = DeviceConnectedPushHandler(services, diagnostics)
 
-    @Test fun `Backend's agent fixture names the agent and opens the connections`() = runTest {
+    @Test fun `Backend's agent fixture names the agent and opens the devices`() = runTest {
         handler.handle(vendoredPayload(), notifier)
 
         val title = UiText.Res(CoreStrings.notification_device_connected_title)
@@ -40,21 +40,23 @@ class DeviceConnectedPushHandlerTest {
                 id = Uuid.parse("00000000-0000-4000-8000-000000000601").hashCode(),
                 title = title,
                 text = UiText.Res(CoreStrings.notification_device_connected_agent, listOf("nas")),
-                destination = NotificationDestination.Connections,
+                destination = NotificationDestination.Devices,
                 publicTitle = title,
             ),
             notifier.shown.single(),
         )
     }
 
-    @Test fun `a browser, a nameless agent and an unknown kind get their own texts`() = runTest {
-        handler.handle(payload("WEB_SESSION", name = null), notifier)
-        handler.handle(payload("AGENT_SESSION", name = "  "), notifier)
-        handler.handle(payload("TV", name = "tv"), notifier)
+    @Test fun `a browser, a named MCP server, a nameless agent and an unknown client get their own texts`() = runTest {
+        handler.handle(payload("web", name = "Chrome"), notifier)
+        handler.handle(payload("mcp", name = "claude"), notifier)
+        handler.handle(payload("agent", name = "  "), notifier)
+        handler.handle(payload("tv", name = "tv"), notifier)
 
         assertEquals(
             listOf(
                 UiText.Res(CoreStrings.notification_device_connected_web),
+                UiText.Res(CoreStrings.notification_device_connected_agent, listOf("claude")),
                 UiText.Res(CoreStrings.notification_device_connected_other),
                 UiText.Res(CoreStrings.notification_device_connected_other),
             ),
@@ -68,7 +70,7 @@ class DeviceConnectedPushHandlerTest {
         assertTrue(notifier.shown.isEmpty())
 
         enabled = true
-        handler.handle(Json.parseToJsonElement("""{"kind":"AGENT"}"""), notifier)
+        handler.handle(Json.parseToJsonElement("""{"client":"agent"}"""), notifier)
         assertTrue(notifier.shown.isEmpty())
         assertEquals(listOf("WARNING:DeviceConnectedPush:Invalid device connection push"), diagnostics.messages)
     }
@@ -78,9 +80,9 @@ class DeviceConnectedPushHandlerTest {
         return Json.parseToJsonElement(fixture.readText()).jsonObject.getValue("data").jsonObject.getValue("payload")
     }
 
-    private fun payload(kind: String, name: String?): JsonElement = Json.parseToJsonElement(
-        """{"connectionId":"00000000-0000-4000-8000-000000000501","kind":"$kind",""" +
-            """"name":${name?.let { "\"$it\"" }},"connectedAt":"2026-10-05T09:00:00Z"}""",
+    private fun payload(client: String, name: String): JsonElement = Json.parseToJsonElement(
+        """{"connectionId":"00000000-0000-4000-8000-000000000501","client":"$client",""" +
+            """"name":"$name","connectedAt":"2026-10-05T09:00:00Z"}""",
     )
 
     private class RecordingNotifier : AppNotifier {

@@ -37,11 +37,13 @@ class AppLinksTest {
         }
     }
 
-    @Test fun `pairing links on both hosts carry the device's link and damaged ones are malformed`() {
-        val fragment = "v1.ABCD2345.QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
+    @Test fun `pairing links on both hosts carry the client's link and damaged ones are malformed`() {
+        val fragment = "1.ABCD2345.QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
         hosts.forEach { host ->
             val link = AppLinks.parse("$host/pair#$fragment")
             assertTrue(host, link is AppLink.Pair && link.link.toUrl() == "$host/pair#$fragment")
+            val alpha = AppLinks.parse("$host/pair#v$fragment")
+            assertTrue(host, alpha is AppLink.Pair && alpha.link.toUrl() == "$host/pair#$fragment")
             assertEquals(host, AppLink.Malformed, AppLinks.parse("$host/pair"))
             assertEquals(host, AppLink.Malformed, AppLinks.parse("$host/pair?$fragment"))
         }

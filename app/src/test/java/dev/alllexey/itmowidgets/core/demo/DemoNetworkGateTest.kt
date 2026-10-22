@@ -9,6 +9,7 @@ import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.device.DevicePlatform
+import dev.alllexey.itmowidgets.core.connections.PairLink
 import dev.alllexey.itmowidgets.core.network.asBackendTokenSource
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -32,10 +33,10 @@ import dev.alllexey.itmowidgets.feature.settings.domain.SharingSettingsState
 import dev.alllexey.itmowidgets.feature.settings.domain.SharingVisibility
 import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
-import dev.alllexey.itmowidgets.feature.weblogin.data.PairingRepositoryImpl
-import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
-import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingError
-import dev.alllexey.itmowidgets.feature.weblogin.domain.PairingResult
+import dev.alllexey.itmowidgets.feature.connections.data.DevicesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.connections.data.PairingRepositoryImpl
+import dev.alllexey.itmowidgets.feature.connections.domain.PairingError
+import dev.alllexey.itmowidgets.feature.connections.domain.PairingResult
 import io.ktor.client.engine.mock.MockEngine
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
@@ -49,7 +50,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Single-call clients of the demo session: the pass, the update offer, web sign-in, pairing, privacy and Backend
+ * Single-call clients of the demo session: the pass, the update offer, «Устройства», pairing, privacy and Backend
  * sessions.
  * The Backend ones send nothing in the demo, even with the stored opt-in, and nothing without the opt-in; the Core 2.0
  * identity sync does not even read the ITMO.ID session.
@@ -76,6 +77,9 @@ class DemoNetworkGateTest {
     private val unreachableEngine = MockEngine { request -> throw AssertionError("The demo session asked ${request.url}") }
     private val unreachableSession = MyItmoClient(MyItmoConfiguration.DEFAULT, unreachableTokens, unreachableEngine, Clock.System)
     private val backendClient = BackendClient("https://backend.test", unreachableSession.tokens.asBackendTokenSource(), unreachableEngine)
+    private val pairLink = PairLink.parse(
+        "https://widgets.alllexey.dev/pair#1.ABCD2345.QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
+    )!!
 
     @Test
     fun `the pass is a code no turnstile accepts`() = runTest {
@@ -89,17 +93,15 @@ class DemoNetworkGateTest {
     }
 
     @Test
-    fun `no update is offered and web sign-in is refused`() = runTest {
+    fun `no update is offered and the devices and pairing are refused`() = runTest {
         val update = update(gate, demo)
-        val webLogin = WebLoginRepositoryImpl(gate, backendClient.users, demo, dispatchers)
-        val pairing = PairingRepositoryImpl(gate, backendClient.pairing, demo, dispatchers)
+        val devices = DevicesRepositoryImpl(gate, backendClient.connections, demo, dispatchers)
+        val pairing = PairingRepositoryImpl(gate, backendClient.connections, demo, dispatchers)
 
         assertNull(update.loadUpdate())
-        assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.preview("ABCD2345"))
-        assertEquals(AppResult.Failure(AppError.DemoUnavailable), webLogin.approve(Uuid.random()))
-        assertEquals(PairingResult.Failure(PairingError.Failed(AppError.DemoUnavailable)), pairing.open("ABCD2345", null))
-        assertEquals(AppResult.Failure(AppError.DemoUnavailable), pairing.connections())
-        assertEquals(AppResult.Failure(AppError.DemoUnavailable), pairing.revoke(Uuid.random()))
+        assertEquals(AppResult.Failure(AppError.DemoUnavailable), devices.refresh())
+        assertEquals(AppResult.Failure(AppError.DemoUnavailable), devices.revoke(Uuid.random()))
+        assertEquals(PairingResult.Failure(PairingError.Failed(AppError.DemoUnavailable)), pairing.open(pairLink))
     }
 
     @Test
@@ -122,15 +124,14 @@ class DemoNetworkGateTest {
         val noDemo = FakeDemoMode()
         val stored = PreferenceStores()
         val optedOut = DefaultBackendGate(stored.servicesOptIn, noDemo)
-        val webLogin = WebLoginRepositoryImpl(optedOut, backendClient.users, noDemo, dispatchers)
-        val pairing = PairingRepositoryImpl(optedOut, backendClient.pairing, noDemo, dispatchers)
+        val devices = DevicesRepositoryImpl(optedOut, backendClient.connections, noDemo, dispatchers)
+        val pairing = PairingRepositoryImpl(optedOut, backendClient.connections, noDemo, dispatchers)
         val privacy = settingsRepository(stored, optedOut, noDemo)
 
         assertNull(update(optedOut, noDemo).loadUpdate())
-        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.preview("ABCD2345"))
-        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), webLogin.approve(Uuid.random()))
-        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), pairing.connections())
-        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), pairing.reject(Uuid.random()))
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), devices.refresh())
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), devices.revoke(Uuid.random()))
+        assertEquals(PairingResult.Failure(PairingError.Failed(AppError.CustomServicesDisabled)), pairing.open(pairLink))
         privacy.refreshSharingSettings()
         assertEquals(SharingSettingsState.Disabled, privacy.observeSharingSettings().first())
         assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), privacy.setScheduleVisibility(SharingVisibility.ALL))

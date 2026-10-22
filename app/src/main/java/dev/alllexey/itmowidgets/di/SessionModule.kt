@@ -3,7 +3,9 @@ package dev.alllexey.itmowidgets.di
 import android.os.Build
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.app.AndroidSessionLifecycleEffects
+import dev.alllexey.itmowidgets.core.connections.ThisPhone
 import dev.alllexey.itmowidgets.core.demo.DemoCurrentUserProvider
+import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.services.DefaultBackendGate
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
@@ -11,8 +13,8 @@ import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.DefaultBackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.DefaultBackendIdentitySync
-import dev.alllexey.itmowidgets.core.session.IdentitySyncWork
 import dev.alllexey.itmowidgets.core.session.IdTokenCurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.IdentitySyncWork
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
@@ -57,14 +59,10 @@ val sessionModule = module {
             demo = get(),
             dispatchers = get(),
             version = get(),
-            deviceName = listOf(Build.MANUFACTURER, Build.MODEL)
-                .map(String::trim)
-                .filter(String::isNotEmpty)
-                .distinct()
-                .joinToString(" ")
-                .ifBlank { "Android" }
+            deviceName = androidDeviceName()
         )
     }
+    single { ThisPhone(androidDeviceName(), get<AppBuild>().version) }
     single<SessionLifecycleEffects> {
         AndroidSessionLifecycleEffects(
             context = androidContext(),
@@ -85,3 +83,11 @@ val sessionModule = module {
         SessionDataCleaners { koin.getAll<SessionDataCleaner>() }
     }
 }
+
+/** «Google Pixel 8»: what Backend's device registry and «Устройства» call this phone. */
+private fun androidDeviceName(): String = listOf(Build.MANUFACTURER, Build.MODEL)
+    .map(String::trim)
+    .filter(String::isNotEmpty)
+    .distinct()
+    .joinToString(" ")
+    .ifBlank { "Android" }

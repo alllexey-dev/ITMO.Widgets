@@ -1,8 +1,7 @@
 package dev.alllexey.itmowidgets.feature.connections.presentation
 
-import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.core.connections.SignInLabel
-import dev.alllexey.itmowidgets.core.notification.PushDevice
+import dev.alllexey.itmowidgets.core.connections.ThisPhone
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
@@ -58,13 +57,7 @@ class DevicesViewModelTest {
         override suspend fun isBrowserLike() = value.value
         override suspend fun setBrowserLike(browserLike: Boolean) { value.value = browserLike }
     }
-    private val phone = object : PushDevice {
-        override val platform = DevicePlatform.ANDROID
-        override val name = "Google Pixel 8"
-        override val appVersion = "2.4.0"
-        override suspend fun token(): String? = null
-        override suspend fun alertsAllowed() = true
-    }
+    private val phone = ThisPhone("Google Pixel 8", "2.4.0")
 
     @BeforeTest
     fun setUp() = main.install()

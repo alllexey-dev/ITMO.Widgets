@@ -55,10 +55,10 @@ class NotificationTapRoutesTest {
     }
 
     @Test
-    fun aNewConnectionOpensTheConnectedDevices() {
+    fun aNewConnectionOpensTheDevices() {
         val data = envelope("DEVICE_CONNECTED_PAYLOAD", """{"connectionId":"00000000-0000-4000-8000-000000000601"}""")
 
-        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.Connections), NotificationTapRoutes.entryRoute(data))
+        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.Devices), NotificationTapRoutes.entryRoute(data))
     }
 
     @Test
@@ -86,7 +86,8 @@ class NotificationTapRoutesTest {
             NotificationDestination.RecordbookSubject(subject),
             NotificationDestination.RecordbookSubject(subjectWithoutJournal),
             NotificationDestination.BarsLogin,
-            NotificationDestination.Connections,
+            NotificationDestination.Devices,
+            NotificationDestination.Connection("conn-1"),
         )
 
         for (destination in destinations) {
@@ -117,6 +118,10 @@ class NotificationTapRoutesTest {
         assertEquals(
             mapOf("action" to AppEntryIntents.ACTION_OPEN_USER_PROFILE, "isu" to "100002"),
             NotificationTapRoutes.userInfoOf(NotificationDestination.UserProfile(100002)),
+        )
+        assertEquals(
+            mapOf("action" to AppEntryIntents.ACTION_OPEN_CONNECTION, "connection" to "conn-1"),
+            NotificationTapRoutes.userInfoOf(NotificationDestination.Connection("conn-1")),
         )
     }
 
@@ -188,7 +193,8 @@ class NotificationTapRoutesTest {
         is NotificationDestination.RecordbookSubject ->
             EntryRoute(AppTab.RECORDBOOK, overlay = AppRoutes.RecordbookSubject(destination.args))
         NotificationDestination.BarsLogin -> EntryRoute(AppTab.RECORDBOOK, activity = ActivityRoute.BARS_LOGIN)
-        NotificationDestination.Connections -> EntryRoute(AppTab.ME, overlay = AppRoutes.Connections)
+        NotificationDestination.Devices -> EntryRoute(AppTab.ME, overlay = AppRoutes.Devices)
+        is NotificationDestination.Connection -> EntryRoute(AppTab.ME, overlay = AppRoutes.Connection(destination.id))
     }
 
     /** The route of Android's notification intent for [destination] (`AndroidAppNotifier`'s action and extras). */
@@ -201,7 +207,9 @@ class NotificationTapRoutesTest {
         is NotificationDestination.RecordbookSubject ->
             EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_RECORDBOOK_SUBJECT, subject = destination.args)
         NotificationDestination.BarsLogin -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_BARS_LOGIN)
-        NotificationDestination.Connections -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_CONNECTIONS)
+        NotificationDestination.Devices -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_DEVICES)
+        is NotificationDestination.Connection ->
+            EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_CONNECTION, connection = destination.id)
     }
 
     private val subject = RecordbookSubjectArgs(11, 1, 3, "2026/2027", 7, "flow", "7")

@@ -55,11 +55,23 @@ class EntryRouteParserTest {
     }
 
     @Test
-    fun aNewConnectionNotificationOpensTheConnectedDevicesOverTheMeTab() {
+    fun aNewConnectionNotificationOpensTheDevicesOverTheMeTab() {
+        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.Devices), parse(AppEntryIntents.ACTION_OPEN_DEVICES))
+    }
+
+    @Test
+    fun aConnectionNotificationOpensTheClientAndWithoutAnIdTheDevices() {
         assertEquals(
-            EntryRoute(AppTab.ME, overlay = AppRoutes.Connections),
-            parse(AppEntryIntents.ACTION_OPEN_CONNECTIONS)
+            EntryRoute(AppTab.ME, overlay = AppRoutes.Connection("conn-1")),
+            parse(AppEntryIntents.ACTION_OPEN_CONNECTION, connection = "conn-1")
         )
+        listOf(null, "", " ").forEach { connection ->
+            assertEquals(
+                EntryRoute(AppTab.ME, overlay = AppRoutes.Devices),
+                parse(AppEntryIntents.ACTION_OPEN_CONNECTION, connection = connection),
+                "$connection"
+            )
+        }
     }
 
     @Test
@@ -138,17 +150,19 @@ class EntryRouteParserTest {
     }
 
     @Test
-    fun aPairingLinkOpensTheWebSignInSheetWithTheLinkAndADamagedOneTheUnavailableDialog() {
-        val link = "https://dev.widgets.alllexey.dev/pair#v1.ABCD2345." +
+    fun aPairingLinkOpensThePairingSheetWithTheLinkAndADamagedOneTheUnavailableDialog() {
+        val link = "https://dev.widgets.alllexey.dev/pair#1.ABCD2345." +
             "QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
 
-        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.WebLogin(code = link)), view(link))
+        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.Pairing(link = link)), view(link))
+        // The alpha's `v1.` link opens the sheet with the canonical link.
+        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.Pairing(link = link)), view(link.replace("#1.", "#v1.")))
         assertEquals(
             EntryRoute(AppTab.HOME, alert = AppRoutes.LinkUnavailable),
-            view("https://dev.widgets.alllexey.dev/pair#v1.ABCD2345")
+            view("https://dev.widgets.alllexey.dev/pair#1.ABCD2345")
         )
-        // The route may reach a crash report; the device's key must not.
-        assertEquals("WebLogin(code=redacted)", AppRoutes.WebLogin(code = link).toString())
+        // The route may reach a crash report; the client's key must not.
+        assertEquals("Pairing(link=redacted)", AppRoutes.Pairing(link = link).toString())
     }
 
     @Test
@@ -176,7 +190,8 @@ class EntryRouteParserTest {
         subject: RecordbookSubjectArgs? = null,
         launchedFromHistory: Boolean = false,
         link: String? = null,
-    ) = EntryRouteParser.parse(action, isu, subject, launchedFromHistory, link)
+        connection: String? = null,
+    ) = EntryRouteParser.parse(action, isu, subject, launchedFromHistory, link, connection = connection)
 
     private fun view(link: String?) = parse(EntryRouteParser.ACTION_VIEW, link = link)
 
@@ -192,7 +207,8 @@ class EntryRouteParserTest {
             AppEntryIntents.ACTION_OPEN_BARS_LOGIN,
             AppEntryIntents.ACTION_OPEN_QR_PASS,
             AppEntryIntents.ACTION_OPEN_TODAY,
-            AppEntryIntents.ACTION_OPEN_CONNECTIONS
+            AppEntryIntents.ACTION_OPEN_DEVICES,
+            AppEntryIntents.ACTION_OPEN_CONNECTION
         )
     }
 }

@@ -1,5 +1,13 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
+import dev.alllexey.itmowidgets.client.common.UserData
+import dev.alllexey.itmowidgets.client.common.UserProfile
+import dev.alllexey.itmowidgets.client.users.ConsentRequest
+import dev.alllexey.itmowidgets.client.users.IdTokenRequest
+import dev.alllexey.itmowidgets.client.users.UserLookupRequest
+import dev.alllexey.itmowidgets.client.users.UserLookupResponse
+import dev.alllexey.itmowidgets.client.users.UserPrivacySettings
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
@@ -37,7 +45,8 @@ class CustomServicesRepositoryImplTest {
         },
         diagnostics = diagnostics,
         demo = demo,
-        uploads = uploads
+        uploads = uploads,
+        users = RecordingUsers()
     )
 
     @Test
@@ -56,7 +65,7 @@ class CustomServicesRepositoryImplTest {
     }
 
     @Test
-    fun outsideTheDemoTheStoredChoiceDecidesAndOptingInConnectsTheDevice() = runTest {
+    fun outsideTheDemoTheStoredChoiceDecidesAndOptingInConsentsThenConnectsTheDevice() = runTest {
         assertFalse(repository.isEnabled())
         assertTrue(repository.isChangeable())
 
@@ -64,7 +73,16 @@ class CustomServicesRepositoryImplTest {
 
         assertTrue(settings.getCustomServicesEnabled())
         assertTrue(repository.observeEnabled().first())
-        assertEquals(listOf("identity", "token", "register"), calls)
+        assertEquals(listOf("consent:1", "identity", "token", "register"), calls)
+    }
+
+    @Test
+    fun optingOutSendsNoConsent() = runTest {
+        settings.setCustomServicesEnabled(true)
+
+        repository.setEnabled(false)
+
+        assertEquals(listOf("unregister"), calls)
     }
 
     @Test
@@ -86,7 +104,8 @@ class CustomServicesRepositoryImplTest {
             },
             diagnostics = diagnostics,
             demo = demo,
-            uploads = uploads
+            uploads = uploads,
+            users = RecordingUsers()
         )
 
         repository.setEnabled(false)
@@ -113,7 +132,7 @@ class CustomServicesRepositoryImplTest {
         repository.setEnabled(true)
 
         assertTrue(settings.getCustomServicesEnabled())
-        assertEquals(listOf("identity", "token", "register"), calls)
+        assertEquals(listOf("consent:1", "identity", "token", "register"), calls)
         assertEquals(listOf("WARNING:CustomServices:Device session sync failed"), diagnostics.messages)
     }
 
@@ -130,5 +149,19 @@ class CustomServicesRepositoryImplTest {
     private fun record(call: String) {
         calls += call
         if (call == failingCall) error("synthetic $call failure")
+    }
+
+    /** Records the consent; nothing else of [UsersApi] is called on opting in. */
+    private inner class RecordingUsers : UsersApi {
+        override suspend fun updateConsent(request: ConsentRequest) = record("consent:${request.version}")
+        override suspend fun userProfile(isu: Int): UserProfile = error("unexpected")
+        override suspend fun userFriends(isu: Int): List<UserProfile> = error("unexpected")
+        override suspend fun lookupUsers(request: UserLookupRequest): UserLookupResponse = error("unexpected")
+        override suspend fun myPrivacySettings(): UserPrivacySettings = error("unexpected")
+        override suspend fun updateMyPrivacySettings(settings: UserPrivacySettings): UserPrivacySettings =
+            error("unexpected")
+        override suspend fun updateIdTokenData(request: IdTokenRequest) = error("unexpected")
+        override suspend fun myUserData(): UserData = error("unexpected")
+        override suspend fun deleteMe() = error("unexpected")
     }
 }

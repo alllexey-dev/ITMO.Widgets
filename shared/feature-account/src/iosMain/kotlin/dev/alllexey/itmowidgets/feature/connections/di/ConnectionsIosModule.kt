@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.feature.connections.di
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.connections.ThisPhone
+import dev.alllexey.itmowidgets.core.notification.IosPushDevice
 import dev.alllexey.itmowidgets.feature.connections.data.IosDeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.data.IosHpkeSender
 import dev.alllexey.itmowidgets.feature.connections.data.PairingHost
@@ -10,11 +12,12 @@ import org.koin.dsl.module
 
 /**
  * The iOS ports of pairing on the app's [PairingHost]: CryptoKit's HPKE and LocalAuthentication; the text resolver
- * comes from `iosBackgroundModule`.
+ * comes from `iosBackgroundModule`, this phone's name from the push registration's `IosPushDevice`.
  */
 fun connectionsIosModule(host: PairingHost) = module {
     single<HpkeSender> { IosHpkeSender(host) }
     single<DeviceUnlock> { IosDeviceUnlock(host, get()) }
+    single { get<IosPushDevice>().let { ThisPhone(it.name, it.appVersion.orEmpty()) } }
 }
 
 /**

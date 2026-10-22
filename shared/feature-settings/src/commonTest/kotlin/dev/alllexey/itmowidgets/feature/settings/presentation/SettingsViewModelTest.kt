@@ -151,9 +151,7 @@ class SettingsViewModelTest {
                     SettingRowId.LICENSE_PLANS,
                     SettingRowId.LICENSE_MAPLIBRE,
                     SettingRowId.LICENSE_NOTO,
-                    SettingRowId.BARS,
-                    SettingRowId.PAIR_DEVICE,
-                    SettingRowId.CONNECTED_DEVICES
+                    SettingRowId.BARS
                 ),
                 items.map(SettingItem::id).toSet()
             )

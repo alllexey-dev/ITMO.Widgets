@@ -13,3 +13,6 @@ data class DevicesSummary(val count: Int?, val warning: UiText?)
 interface DevicesOverview {
     fun observe(): Flow<DevicesSummary>
 }
+
+/** This phone as «Устройства» names it without Backend: the model name the app registers and the app version. */
+data class ThisPhone(val name: String, val appVersion: String)

@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.settings.presentation
 
-import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.notification.AppNotificationChannels
 import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.text.AppIcon
@@ -142,22 +141,6 @@ class RootPageProviderTest {
         assertEquals(versionSummary(TEST_BUILD), about.viewModel.action(SettingRowId.VERSION).description)
         assertEquals(UiText.Res(SettingsStrings.connection_title), SettingsPage.SERVICES.title)
         assertEquals(UiText.Res(SettingsStrings.notifications_title), SettingsPage.NOTIFICATIONS.title)
-    }
-
-    @Test
-    fun theDevicesPageOpensTheWebSignInAndTheConnectedDevices() = runTest(main.dispatcher) {
-        val fixture = createFixture(page = SettingsPage.DEVICES)
-        val events = recordEvents(fixture)
-        advanceUntilIdle()
-        assertEquals(listOf(SettingRowId.PAIR_DEVICE, SettingRowId.CONNECTED_DEVICES), fixture.viewModel.allItems().map { it.id })
-
-        fixture.viewModel.onAction(SettingRowId.PAIR_DEVICE)
-        fixture.viewModel.onAction(SettingRowId.CONNECTED_DEVICES)
-        advanceUntilIdle()
-        assertEquals(
-            listOf<SettingsEvent>(SettingsEvent.OpenRoute(AppRoutes.WebLogin()), SettingsEvent.OpenRoute(AppRoutes.Connections)),
-            events
-        )
     }
 
     @Test

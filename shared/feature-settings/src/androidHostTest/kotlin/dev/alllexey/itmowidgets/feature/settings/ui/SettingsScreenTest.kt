@@ -144,10 +144,10 @@ class SettingsScreenTest {
         val navigation = SettingItem.Navigation(SettingRowId.PAGE_SERVICES, text("Открыть"), page = SettingsPage.SERVICES)
         show(page(SettingSection(null, listOf(navigation))))
         val row = nodeId(SettingRowId.PAGE_SERVICES)
-        update(page(SettingSection(null, listOf(navigation.copy(page = SettingsPage.DEVICES)))))
+        update(page(SettingSection(null, listOf(navigation.copy(page = SettingsPage.ABOUT)))))
         assertEquals(row, nodeId(SettingRowId.PAGE_SERVICES))
         compose.onNodeWithTag(SettingRowId.PAGE_SERVICES.key).performClick()
-        assertEquals(listOf(SettingsPage.DEVICES), pages)
+        assertEquals(listOf(SettingsPage.ABOUT), pages)
 
         update(
             page(
