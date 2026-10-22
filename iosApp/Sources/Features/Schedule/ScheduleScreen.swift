@@ -358,7 +358,7 @@ private enum FeedItem: Identifiable {
     var jumpID: String { "jump-\(id)" }
 
     func isVisible(in targets: Set<String>) -> Bool {
-        if targets.contains(id) || targets.contains(jumpID) { return true }
+        if targets.contains(jumpID) { return true }
         if case let .day(_, lessons) = self { return targets.contains(lessons.key) }
         return false
     }

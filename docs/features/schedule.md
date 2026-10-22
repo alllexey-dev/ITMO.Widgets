@@ -174,22 +174,17 @@ otherwise; iOS always opens this sheet.
 
 ## iOS
 
-The vertical feed observes visible target IDs with `onScrollTargetVisibilityChange`; it has no `scrollPosition`
-binding that could retarget a lazy section during sheet layout. Headers and timelines have separate IDs, and an
-explicit date jump targets the concrete header, never the union of a section's views. That jump stays pending
-until its rows finish loading, and a vertical drag or lesson tap cancels it. Visible-date updates and edge
-pagination follow real vertical drags/deceleration, not layout changes during a sheet transition.
-`ScheduleUITests.testRepeatedLessonSheetsKeepTheFeedPosition` checks three open/close cycles on today and after a
-partial scroll, measuring the same lesson's frame each time.
-
-The shell identifies a sheet by its complete route, including arguments, and keys its content by that identity.
-Quickly closing one lesson and opening another therefore recreates the sheet's `@State` ViewModel even when the
-dismissal has not finished. The UI regression also replaces lesson entry routes without an intervening empty
-presentation and checks both room and time, including different pairs of the same subject.
-
 SwiftUI over the same view models ([iOS app](../ios.md)): `ScheduleScreen.swift` has the feed, `ScheduleSheets.swift`
 the lesson sheet, the month sheet and the friend picker (`Routes+Schedule.swift`). The week strip stays a few points
 off the bar above it: a scroll view touching the bar's edge takes the bar's height as a vertical content inset and
 draws its days outside its clip (`ScheduleUITests.testWeekStripIsDrawnOnLaunchAndAfterATabSwitch` checks the
 pixels). iOS animates programmatic week changes unless Reduce Motion is on. See also
 [schedule changes](schedule-changes.md#ios), [calendar](calendar.md#ios), [widgets](widgets.md#timeline-widgetkit).
+
+The feed has no `scrollPosition` binding: it reads the visible rows with `onScrollTargetVisibilityChange`, so a sheet
+presenting or dismissing never re-anchors a lazy section. A date jump scrolls to the day's header (`jump-<key>`, the
+timeline has its own id) and stays pending until the rows above it load; a vertical drag or a lesson tap cancels it.
+The visible date and edge loading follow only the user's own scrolling. A sheet's identity is its whole route with
+the arguments, so another lesson opened while the last one is still closing gets its own view model
+(`ScheduleUITests.testRepeatedLessonSheetsKeepTheFeedPosition`,
+`testReplacingALessonBeforeDismissalSettlesShowsTheNewDetails`).

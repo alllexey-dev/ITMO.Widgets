@@ -307,14 +307,21 @@ final class ScheduleUITests: XCTestCase {
         lessons(app).firstMatch
     }
 
-    /// The first lesson wholly inside the feed, so a tap lands on it.
+    /// The first lesson wholly inside the feed, so a tap lands on it. Lesson ids repeat from day to day: the element
+    /// is looked up inside its day, so it resolves to the same lesson later.
     private func lessonOnScreen(_ app: XCUIApplication) -> XCUIElement? {
         XCTAssertTrue(firstLesson(app).waitForExistence(timeout: stepTimeout))
         let list = element(app, "schedule.list").frame
-        let rows = lessons(app)
-        return (0..<min(rows.count, 20)).lazy
-            .map { rows.element(boundBy: $0) }
-            .first { list.contains($0.frame) && $0.isHittable }
+        let days = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'schedule.day.'"))
+        for dayIndex in 0..<min(days.count, 10) {
+            let day = element(app, days.element(boundBy: dayIndex).identifier)
+            let rows = day.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'timeline.lesson.'"))
+            for index in 0..<rows.count {
+                let lesson = day.descendants(matching: .any)[rows.element(boundBy: index).identifier].firstMatch
+                if list.contains(lesson.frame) && lesson.isHittable { return lesson }
+            }
+        }
+        return nil
     }
 
     private func openLessonSheet(_ app: XCUIApplication) -> XCUIElement {
@@ -345,31 +352,28 @@ final class ScheduleUITests: XCTestCase {
     }
 
     private func assertLessonSheetsKeepPosition(_ app: XCUIApplication) throws {
-        let anchor = try XCTUnwrap(lessonOnScreen(app), "a lesson wholly inside the feed is needed")
-        let identifier = anchor.identifier
-        let original = try XCTUnwrap(stableLessonFrame(app, identifier: identifier), "the feed did not settle")
+        let lesson = try XCTUnwrap(lessonOnScreen(app), "a lesson wholly inside the feed is needed")
+        let original = try XCTUnwrap(stableFrame(of: lesson), "the feed did not settle")
         for cycle in 1...3 {
             // Tap the same lesson, without the helper's swipe fallback: scrolling here would mask the regression.
-            let lesson = element(app, identifier)
             XCTAssertTrue(lesson.isHittable, "the original lesson moved off screen before cycle \(cycle)")
             lesson.tap()
             let sheet = element(app, "schedule.lessonSheet")
             XCTAssertTrue(sheet.waitForExistence(timeout: stepTimeout))
             app.buttons[Self.close].firstMatch.tap()
             XCTAssertTrue(sheet.waitForNonExistence(timeout: stepTimeout))
-            let restored = try XCTUnwrap(stableLessonFrame(app, identifier: identifier), "the lesson did not settle after dismissal")
-            XCTAssertEqual(restored.minY, original.minY, accuracy: 2, "cycle \(cycle) moved \(identifier)")
+            let restored = try XCTUnwrap(stableFrame(of: lesson), "the lesson did not settle after dismissal")
+            XCTAssertEqual(restored.minY, original.minY, accuracy: 2, "cycle \(cycle) moved the lesson")
             XCTAssertEqual(restored.height, original.height, accuracy: 2)
         }
     }
 
     /// Wait for the actual frame to settle, so a dismissal's first animation frame cannot hide a later jump.
-    private func stableLessonFrame(_ app: XCUIApplication, identifier: String) -> CGRect? {
+    private func stableFrame(of lesson: XCUIElement) -> CGRect? {
         let deadline = Date().addingTimeInterval(stepTimeout)
         var previous: CGRect?
         var stableSince = Date()
         while Date() < deadline {
-            let lesson = element(app, identifier)
             guard lesson.exists && lesson.isHittable else { return nil }
             let frame = lesson.frame
             if let previous, abs(frame.minY - previous.minY) < 1 && abs(frame.height - previous.height) < 1 {
