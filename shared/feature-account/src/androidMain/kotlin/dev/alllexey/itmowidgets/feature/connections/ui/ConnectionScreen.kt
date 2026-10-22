@@ -203,7 +203,7 @@ private fun SignIn(signIn: SignInStatus, actions: ConnectionActions) = ListGroup
 }
 
 @Composable
-private fun RenewContent(renew: RenewSheet, name: String, actions: ConnectionActions) {
+internal fun RenewContent(renew: RenewSheet, name: String, actions: ConnectionActions) {
     val clipboard = LocalClipboardManager.current
     SheetScaffold(
         title = renew.title.asString(),

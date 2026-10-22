@@ -72,14 +72,14 @@ fun PairingSheetRoute(viewModel: PairingViewModel, unlock: DeviceUnlock, onScan:
             LaunchedEffect(current) { if (!current.busy) viewModel.proceed(unlock) }
             Progress(close)
         } else {
-            Confirm(current, close, onProceed = { viewModel.proceed(unlock) }, onScope = viewModel::onScopeChanged, onCancel = onClose)
+            PairingConfirm(current, close, onProceed = { viewModel.proceed(unlock) }, onScope = viewModel::onScopeChanged, onCancel = onClose)
         }
         else -> Unit
     }
     when (val current = state) {
-        is PairingUiState.Input -> Input(current, close, viewModel::onTextChanged, viewModel::submit, onScan)
+        is PairingUiState.Input -> PairingInput(current, close, viewModel::onTextChanged, viewModel::submit, onScan)
         PairingUiState.Opening, PairingUiState.Sending -> Progress(close)
-        is PairingUiState.Result -> Result(current, close) {
+        is PairingUiState.Result -> PairingResultContent(current, close) {
             if (current.next == ResultAction.CLOSE) onClose() else viewModel.onResultAction()
         }
         is PairingUiState.SigningIn -> Progress(close)
@@ -88,7 +88,7 @@ fun PairingSheetRoute(viewModel: PairingViewModel, unlock: DeviceUnlock, onScan:
 }
 
 @Composable
-private fun Input(
+internal fun PairingInput(
     state: PairingUiState.Input,
     close: SheetClose,
     onText: (String) -> Unit,
@@ -125,7 +125,7 @@ private fun Input(
 }
 
 @Composable
-private fun Confirm(
+internal fun PairingConfirm(
     state: PairingUiState.Confirm,
     close: SheetClose,
     onProceed: () -> Unit,
@@ -203,7 +203,7 @@ private fun Progress(close: SheetClose) = SheetScaffold(title = text(AccountStri
 }
 
 @Composable
-private fun Result(state: PairingUiState.Result, close: SheetClose, onAction: () -> Unit) =
+internal fun PairingResultContent(state: PairingUiState.Result, close: SheetClose, onAction: () -> Unit) =
     SheetScaffold(title = text(AccountStrings.pair_title), close = close) {
         Box(Modifier.fillMaxWidth().padding(bottom = ItmoTheme.spacing.section).testTag(PairingTestTags.RESULT)) {
             ContentState(

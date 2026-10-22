@@ -20,7 +20,7 @@ class PairingCryptoTest {
 
     @Test
     fun theInfoBindsTheChallengeTheKindAndTheSecret() {
-        assertEquals(PairingVectors.INFO_HEX, PairingCrypto.info(CHALLENGE_ID, PairingKind.AGENT, SECRET).toHexString())
+        assertEquals(PairingVectors.INFO_HEX, PairingCrypto.info(CHALLENGE_ID, PairingKind.CONNECT, SECRET).toHexString())
     }
 
     @Test

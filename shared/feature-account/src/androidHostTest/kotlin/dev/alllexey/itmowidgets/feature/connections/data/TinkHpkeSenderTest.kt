@@ -20,8 +20,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 
 /**
- * Tink as the device: it opens what the phone's Tink sealer and what iOS's CryptoKit sealed (the fixed vector of
- * [PairingVectors]), and nothing sealed for another challenge or secret. The agent opens the same way.
+ * Tink as the client: it opens what the phone's Tink sealer and what iOS's CryptoKit sealed (the fixed interop
+ * vector of [PairingVectors]), and nothing sealed for another challenge, kind or secret. The agent opens the same way.
  */
 class TinkHpkeSenderTest {
     private val sealer = PairingSealer(TinkHpkeSender())
@@ -39,17 +39,17 @@ class TinkHpkeSenderTest {
     fun theDeviceOpensTheBundleCryptoKitSealed() {
         val sealed = BASE64.decode(PairingVectors.SEALED_BY_CRYPTOKIT)
 
-        assertEquals(PairingVectors.BUNDLE_JSON, open(sealed, PairingVectors.INFO_HEX.hexToByteArray()))
+        assertEquals(PairingVectors.INTEROP_PLAINTEXT, open(sealed, PairingVectors.INTEROP_INFO_HEX.hexToByteArray()))
     }
 
     @Test
     fun aBundleForAnotherChallengeKindOrSecretDoesNotOpen() {
-        val sealed = BASE64.decode(PairingVectors.SEALED_BY_CRYPTOKIT)
+        val sealed = BASE64.decode(sealer.sealBundle(PairingVectors.link(), PairingVectors.BUNDLE))
         val secret = PairingVectors.SECRET
         listOf(
-            PairingCrypto.info(kotlin.uuid.Uuid.random(), PairingKind.AGENT, secret),
-            PairingCrypto.info(PairingVectors.CHALLENGE_ID, PairingKind.AGENT_SESSION, secret),
-            PairingCrypto.info(PairingVectors.CHALLENGE_ID, PairingKind.AGENT, ByteArray(16)),
+            PairingCrypto.info(kotlin.uuid.Uuid.random(), PairingKind.CONNECT, secret),
+            PairingCrypto.info(PairingVectors.CHALLENGE_ID, PairingKind.RENEW, secret),
+            PairingCrypto.info(PairingVectors.CHALLENGE_ID, PairingKind.CONNECT, ByteArray(16)),
         ).forEach { info -> assertFailsWith<GeneralSecurityException> { open(sealed, info) } }
     }
 

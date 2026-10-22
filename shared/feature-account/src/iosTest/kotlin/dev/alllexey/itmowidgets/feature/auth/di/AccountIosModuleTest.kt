@@ -43,9 +43,9 @@ import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
 import dev.alllexey.itmowidgets.feature.connections.data.PairingHost
-import dev.alllexey.itmowidgets.feature.connections.di.webLoginDataModule
-import dev.alllexey.itmowidgets.feature.connections.di.webLoginIosModule
-import dev.alllexey.itmowidgets.feature.connections.di.webLoginModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsIosModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respondError
@@ -179,7 +179,7 @@ class AccountIosModuleTest {
 
     private fun accountGraph(vararg overrides: Module): Koin = graph(
         iosCoreModule(FakeHost(), ORIGIN), authDataModule, accountIosModule,
-        webLoginDataModule, webLoginModule, webLoginIosModule(NoPairingHost), updateModule, updateIosModule,
+        connectionsDataModule, connectionsModule, connectionsIosModule(NoPairingHost), updateModule, updateIosModule,
         testDevice(), *overrides,
     )
 

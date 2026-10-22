@@ -243,7 +243,7 @@ private fun Row(row: DeviceRow, actions: DevicesActions) {
 }
 
 @Composable
-private fun FactsSheetContent(sheet: FactsSheet, busy: Boolean, actions: DevicesActions) {
+internal fun FactsSheetContent(sheet: FactsSheet, busy: Boolean, actions: DevicesActions) {
     SheetScaffold(
         title = sheet.title.asString(),
         subtitle = sheet.subtitle?.asString(),

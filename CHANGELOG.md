@@ -14,8 +14,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - A new app for iOS 26.1 and later: a Liquid Glass tab bar `Сегодня`, `Расписание`, `Зачётка`, `Спорт`, `Профиль`,
   native SwiftUI screens over the same view models as Android; sheets open at the content's height, 0.82 of the
   screen or full.
-- Sign-in through ITMO.ID or a refresh token, the demo session (five taps on the logo), the first run, `Подключить
-  устройство` with the system QR scanner, and My ITMO in the app's browser (other sites open in Safari).
+- Sign-in through ITMO.ID or a refresh token, the demo session (five taps on the logo), the first run, `Устройства`
+  and `Подключить устройство` with the system QR scanner, and My ITMO in the app's browser (other sites open in Safari).
 - The QR pass at full brightness in a sheet from the `QR-пропуск` accessory over `Сегодня`, the `QR-пропуск` control
   in Control Center, on the Lock Screen and the Action button, App Shortcuts `QR-пропуск` and `Сегодня`, and quick
   actions on the app icon.
@@ -120,17 +120,28 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   reviews) and `Учёба` (groups, schedule, sport and friends you may open). Someone's hidden data is simply absent.
 - Another user's sport is titled `Спорт` with their given name after it and shows lesson cards.
 - Teachers in the lesson sheet and on the subject page show their My ITMO photo, initials without one.
+- `Устройства` (a Профиль row with the count and a warning) lists this phone, your other app installs, connected
+  clients (agents, MCP servers, browsers) and every other ITMO.ID sign-in of the account, with IP addresses as
+  id.itmo.ru shows them. Installs and sign-ins open a sheet with `Выйти на этом устройстве` or `Завершить вход`;
+  `Завершить все другие входы` ends the rest.
+- `Подключить устройство` pairs an agent, an MCP server or a browser from its QR, a pasted link or an App Link, with
+  a code to compare. An agent or MCP server gets its own ITMO.ID session: you sign in for it on the official page in
+  a separate empty browser store, the password stays on the phone, and the session is sealed end to end to the
+  device. A client's screen shows its ITMO sign-in, its access as switches (more access asks for the screen lock),
+  `Обновить вход` and `Отключить`, which also ends its ITMO session.
+- 7 days before a client's ITMO sign-in ends, the bell and a notification remind you to renew it.
+- `Выглядеть как обычный браузер` (on by default) decides how new sign-ins look on id.itmo.ru: as a browser, or as
+  `ITMO Widgets ... bot`. It applies to the app's own sign-in too.
+- The alpha web sign-in by code, the agent hand-off of the phone's own session and `Подключённые устройства` are
+  gone.
 
 ### Settings
 
 - The root starts with `Аккаунты` (`Сервер ITMO.Widgets` and `БАРС`), then `Уведомления`, `Виджеты`, `Оформление`,
   `Разделы` and `О приложении`. Every settings page, `Журнал ошибок` and another user's `Спорт` share the profile's
   look: the pushed header, rows with icons in connected groups.
-- `Сервер ITMO.Widgets` has the switch, `Кто видит` and `Устройства` while connected, `Что даёт подключение` before
-  it; what the server keeps opens in a sheet.
-- `Устройства` replaces `Вход на сайт`: `Подключить устройство` signs a browser in or pairs a self-hosted agent from
-  its QR, a pasted link or an App Link, with a verification code; the ITMO session is handed over end-to-end
-  encrypted. `Подключённые устройства` lists web sessions and agents with `Отключить`.
+- `Сервер ITMO.Widgets` has the switch and `Кто видит` while connected, `Что даёт подключение` before it; what the
+  server keeps opens in a sheet. Turning it on sends the consent, which enrolls the account on Backend.
 - `Уведомления` gives every type its own switch, pushes included; a switched-off push is dropped on the device.
 - `Разделы` holds the `Сегодня`, `Расписание` and `Спорт` options.
 - `Версия` shows the build number, the short commit and, for a custom build, its source; a tap copies the details.
@@ -189,6 +200,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - MyItmoApi 2.x and Core 2.0 (`:shared:backend-client`) over Ktor, Koin only; Retrofit, Gson, Hilt, Dagger and KSP
   are gone. MyItmoApi comes from Maven Central (`MYITMOAPI_DIR` for a local checkout).
 - Every Backend request carries `X-App-Version` and `X-Client` (ADR 0034); every call checks the opt-in and demo.
+- Every Backend request carries `Accept-Language` with the app's UI language; Core 2 has the connections area
+  (Backend's `connections.md`) instead of the alpha pairing and web login; MyItmoApi 2.3.0 lists and ends ITMO.ID
+  sessions.
 - Files and settings stay compatible with 2.2; `UpgradeFrom22Test` and `StableIdentifiersTest` guard the upgrade.
 - Builds name their origin (`official` or `custom`, with source and commit); `dist.yml` builds a self-signed APK and
   an unsigned `.ipa` with no secrets, also in a fork.

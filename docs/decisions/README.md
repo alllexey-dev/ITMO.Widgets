@@ -33,7 +33,7 @@ and keep their numbers.
 - [0025 MyItmoApi 2.x is a Kotlin Multiplatform library beside 1.x](0025-myitmoapi-2-kmp.md) - accepted
 - [0026 Core 2.0 is a client-only KMP module; Backend owns the wire DTOs](0026-core-2-backend-client.md) - accepted
 - [0027 Android widgets stay RemoteViews; a shared timeline feeds them and WidgetKit](0027-remoteviews-widgets.md) - accepted
-- [0028 One Russian string catalog generated outward; Material Symbols Rounded with an SF Symbol registry](0028-strings-and-icons.md) - amended by 0035
+- [0028 One Russian string catalog generated outward; Material Symbols Rounded with an SF Symbol registry](0028-strings-and-icons.md) - amended by 0035 and 0036
 - 0029 Lanes and integrator - process, deleted
 - [0030 Release lines, version codes and data continuity](0030-release-lines-and-data-continuity.md) - accepted
 - [0031 iOS screens are native SwiftUI over shared Kotlin](0031-swiftui-ios-screens.md) - accepted, amended by 0035
@@ -41,3 +41,4 @@ and keep their numbers.
 - [0033 Campus plans come from a static mirror, outside the Backend opt-in](0033-campus-map-mirror.md) - accepted
 - [0034 One client header and one activity table for client statistics](0034-client-stats.md) - accepted
 - [0035 The iOS framework links no Compose](0035-ios-without-compose.md) - accepted
+- [0036 Scope texts of connected clients come from Backend](0036-backend-scope-texts.md) - accepted

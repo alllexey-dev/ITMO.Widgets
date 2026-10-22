@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
 import dev.alllexey.itmowidgets.shared.feature.account.AccountPlurals
 import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,26 +58,28 @@ class DevicesViewModel(
         }.launchIn(viewModelScope)
         label.observeBrowserLike().onEach { browserLike -> _uiState.update { it.copy(browserLike = browserLike) } }
             .launchIn(viewModelScope)
-        refresh()
+        viewModelScope.launch { load() }
     }
 
     /** Both sources again; pull-to-refresh and the error's retry. */
     fun refresh() {
         if (_uiState.value.refreshing) return
         _uiState.update { it.copy(refreshing = true) }
-        viewModelScope.launch {
-            val listed = async { logins.list() }
-            val answered = if (gate.mayCallBackend()) devices.refresh() else null
-            when (answered) {
-                is AppResult.Success -> { backend = answered.value; backendError = null }
-                is AppResult.Failure -> backendError = answered.error
-                null -> Unit
-            }
-            itmo = listed.await()
-            _uiState.update { it.copy(refreshing = false) }
-            render()
-            reconcile()
+        viewModelScope.launch { load() }
+    }
+
+    private suspend fun load() = coroutineScope {
+        val listed = async { logins.list() }
+        val answered = if (gate.mayCallBackend()) devices.refresh() else null
+        when (answered) {
+            is AppResult.Success -> { backend = answered.value; backendError = null }
+            is AppResult.Failure -> backendError = answered.error
+            null -> Unit
         }
+        itmo = listed.await()
+        _uiState.update { it.copy(refreshing = false) }
+        render()
+        reconcile()
     }
 
     /** A row of an install or another session opens its facts; clients are the host's to open. */

@@ -30,10 +30,9 @@ class PairingSealerTest {
     }
 
     @Test
-    fun theBundleNeverPrintsItsToken() {
+    fun theBundleNeverPrintsItsSession() {
         assertEquals("PairingBundle(redacted)", PairingVectors.BUNDLE.toString())
-        val token = HandoffToken("test-refresh-token", PairingVectors.BUNDLE.issuedAt)
-        assertFalse("test-refresh-token" in token.toString())
+        assertFalse("test-refresh-token" in PairingVectors.BUNDLE.itmo.toString())
     }
 
     private class RecordingHpke(val output: ByteArray) : HpkeSender {
