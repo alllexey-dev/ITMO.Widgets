@@ -111,7 +111,7 @@ struct MeContent: View {
         }
     }
 
-    /// The widgets gallery and the settings.
+    /// The widgets gallery, the devices screen (`devices_title`) and the settings.
     private var app: some View {
         ItmoListGroup {
             ItmoRow(
@@ -122,6 +122,16 @@ struct MeContent: View {
                 action: { actions.open(AppRoutes.Settings(page: SettingsPage.widgets.name)) }
             )
             .accessibilityIdentifier("widgets_row")
+            ItmoRow(
+                title: AppStrings.string("devices_title"),
+                symbol: .devices,
+                tone: .neutral,
+                trailing: state.devices.count.map { "\($0)" },
+                chevron: true,
+                pill: state.devices.warning.map { ItmoPill(text: $0.resolved, tone: .warn) },
+                action: { actions.open(AppRoutes.Devices.shared) }
+            )
+            .accessibilityIdentifier("devices_row")
             ItmoRow(
                 title: AppStrings.string("settings_title"),
                 symbol: .settings,

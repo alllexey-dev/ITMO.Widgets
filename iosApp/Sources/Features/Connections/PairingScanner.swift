@@ -2,11 +2,11 @@ import AVFoundation
 import SwiftUI
 import VisionKit
 
-/// The QR scanner of the web sign-in: VisionKit's `DataScannerViewController`, QR codes only, full screen under a
-/// close button and `ios_web_login_scan_hint`. Unlike Android's Play services scanner it needs the camera permission
+/// The QR scanner of pairing: VisionKit's `DataScannerViewController`, QR codes only, full screen under a close
+/// button and `ios_web_login_scan_hint`. Unlike Android's Play services scanner it needs the camera permission
 /// (`NSCameraUsageDescription`, `ios_web_login_camera_usage`); a refused permission, a device without the scanner
-/// (the simulator) or a scanner that does not start reads as `web_login_scanner_unavailable`, and typing still works.
-enum WebLoginScanner {
+/// (the simulator) or a scanner that does not start reads as `pair_scanner_unavailable`, and pasting still works.
+enum PairingScanner {
     /// Asks for the camera once; true when the scanner can run now.
     @MainActor
     static func requestAccess(_ completion: @escaping @MainActor (Bool) -> Void) {
@@ -28,15 +28,15 @@ enum WebLoginScanner {
 }
 
 /// The scanner above the sheet. `scanned` gets the first QR's text, whatever it holds: the ViewModel decides whether
-/// it is a sign-in link.
-struct WebLoginScannerScreen: View {
+/// it is a pairing link.
+struct PairingScannerScreen: View {
     let scanned: (String) -> Void
     let unavailable: () -> Void
     let close: () -> Void
 
     var body: some View {
         NavigationStack {
-            WebLoginDataScanner(scanned: scanned, unavailable: unavailable)
+            PairingDataScanner(scanned: scanned, unavailable: unavailable)
                 .ignoresSafeArea()
                 .overlay(alignment: .bottom) {
                     Text(verbatim: AppStrings.string("ios_web_login_scan_hint"))
@@ -47,7 +47,7 @@ struct WebLoginScannerScreen: View {
                         .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: ItmoCorner.medium))
                         .padding(ItmoSpacing.section)
                 }
-                .navigationTitle(Text(verbatim: AppStrings.string("web_login_scan")))
+                .navigationTitle(Text(verbatim: AppStrings.string("pair_scan")))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(.visible, for: .navigationBar)
                 .toolbar {
@@ -56,17 +56,17 @@ struct WebLoginScannerScreen: View {
                             AppSymbol.close.image
                         }
                         .accessibilityLabel(Text(verbatim: AppStrings.string("common_close")))
-                        .accessibilityIdentifier("webLogin.scanner.close")
+                        .accessibilityIdentifier("pairing.scanner.close")
                     }
                 }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("webLogin.scanner")
+        .accessibilityIdentifier("pairing.scanner")
     }
 }
 
 /// `DataScannerViewController` in SwiftUI; it starts scanning once on screen and reports the first QR once.
-private struct WebLoginDataScanner: UIViewControllerRepresentable {
+private struct PairingDataScanner: UIViewControllerRepresentable {
     let scanned: (String) -> Void
     let unavailable: () -> Void
 

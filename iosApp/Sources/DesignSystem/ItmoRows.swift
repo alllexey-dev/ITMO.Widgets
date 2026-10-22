@@ -25,8 +25,8 @@ struct ItmoListGroup<Content: View>: View {
 }
 
 /// A row: a leading icon tile (or a custom view such as an avatar), title, subtitle, a trailing value, a badge, a
-/// custom accessory (a check, a small button), a chevron. `danger` makes the title and icon red. With an `action`
-/// the whole row is the button.
+/// custom accessory (a check, a small button), a chevron, and a status `pill` under the subtitle (a problem to see at
+/// a glance). `danger` makes the title and icon red. With an `action` the whole row is the button.
 struct ItmoRow<Leading: View, Accessory: View>: View {
     let title: String
     var subtitle: String?
@@ -34,6 +34,7 @@ struct ItmoRow<Leading: View, Accessory: View>: View {
     var badge: Int?
     var chevron = false
     var danger = false
+    var pill: ItmoPill?
     var action: (() -> Void)?
     @ViewBuilder var leading: Leading
     @ViewBuilder var accessory: Accessory
@@ -58,6 +59,9 @@ struct ItmoRow<Leading: View, Accessory: View>: View {
                     Text(verbatim: subtitle)
                         .font(.itmo(.bodyMedium))
                         .foregroundStyle(.secondary)
+                }
+                if let pill {
+                    ItmoStatusPill(pill: pill).padding(.top, 4)
                 }
             }
             Spacer(minLength: ItmoSpacing.compact)
@@ -101,11 +105,12 @@ extension ItmoRow where Leading == ItmoRowIcon?, Accessory == EmptyView {
         badge: Int? = nil,
         chevron: Bool = false,
         danger: Bool = false,
+        pill: ItmoPill? = nil,
         action: (() -> Void)? = nil
     ) {
         self.init(
             title: title, subtitle: subtitle, trailing: trailing, badge: badge, chevron: chevron, danger: danger,
-            action: action,
+            pill: pill, action: action,
             leading: { symbol.map { ItmoRowIcon(symbol: $0, tone: tone, danger: danger) } },
             accessory: { EmptyView() }
         )
@@ -117,7 +122,7 @@ extension ItmoRow where Leading == ItmoRowIcon?, Accessory == EmptyView {
     func accessory<A: View>(@ViewBuilder _ view: () -> A) -> ItmoRow<ItmoRowIcon?, A> {
         ItmoRow<ItmoRowIcon?, A>(
             title: title, subtitle: subtitle, trailing: trailing, badge: badge, chevron: chevron, danger: danger,
-            action: action, leading: { leading }, accessory: view
+            pill: pill, action: action, leading: { leading }, accessory: view
         )
     }
 }

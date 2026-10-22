@@ -61,7 +61,6 @@ struct ShellView: View {
             .onAppear { router.shellMounted(true) }
             .onDisappear { router.shellMounted(false) }
             .appUpdateOffer(updateOffer, checks: checksForUpdate)
-            .webLoginFixtureEntry(router: router)
         }
     }
 }
@@ -123,15 +122,14 @@ struct ShellStack: View {
     }
 }
 
-/// A shell sheet. The damaged-link message is a content-height kit sheet; the web sign-in brings its own stack
-/// (`WebLoginSheet`), a route sheet its own content and detents (`Routes.sheetView`).
+/// A shell sheet. The damaged-link message is a content-height kit sheet, a route sheet brings its own content and
+/// detents (`Routes.sheetView`).
 struct ShellSheetView: View {
     let sheet: ShellSheet
 
     var body: some View {
         switch sheet {
         case .linkUnavailable: messageSheet
-        case let .webLogin(code): WebLoginSheet(code: code)
         case let .route(destination): Routes.sheetView(for: destination)
         }
     }

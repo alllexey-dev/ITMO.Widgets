@@ -1,16 +1,22 @@
 import Shared
 import SwiftUI
 
+// shortcut: feature-account's connected-client `ConnectionViewModel` and `ConnectionUiState` take the plain Swift
+// names, so SKIE exports the settings ones with a `_` suffix by module order; drop these aliases once Kotlin gives one
+// pair an `@ObjCName`.
+typealias ServicesViewModel = ConnectionViewModel_
+typealias ServicesUiState = ConnectionUiState_
+
 /// the connection page (`connection_title`) (`AppRoutes.Settings` `SERVICES`, also `PRIVACY`) over the shared
-/// `ConnectionViewModel`, as Android's `ConnectionScreen`: the status with its switch, then while connected who sees
-/// what and the devices, before it what the connection gives; what the server keeps opens in a sheet, and the account
-/// deletion comes last. Turning it on always goes through `ServicesConsentSheet`.
+/// settings `ConnectionViewModel` (`ServicesViewModel`), as Android's `ConnectionScreen`: the status with its switch,
+/// then while connected who sees what, before it what the connection gives; what the server keeps opens in a sheet,
+/// and the account deletion comes last. Turning it on always goes through `ServicesConsentSheet`. The devices live in
+/// the devices screen (`devices_title`) of the profile.
 struct ConnectionDataScreen: View {
-    @State private var model = ObservableViewModel(ConnectionViewModel.self, state: \.uiState)
+    @State private var model = ObservableViewModel(ServicesViewModel.self, state: \.uiState)
     @State private var showsConsent = false
     @State private var showsStoredData = false
     @State private var message: SettingsMessage?
-    @Environment(AppRouter.self) private var router
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -22,7 +28,6 @@ struct ConnectionDataScreen: View {
                 },
                 audience: { topic, visibility in model.viewModel.setAudience(topic: topic, visibility: visibility) },
                 retryPrivacy: { model.viewModel.retryPrivacy() },
-                devices: { router.open(AppRoutes.Settings(page: SettingsPage.devices.name)) },
                 storedData: { showsStoredData = true },
                 deleteAccount: { model.viewModel.deleteAccount() }
             )
@@ -69,14 +74,13 @@ struct ConnectionDataActions {
     var switchChanged: (Bool) -> Void = { _ in }
     var audience: (PrivacyTopic, SharingVisibility) -> Void = { _, _ in }
     var retryPrivacy: () -> Void = {}
-    var devices: () -> Void = {}
     var storedData: () -> Void = {}
     var deleteAccount: () -> Void = {}
 }
 
-/// the connection page (`connection_title`) for one `ConnectionUiState`, without the ViewModel.
+/// the connection page (`connection_title`) for one `ServicesUiState`, without the ViewModel.
 struct ConnectionDataContent: View {
-    let state: ConnectionUiState
+    let state: ServicesUiState
     var actions = ConnectionDataActions()
 
     var body: some View {
@@ -85,16 +89,6 @@ struct ConnectionDataContent: View {
                 statusCard
                 if state.connected { audiences } else { gives }
                 ItmoListGroup {
-                    if state.connected {
-                        ItmoRow(
-                            title: AppStrings.string("connection_devices"),
-                            subtitle: AppStrings.string("connection_devices_list_text"),
-                            symbol: .devices,
-                            chevron: true,
-                            action: actions.devices
-                        )
-                        .accessibilityIdentifier("connection.devices")
-                    }
                     ItmoRow(
                         title: AppStrings.string(state.connected ? "connection_stored_on" : "connection_stored_off"),
                         symbol: .folder,

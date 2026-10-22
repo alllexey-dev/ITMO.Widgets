@@ -1,3 +1,4 @@
+import Shared
 import SwiftUI
 import UIKit
 import WebKit
@@ -6,7 +7,7 @@ import WebKit
 /// will share and that sign-out clears (`IosCoreHost.clearWebsiteData`). Every load clears that store first, as
 /// Android's `LoginActivity` does, so the ITMO.ID cookies the sign-in keeps for BARS are only the new account's.
 /// It reports the page lifecycle to the model, keeps the main frame on `ItmoAuthUrls.isNavigable` pages, opens no
-/// windows, and hands posted tokens to the model.
+/// windows, and hands posted tokens to the model. The page's User-Agent follows `devices_browser_like`.
 @MainActor
 final class ItmoSignInBrowser: NSObject, WKNavigationDelegate {
     let webView: WKWebView
@@ -45,10 +46,29 @@ final class ItmoSignInBrowser: NSObject, WKNavigationDelegate {
         loadedGeneration = generation
         webView.stopLoading()
         AppPlatform.removeWebsiteData { [weak self] in
-            // A newer load or a closed page owns the browser by now.
-            guard let self, self.loadedGeneration == generation else { return }
-            self.webView.load(URLRequest(url: ItmoAuthUrls.login, cachePolicy: .reloadIgnoringLocalCacheData))
+            Task { @MainActor in
+                // A newer load or a closed page owns the browser by now.
+                guard let self, self.loadedGeneration == generation else { return }
+                await self.applySignInLabel()
+                guard self.loadedGeneration == generation else { return }
+                self.webView.load(URLRequest(url: ItmoAuthUrls.login, cachePolicy: .reloadIgnoringLocalCacheData))
+            }
         }
+    }
+
+    /// The User-Agent of `devices_browser_like` (`appSignInUserAgent`): it fixes how id.itmo.ru labels this sign-in.
+    /// Without the system's own User-Agent the page keeps the default, an ordinary browser's.
+    private func applySignInLabel() async {
+        webView.customUserAgent = nil
+        guard let label = IosKoin.shared.get(protocol: SignInLabel.self) as? SignInLabel,
+              let build = IosKoin.shared.get(type: AppBuild.self) as? AppBuild,
+              let system = try? await webView.evaluateJavaScript("navigator.userAgent") as? String else { return }
+        let browserLike = (try? await label.isBrowserLike().boolValue) ?? true
+        webView.customUserAgent = SignInLabelKt.appSignInUserAgent(
+            webViewUserAgent: system,
+            appVersion: build.version,
+            browserLike: browserLike
+        )
     }
 
     @objc private func pullToRefresh(_ control: UIRefreshControl) {

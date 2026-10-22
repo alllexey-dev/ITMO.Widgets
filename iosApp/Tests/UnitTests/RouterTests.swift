@@ -212,6 +212,22 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.sheet, .linkUnavailable)
     }
 
+    func testDevicesAndPairingEntriesOpenOnTheProfile() throws {
+        let router = readyRouter()
+        let devices = IosRoutes.shared.entryRoute(action: AppEntryIntents.shared.ACTION_OPEN_DEVICES)
+
+        XCTAssertTrue(router.open(entry: try XCTUnwrap(devices)))
+        XCTAssertEqual(router.selectedTab, .profile)
+        XCTAssertEqual(router.path(of: .profile), [ShellDestination(AppRoutes.Devices.shared)])
+
+        let link = "https://dev.widgets.alllexey.dev/pair#1.ABCD2345."
+            + "QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
+        XCTAssertTrue(router.open(url: try XCTUnwrap(URL(string: link))))
+        XCTAssertEqual(router.selectedTab, .profile)
+        guard case let .route(sheet) = router.sheet else { return XCTFail("a pairing link opens the pairing sheet") }
+        XCTAssertNotNil((sheet.route as? AppRoutes.Pairing)?.link, "the sheet reads the link as a scan")
+    }
+
     func testRecordbookEntryRouteSelectsTheRecordbookTab() throws {
         let router = readyRouter()
         let recordbook = IosRoutes.shared.entryRoute(action: AppEntryIntents.shared.ACTION_OPEN_RECORDBOOK)
@@ -385,8 +401,9 @@ final class RouterTests: XCTestCase {
 
         router.sessionChanged(ShellSessionState.demo.sessionState, onboarding: .passed)
         XCTAssertEqual(router.open(AppRoutes.MyItmoWeb.shared), .refusedInDemo)
-        XCTAssertEqual(router.open(AppRoutes.WebLogin(code: nil)), .refusedInDemo)
-        XCTAssertEqual(router.open(AppRoutes.Connections.shared), .refusedInDemo)
+        XCTAssertEqual(router.open(AppRoutes.Pairing(link: nil)), .refusedInDemo)
+        XCTAssertEqual(router.open(AppRoutes.Devices.shared), .refusedInDemo)
+        XCTAssertEqual(router.open(AppRoutes.Connection(id: "0190f1a2-3b4c-7d5e-8f60-718293a4b5c6")), .refusedInDemo)
 
         router.sessionChanged(signedIn, onboarding: .passed)
         XCTAssertEqual(router.open(AppRoutes.MyItmoWeb.shared), .opened)
@@ -599,8 +616,9 @@ final class RouterTests: XCTestCase {
             (AppRoutes.FriendSelector(selectedIsu: 0), .swiftUISheet),
             (AppRoutes.ScheduleMonth(date: "2026-10-06", userIsu: -1), .swiftUISheet),
             (AppRoutes.SheetScores(args: scores), .swiftUISheet),
-            (AppRoutes.WebLogin(code: nil), .sheet(.webLogin(code: nil))),
-            (AppRoutes.Connections.shared, .swiftUI),
+            (AppRoutes.Pairing(link: nil), .swiftUISheet),
+            (AppRoutes.Devices.shared, .swiftUI),
+            (AppRoutes.Connection(id: "0190f1a2-3b4c-7d5e-8f60-718293a4b5c6"), .swiftUI),
             (AppRoutes.ReviewEditor(args: teacher), .swiftUISheet),
             (AppRoutes.SubjectLinks(args: links), .swiftUISheet),
             (AppRoutes.LinkEditor(args: links, linkId: nil), .swiftUISheet),

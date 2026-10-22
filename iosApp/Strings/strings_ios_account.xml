@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copy only the iOS web sign-in shows (ADR 0028): exported to Localizable.xcstrings. -->
+<!-- Copy only iOS shows for connecting devices (ADR 0028): exported to Localizable.xcstrings. -->
 <resources>
     <!-- NSCameraUsageDescription (InfoPlist row): iOS asks before the first scan; Android's Play services scanner needs no permission. -->
-    <string name="ios_web_login_camera_usage">Камера нужна, чтобы сканировать QR для входа на сайт</string>
+    <string name="ios_web_login_camera_usage">Камера нужна, чтобы сканировать QR-коды для подключения устройств</string>
     <!-- Under the camera of the scanner. -->
-    <string name="ios_web_login_scan_hint">Наведите камеру на QR на странице входа</string>
+    <string name="ios_web_login_scan_hint">Наведите камеру на QR-код на экране устройства</string>
     <!-- NSFaceIDUsageDescription (InfoPlist row): Face ID confirms that the owner pairs a device. -->
     <string name="ios_pair_face_id_usage">Face ID подтверждает, что устройство подключаете вы</string>
 </resources>

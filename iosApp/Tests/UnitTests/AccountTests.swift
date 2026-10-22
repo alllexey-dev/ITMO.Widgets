@@ -2,31 +2,38 @@
 import Shared
 import XCTest
 
-/// The web sign-in, My ITMO web and the update offer on the app's graph: the ViewModels resolve with their
-/// Koin parameters, My ITMO keeps only official pages inside, and the offer never checks without an App Store ID.
+/// Connected clients, My ITMO web and the update offer on the app's graph: the ViewModels resolve with their Koin
+/// parameters, My ITMO keeps only official pages inside, and the offer never checks without an App Store ID.
 @MainActor
 final class AccountTests: XCTestCase {
-    // MARK: Web sign-in
+    // MARK: Connected clients
 
-    func testWebLoginViewModelResolvesWithAnEmptyField() {
+    func testPairingViewModelResolvesWithAnEmptyField() {
         let store = ScreenViewModelStore()
         defer { store.clear() }
-        let model = store.resolve(type: WebLoginViewModel.self, parameters: WebLoginIosParameters.shared.viewModel())
+        let model = store.resolve(type: PairingViewModel.self, parameters: ConnectionsIosParameters.shared.pairing())
 
-        let state = (model as? WebLoginViewModel)?.uiState.value
-        XCTAssertEqual((state as? WebLoginUiStateInput)?.code, "")
+        let state = (model as? PairingViewModel)?.uiState.value
+        XCTAssertEqual((state as? PairingUiStateInput)?.text, "")
     }
 
-    func testFixtureIsOffWithoutItsArgument() {
-        XCTAssertFalse(WebLoginFixture.isOn)
-        XCTAssertNil(WebLoginFixture.viewModel(store: ScreenViewModelStore()))
+    func testConnectionViewModelResolvesWithItsId() {
+        let store = ScreenViewModelStore()
+        defer { store.clear() }
+        let parameters = ConnectionsIosParameters.shared.connection(id: "0190f1a2-3b4c-7d5e-8f60-718293a4b5c6")
+
+        XCTAssertTrue(store.resolve(type: ConnectionViewModel.self, parameters: parameters) is ConnectionViewModel)
+        XCTAssertTrue(store.resolve(type: DevicesViewModel.self) is DevicesViewModel)
+        XCTAssertNotNil(IosKoin.shared.get(protocol: DeviceUnlock.self) as? DeviceUnlock)
     }
 
-    func testWebLoginOpensAsASheetWithItsLinkCode() {
-        XCTAssertEqual(target(AppRoutes.WebLogin(code: nil)), .sheet(.webLogin(code: nil)))
-        XCTAssertEqual(target(AppRoutes.WebLogin(code: "ABCD2345")), .sheet(.webLogin(code: "ABCD2345")))
-        XCTAssertEqual(ShellSheet.webLogin(code: "ABCD2345").id, .webLogin(code: "ABCD2345"))
-        XCTAssertNotEqual(ShellSheet.webLogin(code: "ABCD2345").id, ShellSheet.webLogin(code: nil).id)
+    func testPairingIsASheetPerLinkAndDevicesAndClientsArePushed() {
+        XCTAssertEqual(target(AppRoutes.Pairing(link: nil)), .swiftUISheet)
+        XCTAssertEqual(target(AppRoutes.Devices.shared), .swiftUI)
+        XCTAssertEqual(target(AppRoutes.Connection(id: "0190f1a2-3b4c-7d5e-8f60-718293a4b5c6")), .swiftUI)
+        let sheet = ShellSheet.route(ShellDestination(AppRoutes.Pairing(link: "https://example.com/pair#a")))
+        XCTAssertEqual(sheet.id, .route(ShellDestination(AppRoutes.Pairing(link: "https://example.com/pair#a"))))
+        XCTAssertNotEqual(sheet.id, ShellSheet.route(ShellDestination(AppRoutes.Pairing(link: nil))).id)
     }
 
     // MARK: My ITMO web

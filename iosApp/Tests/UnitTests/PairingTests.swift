@@ -3,8 +3,10 @@ import CryptoKit
 import Shared
 import XCTest
 
-/// Pairing's CryptoKit HPKE against RFC 9180 and Tink: the device key is RFC 9180 A.2's recipient, the bundle the
-/// fixed synthetic one of `PairingVectors.kt` (`shared/feature-account/src/commonTest`), never a real token.
+/// Pairing's CryptoKit HPKE against RFC 9180 and Tink: the device key is RFC 9180 A.2's recipient, the plaintext the
+/// fixed synthetic interop vector of `PairingVectors.kt` (`INTEROP_*`, `shared/feature-account/src/commonTest`), never
+/// a real token. The info has the protocol's layout, `"itmo-widgets pair v1" 0x00 challengeId kind 0x00 s`; the
+/// vector's kind is an older `AGENT`, which the suite does not care about (connections use `CONNECT` and `RENEW`).
 final class PairingTests: XCTestCase {
     private let privateKey = hex("8057991eef8f1f1af18f4a9491d16a1ce333f695d4db8e38da75975c4478e0fb")
     private let publicKey = hex("4310ee97d88cc1f088a5576c77ab0cf5c3ac797f3d95139c6c84b5429c59662a")
@@ -37,7 +39,8 @@ final class PairingTests: XCTestCase {
         XCTAssertNotEqual(sealed, again)
     }
 
-    /// What Tink sealed on Android (`TinkHpkeSender`); `TinkHpkeSenderTest` opens CryptoKit's the other way.
+    /// What Tink sealed on Android (`TinkHpkeSender`); `TinkHpkeSenderTest` opens CryptoKit's the other way
+    /// (`SEALED_BY_CRYPTOKIT`).
     func testABundleTinkSealedOpens() throws {
         let sealed = try XCTUnwrap(base64url(
             "NQaYRQiWkoh803FbVgae1Uc-d-uksrb2ZoGa6aLn7W2W8rEPk-tL5yt2H3nyXANI40JzBGbkMi4Kw2lWYA5biSfCLj"

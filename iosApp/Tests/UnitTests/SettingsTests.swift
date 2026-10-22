@@ -34,7 +34,7 @@ final class SettingsTests: XCTestCase {
         for page in Self.ownScreens {
             XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Settings(page: page.name)), page.name)
         }
-        let connection = ObservableViewModel(ConnectionViewModel.self, state: \.uiState)
+        let connection = ObservableViewModel(ServicesViewModel.self, state: \.uiState)
         XCTAssertNotNil(connection.state)
         let notifications = ObservableViewModel(NotificationSettingsViewModel.self, state: \.uiState)
         XCTAssertNotNil(notifications.state)
