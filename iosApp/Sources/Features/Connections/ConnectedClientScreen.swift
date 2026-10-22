@@ -2,14 +2,14 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// A connected client (UX spec section 4) over the shared `ConnectionViewModel`, pushed from the devices screen and
+/// A connected client (UX spec section 4) over the shared `ConnectedClientViewModel`, pushed from the devices screen and
 /// from its reminder (`AppRoutes.Connection`): its ITMO sign-in with renewal, access as switches (widening asks for the
 /// screen lock), the facts and the danger row, which asks first and leaves the screen once revoked. Renewal shows the
 /// command for the client, then scans the client's QR and continues in the pairing sheet (`AppRoutes.Pairing`).
 struct ConnectedClientScreen: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
-    @State private var model: ObservableViewModel<ConnectionViewModel, ConnectionUiState>
+    @State private var model: ObservableViewModel<ConnectedClientViewModel, ConnectedClientUiState>
     /// The renewal's scan waits for its sheet to close; the scanned link opens once the scanner has closed.
     @State private var scanAfterRenew = false
     @State private var scanning = false
@@ -18,9 +18,9 @@ struct ConnectedClientScreen: View {
     init(id: String) {
         _model = State(initialValue: ObservableViewModel(state: \.uiState) { store in
             let parameters = ConnectionsIosParameters.shared.connection(id: id)
-            guard let model = store.resolve(type: ConnectionViewModel.self, parameters: parameters)
-                as? ConnectionViewModel else {
-                preconditionFailure("Koin resolved no ConnectionViewModel")
+            guard let model = store.resolve(type: ConnectedClientViewModel.self, parameters: parameters)
+                as? ConnectedClientViewModel else {
+                preconditionFailure("Koin resolved no ConnectedClientViewModel")
             }
             return model
         })
@@ -107,10 +107,10 @@ struct ConnectedClientActions {
     var revoke: () -> Void = {}
 }
 
-/// A client for one `ConnectionUiState`, without the ViewModel: `connection_gone` once it is gone, a spinner
+/// A client for one `ConnectedClientUiState`, without the ViewModel: `connection_gone` once it is gone, a spinner
 /// before the first answer, else its sections.
 struct ConnectedClientContent: View {
-    let state: ConnectionUiState
+    let state: ConnectedClientUiState
     var actions = ConnectedClientActions()
 
     var body: some View {

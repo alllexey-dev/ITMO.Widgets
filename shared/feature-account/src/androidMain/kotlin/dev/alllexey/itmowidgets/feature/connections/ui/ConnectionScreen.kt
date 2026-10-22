@@ -41,8 +41,8 @@ import dev.alllexey.itmowidgets.designsystem.kit.SwitchListRow
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
-import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectionUiState
-import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectionViewModel
+import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectedClientUiState
+import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectedClientViewModel
 import dev.alllexey.itmowidgets.feature.connections.presentation.RenewSheet
 import dev.alllexey.itmowidgets.feature.connections.presentation.SignInStatus
 import dev.alllexey.itmowidgets.feature.connections.presentation.SignInTone
@@ -73,7 +73,7 @@ class ConnectionActions(
 
 @Composable
 fun ConnectionRoute(
-    viewModel: ConnectionViewModel,
+    viewModel: ConnectedClientViewModel,
     unlock: DeviceUnlock,
     onBack: () -> Unit,
     onScan: () -> Unit,
@@ -102,7 +102,7 @@ fun ConnectionRoute(
 
 /** A connected client (UX spec section 4): its ITMO sign-in, access, facts and «Отключить». */
 @Composable
-fun ConnectionScreen(state: ConnectionUiState, actions: ConnectionActions, modifier: Modifier = Modifier) {
+fun ConnectionScreen(state: ConnectedClientUiState, actions: ConnectionActions, modifier: Modifier = Modifier) {
     val snackbars = remember { SnackbarHostState() }
     ItmoDetailScreen(
         title = state.title.asString(),
@@ -136,7 +136,7 @@ fun ConnectionScreen(state: ConnectionUiState, actions: ConnectionActions, modif
 }
 
 @Composable
-private fun ConnectionContent(state: ConnectionUiState, actions: ConnectionActions) {
+private fun ConnectionContent(state: ConnectedClientUiState, actions: ConnectionActions) {
     state.signIn?.let { signIn ->
         SectionHeader(text(AccountStrings.connection_section_sign_in))
         SignIn(signIn, actions)

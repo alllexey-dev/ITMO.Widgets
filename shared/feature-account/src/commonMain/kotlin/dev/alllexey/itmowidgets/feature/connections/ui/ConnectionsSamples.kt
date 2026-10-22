@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.feature.connections.ui
 
 import dev.alllexey.itmowidgets.core.text.UiText
-import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectionUiState
+import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectedClientUiState
 import dev.alllexey.itmowidgets.feature.connections.presentation.DeviceIcon
 import dev.alllexey.itmowidgets.feature.connections.presentation.DeviceRow
 import dev.alllexey.itmowidgets.feature.connections.presentation.DevicesUiState
@@ -69,7 +69,7 @@ object ConnectionsSamples {
         ScopeSwitch("SCHEDULE_WRITE", t("Расписание для друзей"), t("Отправляет ваше расписание, чтобы друзья видели его без телефона"), true),
     )
 
-    val agent = ConnectionUiState(
+    val agent = ConnectedClientUiState(
         loading = false,
         title = t("nas"),
         subtitle = t("Агент ITMO.Widgets 1.2, Linux"),

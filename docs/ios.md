@@ -153,7 +153,7 @@ and offers no black background ([settings](settings.md#ios-1)).
 ## Connected clients
 
 The profile's `Устройства` row (`AppRoutes.Devices`) pushes `DevicesScreen` (`Features/Connections/`) over the shared
-`DevicesViewModel`; a client pushes `ConnectedClientScreen` (`AppRoutes.Connection`) over `ConnectionViewModel`
+`DevicesViewModel`; a client pushes `ConnectedClientScreen` (`AppRoutes.Connection`) over `ConnectedClientViewModel`
 (Koin parameters `ConnectionsIosParameters.connection(id)`), and `AppRoutes.Pairing` is the route sheet
 `PairingSheet` over `PairingViewModel` ([connected clients](features/connections.md)).
 

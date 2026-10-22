@@ -14,7 +14,7 @@ import dev.alllexey.itmowidgets.feature.connections.domain.DevicesRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingSealer
-import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectionViewModel
+import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectedClientViewModel
 import dev.alllexey.itmowidgets.feature.connections.presentation.DevicesViewModel
 import dev.alllexey.itmowidgets.feature.connections.presentation.PairingViewModel
 import org.koin.core.module.dsl.bind
@@ -47,6 +47,6 @@ val connectionsDataModule = module {
 /** «Устройства», a client and the pairing sheet; the pairing link field survives in the `SavedStateHandle`. */
 val connectionsModule = module {
     viewModelOf(::DevicesViewModel)
-    viewModelOf(::ConnectionViewModel)
+    viewModelOf(::ConnectedClientViewModel)
     viewModelOf(::PairingViewModel)
 }

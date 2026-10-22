@@ -20,7 +20,7 @@ import kotlin.time.Instant
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
-class ConnectionViewModelTest {
+class ConnectedClientViewModelTest {
 
     private val main = TestMainDispatcher()
     private val devices = FakeDevicesRepository().apply { next = Devices(listOf(Samples.agent(), Samples.web()), emptyList()) }
@@ -34,7 +34,7 @@ class ConnectionViewModelTest {
     fun tearDown() = main.reset()
 
     private fun viewModel(id: String = Samples.agentId.toString()) =
-        ConnectionViewModel(id, devices, logins, FixedAcademicTime())
+        ConnectedClientViewModel(id, devices, logins, FixedAcademicTime())
 
     private fun unlock(result: DeviceUnlockResult) = DeviceUnlock { unlocks++; result }
 

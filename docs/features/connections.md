@@ -45,7 +45,7 @@ Two sources, joined by `sid`:
   `POST /api/users/me/connections/{id}/itmo-ended`; a `sid` ITMO.ID no longer lists is reported too.
 - Labels, IP addresses and ITMO times stay on the phone; nothing from ITMO.ID is sent to Backend or logged.
 
-## A client (`ConnectionViewModel`)
+## A client (`ConnectedClientViewModel`)
 
 - «Вход в ИТМО»: until when, a warning within 7 days, an error when closed; «Обновить вход» appears in the last 14
   days and opens the renewal sheet with the client's command (`itmo-widgets-agent renew`, `itmo-mcp renew`) and
@@ -101,7 +101,7 @@ carries as `APP_LANGUAGE`): an exception to ADR 0028, so a new scope needs no ap
 
 - Core 2: `ConnectionsRequestTest`, `ConnectionsContractTest`, `ConnectionsVendoredFixturesTest`,
   `AcceptLanguageHeaderTest`, conformance.
-- Shared: `PairingViewModelTest`, `DevicesViewModelTest`, `ConnectionViewModelTest`, `PairingRepositoryImplTest`,
+- Shared: `PairingViewModelTest`, `DevicesViewModelTest`, `ConnectedClientViewModelTest`, `PairingRepositoryImplTest`,
   `ConnectionsReminderTest`, `PairingCryptoTest`, `PairingSealerTest`, `TinkHpkeSenderTest` (CryptoKit interop).
 - JVM screenshots `DevicesScreen_*`, `ConnectionScreen_*`, `PairingSheet_*` from `ConnectionsPreviews.kt`.
 - Not covered by automated tests: the isolated WebView sign-in against the real id.itmo.ru (checks C1, C6, C7 of the

@@ -8,7 +8,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
-import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectionUiState
+import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectedClientUiState
 import dev.alllexey.itmowidgets.feature.connections.presentation.DevicesUiState
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 
@@ -21,7 +21,7 @@ import dev.alllexey.itmowidgets.shared.core.CoreStrings
 private fun Devices(state: DevicesUiState) = ItmoPreview { DevicesScreen(state, DevicesActions()) }
 
 @Composable
-private fun Client(state: ConnectionUiState) = ItmoPreview { ConnectionScreen(state, ConnectionActions()) }
+private fun Client(state: ConnectedClientUiState) = ItmoPreview { ConnectionScreen(state, ConnectionActions()) }
 
 private val close: SheetClose
     @Composable get() = SheetClose(text(CoreStrings.common_close)) {}

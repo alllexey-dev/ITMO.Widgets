@@ -67,7 +67,7 @@ final class ConnectionsSnapshotTests: XCTestCase {
     }
 
     func testGoneClient() {
-        let state = ConnectionUiState(
+        let state = ConnectedClientUiState(
             loading: false, gone: true, title: dynamic("nas"), subtitle: nil, icon: .agent, signIn: nil, scopes: [],
             facts: [], revoke: res("connection_revoke"), confirm: nil, renew: nil, busy: false, message: nil,
             closed: false
@@ -240,8 +240,8 @@ final class ConnectionsSnapshotTests: XCTestCase {
     }
 
     /// The agent «nas»: four days left, three scopes, its facts.
-    private func agent() -> ConnectionUiState {
-        ConnectionUiState(
+    private func agent() -> ConnectedClientUiState {
+        ConnectedClientUiState(
             loading: false,
             gone: false,
             title: dynamic("nas"),

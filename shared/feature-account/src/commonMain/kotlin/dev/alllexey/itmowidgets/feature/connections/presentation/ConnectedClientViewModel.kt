@@ -32,14 +32,14 @@ import kotlinx.coroutines.launch
  * the facts and «Отключить», which ends Backend access and then the client's ITMO session with the phone's own cookie
  * (plan 6.2). The client comes from [DevicesRepository]'s last answer, refreshed on open.
  */
-class ConnectionViewModel(
+class ConnectedClientViewModel(
     private val id: String,
     private val devices: DevicesRepository,
     private val logins: ItmoLoginsRepository,
     private val time: AcademicTimeProvider,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(ConnectionUiState())
-    val uiState: StateFlow<ConnectionUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(ConnectedClientUiState())
+    val uiState: StateFlow<ConnectedClientUiState> = _uiState.asStateFlow()
 
     private val uuid = runCatching { Uuid.parse(id) }.getOrNull()
     private var itmo: ItmoLogins? = null

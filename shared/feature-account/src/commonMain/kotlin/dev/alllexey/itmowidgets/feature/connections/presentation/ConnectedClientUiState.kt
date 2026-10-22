@@ -7,7 +7,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
  * says so; [closed] is set once this screen revoked it and the host leaves. [signIn] and [scopes] are an agent's
  * or an MCP server's; the web has neither.
  */
-data class ConnectionUiState(
+data class ConnectedClientUiState(
     val loading: Boolean = true,
     val gone: Boolean = false,
     val title: UiText = UiText.Dynamic(""),

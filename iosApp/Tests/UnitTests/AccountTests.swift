@@ -22,7 +22,7 @@ final class AccountTests: XCTestCase {
         defer { store.clear() }
         let parameters = ConnectionsIosParameters.shared.connection(id: "0190f1a2-3b4c-7d5e-8f60-718293a4b5c6")
 
-        XCTAssertTrue(store.resolve(type: ConnectionViewModel.self, parameters: parameters) is ConnectionViewModel)
+        XCTAssertTrue(store.resolve(type: ConnectedClientViewModel.self, parameters: parameters) is ConnectedClientViewModel)
         XCTAssertTrue(store.resolve(type: DevicesViewModel.self) is DevicesViewModel)
         XCTAssertNotNil(IosKoin.shared.get(protocol: DeviceUnlock.self) as? DeviceUnlock)
     }

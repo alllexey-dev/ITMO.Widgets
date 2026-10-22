@@ -76,7 +76,7 @@ import dev.alllexey.itmowidgets.feature.web.ui.openExternalPage
 import dev.alllexey.itmowidgets.feature.connections.data.BiometricDeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
-import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectionViewModel
+import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectedClientViewModel
 import dev.alllexey.itmowidgets.feature.connections.presentation.DevicesViewModel
 import dev.alllexey.itmowidgets.feature.connections.presentation.PairingViewModel
 import dev.alllexey.itmowidgets.feature.connections.ui.ConnectionRoute
@@ -235,8 +235,8 @@ private fun PairingEntry(link: String?, onClose: () -> Unit) {
 private fun ConnectionEntry(id: String, navigator: Nav3AppNavigator, onBack: () -> Unit) {
     val context = LocalContext.current
     val unlock = rememberDeviceUnlock()
-    val viewModel: ConnectionViewModel = viewModel {
-        KoinStarter.ensureStarted(context).get<ConnectionViewModel> { parametersOf(id) }
+    val viewModel: ConnectedClientViewModel = viewModel {
+        KoinStarter.ensureStarted(context).get<ConnectedClientViewModel> { parametersOf(id) }
     }
     ConnectionRoute(
         viewModel = viewModel,
