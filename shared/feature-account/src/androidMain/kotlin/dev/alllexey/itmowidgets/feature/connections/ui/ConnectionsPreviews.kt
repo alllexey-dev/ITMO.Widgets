@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.connections.presentation.ConnectionUiState
 import dev.alllexey.itmowidgets.feature.connections.presentation.DevicesUiState
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 
 /*
  * Baselines `DevicesScreen_<state>`, `ConnectionScreen_<state>` and the sheets' contents: each state is a function
@@ -22,7 +23,8 @@ private fun Devices(state: DevicesUiState) = ItmoPreview { DevicesScreen(state, 
 @Composable
 private fun Client(state: ConnectionUiState) = ItmoPreview { ConnectionScreen(state, ConnectionActions()) }
 
-private val close = SheetClose("Закрыть") {}
+private val close: SheetClose
+    @Composable get() = SheetClose(text(CoreStrings.common_close)) {}
 
 internal class DevicesScreenListPreview {
     @Preview(name = "list", heightDp = 1400)
