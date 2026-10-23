@@ -28,7 +28,7 @@ import dev.alllexey.itmowidgets.app.MainActivity
 import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.session.SessionRepository
-import dev.alllexey.itmowidgets.feature.settings.presentation.MaintenancePageProvider
+import dev.alllexey.itmowidgets.feature.settings.presentation.AboutPageProvider
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.testing.ShellProbe
 import dev.alllexey.itmowidgets.testing.TestGraph
@@ -89,7 +89,7 @@ class ShellPlatformActionsTest {
         eventually {
             val intent = started.single()
             assertEquals(Intent.ACTION_VIEW, intent.action)
-            val page = BuildConfig.WIDGETS_BASE_URL + MaintenancePageProvider.PRIVACY_POLICY_PATH
+            val page = BuildConfig.WIDGETS_BASE_URL + AboutPageProvider.PRIVACY_POLICY_PATH
             assertEquals(page, intent.dataString)
         }
     }
