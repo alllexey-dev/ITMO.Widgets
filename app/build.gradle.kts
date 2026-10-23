@@ -51,8 +51,8 @@ android {
 
     defaultConfig {
         applicationId = "dev.alllexey.itmowidgets"
-        versionCode = 20292
-        versionName = "2.3-SNAPSHOT"
+        versionCode = 20293
+        versionName = "2.3.0-beta.3"
         resValue("string", "app_version", versionName!!)
         buildConfigField("String", "BUILD_CHANNEL", "\"$buildChannel\"")
         buildConfigField("String", "BUILD_SOURCE", "\"$buildSource\"")
@@ -81,6 +81,17 @@ android {
                     systemImageSource = "aosp"
                 }
             }
+        }
+    }
+
+    // `-Pitmo.abiSplit=true` (APKs posted to the channel): one APK per phone ABI, no emulator-only x86; MapLibre alone
+    // is about 12 MB per ABI. Off by default, so CI and the release scripts keep the single universal APK.
+    splits {
+        abi {
+            isEnable = providers.gradleProperty("itmo.abiSplit").map(String::toBoolean).getOrElse(false)
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
         }
     }
 

@@ -18,7 +18,7 @@ CAMPUS_MAP_URL = https:/$()/map.alllexey.dev/app/v1/
 // record exists.
 APP_STORE_ID =
 
-MARKETING_VERSION = 2.3.0
+MARKETING_VERSION = 2.3.0-beta.3
 CURRENT_PROJECT_VERSION = 1
 // Build identity, BuildChannel, BuildSource and BuildCommit in the app's and the notification service's Info.plist
 // (docs/building.md). `custom` unless the owner's Signing.local.xcconfig sets ITMO_BUILD_CHANNEL = official;
