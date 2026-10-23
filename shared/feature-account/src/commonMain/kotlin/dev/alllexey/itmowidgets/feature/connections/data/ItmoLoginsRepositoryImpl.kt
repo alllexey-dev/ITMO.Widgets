@@ -11,6 +11,9 @@ import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogin
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogins
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
 /**
@@ -25,6 +28,8 @@ class ItmoLoginsRepositoryImpl(
     private val demo: DemoMode,
     private val dispatchers: AppDispatchers,
 ) : ItmoLoginsRepository {
+    private val last = MutableStateFlow<ItmoLogins.Listed?>(null)
+    override val lastListed: StateFlow<ItmoLogins.Listed?> = last.asStateFlow()
 
     override suspend fun list(): AppResult<ItmoLogins> = call {
         val bearer = profileToken() ?: return@call ItmoLogins.NoCookie
@@ -39,7 +44,7 @@ class ItmoLoginsRepositoryImpl(
                 mobile = it.mobile,
             )
         }
-        ItmoLogins.Listed(listed, IdTokenClaims.sid(tokens.getIdToken()))
+        ItmoLogins.Listed(listed, IdTokenClaims.sid(tokens.getIdToken())).also { last.value = it }
     }
 
     override suspend fun end(sids: List<String>): AppResult<Unit> {

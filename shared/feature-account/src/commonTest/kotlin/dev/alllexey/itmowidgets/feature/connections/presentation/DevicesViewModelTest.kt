@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.connections.data.DevicesOverviewImpl
 import dev.alllexey.itmowidgets.feature.connections.domain.Devices
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogins
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
@@ -22,6 +23,7 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
@@ -92,6 +94,22 @@ class DevicesViewModelTest {
         val state = viewModel().also { advanceUntilIdle() }.uiState.value
 
         assertEquals(listOf("install:${Samples.tabletId}", "install:${live.instanceId}"), state.installs.map { it.key })
+    }
+
+    @Test
+    fun profileCountsExactlyTheRowsOfOtherDevicesAndClients() = runTest(main.dispatcher) {
+        // The owner's phone on 2026-10-23: earlier sign-ins left nameless installs, revoked clients wait for their end.
+        val earlier = listOf(
+            Samples.install(Uuid.random(), current = false, sid = "sid-ended", name = null),
+            Samples.install(Uuid.random(), current = false, sid = null, name = null),
+        )
+        devices.next = backend.copy(installs = backend.installs + earlier)
+        val overview = DevicesOverviewImpl(devices, logins, FixedAcademicTime())
+
+        val state = viewModel().also { advanceUntilIdle() }.uiState.value
+
+        assertEquals(state.installs.size + state.clients.size, overview.observe().first().count)
+        assertEquals(3, overview.observe().first().count, "the tablet, the agent and the web")
     }
 
     @Test

@@ -216,6 +216,7 @@ class DevicesViewModel(
         val installs = if (backendOn) data?.installs.orEmpty() else emptyList()
         val current = installs.firstOrNull { it.current }
         val phoneSession = (current?.sid ?: ownSid)?.let(sessions::get)
+        val others = if (backendOn) data?.otherInstalls(listed?.let { sessions.keys }).orEmpty() else emptyList()
         _uiState.update { state ->
             state.copy(
                 loading = backendOn && data == null && backendError == null,
@@ -230,7 +231,7 @@ class DevicesViewModel(
                         phoneSession?.let { UiText.Res(AccountStrings.devices_sign_in_until_line, listOf(dayMonth(it.expires, zone))) },
                     ),
                 ),
-                installs = installs.filter { !it.current && it.isLive(sessions, listed != null) }.map { install ->
+                installs = others.map { install ->
                     val ended = listed != null && install.sid != null && install.sid !in sessions
                     DeviceRow(
                         key = INSTALL + install.instanceId,
@@ -246,7 +247,7 @@ class DevicesViewModel(
                         ),
                     )
                 },
-                clients = if (backendOn) data?.connections.orEmpty().filter { it.revokedAt == null }.map { it.row(now) } else emptyList(),
+                clients = if (backendOn) data?.liveConnections.orEmpty().map { it.row(now) } else emptyList(),
                 others = when (val result = itmo) {
                     null -> OtherLogins.Loading
                     is AppResult.Failure -> OtherLogins.Error(result.error.toUiText())
@@ -282,13 +283,6 @@ class DevicesViewModel(
             listOf(dayMonth(started, time.timeZone), activityText(lastAccess, now, time.timeZone)),
         ),
     )
-
-    /**
-     * An install worth a row: one with a device registration, or one whose ITMO session ITMO.ID still lists. The
-     * install id is new after every sign-in, so each earlier sign-in of a phone leaves a nameless row behind.
-     */
-    private fun AppInstall.isLive(sessions: Map<String, ItmoLogin>, listed: Boolean): Boolean =
-        deviceName != null || (listed && sid != null && sid in sessions)
 
     /** ITMO.ID sessions that match no install and no client of ours, live or revoked, nor this phone. */
     private fun otherSessions(): List<ItmoLogin> {
