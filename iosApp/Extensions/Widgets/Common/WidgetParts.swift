@@ -297,39 +297,27 @@ enum WidgetCountdown {
     }
 }
 
-/// The elapsed part of a lesson from `since` to `until`: the system's timer progress, live; a bar or, on the Lock
-/// Screen, a ring.
+/// The elapsed part of a lesson at its timeline entry: a bar or a Lock Screen ring. WidgetKit advances it at the
+/// precomputed ticks, using the same value-based rendering as the gallery. Countdown text remains live.
 struct WidgetLessonProgress: View {
     let since: Date
     let until: Date
-    let clock: WidgetClock
+    let date: Date
     var ring = false
 
     var body: some View {
-        switch clock {
-        case .live:
-            ProgressView(timerInterval: since...until, countsDown: false) {} currentValueLabel: { EmptyView() }
-                .progressViewStyle(ring ? AnyProgressViewStyle.circular : .linear)
-        case let .frozen(now):
-            let elapsed = min(max(now.timeIntervalSince(since) / until.timeIntervalSince(since), 0), 1)
-            if ring {
-                Gauge(value: elapsed) {}.gaugeStyle(.accessoryCircularCapacity)
-            } else {
-                ProgressView(value: elapsed).progressViewStyle(.linear)
-            }
+        let elapsed = Self.fraction(since: since, until: until, at: date)
+        if ring {
+            Gauge(value: elapsed) {}.gaugeStyle(.accessoryCircularCapacity)
+        } else {
+            ProgressView(value: elapsed).progressViewStyle(.linear)
         }
     }
-}
 
-/// The two system progress styles behind one type.
-enum AnyProgressViewStyle: ProgressViewStyle {
-    case linear
-    case circular
-
-    func makeBody(configuration: Configuration) -> some View {
-        switch self {
-        case .linear: ProgressView(configuration).progressViewStyle(.linear)
-        case .circular: ProgressView(configuration).progressViewStyle(.circular)
-        }
+    nonisolated static func fraction(since: Date, until: Date, at date: Date) -> Double {
+        let duration = until.timeIntervalSince(since)
+        let elapsed = date.timeIntervalSince(since)
+        guard duration.isFinite, duration > 0, elapsed.isFinite else { return 0 }
+        return min(max(elapsed / duration, 0), 1)
     }
 }

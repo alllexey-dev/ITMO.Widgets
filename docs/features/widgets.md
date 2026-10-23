@@ -70,6 +70,12 @@ additive fields and goes up for a rename or removal; readers accept only their o
 `shared/feature-schedule/fixtures/schedule-widget-timeline-v2.json`. Countdowns are system live text on iOS
 (`until`, `since`); Swift takes no time decision.
 
+The iOS lesson progress is value-based (`WidgetLessonProgress`): `ProgressView(value:)` in the home-screen widget
+and a `Gauge` on the Lock Screen at the entry's date (the frozen sample's in the gallery), so it moves at the
+5-minute ticks and the lesson boundaries. A timer `ProgressView(timerInterval:)` behind a custom style turned the
+small and medium widgets blank during a lesson on devices. The bar takes the footer's width left of the countdown, at
+least 24 pt; the countdown keeps its width first and shrinks with the line.
+
 ## Sport widget
 
 - `SportWidgetDataProvider` fetches as `Моё` does: the score from My ITMO, the bookings with their queues (the queues

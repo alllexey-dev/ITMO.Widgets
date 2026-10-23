@@ -21,6 +21,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   actions on the app icon.
 - Widgets `Пара`, `Расписание на день`, `Список пар`, `Спорт` and Lock Screen widgets read a timeline the app
   precomputes to the end of tomorrow, so they switch lessons without waking the app.
+- The small and medium `Пара` widgets no longer go blank or flicker during a lesson: the progress bar and the Lock
+  Screen ring move with the timeline's 5-minute ticks instead of a system timer; the countdown stays live.
 - Background refresh checks schedule changes and new marks (My ITMO, BARS, connected sheets) with Android's periods
   and texts; what is found at night arrives at 06:00, and a tap on a notification opens the screen it is about.
 - The notification service books a freed sport place as Android does, never for another account, the demo or

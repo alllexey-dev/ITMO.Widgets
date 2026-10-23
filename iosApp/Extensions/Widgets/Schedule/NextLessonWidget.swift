@@ -73,10 +73,10 @@ struct NextLessonEntryView: View {
                 NextLessonRectangular(display: display)
                     .containerBackground(for: .widget) { Color.clear }
             case .accessoryCircular:
-                NextLessonCircular(display: display, clock: entry.clock)
+                NextLessonCircular(display: display, clock: entry.clock, progressDate: entry.progressDate)
                     .containerBackground(for: .widget) { AccessoryWidgetBackground() }
             default:
-                NextLessonTile(display: display, family: family, clock: entry.clock)
+                NextLessonTile(display: display, family: family, clock: entry.clock, progressDate: entry.progressDate)
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .widgetTile(colors.background)
             }
@@ -96,6 +96,7 @@ private struct NextLessonTile: View {
     let display: NextLessonDisplay
     let family: WidgetFamily
     let clock: WidgetClock
+    let progressDate: Date
 
     @Environment(\.widgetColors) private var colors
 
@@ -107,7 +108,7 @@ private struct NextLessonTile: View {
             Group {
                 if family == .systemMedium {
                     HStack(spacing: 12) {
-                        NextLessonHero(content: content, moment: moment, lesson: lesson, clock: clock, hero: true)
+                        NextLessonHero(content: content, moment: moment, lesson: lesson, clock: clock, progressDate: progressDate, hero: true)
                             .padding(12)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(colors.hero, in: .rect(cornerRadius: 16, style: .continuous))
@@ -117,7 +118,7 @@ private struct NextLessonTile: View {
                     }
                     .padding(10)
                 } else {
-                    NextLessonHero(content: content, moment: moment, lesson: lesson, clock: clock, hero: false)
+                    NextLessonHero(content: content, moment: moment, lesson: lesson, clock: clock, progressDate: progressDate, hero: false)
                         .padding(14)
                 }
             }
@@ -133,6 +134,7 @@ private struct NextLessonHero: View {
     let moment: NextLessonMoment
     let lesson: WidgetLesson
     let clock: WidgetClock
+    let progressDate: Date
     let hero: Bool
 
     @Environment(\.widgetColors) private var colors
@@ -162,7 +164,7 @@ private struct NextLessonHero: View {
             .padding(.top, 5)
             Spacer(minLength: 2)
             NextLessonPlace(lesson: lesson, size: hero ? 34 : 28)
-            NextLessonFooter(content: content, moment: moment, clock: clock)
+            NextLessonFooter(content: content, moment: moment, clock: clock, progressDate: progressDate)
                 .padding(.top, 3)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -211,6 +213,7 @@ private struct NextLessonFooter: View {
     let content: NextLessonContent
     let moment: NextLessonMoment
     let clock: WidgetClock
+    let progressDate: Date
 
     @Environment(\.widgetColors) private var colors
 
@@ -219,12 +222,13 @@ private struct NextLessonFooter: View {
             switch moment {
             case .now:
                 if let since = content.since, let until = content.until, since < until {
-                    WidgetLessonProgress(since: since, until: until, clock: clock)
+                    WidgetLessonProgress(since: since, until: until, date: progressDate)
+                        .frame(minWidth: 24, maxWidth: .infinity)
                         .tint(colors.accent)
                     countdown({ .widgetNextLeft($0) }, until: until)
                         .widgetFont(11, weight: .bold)
                         .foregroundStyle(colors.primaryText)
-                        .fixedSize()
+                        .layoutPriority(1)
                 }
             case .first, .next:
                 if let until = content.until {
@@ -389,13 +393,14 @@ private struct NextLessonRectangular: View {
 private struct NextLessonCircular: View {
     let display: NextLessonDisplay
     let clock: WidgetClock
+    let progressDate: Date
 
     var body: some View {
         Group {
             switch display {
             case let .lesson(content, moment, lesson, _):
                 if moment == .now, let since = content.since, let until = content.until, since < until {
-                    WidgetLessonProgress(since: since, until: until, clock: clock, ring: true)
+                    WidgetLessonProgress(since: since, until: until, date: progressDate, ring: true)
                         .overlay { minutes(until) }
                         .padding(2)
                 } else if moment != .tomorrow, let until = content.until {

@@ -288,8 +288,9 @@ The widget extension reads App Group files on each timeline request and makes no
   gaps, and the now line (kind `.widget.day-timeline`). The classic list (`ClassicListWidget`, kind
   `.widget.day-schedule`, medium and large) draws the same day content as rows: the header, the lessons that fit (done
   ones leave first) and the end. All three read schedule-timeline-v2.json in `Extensions/Widgets/Schedule/`: Swift picks the entry
-  whose `validFrom` has passed and, inside it, the last `nowTicks` minute; countdowns and progress are the system's
-  live views on `until` and `since` (`WidgetCountdown`, `WidgetLessonProgress`), so Swift computes no time.
+  whose `validFrom` has passed and, inside it, the last `nowTicks` minute; countdowns are the system's live text on
+  `until` (`WidgetCountdown`) and the lesson's progress is drawn at each entry's date (`WidgetLessonProgress`), so
+  Swift computes no time.
 - Sport widget (`Extensions/Widgets/Sport/`, medium and small): the score ring, the remaining points and the nearest
   bookings or queues from sport-widget-v1.json.
 - The picker names of the next-lesson, day and sport widgets end in `(бета)` (`widget_*_name`), as the gallery's `Бета`
