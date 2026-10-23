@@ -144,7 +144,8 @@ enum SettingsFixtures {
                 customArgb: ThemeSpec.companion.DEFAULT_CUSTOM_ARGB,
                 style: .tonalSpot,
                 contrast: .standard,
-                pureBlack: false
+                pureBlack: false,
+                mode: .system
             ),
             widgetsFollowTheme: true,
             homePassVisible: true,

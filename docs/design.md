@@ -71,7 +71,7 @@ wallpaper.
 
 The user picks the colours on `Оформление` ([settings](settings.md#appearance)),
 stored as one `ThemeSpec` (accent, custom colour, palette style, contrast,
-black background). `resolveColorScheme(spec, dark, wallpaper)` in
+black background, light or dark mode). `resolveColorScheme(spec, dark, wallpaper)` in
 `designsystem/theme/ThemeSchemes.kt` is the one way from it to a scheme:
 `ItmoTheme` without a `colorSource` reads `AppColorSource.current`, which the
 Android app feeds from `AppearancePreferences.observeTheme()` at start. The
@@ -79,6 +79,15 @@ widgets take the same roles from core's `ThemeSpec.widgetPalette()` (the seeds
 live in `core/settings/ThemeSeeds.kt`), which builds the scheme without
 Compose; Android's `widgetPalette(context)` keeps the wallpaper's own scheme
 where the app does ([widgets](features/widgets.md#theme-colours)).
+
+`ThemeSpec.mode` (`Системная`, `Светлая`, `Тёмная`) is not part of the scheme:
+it decides `dark`. Android applies it as AppCompat's night mode in
+`ItmoWidgetsApplication` (read before the first activity starts, then followed),
+so the activity's configuration carries it: `isSystemInDarkTheme()`, the
+default of `ItmoTheme(dark = ...)`, the Views, the system bars and the WebViews
+all read it; a change recreates the activities. iOS sets `preferredColorScheme`
+on `ShellView`. Never read the phone's own mode for an app screen; the widgets
+(`WidgetColors`, `observeWidgetTheme()` drops the mode) keep the launcher's.
 
 - The seed: `Как обои` the wallpaper's (`system_accent1_500`, the brand blue
   without one), `Фирменный` the brand blue `#4984E2`, `Свой цвет` the user's,

@@ -6,7 +6,7 @@ import XCTest
 
 /// The appearance page as iOS has it (`AppearanceSamples` with iOS's capabilities: no wallpaper colour, no black background,
 /// the widget sample): the defaults, an own colour at the vibrant palette and high contrast with its colour well, and the monochrome palette with
-/// the colours dimmed.
+/// the colours dimmed, and the dark theme picked (the sample, a widget, still shows both).
 @MainActor
 final class AppearanceSnapshotTests: XCTestCase {
     private let samples = AppearanceSamples.shared
@@ -21,6 +21,10 @@ final class AppearanceSnapshotTests: XCTestCase {
 
     func testMonochrome() {
         assertPage(samples.state(theme: samples.MONOCHROME, ios: true), named: "monochrome")
+    }
+
+    func testDarkMode() {
+        assertPage(samples.state(theme: samples.DARK, ios: true), named: "dark-mode")
     }
 
     /// The whole page: it scrolls, so each appearance gets a height that holds it.

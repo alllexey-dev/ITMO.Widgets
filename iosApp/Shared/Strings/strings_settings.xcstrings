@@ -1213,6 +1213,30 @@
         }
       }
     },
+    "settings_appearance_sample_dark" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пример оформления в тёмной теме"
+          }
+        }
+      }
+    },
+    "settings_appearance_sample_light" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пример оформления в светлой теме"
+          }
+        }
+      }
+    },
     "settings_appearance_title" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",
@@ -2085,6 +2109,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Контраст"
+          }
+        }
+      }
+    },
+    "settings_theme_mode_dark" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тёмная"
+          }
+        }
+      }
+    },
+    "settings_theme_mode_light" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Светлая"
+          }
+        }
+      }
+    },
+    "settings_theme_mode_system" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системная"
+          }
+        }
+      }
+    },
+    "settings_theme_mode_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тема"
           }
         }
       }

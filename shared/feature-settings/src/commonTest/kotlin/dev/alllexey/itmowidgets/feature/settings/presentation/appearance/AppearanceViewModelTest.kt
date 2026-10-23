@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.settings.presentation.appearance
 import dev.alllexey.itmowidgets.core.platform.PlatformCapabilities
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeMode
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -67,6 +68,43 @@ class AppearanceViewModelTest {
         assertEquals(ThemeContrast.entries, state.contrasts.map { it.contrast })
         assertEquals(false, state.blackBackground)
         assertEquals(UiText.Res(SettingsStrings.settings_appearance_widgets_note), state.footer)
+        assertEquals(ThemeMode.entries, state.modes.map { it.mode })
+        assertEquals(UiText.Res(SettingsStrings.settings_theme_mode_system), state.modes.first().label)
+        assertEquals(listOf(false, true), state.sampleDark)
+        assertEquals(UiText.Res(SettingsStrings.settings_appearance_sample), state.sampleDescription)
+    }
+
+    @Test
+    fun aKeptThemeShowsOnlyItsSampleAndTheLightOneHasNoBlackBackground() = runTest(main.dispatcher) {
+        val fixture = fixture(ThemeSpec(pureBlack = true))
+        advanceUntilIdle()
+
+        fixture.viewModel.selectMode(ThemeMode.DARK)
+        advanceUntilIdle()
+        assertEquals(ThemeSpec(pureBlack = true, mode = ThemeMode.DARK), fixture.repository.themeRequests.last())
+        assertEquals(listOf(true), fixture.state.sampleDark)
+        assertEquals(UiText.Res(SettingsStrings.settings_appearance_sample_dark), fixture.state.sampleDescription)
+        assertEquals(true, fixture.state.blackBackground)
+
+        fixture.viewModel.selectMode(ThemeMode.LIGHT)
+        advanceUntilIdle()
+        assertEquals(listOf(false), fixture.state.sampleDark)
+        assertEquals(UiText.Res(SettingsStrings.settings_appearance_sample_light), fixture.state.sampleDescription)
+        assertNull(fixture.state.blackBackground)
+        // Kept for when the dark theme comes back.
+        assertTrue(fixture.repository.themeRequests.last().pureBlack)
+    }
+
+    @Test
+    fun onIosTheSampleIsAWidgetSoItShowsBothThemes() = runTest(main.dispatcher) {
+        val fixture = fixture(
+            ThemeSpec(mode = ThemeMode.DARK),
+            EveryPlatformCapability.copy(wallpaperColors = false, appColors = false),
+        )
+        advanceUntilIdle()
+
+        assertEquals(ThemeMode.DARK, fixture.state.theme.mode)
+        assertEquals(listOf(false, true), fixture.state.sampleDark)
     }
 
     @Test

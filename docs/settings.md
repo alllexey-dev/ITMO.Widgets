@@ -59,7 +59,9 @@ in a dialog, and applies to the app and the widgets at once. From the top:
 
 - A sample of the app in the picked colours, once in the light and once in the
   dark theme, whichever the phone shows now, so contrast and `Чёрный фон` show
-  too. It is a picture: TalkBack and VoiceOver read it as one element.
+  too; with `Светлая` or `Тёмная` only that one. It is a picture: TalkBack and
+  VoiceOver read it as one element.
+- `Тема`: a segmented choice `Системная`, `Светлая`, `Тёмная`.
 - `Цвет`: every colour as a named circle of the primary it gives, three to a
   row; the picked one is ringed and checked. `Свой цвет` puts its picker under
   the circles. A line says what `Как обои` does; under `Монохром` the circles
@@ -68,11 +70,12 @@ in a dialog, and applies to the app and the widgets at once. From the top:
   colour (primary, its container, tertiary); the row scrolls sideways and opens
   on the picked one, whose plain description is under it.
 - `Контраст`: a segmented choice with a line on what it does.
-- `Чёрный фон`: a switch, on Android only.
+- `Чёрный фон`: a switch, on Android only, hidden while `Тема` is `Светлая`.
 - A line on the widgets (below).
 
 | Choice | Key | Values | Default |
 |---|---|---|---|
+| `Тема` | `app_theme_mode` | `Системная` (SYSTEM), `Светлая` (LIGHT), `Тёмная` (DARK) | `Системная` |
 | `Цвет` | `app_accent_color` | `Как обои` (Android 12+ only), `Фирменный`, `Бирюзовый`, `Зелёный`, `Янтарный`, `Красный`, `Розовый`, `Фиолетовый`, `Свой цвет` | `Как обои` on Android 12+, `Фирменный` elsewhere |
 | `Свой цвет` | `app_accent_custom` | any opaque colour (ARGB int); kept while another colour is picked | `#4984E2`, the brand blue |
 | `Палитра` | `app_theme_style` | `Спокойная` (TonalSpot), `Яркая` (Vibrant), `Выразительная` (Expressive), `Точная` (Fidelity), `Насыщенная` (Content), `Нейтральная` (Neutral), `Монохром` (Monochrome) | `Спокойная` |
@@ -88,6 +91,12 @@ in a dialog, and applies to the app and the widgets at once. From the top:
 - With `Как обои`, a palette other than `Спокойная` or a contrast other than
   `Обычный` rebuilds the palette from the wallpaper's colour
   (`system_accent1_500`) instead of using the system's scheme.
+- `Тема` sets light or dark for every screen of the app, its system bars,
+  dialogs and web pages, without a restart; `Системная` follows the phone.
+  Android sets AppCompat's night mode (`AppCompatDelegate.setDefaultNightMode`,
+  read before the first activity starts), iOS the root's
+  `preferredColorScheme`. The widgets, the QR tile and notifications stay light
+  or dark as the system is: the launcher and the system draw them.
 - `Чёрный фон` turns the dark theme's background and surfaces black; cards and
   other containers keep their tones. The light theme ignores it.
 - Absent or unknown values read as the defaults; the choices are device
@@ -108,10 +117,11 @@ and the Android versions are in [widgets](features/widgets.md#theme-colours).
 ### iOS
 
 The iOS app's own screens keep the system's colours
-(`PlatformCapabilities.appColors` is off): the choices reach only the widgets
-that follow the theme. So the iOS page has no `Как обои` and no `Чёрный фон`,
-its sample is a widget in the picked colours, and its last line says that only
-the widgets take them. iOS reads and writes the same keys of its own
+(`PlatformCapabilities.appColors` is off): the colour choices reach only the
+widgets that follow the theme; `Тема` applies to the app as on Android. So the
+iOS page has no `Как обои` and no `Чёрный фон`, its sample is a widget in the
+picked colours, in both themes whatever `Тема` says (the widgets keep the
+system's), and its last line says that only the widgets take the colours. iOS reads and writes the same keys of its own
 `app_preferences` file; the app writes the palette into the widgets' App Group
 files ([iOS widgets](ios.md#widgets)). The tinted and clear home screens and
 the Lock Screen keep the system's rendering.

@@ -342,6 +342,7 @@ private fun AppearanceEntry(onBack: () -> Unit) {
             onAccent = viewModel::selectAccent,
             onCustomColor = viewModel::setCustomColor,
             onStyle = viewModel::selectStyle,
+            onMode = viewModel::selectMode,
             onContrast = viewModel::selectContrast,
             onBlackBackground = viewModel::setBlackBackground,
         )

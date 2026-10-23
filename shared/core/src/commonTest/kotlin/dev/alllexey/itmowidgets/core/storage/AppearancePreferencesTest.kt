@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.HexColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeMode
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import kotlin.test.Test
@@ -34,11 +35,14 @@ class AppearancePreferencesTest {
         assertEquals(ThemeStyle.TONAL_SPOT, theme.style)
         assertEquals(ThemeContrast.STANDARD, theme.contrast)
         assertEquals(false, theme.pureBlack)
+        assertEquals(ThemeMode.SYSTEM, theme.mode)
     }
 
     @Test
     fun everyChoiceIsStoredUnderItsKey() = runTest {
-        val theme = ThemeSpec(AccentColor.CUSTOM, 0xFF123456.toInt(), ThemeStyle.VIBRANT, ThemeContrast.HIGH, true)
+        val theme = ThemeSpec(
+            AccentColor.CUSTOM, 0xFF123456.toInt(), ThemeStyle.VIBRANT, ThemeContrast.HIGH, true, ThemeMode.DARK,
+        )
 
         preferences.updateTheme { theme }
 
@@ -49,6 +53,7 @@ class AppearancePreferencesTest {
         assertEquals("VIBRANT", stored[STYLE])
         assertEquals("HIGH", stored[CONTRAST])
         assertEquals(true, stored[BLACK])
+        assertEquals("DARK", stored[MODE])
     }
 
     @Test
@@ -72,6 +77,7 @@ class AppearancePreferencesTest {
             it[ACCENT] = "GRAPHITE"
             it[STYLE] = "RAINBOW"
             it[CONTRAST] = "LOW"
+            it[MODE] = "SEPIA"
         }
 
         assertEquals(ThemeSpec(), preferences.observeTheme().first())
@@ -88,6 +94,7 @@ class AppearancePreferencesTest {
             ThemeStyle.entries.map { it.name },
         )
         assertEquals(listOf("STANDARD", "MEDIUM", "HIGH"), ThemeContrast.entries.map { it.name })
+        assertEquals(listOf("SYSTEM", "LIGHT", "DARK"), ThemeMode.entries.map { it.name })
     }
 
     @Test
@@ -125,6 +132,13 @@ class AppearancePreferencesTest {
         assertNull(preferences.observeWidgetTheme().first())
     }
 
+    @Test
+    fun theWidgetsKeepTheLaunchersLightOrDark() = runTest {
+        preferences.updateTheme { it.copy(accent = AccentColor.TEAL, mode = ThemeMode.DARK) }
+
+        assertEquals(ThemeSpec(accent = AccentColor.TEAL), preferences.observeWidgetTheme().first())
+    }
+
     private companion object {
         val WIDGETS = booleanPreferencesKey("widgets_follow_app_theme")
         val ACCENT = stringPreferencesKey("app_accent_color")
@@ -132,5 +146,6 @@ class AppearancePreferencesTest {
         val STYLE = stringPreferencesKey("app_theme_style")
         val CONTRAST = stringPreferencesKey("app_theme_contrast")
         val BLACK = booleanPreferencesKey("app_dark_black")
+        val MODE = stringPreferencesKey("app_theme_mode")
     }
 }

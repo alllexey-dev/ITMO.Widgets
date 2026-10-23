@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.ui.preview
 
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeMode
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.feature.settings.presentation.EveryPlatformCapability
@@ -19,6 +20,9 @@ object AppearanceSamples {
         contrast = ThemeContrast.HIGH,
         pureBlack = true,
     )
+
+    /** `Тёмная` with the black background: one sample on Android, both on iOS. */
+    val DARK = ThemeSpec(accent = AccentColor.TEAL, pureBlack = true, mode = ThemeMode.DARK)
 
     /** `Монохром`: the colours dimmed with the note why. */
     val MONOCHROME = ThemeSpec(accent = AccentColor.TEAL, style = ThemeStyle.MONOCHROME)

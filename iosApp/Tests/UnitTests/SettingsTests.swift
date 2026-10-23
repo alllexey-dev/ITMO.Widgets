@@ -8,6 +8,13 @@ import XCTest
 /// Android.
 @MainActor
 final class SettingsTests: XCTestCase {
+    /// `Оформление`'s light or dark reaches the app's root as `preferredColorScheme`; nil follows the system.
+    func testTheThemeModeIsTheRootsColourScheme() {
+        XCTAssertNil(ThemeMode.system.colorScheme)
+        XCTAssertEqual(ThemeMode.light.colorScheme, .light)
+        XCTAssertEqual(ThemeMode.dark.colorScheme, .dark)
+    }
+
     func testSettingsAndDiagnosticsAreSwiftUIScreensAndTheDebugToolsStayOnAndroid() {
         XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Settings(page: "SECTIONS")))
         XCTAssertTrue(Self.isSwiftUIScreen(AppRoutes.Diagnostics.shared))

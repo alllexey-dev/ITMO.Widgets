@@ -3,11 +3,12 @@ import SwiftUI
 
 /// The app's root: the session gate (the sign-in screen while signed out, the first-run flow before the tabs of a
 /// new account), then the tab bar with one `NavigationStack` per tab, the demo banner above the tab bar while the demo
-/// session is open, and the shell's sheets.
+/// session is open, and the shell's sheets; all of it light or dark as the appearance page says (`ThemeSpec.mode`).
 struct ShellView: View {
     @Bindable var router: AppRouter
     let session: ShellSession
     @State private var showPass = false
+    @State private var themeMode = ThemeMode.system
     @State private var updateOffer = AppUpdateOffer()
 
     var body: some View {
@@ -26,12 +27,20 @@ struct ShellView: View {
                     showPass = visible.boolValue
                 }
             }
+            .task {
+                guard let appearance = IosKoin.shared.get(type: AppearancePreferences.self) as? AppearancePreferences else { return }
+                for await theme in appearance.observeTheme() {
+                    themeMode = theme.mode
+                }
+            }
             .sheet(item: $router.sheet) { sheet in
                 // Route sheets open further routes and answer their opener through the router.
                 ShellSheetView(sheet: sheet)
                     .id(sheet.id)
                     .environment(router)
             }
+            // On the root, so the window and every sheet and alert take it.
+            .preferredColorScheme(themeMode.colorScheme)
     }
 
     @ViewBuilder
@@ -143,5 +152,16 @@ struct ShellSheetView: View {
             )
         }
         .accessibilityIdentifier("shell.sheet.linkUnavailable")
+    }
+}
+
+extension ThemeMode {
+    /// What `preferredColorScheme` takes: nil follows the system.
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .light: .light
+        case .dark: .dark
+        case .system: nil
+        }
     }
 }
