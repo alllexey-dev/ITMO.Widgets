@@ -195,6 +195,8 @@ class RecordbookEntriesTest {
             programId = PROGRAM_ID,
             semester = CURRENT_SEMESTER,
             studyYear = STUDY_YEAR,
+            disciplineId = 100L + CURRENT_SEMESTER,
+            controlType = "Экзамен",
         )
         val SHEET = SheetScoresArgs(
             subjectId = 5,

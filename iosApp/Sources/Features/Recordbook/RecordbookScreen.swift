@@ -18,7 +18,7 @@ struct RecordbookScreen: View {
                 barsSignIn: { showsBarsLogin = true },
                 retry: { model.viewModel.refresh(mode: .force) },
                 hideOffer: { model.viewModel.hideBarsOffer() },
-                openSources: { model.viewModel.openSources(id: $0) }
+                openSources: { model.viewModel.openSources(key: $0) }
             )
         )
         .refreshable {
@@ -81,7 +81,7 @@ struct RecordbookContentActions {
     var barsSignIn: () -> Void = {}
     var retry: () -> Void = {}
     var hideOffer: () -> Void = {}
-    var openSources: (Int64) -> Void = { _ in }
+    var openSources: (String) -> Void = { _ in }
 }
 
 /// The list without the ViewModel: one list with the session's hero near the end of the semester, a BARS notice, the
@@ -133,7 +133,7 @@ struct RecordbookContent: View {
         ForEach(content.sections, id: \.self) { section in
             ItmoSectionHeader(title: section.title.resolved)
             ItmoListGroup(inset: ItmoKit.padding) {
-                ForEach(section.rows, id: \.id) { row in
+                ForEach(section.rows, id: \.key) { row in
                     RecordbookRowView(row: row, open: actions.open, openSources: actions.openSources)
                 }
             }
@@ -306,7 +306,7 @@ private struct RecordbookBarsRow: View {
 struct RecordbookRowView: View {
     let row: RecordbookRow
     var open: (RecordbookTarget) -> Void = { _ in }
-    var openSources: (Int64) -> Void = { _ in }
+    var openSources: (String) -> Void = { _ in }
 
     private static let nameFont = Font.itmo(.titleMedium, emphasized: true)
     private static let metaFont = Font.itmo(.bodyMedium)
@@ -345,7 +345,7 @@ struct RecordbookRowView: View {
         .padding(.vertical, 11)
         .frame(minHeight: 52)
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("recordbook.row.\(row.id)")
+        .accessibilityIdentifier("recordbook.row.\(row.key)")
     }
 
     /// The new-mark dot and the number over its source.
@@ -359,7 +359,7 @@ struct RecordbookRowView: View {
             ItmoValueWithSource(
                 source: source,
                 stale: row.stale,
-                onSource: row.hasSources ? { openSources(row.id) } : nil,
+                onSource: row.hasSources ? { openSources(row.key) } : nil,
                 sourceLabel: AppStrings.string("recordbook_sources_action", [source])
             ) {
                 RecordbookValueView(value: row.value)

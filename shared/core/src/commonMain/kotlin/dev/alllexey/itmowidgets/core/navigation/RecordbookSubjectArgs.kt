@@ -14,7 +14,10 @@ data class RecordbookSubjectArgs(
     val studyYear: String,
     val barsPlan: Long? = null,
     val barsType: String? = null,
-    val barsIdentifier: String? = null
+    val barsIdentifier: String? = null,
+    /** Optional for old notifications; together they distinguish assessments sharing a My ITMO est_id. */
+    val disciplineId: Long? = null,
+    val controlType: String? = null,
 ) {
     /** These arguments when they describe a page; null for non-positive ids, an odd study year or half a BARS journal. */
     fun validOrNull(): RecordbookSubjectArgs? {
@@ -33,6 +36,8 @@ data class RecordbookSubjectArgs(
         const val BARS_PLAN = "bars_plan"
         const val BARS_TYPE = "bars_type"
         const val BARS_IDENTIFIER = "bars_identifier"
+        const val DISCIPLINE_ID = "discipline_id"
+        const val CONTROL_TYPE = "control_type"
 
         private val STUDY_YEAR = Regex("""\d{4}/\d{4}""")
     }

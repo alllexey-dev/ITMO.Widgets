@@ -130,7 +130,7 @@ class RecordbookSubjectViewModel(
         loadJob = viewModelScope.launch {
             barsEnabled = barsPreference.isEnabled()
             val subjects = repository.getSubjects(args.programId, period.semester)
-            val subject = (subjects as? AppResult.Success)?.value?.firstOrNull { it.entryId == args.entryId }
+            val subject = (subjects as? AppResult.Success)?.value?.findRequestedSubject()
             if (subject == null) {
                 val error = (subjects as? AppResult.Failure)?.error ?: AppError.NotFound
                 refreshing = false
@@ -235,10 +235,20 @@ class RecordbookSubjectViewModel(
 
     /** The list's last answer for this subject, so the page opens without a spinner; only with its controls known. */
     private fun seedFromCache() {
-        val subject = repository.cachedSubjects(args.programId, period.semester)?.firstOrNull { it.entryId == args.entryId } ?: return
+        val subject = repository.cachedSubjects(args.programId, period.semester)?.findRequestedSubject() ?: return
         controls = repository.cachedControls(args.entryId) ?: if (subject.hasDetails) return else emptyList()
         official = subject
         shown = subject
+    }
+
+    private fun List<RecordbookSubject>.findRequestedSubject(): RecordbookSubject? {
+        val disciplineId = args.disciplineId
+        val controlType = args.controlType?.trim()
+        return firstOrNull { subject ->
+            subject.entryId == args.entryId &&
+                (disciplineId == null || subject.disciplineId == disciplineId) &&
+                (controlType == null || subject.controlType.trim() == controlType)
+        }
     }
 
     /** Opening the page reads the subject's new marks. */

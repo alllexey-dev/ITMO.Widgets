@@ -17,6 +17,8 @@ fun RecordbookSubjectArgs.toBundle(): Bundle = Bundle().apply {
     barsPlan?.let { putLong(RecordbookSubjectArgs.BARS_PLAN, it) }
     barsType?.let { putString(RecordbookSubjectArgs.BARS_TYPE, it) }
     barsIdentifier?.let { putString(RecordbookSubjectArgs.BARS_IDENTIFIER, it) }
+    disciplineId?.let { putLong(RecordbookSubjectArgs.DISCIPLINE_ID, it) }
+    controlType?.let { putString(RecordbookSubjectArgs.CONTROL_TYPE, it) }
 }
 
 /** The arguments [bundle] describes; null for a missing bundle or a set [RecordbookSubjectArgs.validOrNull] refuses. */
@@ -33,7 +35,11 @@ fun RecordbookSubjectArgs.Companion.from(bundle: Bundle?): RecordbookSubjectArgs
             null
         },
         barsType = bundle.getString(RecordbookSubjectArgs.BARS_TYPE),
-        barsIdentifier = bundle.getString(RecordbookSubjectArgs.BARS_IDENTIFIER)
+        barsIdentifier = bundle.getString(RecordbookSubjectArgs.BARS_IDENTIFIER),
+        disciplineId = if (bundle.containsKey(RecordbookSubjectArgs.DISCIPLINE_ID)) {
+            bundle.getLong(RecordbookSubjectArgs.DISCIPLINE_ID)
+        } else null,
+        controlType = bundle.getString(RecordbookSubjectArgs.CONTROL_TYPE),
     ).validOrNull()
 }
 

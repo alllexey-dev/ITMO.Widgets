@@ -46,11 +46,11 @@ internal data class RecordbookInput(
     val official: List<RecordbookSubject>,
     val bars: RecordbookBarsData,
     val sport: RecordbookSportState?,
-    val attention: Map<Long, RecordbookAttentionReason>,
+    val attention: Map<String, RecordbookAttentionReason>,
     val unread: Set<String>,
     val sheets: Map<Long, RecordbookSheetTotal>,
     val offerHidden: Boolean,
-    val sourcesId: Long?,
+    val sourcesKey: String?,
     val today: LocalDate,
     val timeZone: TimeZone,
 )
@@ -93,10 +93,9 @@ internal object RecordbookPresenter {
         val entries = input.official.zip(shown) { official, merged ->
             Entry(official, merged, RecordbookPointsRule.pick(official, merged, input.sheets[official.disciplineId]))
         }
-        val rows = entries.associate { it.official.entryId to row(it, input) }
         val sections = listOfNotNull(
-            section(RecordbookStrings.recordbook_attention_section, entries.filter { it.official.entryId in input.attention }, rows),
-            section(RecordbookStrings.recordbook_disciplines_section, entries.filter { it.official.entryId !in input.attention }, rows),
+            section(RecordbookStrings.recordbook_attention_section, entries.filter { it.official.key in input.attention }, input),
+            section(RecordbookStrings.recordbook_disciplines_section, entries.filter { it.official.key !in input.attention }, input),
         )
         val session = RecordbookSessionWindow.isOpen(input.selection.period, input.official, input.today, input.timeZone)
         return RecordbookBody.Content(
@@ -108,7 +107,7 @@ internal object RecordbookPresenter {
             },
             sections = sections,
             barsOffer = input.bars == RecordbookBarsData.Off && !input.offerHidden,
-            sources = input.sourcesId?.let { id -> entries.firstOrNull { it.official.entryId == id } }
+            sources = input.sourcesKey?.let { key -> entries.firstOrNull { it.official.key == key } }
                 ?.takeUnless { it.official.isPhysicalEducation }
                 ?.let { sources(it, input) },
         )
@@ -119,13 +118,13 @@ internal object RecordbookPresenter {
         val fromBars: Boolean get() = shown.barsJournal != null
     }
 
-    private fun section(title: String, entries: List<Entry>, rows: Map<Long, RecordbookRow>): RecordbookSection? =
+    private fun section(title: String, entries: List<Entry>, input: RecordbookInput): RecordbookSection? =
         entries.takeIf { it.isNotEmpty() }
-            ?.let { RecordbookSection(UiText.Res(title), it.map { entry -> rows.getValue(entry.official.entryId) }) }
+            ?.let { RecordbookSection(UiText.Res(title), it.map { entry -> row(entry, input) }) }
 
     private fun row(entry: Entry, input: RecordbookInput): RecordbookRow {
         val subject = entry.shown
-        val reason = input.attention[subject.entryId]
+        val reason = input.attention[entry.official.key]
         val metaTone = when (reason) {
             null -> RecordbookTone.NEUTRAL
             is RecordbookAttentionReason.SportShort -> RecordbookTone.WARN
@@ -135,6 +134,7 @@ internal object RecordbookPresenter {
         val source = source(entry)
         return RecordbookRow(
             id = subject.entryId,
+            key = entry.official.key,
             name = subject.name,
             meta = reason?.let(::reasonText) ?: meta(subject, input),
             metaTone = metaTone,
@@ -272,7 +272,7 @@ internal object RecordbookPresenter {
             shown = shown == RecordbookSource.SHEET,
         )
         return RecordbookSources(
-            id = entry.official.entryId,
+            id = entry.official.key,
             caption = UiText.Joined(
                 listOf(UiText.Dynamic(entry.official.name), UiText.LowercaseFirst(UiText.Dynamic(entry.official.controlType.trim()))),
                 ", ",
@@ -298,6 +298,8 @@ internal object RecordbookPresenter {
         barsPlan = subject.barsJournal?.planId,
         barsType = subject.barsJournal?.type,
         barsIdentifier = subject.barsJournal?.identifier,
+        disciplineId = subject.disciplineId,
+        controlType = subject.controlType.trim(),
     )
 
     private fun semester(number: Int): UiText = UiText.Res(RecordbookStrings.subject_semester, listOf(number))

@@ -40,7 +40,8 @@ class RecordbookLessonSubjectsTest {
     }
     private val gate = FakeBackendGate(optedIn = true)
     private val autumn = LocalDate(2026, 9, 7)
-    private val args = RecordbookSubjectArgs(entryId = 42L, programId = 1L, semester = 3, studyYear = "2026/2027")
+    private val args = RecordbookSubjectArgs(entryId = 42L, programId = 1L, semester = 3, studyYear = "2026/2027",
+        disciplineId = 1, controlType = "Экзамен")
     private val known = LessonSubject(AppRoutes.RecordbookSubject(args), 3, AppRoutes.RecordbookSubject(args, materials = true))
 
     private fun source(backendGate: FakeBackendGate = gate) =

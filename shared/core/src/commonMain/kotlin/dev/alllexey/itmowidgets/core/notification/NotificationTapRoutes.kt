@@ -108,6 +108,8 @@ object NotificationTapRoutes {
         barsPlan?.let { RecordbookSubjectArgs.BARS_PLAN to it.toString() },
         barsType?.let { RecordbookSubjectArgs.BARS_TYPE to it },
         barsIdentifier?.let { RecordbookSubjectArgs.BARS_IDENTIFIER to it },
+        disciplineId?.let { RecordbookSubjectArgs.DISCIPLINE_ID to it.toString() },
+        controlType?.let { RecordbookSubjectArgs.CONTROL_TYPE to it },
     ).toMap()
 
     /** The subject's arguments as stored; `EntryRouteParser` drops a set that does not describe a page. */
@@ -124,6 +126,8 @@ object NotificationTapRoutes {
             barsPlan = number(RecordbookSubjectArgs.BARS_PLAN),
             barsType = this[RecordbookSubjectArgs.BARS_TYPE] as? String,
             barsIdentifier = this[RecordbookSubjectArgs.BARS_IDENTIFIER] as? String,
+            disciplineId = number(RecordbookSubjectArgs.DISCIPLINE_ID),
+            controlType = this[RecordbookSubjectArgs.CONTROL_TYPE] as? String,
         )
     }
 
