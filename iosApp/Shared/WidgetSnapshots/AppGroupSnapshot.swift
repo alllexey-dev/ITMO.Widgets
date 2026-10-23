@@ -8,20 +8,38 @@ import Foundation
 /// reader's) all come back as nil, and the reader shows its placeholder.
 enum AppGroupSnapshot {
     /// The App Group container of this process: the group in its own Info.plist (`AppGroupID`), then any group
-    /// AltStore lists in `ALTAppGroups`, as the Kotlin `AppGroupDirectory` resolves it. Nil in a build
-    /// without the entitlement; the extensions then see nothing and show the signed-out state.
+    /// AltStore lists in `ALTAppGroups`, then the groups of the bundle's own `embedded.mobileprovision`, as the Kotlin
+    /// `AppGroupDirectory` resolves it. Nil in a build without the entitlement; the extensions then see nothing and
+    /// show the signed-out state.
     static func container(bundle: Bundle = .main, fileManager: FileManager = .default) -> URL? {
         groupCandidates(of: bundle).lazy
             .compactMap { fileManager.containerURL(forSecurityApplicationGroupIdentifier: $0) }
             .first
     }
 
-    /// `AppGroupID`, then `ALTAppGroups`, without repeats.
+    /// `AppGroupID`, then `ALTAppGroups`, then the provisioned groups, without repeats.
     static func groupCandidates(of bundle: Bundle) -> [String] {
         let own = (bundle.object(forInfoDictionaryKey: "AppGroupID") as? String).map { [$0] } ?? []
         let altStore = bundle.object(forInfoDictionaryKey: "ALTAppGroups") as? [String] ?? []
+        let provisioned = bundle.url(forResource: "embedded", withExtension: "mobileprovision")
+            .flatMap { try? Data(contentsOf: $0) }
+            .map(provisionedGroups(profile:)) ?? []
         var seen = Set<String>()
-        return (own + altStore).filter { !$0.isEmpty && seen.insert($0).inserted }
+        return (own + altStore + provisioned).filter { !$0.isEmpty && seen.insert($0).inserted }
+    }
+
+    /// The App Groups a provisioning profile grants: SideStore re-signs the group into `<group>.<TEAMID>` without
+    /// writing `ALTAppGroups` (since its 2026-09-15 builds), so only the profile names it. The profile is a CMS
+    /// envelope around a plain XML plist; anything unreadable gives none.
+    static func provisionedGroups(profile: Data) -> [String] {
+        guard let start = profile.range(of: Data("<?xml".utf8)),
+              let end = profile.range(of: Data("</plist>".utf8), in: start.lowerBound..<profile.endIndex),
+              let plist = try? PropertyListSerialization.propertyList(
+                  from: profile.subdata(in: start.lowerBound..<end.upperBound), format: nil
+              ) as? [String: Any],
+              let entitlements = plist["Entitlements"] as? [String: Any]
+        else { return [] }
+        return entitlements["com.apple.security.application-groups"] as? [String] ?? []
     }
 
     /// `<name>-v<version>.json`.

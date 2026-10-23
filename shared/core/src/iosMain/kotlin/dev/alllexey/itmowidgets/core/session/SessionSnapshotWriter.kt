@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.core.session
 
 import dev.alllexey.itmowidgets.core.storage.AppGroupSnapshotWriter
 import dev.alllexey.itmowidgets.core.storage.SnapshotFile
+import dev.alllexey.itmowidgets.core.storage.WidgetReloader
 import kotlinx.serialization.Serializable
 import okio.IOException
 
@@ -29,9 +30,12 @@ data class SessionSnapshot(
 /** The only writer of [FILE]; the session's lifecycle effects call it on every session change. */
 class SessionSnapshotWriter(private val writer: AppGroupSnapshotWriter) {
 
-    /** Replaces the snapshot as a whole, then reloads [reloadKinds] (widget kinds that show session state). */
+    /**
+     * Replaces the snapshot as a whole, then reloads [reloadKinds]: by default every widget kind, since each one shows
+     * the signed-out state without this file and would keep it until its next timeline (up to an hour) otherwise.
+     */
     @Throws(IOException::class)
-    fun write(snapshot: SessionSnapshot, reloadKinds: Collection<String> = emptyList()) =
+    fun write(snapshot: SessionSnapshot, reloadKinds: Collection<String> = WidgetReloader.ALL_KINDS) =
         writer.write(FILE, snapshot, reloadKinds)
 
     /** The snapshot as this build reads it; null when signed out, unreadable or newer than this build. */

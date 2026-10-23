@@ -20,6 +20,17 @@ import okio.Path
  */
 fun interface WidgetReloader {
     fun reload(kind: String)
+
+    companion object {
+        /** Every kind of the widget extension (`StableIdentifiersTests`). */
+        val ALL_KINDS = listOf(
+            "dev.alllexey.itmowidgets.widget.qr",
+            "dev.alllexey.itmowidgets.widget.single-lesson",
+            "dev.alllexey.itmowidgets.widget.day-schedule",
+            "dev.alllexey.itmowidgets.widget.day-timeline",
+            "dev.alllexey.itmowidgets.widget.sport",
+        )
+    }
 }
 
 /**

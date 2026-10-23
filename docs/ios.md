@@ -238,13 +238,16 @@ Kotlin platform classes live in `shared/core/src/iosMain/` and run only in the a
 files are in the app container (`IosAppDirectories`); DataStore never leaves it.
 
 App Group files (`AppGroupDirectory`; an unsigned build without the group falls back to a private directory and the
-extensions see nothing). Snapshots are `{"version": N, ...}`, written to a temporary file and renamed, then the
+extensions see nothing). Each process looks the container up by its own `AppGroupID`, then `ALTAppGroups`, then the
+groups of its own `embedded.mobileprovision`: AltStore and SideStore re-sign the group into `<group>.<TEAMID>`, and
+SideStore (since its 2026-09-15 builds) no longer lists it in `ALTAppGroups` (`BundleIdentifiers`,
+`AppGroupSnapshot.groupCandidates`). Snapshots are `{"version": N, ...}`, written to a temporary file and renamed, then the
 writer reloads the widget kinds through `WidgetReloader`. A reader treats a missing, corrupt or newer file as its
 placeholder state (`AppGroupSnapshot`, `SnapshotReaderTests`).
 
 | File | Written by | Read by |
 |---|---|---|
-| session-v1.json | `SessionSnapshotWriter` on every session change | widgets, notification service |
+| session-v1.json | `SessionSnapshotWriter` on every session change, reloading every widget kind | widgets, notification service |
 | qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`) | QR widget |
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension | QR widget |
 | schedule-timeline-v2.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`) on the session, widget options, foreground, cached schedule and after a booking | next-lesson and day widgets |
