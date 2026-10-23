@@ -15,6 +15,14 @@ struct ScheduleWidgetEntry: TimelineEntry, Equatable {
     var palette: WidgetPalette? = nil
     /// Live in WidgetKit; frozen at the sample's moment in the gallery and the snapshot tests.
     var clock: WidgetClock = .live
+
+    /// Progress is rendered from this entry's instant; only the countdown text uses the live system clock.
+    var progressDate: Date {
+        switch clock {
+        case .live: date
+        case let .frozen(now): now
+        }
+    }
 }
 
 /// Both schedule widgets' WidgetKit timeline from the App Group files. The app precomputed every switch (lesson

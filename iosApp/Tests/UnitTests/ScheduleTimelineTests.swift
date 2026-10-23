@@ -141,6 +141,22 @@ final class ScheduleTimelineTests: XCTestCase {
 
     // MARK: WidgetKit timeline
 
+    func testLessonProgressAdvancesWithThePrecomputedTicks() throws {
+        let timeline = try fixture()
+        let entries = ScheduleWidgetTimeline.entries(now: timeline.generatedAt, session: session, timeline: timeline)
+        let expectations = [("2026-09-07T09:22:00Z", 42.0 / 90), ("2026-09-07T09:25:00Z", 0.5)]
+        for (time, expected) in expectations {
+            let entry = try XCTUnwrap(entries.first { $0.date == instant(time) })
+            guard case let .snapshot(snapshot) = entry.content else { return XCTFail("No schedule at \(time)") }
+            let since = try XCTUnwrap(snapshot.next.since)
+            let until = try XCTUnwrap(snapshot.next.until)
+            XCTAssertEqual(
+                WidgetLessonProgress.fraction(since: since, until: until, at: entry.progressDate),
+                expected, accuracy: 0.000_001
+            )
+        }
+    }
+
     func testEveryLaterMomentIsAnEntryAndTheTimelineEndsUnavailable() throws {
         let timeline = try fixture()
         let now = instant("2026-09-07T10:12:30Z")
