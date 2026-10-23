@@ -7,7 +7,7 @@
     <string name="ios_beta_notifications_title">Уведомлений пока нет</string>
     <string name="ios_beta_notifications_text">Колокольчик обновляется, только пока приложение открыто</string>
     <string name="ios_beta_agent_title">Автозапись на спорт</string>
-    <string name="ios_beta_agent_text">Без уведомлений работает только через itmo-widgets-agent на компьютере или сервере</string>
+    <string name="ios_beta_agent_text">Когда приложение закрыто, записывает itmo-widgets-agent на компьютере или сервере</string>
     <string name="ios_beta_widgets_title">Виджеты просят войти</string>
     <string name="ios_beta_widgets_text">Так бывает после некоторых программ для установки. Надёжнее ставить через AltStore или SideStore</string>
     <string name="ios_beta_feedback_title">Вопросы и баги</string>
