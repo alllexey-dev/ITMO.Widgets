@@ -33,7 +33,8 @@ final class StableIdentifiersTests: XCTestCase {
 
     func testExtensionsShareTheAppVersion() throws {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-        XCTAssertEqual(appVersion, "2.3.0")
+        // A sideloaded beta carries its suffix (`2.3.0-beta.3`); App Store builds stay `2.3.0`.
+        XCTAssertTrue(appVersion?.hasPrefix("2.3.0") == true, "\(appVersion ?? "nil")")
         for name in ["ITMOWidgetsWidgets", "ITMOWidgetsNotificationService"] {
             XCTAssertEqual(try extensionInfo(name)["CFBundleShortVersionString"] as? String, appVersion, name)
         }
