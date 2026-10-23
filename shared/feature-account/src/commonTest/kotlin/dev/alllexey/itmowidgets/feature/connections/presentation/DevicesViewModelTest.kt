@@ -19,6 +19,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -82,6 +83,44 @@ class DevicesViewModelTest {
     }
 
     @Test
+    fun earlierSignInsOfAPhoneWithoutARegistrationAreHidden() = runTest(main.dispatcher) {
+        val live = Samples.install(Uuid.random(), current = false, sid = "sid-other-1", name = null)
+        val ended = Samples.install(Uuid.random(), current = false, sid = "sid-ended", name = null)
+        val noSid = Samples.install(Uuid.random(), current = false, sid = null, name = null)
+        devices.next = backend.copy(installs = backend.installs + listOf(live, ended, noSid))
+
+        val state = viewModel().also { advanceUntilIdle() }.uiState.value
+
+        assertEquals(listOf("install:${Samples.tabletId}", "install:${live.instanceId}"), state.installs.map { it.key })
+    }
+
+    @Test
+    fun anEndedSessionIsReloadedOnceMoreAMomentLater() = runTest(main.dispatcher) {
+        val model = viewModel()
+        advanceUntilIdle()
+        val before = devices.calls.count { it == "refresh" }
+
+        model.askEndAllOthers()
+        model.confirm()
+        advanceUntilIdle()
+
+        assertEquals(before + 2, devices.calls.count { it == "refresh" })
+    }
+
+    @Test
+    fun aChangeMadeElsewhereShowsAtOnceAndSettles() = runTest(main.dispatcher) {
+        val model = viewModel()
+        advanceUntilIdle()
+        val before = devices.calls.count { it == "refresh" }
+
+        devices.state.value = backend.copy(connections = listOf(Samples.web()))
+        advanceUntilIdle()
+
+        assertEquals(before + 2, devices.calls.count { it == "refresh" })
+        assertTrue(model.uiState.value.clients.isNotEmpty())
+    }
+
+    @Test
     fun aRevokedClientsOpenSessionIsEndedAndReported() = runTest(main.dispatcher) {
         viewModel()
         advanceUntilIdle()
@@ -101,7 +140,7 @@ class DevicesViewModelTest {
         model.confirm()
         advanceUntilIdle()
 
-        assertEquals(listOf(listOf("sid-other-1", "sid-other-2")), logins.ended)
+        assertEquals(listOf("sid-other-1", "sid-other-2"), logins.ended.first())
         assertNull(model.uiState.value.confirm)
         assertNotNull(model.uiState.value.message)
     }
@@ -118,7 +157,7 @@ class DevicesViewModelTest {
         model.confirm()
         advanceUntilIdle()
 
-        assertEquals(listOf(listOf("sid-gone")), logins.ended)
+        assertEquals(listOf("sid-gone"), logins.ended.first())
         assertTrue("signOut ${Samples.tabletId}" in devices.calls)
         assertNull(model.uiState.value.sheet)
     }

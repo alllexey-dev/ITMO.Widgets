@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.connections.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -112,8 +113,9 @@ fun DevicesScreen(state: DevicesUiState, actions: DevicesActions, modifier: Modi
         backLabel = text(CoreStrings.common_back),
         modifier = modifier,
     ) { padding ->
-        AppRefreshBox(state.refreshing, actions.onRefresh, Modifier.fillMaxSize()) {
-            ScreenColumn(padding) { DevicesContent(state, actions) }
+        // Below the header, so the pull indicator is not drawn under it.
+        AppRefreshBox(state.refreshing, actions.onRefresh, Modifier.fillMaxSize().padding(padding)) {
+            ScreenColumn(PaddingValues()) { DevicesContent(state, actions) }
             ItmoSnackbarHost(snackbars, Modifier.align(Alignment.BottomCenter))
         }
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupSurface
@@ -105,7 +107,14 @@ fun ListRow(
         }
         if (badge != null && badge > 0) Badge { Text("$badge") }
         if (trailing != null) {
-            Text(trailing, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+            // Capped, so a long value (an ITMO.ID session label) wraps instead of squeezing the title to a letter per line.
+            Text(
+                trailing,
+                Modifier.widthIn(max = TrailingMaxWidth),
+                color = ItmoTheme.colorScheme.onSurfaceVariant,
+                style = ItmoTheme.typography.bodyMedium,
+                textAlign = TextAlign.End,
+            )
         }
         accessory?.invoke(this)
         if (chevron) {
@@ -195,6 +204,7 @@ private fun RowIcon(icon: Painter?, tone: Tone?, danger: Boolean) {
 
 /** A group row is at least this tall (design.md "Connected groups"). */
 private val RowMinHeight = 56.dp
+private val TrailingMaxWidth = 160.dp
 private val NoteTopPadding = 2.dp
 private const val DISABLED_ALPHA = 0.38f
 

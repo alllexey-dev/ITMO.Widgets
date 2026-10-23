@@ -19,11 +19,14 @@ import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogins
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
 import dev.alllexey.itmowidgets.shared.feature.account.AccountPlurals
 import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -58,6 +61,14 @@ class DevicesViewModel(
         }.launchIn(viewModelScope)
         label.observeBrowserLike().onEach { browserLike -> _uiState.update { it.copy(browserLike = browserLike) } }
             .launchIn(viewModelScope)
+        // A client connected, renewed or revoked elsewhere shows up at once, then both sources settle. This screen's own
+        // loads assign the answer before the flow delivers it, so they never come back here.
+        devices.devices.filterNotNull().onEach {
+            if (it === backend) return@onEach
+            backend = it
+            render()
+            settle()
+        }.launchIn(viewModelScope)
         viewModelScope.launch { load() }
     }
 
@@ -148,7 +159,6 @@ class DevicesViewModel(
             }
             pending = null
             val ok = result is AppResult.Success
-            if (ok) itmo = logins.list()
             _uiState.update {
                 it.copy(
                     busy = false,
@@ -158,7 +168,15 @@ class DevicesViewModel(
                 )
             }
             render()
+            if (ok) settle()
         }
+    }
+
+    /** ITMO.ID and Backend show a change a moment late: both sources now and once more after [SETTLE_DELAY]. */
+    private suspend fun settle() {
+        load()
+        delay(SETTLE_DELAY)
+        load()
     }
 
     fun setBrowserLike(browserLike: Boolean) {
@@ -205,14 +223,14 @@ class DevicesViewModel(
                 thisPhone = DeviceRow(
                     key = INSTALL + (current?.instanceId?.toString() ?: THIS_PHONE),
                     icon = DeviceIcon.PHONE,
-                    title = current?.let(::installTitle) ?: UiText.Dynamic(phone.name),
+                    title = UiText.Dynamic(phone.name),
                     subtitle = lines(
                         current?.let(::installLine)
                             ?: UiText.Res(AccountStrings.devices_install_app, listOf(phone.appVersion)),
                         phoneSession?.let { UiText.Res(AccountStrings.devices_sign_in_until_line, listOf(dayMonth(it.expires, zone))) },
                     ),
                 ),
-                installs = installs.filter { !it.current }.map { install ->
+                installs = installs.filter { !it.current && it.isLive(sessions, listed != null) }.map { install ->
                     val ended = listed != null && install.sid != null && install.sid !in sessions
                     DeviceRow(
                         key = INSTALL + install.instanceId,
@@ -265,6 +283,13 @@ class DevicesViewModel(
         ),
     )
 
+    /**
+     * An install worth a row: one with a device registration, or one whose ITMO session ITMO.ID still lists. The
+     * install id is new after every sign-in, so each earlier sign-in of a phone leaves a nameless row behind.
+     */
+    private fun AppInstall.isLive(sessions: Map<String, ItmoLogin>, listed: Boolean): Boolean =
+        deviceName != null || (listed && sid != null && sid in sessions)
+
     /** ITMO.ID sessions that match no install and no client of ours, live or revoked, nor this phone. */
     private fun otherSessions(): List<ItmoLogin> {
         val listed = (itmo as? AppResult.Success)?.value as? ItmoLogins.Listed ?: return emptyList()
@@ -305,7 +330,7 @@ class DevicesViewModel(
         }
         return FactsSheet(
             key = key,
-            title = install?.let(::installTitle) ?: UiText.Dynamic(phone.name),
+            title = if (current) UiText.Dynamic(phone.name) else install?.let(::installTitle) ?: UiText.Dynamic(phone.name),
             subtitle = install?.let(::installLine),
             facts = facts,
             action = if (current) null else UiText.Res(AccountStrings.devices_sign_out_action),
@@ -350,6 +375,7 @@ class DevicesViewModel(
         const val CLIENT = "client:"
         const val SESSION = "session:"
         const val THIS_PHONE = "this"
+        val SETTLE_DELAY = 3.seconds
 
         fun lines(first: UiText, second: UiText?): UiText =
             second?.let { UiText.Joined(listOf(first, it), "\n") } ?: first
