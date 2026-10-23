@@ -223,7 +223,7 @@ private struct NextLessonFooter: View {
             case .now:
                 if let since = content.since, let until = content.until, since < until {
                     WidgetLessonProgress(since: since, until: until, date: progressDate)
-                        .frame(width: 24)
+                        .frame(minWidth: 24, maxWidth: .infinity)
                         .tint(colors.accent)
                     countdown({ .widgetNextLeft($0) }, until: until)
                         .widgetFont(11, weight: .bold)

@@ -70,14 +70,11 @@ additive fields and goes up for a rename or removal; readers accept only their o
 `shared/feature-schedule/fixtures/schedule-widget-timeline-v2.json`. Countdowns are system live text on iOS
 (`until`, `since`); Swift takes no time decision.
 
-The iOS lesson progress is value-based: `ProgressView(value:)` in the home-screen widget and a `Gauge` on the Lock
-Screen. It uses the timeline entry's date (the frozen sample's date in the gallery), advancing at the precomputed
-5-minute ticks and lesson boundaries. The countdown text remains live. The active lesson's footer reserves 24 pt
-for the progress bar; its label can shrink to the space left instead of forcing its full intrinsic width.
-`WidgetLessonProgressTests` renders both styles before, during and after their interval; `ScheduleTimelineTests`
-checks that the progress advances with the real fixture's ticks. Hosted renders do not exercise WidgetKit archives.
-For device validation, check both home-screen sizes before the first lesson, during it and in a gap, with the
-app's theme on/off, and the Lock Screen ring. Collect the widget extension's device log if a tile goes blank.
+The iOS lesson progress is value-based (`WidgetLessonProgress`): `ProgressView(value:)` in the home-screen widget
+and a `Gauge` on the Lock Screen at the entry's date (the frozen sample's in the gallery), so it moves at the
+5-minute ticks and the lesson boundaries. A timer `ProgressView(timerInterval:)` behind a custom style turned the
+small and medium widgets blank during a lesson on devices. The bar takes the footer's width left of the countdown, at
+least 24 pt; the countdown keeps its width first and shrinks with the line.
 
 ## Sport widget
 
