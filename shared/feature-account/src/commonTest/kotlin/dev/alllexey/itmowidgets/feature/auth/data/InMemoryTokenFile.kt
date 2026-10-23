@@ -15,8 +15,7 @@ internal class InMemoryTokenFile : TokenStorage, SessionTokenStore {
         private set
     var accessExpiresAt = 0L
         private set
-    var refreshToken: String? = null
-        private set
+    private var refreshToken: String? = null
     var refreshExpiresAt = 0L
         private set
     private var idToken: String? = null
@@ -45,6 +44,8 @@ internal class InMemoryTokenFile : TokenStorage, SessionTokenStore {
     }
 
     override fun hasRefreshToken(): Boolean = refreshToken != null
+
+    override fun getRefreshToken(): String? = refreshToken
 
     override fun getIdToken(): String? = idToken
 

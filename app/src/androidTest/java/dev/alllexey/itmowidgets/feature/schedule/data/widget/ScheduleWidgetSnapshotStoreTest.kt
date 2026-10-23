@@ -143,6 +143,7 @@ class ScheduleWidgetSnapshotStoreTest {
     private class Tokens : SessionTokenStore {
         var signedIn = true
         override fun hasRefreshToken() = signedIn
+        override fun getRefreshToken(): String? = null
         override fun getIdToken(): String? = null
         override fun replaceWithRefreshToken(refreshToken: String) = Unit
         override fun clearTokens() { signedIn = false }

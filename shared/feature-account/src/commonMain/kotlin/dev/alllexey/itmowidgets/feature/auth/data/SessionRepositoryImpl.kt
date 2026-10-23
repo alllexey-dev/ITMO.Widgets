@@ -134,7 +134,7 @@ class SessionRepositoryImpl(
         // This prevents every visible screen from briefly rendering as empty.
         mutableState.value = SessionState.SigningOut
         withContext(NonCancellable) {
-            transitions.signOut()
+            transitions.signOut(tokenStore.getRefreshToken())
             mutableState.value = SessionState.SignedOut
         }
     }

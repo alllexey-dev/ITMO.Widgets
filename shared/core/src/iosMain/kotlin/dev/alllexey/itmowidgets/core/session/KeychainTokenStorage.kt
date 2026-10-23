@@ -52,6 +52,8 @@ class KeychainTokenStorage(
 
     override fun hasRefreshToken(): Boolean = load().refreshToken != null
 
+    override fun getRefreshToken(): String? = load().refreshToken
+
     override fun getIdToken(): String? = load().idToken
 
     override fun replaceWithRefreshToken(refreshToken: String) = persist(TokenState(refreshToken = refreshToken))

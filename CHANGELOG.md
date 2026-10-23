@@ -110,6 +110,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 - Профиль keeps the identity card, friends (or their gate), `Виджеты`, `Настройки`, the links (`Карта`, My ITMO) and
   `Выйти`.
+- `Выйти` ends the app's ITMO.ID session too, so old "Android, Chrome Mobile WebView" sessions no longer pile up on
+  `id.itmo.ru/activity`. Without an answer from ITMO.ID within 5 seconds the sign-out goes on and the session expires
+  there on its own (MyItmoApi 2.3.0).
 - Друзья has the people search on top, requests with `Принять` and `Отклонить` in the row, sent ones with
   `Отменить`.
 - One person card for any ISU: roles, the ISU with copy, `Написать отзыв`, `Добавить в друзья` or `Пригласить в
@@ -170,6 +173,11 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - A setting changed while a screen starts watching it is no longer lost until restart.
 - Android sheets follow the finger and never go under the status bar or a cutout.
 - iOS shows pull-to-refresh on every tab root until the refresh ends.
+- iOS widgets of an `.ipa` re-signed by SideStore (or another tool that renames the App Group without
+  `ALTAppGroups`) show data instead of the signed-out state: the app and the widgets find the group in their
+  provisioning profile.
+- iOS widgets placed before sign-in leave the signed-out state as soon as the app signs in, not at their next
+  hourly timeline.
 - Android text without its own colour is never black in the dark theme: the theme gives every screen `onSurface`,
   not only the ones inside a `Surface`.
 

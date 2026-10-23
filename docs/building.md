@@ -47,6 +47,12 @@ Re-sign the `.ipa` with AltStore, SideStore or your own team. It has no
 notification service extension: push needs the official Apple account
 ([ios](ios.md#degradations)).
 
+The widgets need the App Group the re-signing tool registers for the app and
+the widget extension. The app finds a renamed group in `ALTAppGroups` or in
+the bundle's `embedded.mobileprovision` ([ios](ios.md#data-sharing)); a tool
+that signs without any App Group (reported for Sideloadly with a free Apple
+ID) leaves the widgets in the signed-out state while the app works.
+
 ## Build identity
 
 Every build records where it comes from, so client statistics tell official

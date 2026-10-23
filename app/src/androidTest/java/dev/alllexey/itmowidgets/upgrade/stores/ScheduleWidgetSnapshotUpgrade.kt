@@ -64,6 +64,7 @@ object ScheduleWidgetSnapshotUpgrade {
 
     private object SignedInTokens : SessionTokenStore {
         override fun hasRefreshToken() = true
+        override fun getRefreshToken(): String? = null
         override fun getIdToken() = Captured22.ID_TOKEN
         override fun replaceWithRefreshToken(refreshToken: String) = Unit
         override fun clearTokens() = Unit

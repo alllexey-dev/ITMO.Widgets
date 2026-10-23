@@ -35,7 +35,7 @@ class MyItmoStorage(
     internal fun getAccessExpiresAt(): Long = currentState().accessExpiresAt
 
     @Synchronized
-    internal fun getRefreshToken(): String? = currentState().refreshToken
+    override fun getRefreshToken(): String? = currentState().refreshToken
 
     @Synchronized
     internal fun getRefreshExpiresAt(): Long = currentState().refreshExpiresAt
