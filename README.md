@@ -31,14 +31,9 @@
 
 <p align="center">
   <img height="420" alt="Сегодня" src="https://widgets.alllexey.dev/img/dark/home.webp" />
-  <img height="420" alt="Расписание" src="https://widgets.alllexey.dev/img/dark/schedule.webp" />
+  <img height="420" alt="Карточка пары" src="https://widgets.alllexey.dev/img/dark/lesson.webp" />
   <img height="420" alt="Запись на спорт" src="https://widgets.alllexey.dev/img/dark/sport.webp" />
   <img height="420" alt="Зачётка" src="https://widgets.alllexey.dev/img/dark/recordbook.webp" />
-</p>
-
-<p align="center">
-  <img height="70" alt="Виджет «Пара»" src="https://widgets.alllexey.dev/img/dark/widget_single_lesson_preview.webp" />
-  <img height="150" alt="Виджет «Список пар»" src="https://widgets.alllexey.dev/img/dark/widget_lesson_list_preview.webp" />
 </p>
 
 ## Возможности
