@@ -1,190 +1,119 @@
 <h1 align="center">ITMO.Widgets</h1>
 
 <p align="center">
-  <strong>Расписание, зачётка, спорт и QR-пропуск ИТМО — на Android и iPhone</strong>
+  <strong>Расписание, зачётка, спорт и QR-пропуск ИТМО на Android и iPhone</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/alllexey-dev/ITMO.Widgets/releases"><img src="https://img.shields.io/github/v/release/alllexey-dev/ITMO.Widgets?include_prereleases&style=flat-square&color=blue" alt="Latest release" /></a>
+  <a href="https://github.com/alllexey-dev/ITMO.Widgets/releases"><img src="https://img.shields.io/github/v/release/alllexey-dev/ITMO.Widgets?include_prereleases&style=flat-square&color=blue" alt="Release" /></a>
   <a href="https://github.com/alllexey-dev/ITMO.Widgets/releases"><img src="https://img.shields.io/github/downloads/alllexey-dev/ITMO.Widgets/total?style=flat-square&color=orange" alt="Downloads" /></a>
-  <a href="https://github.com/alllexey-dev/ITMO.Widgets/actions/workflows/android-ci.yml?query=branch%3Amaster"><img src="https://img.shields.io/github/actions/workflow/status/alllexey-dev/ITMO.Widgets/android-ci.yml?branch=master&style=flat-square&label=CI" alt="CI" /></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+" />
   <img src="https://img.shields.io/badge/iOS-26.1%2B-000000?style=flat-square&logo=apple&logoColor=white" alt="iOS 26.1+" />
   <a href="LICENSE"><img src="https://img.shields.io/github/license/alllexey-dev/ITMO.Widgets?style=flat-square" alt="MIT" /></a>
 </p>
 
 <p align="center">
-  <a href="https://t.me/itmowidgets"><strong>Скачать бету 2.3 в Telegram</strong></a>
-  ·
-  <a href="https://github.com/alllexey-dev/ITMO.Widgets/releases">Релизы</a>
-  ·
-  <a href="https://widgets.alllexey.dev">Сайт</a>
-  ·
-  <a href="https://widgets.alllexey.dev/privacy.html">Политика конфиденциальности</a>
+  <a href="#скачать"><strong>Скачать</strong></a> ·
+  <a href="https://t.me/itmowidgets">Telegram</a> ·
+  <a href="https://widgets.alllexey.dev">Сайт</a> ·
+  <a href="https://widgets.alllexey.dev/privacy.html">Конфиденциальность</a>
 </p>
 
-> Неофициальное приложение. Не связано с Университетом ИТМО.
+Неофициальное приложение для студентов ИТМО: данные My ITMO и БАРС в одном месте, на главном экране и без пароля в приложении.
 
-Приложение для студентов ИТМО на Android и iPhone. Пара, на которую идти сейчас, день на линии времени и QR-пропуск — на вкладке «Сегодня» и в виджетах на домашнем экране; внутри — расписание, зачётка с БАРС, запись и очереди на спорт, карта кампуса и расписание друзей. Вход через ITMO.ID, пароль приложению не нужен.
+## Что умеет
 
-**Версия 2.3 — публичная бета.** APK для Android и `.ipa` для iPhone выходят в Telegram-канале [@itmowidgets](https://t.me/itmowidgets). Стабильная версия 2.2 (только Android) — в [релизах](https://github.com/alllexey-dev/ITMO.Widgets/releases). В Google Play приложения пока нет.
+- **Сегодня** — пара, на которую идти: аудитория, адрес и сколько осталось.
+- **Расписание** — лента дней с изменениями и уведомлениями о переносах и отменах.
+- **Зачётка** — баллы My ITMO, БАРС и таблиц преподавателей в одном списке, уведомления о новых оценках.
+- **Спорт** — запись в одно касание, очередь на свободное место, секции с автозаписью.
+- **QR-пропуск** — на «Сегодня», в виджете и шторке, в Пункте управления на iPhone; работает без сети.
+- **Карта кампуса** — аудитория на своём этаже и маршрут до неё.
+- **Виджеты** — пара, день, список пар и спорт на домашнем экране.
+- **Друзья** — их расписание и где они сейчас; кто видит ваше, решаете вы.
+- **Преподаватели** — отзывы студентов, ИИ-сводка и ссылки к предметам.
+- **Устройства** — веб-версия, [агент](https://github.com/alllexey-dev/itmo-widgets-agent) и [MCP для ИИ-ассистентов](https://github.com/alllexey-dev/itmo-mcp) подключаются по QR.
+
+## Скачать
+
+| | Версия | Требования |
+|---|---|---|
+| **Android** | [2.3 beta 3](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.3): `arm64` для большинства телефонов, `armv7` для старых | Android 8.0+ |
+| **iPhone** | [2.3 beta 3](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.3): `.ipa` без подписи | iOS 26.1+, AltStore, SideStore или Sideloadly |
+| **Android, стабильная** | [2.2](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.2) | Android 8.0+ |
+
+- Бета ставится поверх 2.2 с сохранением данных; вернуться на 2.2 можно только переустановкой.
+- На iPhone пока нет push-уведомлений. Автозапись на спорт при закрытом приложении делает [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent).
+- В Google Play приложения пока нет. Новые версии и ответы на вопросы — в [@itmowidgets](https://t.me/itmowidgets).
+
+## Как выглядит
+
+**Android**
+
+<table>
+  <tr><th>Сегодня</th><th>Расписание</th><th>Зачётка</th><th>Запись на спорт</th></tr>
+  <tr><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-today-dark.webp"><img src="docs/images/readme/android-today.webp" width="180" alt="Сегодня"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-schedule-dark.webp"><img src="docs/images/readme/android-schedule.webp" width="180" alt="Расписание"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-recordbook-dark.webp"><img src="docs/images/readme/android-recordbook.webp" width="180" alt="Зачётка"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-sport-dark.webp"><img src="docs/images/readme/android-sport.webp" width="180" alt="Запись на спорт"></picture></td></tr>
+</table>
+
+**iPhone**
+
+<table>
+  <tr><th>Сегодня</th><th>Пара</th><th>Маршрут</th><th>Спорт</th></tr>
+  <tr><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/iphone-today-dark.webp"><img src="docs/images/readme/iphone-today.webp" width="180" alt="Сегодня"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/iphone-lesson-dark.webp"><img src="docs/images/readme/iphone-lesson.webp" width="180" alt="Пара"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/iphone-map-dark.webp"><img src="docs/images/readme/iphone-map.webp" width="180" alt="Маршрут"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/iphone-sport-dark.webp"><img src="docs/images/readme/iphone-sport.webp" width="180" alt="Спорт"></picture></td></tr>
+</table>
 
 <p align="center">
-  <img height="420" alt="Сегодня" src="https://widgets.alllexey.dev/img/dark/home.webp" />
-  <img height="420" alt="Карточка пары" src="https://widgets.alllexey.dev/img/dark/lesson.webp" />
-  <img height="420" alt="Запись на спорт" src="https://widgets.alllexey.dev/img/dark/sport.webp" />
-  <img height="420" alt="Зачётка" src="https://widgets.alllexey.dev/img/dark/recordbook.webp" />
+  <img src="docs/images/readme/android-lesson-route.gif" width="240" alt="Из расписания в карточку пары и по маршруту до аудитории" />
+  <br />
+  <sub>Из расписания — в карточку пары и по маршруту до аудитории</sub>
 </p>
-
-## Возможности
-
-### Сегодня
-
-Наверху — пара, на которую идти сейчас: аудитория крупно, адрес и сколько осталось, или «Онлайн» с кнопкой «Войти». Ниже — день на линии времени: прошедшие пары приглушены, изменения, отмены, очереди на спорт и окна вроде «Окно 2 ч 10 мин»; вечером — завтрашние пары. «Пропуск» открывает QR-код, последний код доступен без сети.
-
-Колокольчик собирает новые оценки, изменения расписания («было» над «стало»), результаты очередей на спорт и заявки в друзья; каждая строка открывает то, о чём она.
-
-### Расписание
-
-Лента дней под полосой недель, месяц открывается по касанию. Записи и очереди на спорт стоят среди пар («очередь 2 из 5»), изменения — на своей паре.
-
-Карточка пары: время, аудитория и корпус, ссылки к предмету, видеозвонок, друзья на паре, преподаватель с тоном отзывов и «Маршрут» на карте кампуса. «Чьё расписание» показывает, где сейчас друзья, и открывает расписание друга с пометкой «Вы» на общих парах.
-
-**Изменения расписания.** Телефон сам проверяет своё расписание на неделю вперёд и присылает уведомление о переносах и отменах.
-
-**Календарь.** Синхронизация пар в отдельный календарь ITMO.Widgets на телефоне и выгрузка в `.ics`.
-
-### Зачётка
-
-Сначала то, что требует внимания. У каждого числа подписан источник — БАРС, My ITMO, таблица преподавателя или спорт — и шкала 0–100; сданные предметы показаны итогом, «Откуда баллы» сравнивает все источники. БАРС необязателен: без него зачётка полная по данным My ITMO. У предмета своя страница с вкладками «Баллы», «Пары» и «Материалы».
-
-**Новые оценки.** Новые и изменённые оценки My ITMO, БАРС и Google Таблиц приходят уведомлением, оценка по одному предмету — прямо в заголовке.
-
-**Свои баллы из таблицы.** Если преподаватель ведёт баллы в публичной Google Таблице, приложение находит в ней вашу строку и показывает итог на странице предмета. Таблица читается прямо с телефона.
-
-### Спорт
-
-- **Моё** — кольцо баллов, записи и очереди по дням, секции.
-- **Запись** — поиск по виду спорта или преподавателю, фильтры «Есть места», «Утро», «Вечер», «Друзья»; свободные места, друзья и пересечения с парами в строке занятия. Запись в одно касание и отмена.
-- **Очередь на место** — если занятие заполнено, приложение запишет вас, как только место освободится.
-- **Секции** — занятие, на которое вы записались, становится секцией: сервер ставит вас в очередь на него каждые две недели, как только открывается запись, в пределах месячного лимита. Любую дату можно пропустить.
-- **Автозапись** на занятия, которых ещё нет в расписании.
-
-Очереди, секции и автозапись работают через сервер проекта и требуют «Подключения к ITMO.Widgets» (см. ниже). Результат приходит уведомлением.
-
-### Карта кампуса
-
-Карта корпусов ИТМО: аудитория пары на своём этаже, маршрут между любыми двумя аудиториями через этажи, поиск по корпусам и «По городу» в системных Картах. «Маршрут» в карточке пары и на «Сегодня» открывает её. Планы этажей хранятся на телефоне.
-
-### Друзья и люди
-
-Поиск людей по имени, заявки в друзья, расписание и спорт друга рядом со своим. Карточка человека: «Преподавание» (какую пару ведёт сейчас, ваши предметы, ИИ-сводка и отзывы) и «Учёба». Кто видит ваше расписание, спорт и список друзей, решаете вы: все, друзья или никто.
-
-- **Ссылки к предметам** — таблица баллов, очередь, материалы, записи лекций. Видны только вам, вашему потоку или всем; ссылки для потока и для всех проходят проверку.
-- **Отзывы о преподавателях** — по умолчанию анонимные, публикуются после проверки, за полезные голосуют.
-
-### Устройства, агент и ИИ-ассистенты
-
-«Профиль → Устройства» показывает этот телефон, другие установки приложения, подключённые клиенты и все входы ITMO.ID с IP-адресами; любой вход можно завершить. «Подключить устройство» подключает по QR-коду или ссылке:
-
-- **веб-версию** на [widgets.alllexey.dev](https://widgets.alllexey.dev);
-- **[itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent)** — фоновую программу для компьютера или сервера: записывает на спорт из очереди, когда телефон не может (например, iPhone без push-уведомлений);
-- **[itmo-mcp](https://github.com/alllexey-dev/itmo-mcp)** — MCP-сервер, через который Claude, Codex, Cursor и другие ИИ-ассистенты читают расписание, зачётку и спорт.
-
-Агент и MCP-сервер получают свой вход ITMO.ID: вы входите за них на официальной странице, пароль остаётся на телефоне, сессия шифруется до самого устройства. Доступ клиента — переключателями, «Отключить» завершает и его вход в ITMO.
-
-### Виджеты
-
-- **Пара** — пара, на которую идти, с живым обратным отсчётом.
-- **Расписание на день** — день в масштабе с линией «сейчас».
-- **Список пар** — классический список на день, вечером — завтрашние пары.
-- **Спорт** — кольцо баллов и ближайшая запись.
-
-Виджеты есть на Android и iPhone и красятся в цвета приложения. На Android — ещё виджет «QR-код» и плитка «QR-пропуск» в шторке; на iPhone — виджеты экрана блокировки, «Пропуск» в Пункте управления, на экране блокировки и на кнопке действия.
-
-### Оформление
-
-Тема (системная, светлая или тёмная), цвет (как обои, фирменный, шесть готовых или свой), палитра, контраст и чёрный фон — всё применяется сразу. На Android — Material 3 Expressive, на iPhone — нативный SwiftUI с Liquid Glass.
-
-Как всё устроено — откуда берутся данные, что остаётся на телефоне и что уходит на сервер — простыми словами в разделе [«Как это работает»](docs/how-it-works/README.md).
-
-## Установка
-
-### Android
-
-Нужен Android 8.0 и новее.
-
-1. Скачайте APK из поста в канале [@itmowidgets](https://t.me/itmowidgets): `itmo-widgets-v*-arm64.apk` подходит почти всем телефонам, `armv7` — только совсем старым.
-2. Разрешите установку из этого источника и откройте файл.
-3. При первом запуске приложение спросит разрешения и предложит «Подключение к ITMO.Widgets».
-
-Бета 2.3 ставится поверх 2.2 с сохранением данных, а вернуться на 2.2 без удаления приложения нельзя. О новых версиях приложение сообщает само.
-
-### iPhone
-
-Нужен iOS 26.1 и новее. Приложение распространяется как неподписанный `.ipa` из канала [@itmowidgets](https://t.me/itmowidgets) и ставится через AltStore, SideStore или Sideloadly. Надёжнее AltStore и SideStore: после некоторых других программ виджеты просят войти.
-
-Бета для iPhone пока работает не всё как на Android:
-
-- push-уведомлений нет (для них нужен платный аккаунт разработчика Apple), колокольчик обновляется, пока приложение открыто;
-- автозапись на спорт при закрытом приложении делает [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent) на компьютере или сервере.
-
-Вопросы и баги — в канале [@itmowidgets](https://t.me/itmowidgets).
-
-## Вход
-
-**ITMO.ID.** Кнопка «Войти через ITMO.ID» открывает официальную страницу университета. Логин и пароль вводятся только там; приложение получает токен и хранит его на устройстве.
-
-**Другие способы входа.** Если страница входа не работает, токен можно ввести вручную:
-
-1. Откройте [my.itmo.ru](https://my.itmo.ru/) в браузере на компьютере.
-2. `F12` → вкладка **Application** → **Cookies** → `https://my.itmo.ru`.
-3. Скопируйте значение `auth.refresh_token.itmoId` и вставьте его в «Другие способы входа».
-
-«Выйти» завершает и сессию приложения в ITMO.ID.
 
 ## Данные и приватность
 
-Расписание, зачётка, оценки и QR-пропуск загружаются с My ITMO и БАРС прямо на телефон; токены, кэш, проверки изменений, таблицы баллов, планы карты и календарь остаются на устройстве.
+- Вход через официальную страницу ITMO.ID: пароль приложение не видит.
+- Расписание, зачётка и пропуск загружаются с My ITMO и БАРС прямо на телефон и хранятся там.
+- Друзья, очереди на спорт, отзывы и подключённые устройства работают через сервер ITMO.Widgets и включаются отдельно.
+- Рекламы и аналитики нет. Аккаунт на сервере можно [удалить](https://widgets.alllexey.dev/delete-account).
 
-Друзья, очереди и секции на спорт, ссылки к предметам, отзывы, подключённые устройства и push-уведомления работают через сервер проекта и включаются отдельно: «Подключение к ITMO.Widgets» в «Профиль → Настройки → Сервер ITMO.Widgets» (по умолчанию выключено). Токен ITMO.ID приложения сервер проверяет и не сохраняет, запросы к My ITMO от вашего имени не делает. Рекламы и аналитики нет.
+Подробно — в [«Как это работает»](docs/how-it-works/README.md) и [политике конфиденциальности](https://widgets.alllexey.dev/privacy.html).
 
-Что именно хранит сервер — в [«Как это работает»](docs/how-it-works/README.md) и [политике конфиденциальности](https://widgets.alllexey.dev/privacy.html); удаление аккаунта — по [запросу](https://widgets.alllexey.dev/delete-account) («Настройки → Сервер ITMO.Widgets → Удалить аккаунт ITMO.Widgets»). Исходный код сервера открыт.
+<details>
+<summary>Не открывается страница ITMO.ID</summary>
+
+Войдите токеном через «Другие способы входа»:
+
+1. Откройте [my.itmo.ru](https://my.itmo.ru/) в браузере на компьютере.
+2. `F12` → **Application** → **Cookies** → `https://my.itmo.ru`.
+3. Скопируйте значение `auth.refresh_token.itmoId` и вставьте его в приложении.
+
+</details>
 
 ## Экосистема
 
 | Репозиторий | Что делает |
 |---|---|
-| [ITMO.Widgets](https://github.com/alllexey-dev/ITMO.Widgets) | Приложение для Android и iOS (этот репозиторий) |
-| [itmo-widgets-backend](https://github.com/alllexey-dev/itmo-widgets-backend) | Сервер: друзья, приватность, очереди и секции на спорт, подключённые устройства, уведомления |
+| [itmo-widgets-backend](https://github.com/alllexey-dev/itmo-widgets-backend) | Сервер: друзья, приватность, очереди на спорт, уведомления |
 | [itmo-widgets-web](https://github.com/alllexey-dev/itmo-widgets-web) | Сайт и веб-версия |
-| [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent) | Фоновый агент: автозапись на спорт без телефона |
-| [itmo-mcp](https://github.com/alllexey-dev/itmo-mcp) | MCP-сервер ИТМО для ИИ-ассистентов |
-| [my-itmo-api](https://github.com/alllexey-dev/my-itmo-api) | Java-клиент MyITMO и БАРС |
+| [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent) | Агент для компьютера или сервера: автозапись на спорт без телефона |
+| [itmo-mcp](https://github.com/alllexey-dev/itmo-mcp) | MCP-сервер ИТМО для Claude, Codex, Cursor и других ассистентов |
+| [my-itmo-api](https://github.com/alllexey-dev/my-itmo-api) | Java-клиент My ITMO и БАРС |
 
 ## Разработчикам
 
-Приложение на Kotlin Multiplatform: общая логика в `shared/`, Android-приложение с экранами на Compose в `app/` и `shared/`, iOS-приложение на SwiftUI в `iosApp/`. Как собрать и запустить - в [docs/getting-started.md](docs/getting-started.md), все команды сборки и тестов - в [docs/testing.md](docs/testing.md), устройство кода - в [docs/architecture.md](docs/architecture.md), правила для PR - в [CONTRIBUTING.md](CONTRIBUTING.md), вся документация - в [docs/README.md](docs/README.md).
+Kotlin Multiplatform: общая логика в `shared/`, Android на Compose в `app/`, iOS на SwiftUI в `iosApp/`.
+
+- [Сборка и запуск](docs/getting-started.md), [тесты](docs/testing.md), [архитектура](docs/architecture.md), [вся документация](docs/README.md)
+- [Правила для PR](CONTRIBUTING.md)
 
 ```bash
-./gradlew verifyQuick      # тесты всех модулей, Konsist, lint, debug-сборки (JDK 21)
+./gradlew verifyQuick      # тесты, Konsist, lint и debug-сборки (JDK 21)
 scripts/ios/test.sh        # сборка и тесты iOS (Mac с Xcode)
 ```
 
 ## Обратная связь
 
-Ошибки и идеи — в [Issues](https://github.com/alllexey-dev/ITMO.Widgets/issues) или в канале [@itmowidgets](https://t.me/itmowidgets). В приложении есть «Журнал ошибок» (Настройки → О приложении): его содержимое без токенов и личных данных можно приложить к отчёту.
+Ошибки и идеи — в [Issues](https://github.com/alllexey-dev/ITMO.Widgets/issues) или [@itmowidgets](https://t.me/itmowidgets). К отчёту можно приложить «Журнал ошибок» из «Настройки → О приложении»: в нём нет токенов и личных данных.
 
 ## Лицензия
 
 [MIT](LICENSE). Приложение не связано с Университетом ИТМО.
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=alllexey-dev%2Fitmo.widgets&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=alllexey-dev/itmo.widgets&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=alllexey-dev/itmo.widgets&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=alllexey-dev/itmo.widgets&type=date&legend=top-left" />
- </picture>
-</a>
