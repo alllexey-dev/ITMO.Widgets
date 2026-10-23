@@ -210,6 +210,7 @@ class ShellHost(
             lesson = intent.getStringExtra(AppEntryIntents.EXTRA_LESSON),
             sportLesson = intent.getLongExtra(AppEntryIntents.EXTRA_SPORT_LESSON, 0L),
             sportPredicted = intent.getBooleanExtra(AppEntryIntents.EXTRA_SPORT_PREDICTED, false),
+            connection = intent.getStringExtra(AppEntryIntents.EXTRA_CONNECTION),
         ) ?: return
         routes.offer(route)
         routeOffers++

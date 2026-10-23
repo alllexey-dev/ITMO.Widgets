@@ -1,7 +1,7 @@
 package dev.alllexey.itmowidgets.core.navigation
 
 import dev.alllexey.itmowidgets.core.url.StrictUri
-import dev.alllexey.itmowidgets.core.weblogin.PairLink
+import dev.alllexey.itmowidgets.core.connections.PairLink
 
 /** What a verified `https` link to the site asks the app to open. */
 sealed interface AppLink {
@@ -12,7 +12,7 @@ sealed interface AppLink {
     /** A predicted lesson, named by the catalog lesson it repeats two weeks later. */
     data class PredictedSportLesson(val prototypeLessonId: Long) : AppLink
 
-    /** A device asks to be paired; the link holds its key, so it is never logged. */
+    /** A client asks to be paired; the link holds its key, so it is never logged. */
     data class Pair(val link: PairLink) : AppLink
 
     /** A link under an app prefix whose identifier cannot be read. */

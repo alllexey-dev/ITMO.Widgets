@@ -18,8 +18,8 @@ import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.sport.di.sportModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
 import org.koin.core.module.Module
 
 /**
@@ -67,8 +67,8 @@ object KoinModules {
         onboardingModule,
         meModule,
         reviewsModule,
-        webLoginDataModule,
-        webLoginModule,
+        connectionsDataModule,
+        connectionsModule,
         updateModule,
     )
 }

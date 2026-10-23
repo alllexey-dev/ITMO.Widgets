@@ -7,7 +7,7 @@ import dev.alllexey.itmowidgets.core.work.CheckScheduler
 import dev.alllexey.itmowidgets.core.work.PeriodicCheckScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebSilentLogin
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebViewItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier

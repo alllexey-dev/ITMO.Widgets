@@ -1,0 +1,1626 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "connection_copy" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать"
+          }
+        }
+      }
+    },
+    "connection_fact_approved" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтверждено"
+          }
+        }
+      }
+    },
+    "connection_fact_connected" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключено"
+          }
+        }
+      }
+    },
+    "connection_fact_label" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход виден как"
+          }
+        }
+      }
+    },
+    "connection_gone" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устройство отключено"
+          }
+        }
+      }
+    },
+    "connection_reminder_closed" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход %1$@ в ИТМО закрыт"
+          }
+        }
+      }
+    },
+    "connection_reminder_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновите его в «Устройствах»"
+          }
+        }
+      }
+    },
+    "connection_reminder_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход %1$@ в ИТМО закончится %2$@"
+          }
+        }
+      }
+    },
+    "connection_renew" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить вход"
+          }
+        }
+      }
+    },
+    "connection_renew_lead" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустите на %1$@ команду, она покажет QR-код:"
+          }
+        }
+      }
+    },
+    "connection_renew_note" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ и настройки %1$@ не изменятся, обновится только вход в ИТМО."
+          }
+        }
+      }
+    },
+    "connection_renew_scan" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканировать QR-код"
+          }
+        }
+      }
+    },
+    "connection_renew_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить вход для %1$@"
+          }
+        }
+      }
+    },
+    "connection_revoke" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отключить"
+          }
+        }
+      }
+    },
+    "connection_revoke_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ к ITMO.Widgets и вход в ИТМО на нём закончатся сразу."
+          }
+        }
+      }
+    },
+    "connection_revoke_text_later" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ к ITMO.Widgets закончится сразу. Вход в ИТМО закончится, когда устройство выйдет на связь."
+          }
+        }
+      }
+    },
+    "connection_revoke_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отключить %1$@?"
+          }
+        }
+      }
+    },
+    "connection_revoke_web_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер выйдет из ITMO.Widgets сразу."
+          }
+        }
+      }
+    },
+    "connection_scopes_changed" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ изменён"
+          }
+        }
+      }
+    },
+    "connection_section_about" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об устройстве"
+          }
+        }
+      }
+    },
+    "connection_section_access" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ"
+          }
+        }
+      }
+    },
+    "connection_section_sign_in" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в ИТМО"
+          }
+        }
+      }
+    },
+    "connection_sign_in_again" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти заново"
+          }
+        }
+      }
+    },
+    "connection_sign_in_closed" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход закрыт"
+          }
+        }
+      }
+    },
+    "connection_sign_in_closed_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ не может обращаться к My ITMO"
+          }
+        }
+      }
+    },
+    "connection_sign_in_ending" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Осталось %1$lld дня. Потом %2$@ не сможет обращаться к My ITMO"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Осталось %1$lld дней. Потом %2$@ не сможет обращаться к My ITMO"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Остался %1$lld день. Потом %2$@ не сможет обращаться к My ITMO"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Осталось %1$lld дня. Потом %2$@ не сможет обращаться к My ITMO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "connection_sign_in_until" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До %1$@"
+          }
+        }
+      }
+    },
+    "connection_sign_out_web" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти в этом браузере"
+          }
+        }
+      }
+    },
+    "connection_sign_out_web_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти в браузере %1$@?"
+          }
+        }
+      }
+    },
+    "devices_activity_line" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активность %1$@"
+          }
+        }
+      }
+    },
+    "devices_activity_minutes" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld мин назад"
+          }
+        }
+      }
+    },
+    "devices_activity_now" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "только что"
+          }
+        }
+      }
+    },
+    "devices_activity_today" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "сегодня в %1$@"
+          }
+        }
+      }
+    },
+    "devices_activity_yesterday" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "вчера в %1$@"
+          }
+        }
+      }
+    },
+    "devices_browser_like" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выглядеть как обычный браузер"
+          }
+        }
+      }
+    },
+    "devices_browser_like_subtitle" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новые входы в ИТМО подписываются как браузер, а не как ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "devices_client_agent" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Агент"
+          }
+        }
+      }
+    },
+    "devices_client_agent_product" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Агент ITMO.Widgets %1$@"
+          }
+        }
+      }
+    },
+    "devices_client_line" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, активность %2$@"
+          }
+        }
+      }
+    },
+    "devices_client_mcp" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP"
+          }
+        }
+      }
+    },
+    "devices_client_mcp_product" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "itmo-mcp %1$@"
+          }
+        }
+      }
+    },
+    "devices_client_other" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устройство"
+          }
+        }
+      }
+    },
+    "devices_client_web" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер"
+          }
+        }
+      }
+    },
+    "devices_connect" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить устройство"
+          }
+        }
+      }
+    },
+    "devices_connect_subtitle" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Агент, MCP или браузер по QR-коду"
+          }
+        }
+      }
+    },
+    "devices_connected" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключённые"
+          }
+        }
+      }
+    },
+    "devices_end_action" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить вход"
+          }
+        }
+      }
+    },
+    "devices_end_all" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить все другие входы"
+          }
+        }
+      }
+    },
+    "devices_end_all_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На этих устройствах придётся снова войти в ИТМО. Этот телефон и подключённые устройства не затронет."
+          }
+        }
+      }
+    },
+    "devices_end_all_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Завершить %1$lld других входа?"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Завершить %1$lld других входов?"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Завершить %1$lld другой вход?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Завершить %1$lld других входа?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "devices_end_confirm" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить"
+          }
+        }
+      }
+    },
+    "devices_end_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На этом устройстве придётся снова войти в ИТМО."
+          }
+        }
+      }
+    },
+    "devices_end_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить вход?"
+          }
+        }
+      }
+    },
+    "devices_ended" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход завершён"
+          }
+        }
+      }
+    },
+    "devices_fact_activity" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активность"
+          }
+        }
+      }
+    },
+    "devices_fact_ip" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP-адрес"
+          }
+        }
+      }
+    },
+    "devices_fact_notifications" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомления"
+          }
+        }
+      }
+    },
+    "devices_fact_sign_in" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в ИТМО"
+          }
+        }
+      }
+    },
+    "devices_fact_started" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход"
+          }
+        }
+      }
+    },
+    "devices_fact_until" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Действует до"
+          }
+        }
+      }
+    },
+    "devices_gate_fix" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить"
+          }
+        }
+      }
+    },
+    "devices_gate_reason" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без него здесь видны только входы в ИТМО, а подключить агента, MCP или браузер нельзя"
+          }
+        }
+      }
+    },
+    "devices_gate_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер ITMO.Widgets выключен"
+          }
+        }
+      }
+    },
+    "devices_install_android" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android"
+          }
+        }
+      }
+    },
+    "devices_install_app" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ITMO.Widgets %1$@"
+          }
+        }
+      }
+    },
+    "devices_install_ios" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone"
+          }
+        }
+      }
+    },
+    "devices_my_devices" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мои устройства"
+          }
+        }
+      }
+    },
+    "devices_no_cookie" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет входа в ITMO.ID на этом телефоне: войдите в приложение через ITMO.ID"
+          }
+        }
+      }
+    },
+    "devices_notifications_off" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "выключены"
+          }
+        }
+      }
+    },
+    "devices_notifications_on" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "включены"
+          }
+        }
+      }
+    },
+    "devices_os_android" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android %1$@"
+          }
+        }
+      }
+    },
+    "devices_os_ios" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS %1$@"
+          }
+        }
+      }
+    },
+    "devices_others" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другие входы в ITMO.ID"
+          }
+        }
+      }
+    },
+    "devices_others_no_cookie" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы видеть входы в ИТМО, войдите в приложение через ITMO.ID"
+          }
+        }
+      }
+    },
+    "devices_platform_linux" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linux"
+          }
+        }
+      }
+    },
+    "devices_platform_macos" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS"
+          }
+        }
+      }
+    },
+    "devices_platform_windows" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows"
+          }
+        }
+      }
+    },
+    "devices_session_line" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход %1$@, активность %2$@"
+          }
+        }
+      }
+    },
+    "devices_session_subtitle" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в ITMO.ID не через ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "devices_sign_in_closed" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "вход в ИТМО закрыт"
+          }
+        }
+      }
+    },
+    "devices_sign_in_ended" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в ИТМО закончен"
+          }
+        }
+      }
+    },
+    "devices_sign_in_until" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "вход в ИТМО до %1$@"
+          }
+        }
+      }
+    },
+    "devices_sign_in_until_line" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в ИТМО до %1$@"
+          }
+        }
+      }
+    },
+    "devices_sign_out_action" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти на этом устройстве"
+          }
+        }
+      }
+    },
+    "devices_sign_out_confirm" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти"
+          }
+        }
+      }
+    },
+    "devices_sign_out_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение на нём попросит войти заново в течение получаса."
+          }
+        }
+      }
+    },
+    "devices_sign_out_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти на %1$@?"
+          }
+        }
+      }
+    },
+    "devices_summary_closed" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: вход в ИТМО закрыт"
+          }
+        }
+      }
+    },
+    "devices_summary_until" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: вход в ИТМО до %2$@"
+          }
+        }
+      }
+    },
+    "devices_this_phone" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот телефон"
+          }
+        }
+      }
+    },
+    "devices_this_phone_note" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти из аккаунта можно в профиле"
+          }
+        }
+      }
+    },
+    "devices_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устройства"
+          }
+        }
+      }
+    },
+    "pair_access" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получит доступ"
+          }
+        }
+      }
+    },
+    "pair_cancelled" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход не завершён, устройство не подключено"
+          }
+        }
+      }
+    },
+    "pair_client_unavailable" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Такие устройства пока недоступны для вашего аккаунта"
+          }
+        }
+      }
+    },
+    "pair_close" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть"
+          }
+        }
+      }
+    },
+    "pair_code_hint" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключайте, только если код совпадает"
+          }
+        }
+      }
+    },
+    "pair_code_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код на экране устройства"
+          }
+        }
+      }
+    },
+    "pair_connect" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить"
+          }
+        }
+      }
+    },
+    "pair_continue" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продолжить"
+          }
+        }
+      }
+    },
+    "pair_done" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ подключён"
+          }
+        }
+      }
+    },
+    "pair_done_action" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
+          }
+        }
+      }
+    },
+    "pair_done_renew" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход для %1$@ обновлён"
+          }
+        }
+      }
+    },
+    "pair_done_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в ИТМО действует до %1$@. Перед концом срока приложение напомнит обновить его."
+          }
+        }
+      }
+    },
+    "pair_done_web_renew" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в %1$@ подтверждён"
+          }
+        }
+      }
+    },
+    "pair_done_web_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отключить браузер можно в «Устройствах»."
+          }
+        }
+      }
+    },
+    "pair_expired_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустите подключение на устройстве заново"
+          }
+        }
+      }
+    },
+    "pair_expired_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка устарела"
+          }
+        }
+      }
+    },
+    "pair_failed_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не получилось подключить"
+          }
+        }
+      }
+    },
+    "pair_link_mismatch" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR не совпадает с запросом. Запустите подключение на устройстве заново"
+          }
+        }
+      }
+    },
+    "pair_link_unknown" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это не ссылка для подключения"
+          }
+        }
+      }
+    },
+    "pair_lock_required" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включите блокировку экрана, чтобы подключать устройства"
+          }
+        }
+      }
+    },
+    "pair_note_client" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дальше войдите в ИТМО за %1$@. Пароль останется на телефоне: %2$@ получит только свой вход, который можно отключить отсюда."
+          }
+        }
+      }
+    },
+    "pair_note_web" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер увидит то же, что и приложение, кроме входа в ИТМО. Отключить его можно отсюда."
+          }
+        }
+      }
+    },
+    "pair_open" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продолжить"
+          }
+        }
+      }
+    },
+    "pair_other_account_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войдите под тем же аккаунтом, что и в приложении. Вход под другим аккаунтом уже завершён."
+          }
+        }
+      }
+    },
+    "pair_other_account_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это другой аккаунт ИТМО"
+          }
+        }
+      }
+    },
+    "pair_paste_hint" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка с устройства"
+          }
+        }
+      }
+    },
+    "pair_scan" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканировать QR"
+          }
+        }
+      }
+    },
+    "pair_scan_again" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканировать снова"
+          }
+        }
+      }
+    },
+    "pair_scanner_unavailable" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сканер недоступен, вставьте ссылку"
+          }
+        }
+      }
+    },
+    "pair_services_disabled" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужно подключение к серверу ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "pair_sign_in_again" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти заново"
+          }
+        }
+      }
+    },
+    "pair_sign_in_host" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "id.itmo.ru"
+          }
+        }
+      }
+    },
+    "pair_sign_in_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в ИТМО для %1$@"
+          }
+        }
+      }
+    },
+    "pair_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключить устройство"
+          }
+        }
+      }
+    },
+    "pair_too_many" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключено слишком много устройств этого типа. Отключите одно в «Устройствах»"
+          }
+        }
+      }
+    },
+    "pair_unlock_reason" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтвердите подключение устройства"
+          }
+        }
+      }
+    },
+    "pair_unsupported" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновите приложение, чтобы подключить это устройство"
+          }
+        }
+      }
+    },
+    "pair_web_subtitle" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер, ITMO.Widgets на сайте"
+          }
+        }
+      }
+    },
+    "pair_webview_outdated" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновите Android System WebView, чтобы войти в ИТМО за устройство"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

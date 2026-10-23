@@ -21,10 +21,12 @@ kotlin {
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
         }
-        // Pairing: Tink seals to the device's key (CryptoKit on iOS); BiometricPrompt asks for the screen lock.
+        // Pairing: Tink seals to the client's key (CryptoKit on iOS); BiometricPrompt asks for the screen lock; a
+        // WebView profile (androidx.webkit) keeps a client's ITMO.ID sign-in apart from the app's own store.
         androidMain.dependencies {
             implementation(libs.tink.android)
             implementation(libs.androidx.biometric)
+            implementation(libs.androidx.webkit)
             // The account routes: koinViewModel() and lifecycle-aware collection.
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.jetbrains.lifecycle.runtime.compose)

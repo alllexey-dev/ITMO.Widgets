@@ -7,9 +7,7 @@ import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.feature.auth.domain.ItmoAuthUrlPolicy
 import dev.alllexey.itmowidgets.feature.resources.domain.guessCategory
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
-import dev.alllexey.itmowidgets.feature.weblogin.domain.WebLoginCode
 import java.net.URI
-import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.Locale
 import kotlin.random.Random
@@ -41,8 +39,6 @@ class UrlPolicyParityTest {
     @Test fun `Telegram deep links`() = assertParity(Released::deepLink, TelegramLinks::deepLink)
 
     @Test fun `Google Sheet addresses`() = assertParity(Released::googleSheet, GoogleSheetUrl::parse)
-
-    @Test fun `web sign-in codes`() = assertParity(Released::webLoginCode, WebLoginCode::parse)
 
     @Test fun `link category guesses`() = assertParity(Released::guessCategory, ::guessCategory)
 
@@ -77,7 +73,7 @@ class UrlPolicyParityTest {
         return grid.map { it + tails.random(random) } + grid.map { it + tails.random(random) }
     }
 
-    /** The released policies on `java.net.URI`, `URLEncoder` and `URLDecoder`. */
+    /** The released policies on `java.net.URI` and `URLEncoder`. */
     private object Released {
 
         private fun parse(url: String): URI? = runCatching { URI(url) }.getOrNull()
@@ -142,28 +138,6 @@ class UrlPolicyParityTest {
                 ?.substringAfter('=')
             val gid = parameter(uri.rawFragment, "gid") ?: parameter(uri.rawQuery, "gid")
             return GoogleSheetUrl(id, gid?.toLongOrNull())
-        }
-
-        private const val CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
-
-        fun webLoginCode(raw: String): String? {
-            fun normalize(text: String): String? {
-                val code = text.filterNot { it.isWhitespace() || it == '-' }.uppercase()
-                return code.takeIf { it.length == 8 && it.all(CODE_ALPHABET::contains) }
-            }
-            val text = raw.trim()
-            if (text.startsWith("https://", ignoreCase = true)) {
-                val uri = runCatching { URI(text) }.getOrNull() ?: return null
-                if (!uri.scheme.equals("https", ignoreCase = true) || uri.host.isNullOrBlank() || uri.rawUserInfo != null) return null
-                if (uri.path?.trimEnd('/') != "/app/login") return null
-                val value = uri.rawQuery.orEmpty().split('&')
-                    .map { it.substringBefore('=') to it.substringAfter('=', "") }
-                    .singleOrNull { it.first == "code" }?.second ?: return null
-                val decoded = runCatching { URLDecoder.decode(value, Charsets.UTF_8.name()) }.getOrNull() ?: return null
-                return normalize(decoded)
-            }
-            if (text.contains("://")) return null
-            return normalize(text)
         }
 
         private val isu = Regex("[1-9][0-9]{0,9}")

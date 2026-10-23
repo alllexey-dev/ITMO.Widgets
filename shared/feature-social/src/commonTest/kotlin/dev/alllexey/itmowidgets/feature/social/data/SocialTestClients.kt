@@ -5,17 +5,16 @@ import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.common.UserData
 import dev.alllexey.itmowidgets.client.common.UserProfile
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
+import dev.alllexey.itmowidgets.client.users.ConsentRequest
 import dev.alllexey.itmowidgets.client.users.IdTokenRequest
 import dev.alllexey.itmowidgets.client.users.UserLookupRequest
 import dev.alllexey.itmowidgets.client.users.UserLookupResponse
 import dev.alllexey.itmowidgets.client.users.UserPrivacySettings
 import dev.alllexey.itmowidgets.client.users.UsersApi
-import dev.alllexey.itmowidgets.client.users.WebLoginPreview
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -54,8 +53,7 @@ internal object UnreachableUsers : UsersApi {
         unreachable("updateMyPrivacySettings")
     override suspend fun updateIdTokenData(request: IdTokenRequest): Unit = unreachable("updateIdTokenData")
     override suspend fun myUserData(): UserData = unreachable("myUserData")
-    override suspend fun webLoginPreview(code: String): WebLoginPreview = unreachable("webLoginPreview")
-    override suspend fun approveWebLogin(challengeId: Uuid): Unit = unreachable("approveWebLogin")
+    override suspend fun updateConsent(request: ConsentRequest): Unit = unreachable("updateConsent")
     override suspend fun deleteMe(): Unit = unreachable("deleteMe")
 }
 

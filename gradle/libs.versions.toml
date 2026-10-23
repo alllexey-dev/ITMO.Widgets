@@ -32,6 +32,7 @@ ksoup = "0.2.6"
 materialKolor = "5.0.1"
 skie = "0.10.15"
 myItmoApiKmp = "2.3.0"
+androidxWebkit = "1.14.0"
 
 # Tests and screenshots (ADR 0022).
 robolectric = "4.17"
@@ -144,6 +145,7 @@ coil-test = { module = "io.coil-kt.coil3:coil-test", version.ref = "coil" }
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 # MyItmoApi 2.x KMP from Maven Central; MYITMOAPI_DIR swaps in a local checkout (settings.gradle.kts).
 my-itmo-api-kmp = { module = "dev.alllexey:my-itmo-api-kmp", version.ref = "myItmoApiKmp" }
+androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "androidxWebkit" }
 
 # Tests and screenshots
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

@@ -21,8 +21,6 @@ enum class SettingsPage(val title: UiText) {
     APPEARANCE(UiText.Res(SettingsStrings.settings_appearance_title)),
     /** «Разделы»: the settings of Сегодня, Расписание and Спорт. */
     SECTIONS(UiText.Res(SettingsStrings.settings_sections_title)),
-    /** The web sign-in and the connected devices, opened from «Сервер ITMO.Widgets». */
-    DEVICES(UiText.Res(SettingsStrings.connection_devices)),
     ABOUT(UiText.Res(SettingsStrings.settings_about_title)),
     /** Where the campus plans come from and the licences of the bundled libraries and fonts. */
     LICENSES(UiText.Res(SettingsStrings.settings_licenses_title));

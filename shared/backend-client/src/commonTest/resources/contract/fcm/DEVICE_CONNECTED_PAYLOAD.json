@@ -3,7 +3,7 @@
     "type": "DEVICE_CONNECTED_PAYLOAD",
     "payload": {
       "connectionId": "00000000-0000-4000-8000-000000000601",
-      "kind": "AGENT",
+      "client": "agent",
       "name": "nas",
       "connectedAt": "2026-10-05T09:00:00Z"
     }

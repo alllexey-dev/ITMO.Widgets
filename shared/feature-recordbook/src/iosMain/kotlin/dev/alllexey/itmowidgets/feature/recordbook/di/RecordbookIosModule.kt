@@ -12,7 +12,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebHost
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookieExport
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookieExportOnSignIn
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.KeychainItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebViewBarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.IosMarksNotifier

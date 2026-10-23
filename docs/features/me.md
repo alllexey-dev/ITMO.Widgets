@@ -5,7 +5,7 @@ Product behaviour: [Как это работает: аккаунт](../how-it-wo
 `feature/me` is the last bottom-bar tab, the Профиль hub: the own identity, entries to the social screens and the
 settings, the links and sign-out. It owns no data; `MeViewModel` (`:shared:feature-account`) combines the session,
 the custom-services opt-in and `SocialRepository`, and builds every text of the screen (`MeUiState`), so the Compose
-and SwiftUI views only lay it out. Social screens: [Social](social.md); web sign-in: [Web sign-in](web-login.md);
+and SwiftUI views only lay it out. Social screens: [Social](social.md); devices: [Connected clients](connections.md);
 settings: [Settings](../settings.md).
 
 ## Screen
@@ -16,7 +16,9 @@ settings: [Settings](../settings.md).
   user, else Backend's own profile; the study group line only from Backend's primary group; the ISU.
 - `Друзья` with the counts and the incoming requests as a badge. Without the connection
   (`MeFriendsSummary.Disabled`) a gate with `Подключить` stands in its place and opens «Сервер ITMO.Widgets».
-- `Виджеты` (the gallery), `Настройки` (every setting, the connection, privacy, notifications and devices included)
+- `Виджеты` (the gallery), `Устройства` (installs, connected clients and ITMO.ID sessions, with the count and a
+  warning pill, [connected clients](connections.md)), `Настройки` (every setting, the connection, privacy and
+  notifications included)
   and developer tools only in Android debug builds ([Debug tools](debug.md)).
 - Links: `Карта` (`AppRoutes.CampusMap()`, [campus map](map.md)), `My ITMO` ([My ITMO in the app](my-itmo-web.md); the
   demo refuses it), the Telegram channel and GitHub; then `Выйти`.

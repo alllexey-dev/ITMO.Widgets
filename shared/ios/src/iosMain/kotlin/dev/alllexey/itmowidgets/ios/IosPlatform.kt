@@ -3,7 +3,7 @@ package dev.alllexey.itmowidgets.ios
 import dev.alllexey.itmowidgets.core.platform.IosCoreHost
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebHost
-import dev.alllexey.itmowidgets.feature.weblogin.data.PairingHost
+import dev.alllexey.itmowidgets.feature.connections.data.PairingHost
 
 /**
  * What the Kotlin graph needs from the Swift app (UIKit, WidgetKit, WebKit), implemented in Swift and passed to

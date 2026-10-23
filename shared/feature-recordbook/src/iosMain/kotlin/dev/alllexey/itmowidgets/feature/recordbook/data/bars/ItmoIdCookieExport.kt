@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionState
 import kotlin.coroutines.resume

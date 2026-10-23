@@ -9,7 +9,7 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.ClientVersion
-import dev.alllexey.itmowidgets.client.pairing.PairingApi
+import dev.alllexey.itmowidgets.client.connections.ConnectionsApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.systemAppDispatchers
@@ -49,6 +49,9 @@ import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.core.storage.CrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
+import dev.alllexey.itmowidgets.core.storage.SignInLabelPreferences
+import dev.alllexey.itmowidgets.core.connections.SignInLabel
+import dev.alllexey.itmowidgets.core.text.APP_LANGUAGE
 import dev.alllexey.itmowidgets.core.storage.FileCrossProcessLock
 import dev.alllexey.itmowidgets.core.storage.BackendUploadPreferences
 import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
@@ -145,6 +148,7 @@ fun iosCoreModule(
     singleOf(::ServicesOptInPreferences)
     singleOf(::QrSettingsPreferences) { bind<HomePassVisibility>() }
     singleOf(::DeviceHintPreferences)
+    singleOf(::SignInLabelPreferences) { bind<SignInLabel>() }
     singleOf(::AppearancePreferences)
     singleOf(::BellPreferences)
     singleOf(::ScheduleCheckPreferences)
@@ -178,11 +182,12 @@ fun iosCoreModule(
             get<MyItmoClient>().tokens.asBackendTokenSource(),
             get(),
             clientVersion,
-            IosClientVersion.headerFromMainBundle(installIds::installId)
+            IosClientVersion.headerFromMainBundle(installIds::installId),
+            { APP_LANGUAGE },
         )
     }
     single<UsersApi> { get<BackendClient>().users }
-    single<PairingApi> { get<BackendClient>().pairing }
+    single<ConnectionsApi> { get<BackendClient>().connections }
 
     // An open set: each contribution is qualified.
     single<SessionDataCleaner>(named("keychain")) { KeychainSessionDataCleaner(get(), get()) }

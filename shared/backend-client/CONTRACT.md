@@ -29,7 +29,7 @@ push decoder needs no client instance.
 
 | Property | Package, API | Routes | Backend contract |
 |---|---|---|---|
-| `users` | `users`, `UsersApi` | `GET /api/users/{isu}`, `GET /api/users/{isu}/friends`, `POST /api/users/lookup`, `GET` and `PUT /api/users/me/privacy`, `PUT /api/users/me/id-token`, `GET /api/users/me/data`, `GET /api/users/me/web-login/{code}`, `POST /api/users/me/web-login/{challengeId}/approve`, `DELETE /api/users/me` | `B/docs/contracts/privacy.md`, `B/docs/contracts/friendships.md`, `B/docs/contracts/web.md` |
+| `users` | `users`, `UsersApi` | `GET /api/users/{isu}`, `GET /api/users/{isu}/friends`, `POST /api/users/lookup`, `GET` and `PUT /api/users/me/privacy`, `PUT /api/users/me/id-token`, `GET /api/users/me/data`, `PUT /api/users/me/consent`, `DELETE /api/users/me` | `B/docs/contracts/privacy.md`, `B/docs/contracts/friendships.md`, `B/docs/contracts/connections.md` |
 | `friends` | `friends`, `FriendsApi` | `GET /api/friends`, `GET /api/friends/requests/incoming` and `outgoing`, `POST /api/friends/{isu}/request`, `accept`, `reject` and `cancel`, `DELETE /api/friends/{isu}` | `B/docs/contracts/friendships.md` |
 | `sport` | `sport`, `SportApi` | `POST /api/sport/sign/sync`, `GET /api/sport/friends/sport-bookings`, `GET /api/sport/users/{isu}/bookings`, `GET /api/sport/auto-sign/limits`; under `/api/sport/free-sign` and `/api/sport/auto-sign` each: `GET entry/my`, `POST entry/create`, `entry/{id}/cancel`, `lesson/{lessonId}/cancel` and `lesson/{lessonId}/mark-satisfied`, `queue/current` (`GET` for free-sign, `POST` for auto-sign); under `/api/sport/sections`: `GET my`, `GET slots`, `POST create`, `{id}/occurrence` and `{id}/stop` | `B/docs/contracts/sport-automation.md`, `B/docs/contracts/privacy.md` |
 | `links` | `links`, `SubjectLinksApi` | `GET /api/subjects/{subjectId}/links`, `PUT /api/subjects/{subjectId}/links/pin`, `PUT` and `DELETE /api/links/{id}`, `PUT /api/links/{id}/vote`, `POST /api/links/{id}/report`, `GET /api/users/me/restrictions` | `B/docs/contracts/subject-links.md` |
@@ -37,8 +37,8 @@ push decoder needs no client instance.
 | `device` | `device`, `DeviceApi` | `POST /api/device/register-device`, `DELETE /api/device/current` with a JSON body | `B/docs/contracts/notifications.md` |
 | `app` | `app`, `AppApi` | `GET /api/app/version-info` with the optional `platform` query | `B/docs/contracts/app-version.md` |
 | `schedule` | `schedule`, `ScheduleApi` | `POST /api/schedule/lessons/sync`, `GET /api/schedule/lessons/user/{isu}`, `GET /api/schedule/lessons/{pairId}/friends` | `B/docs/contracts/schedule.md`, `B/docs/contracts/privacy.md` |
-| `pairing` | `pairing`, `PairingApi` | `POST /api/users/me/pair/{code}/open`, `POST /api/users/me/pair/{challengeId}/approve` and `reject`, `GET /api/users/me/connections`, `POST /api/users/me/connections/{id}/revoke` | `B/docs/contracts/pairing.md` |
-| none | `push`, `FcmDecoder` | FCM data messages `FRIENDSHIP_EVENT_PAYLOAD`, `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD`, `DEVICE_CONNECTED_PAYLOAD`, `SPORT_AGENT_BOOKED_PAYLOAD` | `B/docs/contracts/notifications.md`, `B/docs/contracts/pairing.md`, `B/docs/contracts/agent.md` |
+| `connections` | `connections`, `ConnectionsApi` | `POST /api/users/me/pair/{code}/open`, `POST /api/users/me/pair/{challengeId}/approve`, `GET /api/users/me/devices`, `PUT /api/users/me/connections/{id}/scopes`, `POST /api/users/me/connections/{id}/revoke` and `itmo-ended`, `POST /api/users/me/installs/{instanceId}/sign-out` | `B/docs/contracts/connections.md` |
+| none | `push`, `FcmDecoder` | FCM data messages `FRIENDSHIP_EVENT_PAYLOAD`, `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD`, `DEVICE_CONNECTED_PAYLOAD`, `SPORT_AGENT_BOOKED_PAYLOAD` | `B/docs/contracts/notifications.md`, `B/docs/contracts/connections.md` |
 
 Wire types that two areas share (`UserProfile`, `UserData`, the vote and report requests) live in `common`; the
 transport (`http`), the `Json` and its serializers (`json`) and `BackendException` (`error`) are shared by every
@@ -78,10 +78,10 @@ serializer in the `json` package (13 Q7 (b)):
 |---|---|---|---|
 | Strict | `StrictEnumSerializer` | fails decoding | `RelationshipState`, `SharingVisibility`, `LinkVisibility`, `FriendshipEvent`, the request-only enums (`ReportReason`) |
 | Most restrictive | `FallbackEnumSerializer` | decodes as `ALL` | `RestrictionCapability` |
-| Display | `UnknownTolerantEnumSerializer` | decodes as `UNKNOWN` | `QueueEntryStatus`, `SportSectionOccurrenceState`, `LinkCategory`, `SubjectLinkStatus`, `TeacherReviewKind`, `TeacherReviewStatus`, `SummaryLevel`, `SummaryConfidence`, `SummaryScaleKind`, `SummaryScaleValue`, `PairingKind`, `ConnectionKind`, `AgentScope` |
+| Display | `UnknownTolerantEnumSerializer` | decodes as `UNKNOWN` | `QueueEntryStatus`, `SportSectionOccurrenceState`, `LinkCategory`, `SubjectLinkStatus`, `TeacherReviewKind`, `TeacherReviewStatus`, `SummaryLevel`, `SummaryConfidence`, `SummaryScaleKind`, `SummaryScaleValue`, `PairingKind`, `ConnectionClient`, `ConnectionScope`, `ItmoStatus` |
 
-`AgentScope` is the one enum whose wire values are no Kotlin names (`sport`, `friends:read`, `schedule:write`): its
-serializer overrides `wireName`. The sport `type` discriminator is strict as well. `UNKNOWN` is decode-only: encoding it fails, and inside a request
+`ConnectionClient`, `ConnectionScope` and `ItmoStatus` have wire values that are no Kotlin names (`agent`,
+`friends:read`, `ok`): their serializers override `wireName`. The sport `type` discriminator is strict as well. `UNKNOWN` is decode-only: encoding it fails, and inside a request
 that is a `BackendException.Contract` before anything is sent, so an app never offers to save a value it could not
 read (a link whose category is `UNKNOWN`). Consumers map `UNKNOWN` explicitly.
 
@@ -113,7 +113,7 @@ internal. The status is mapped before the body is decoded, so an HTML 502 or an 
 | A 2xx answer that fails decoding or an invariant, `success=false`, no `data` for a value call, or a request body that cannot be encoded | `Contract(cause)` |
 
 `code` is Backend's `error.code` (`restricted`, `permission_denied`, `access_denied`, `not_found`,
-`invalid_request`, `unauthorized`, `csrf`, `recent_sign_in_required`) or `null` when the error body is empty or not Backend's envelope. The
+`invalid_request`, `unauthorized`, `csrf`, `recent_sign_in_required`, `not_enrolled`, `client_session`) or `null` when the error body is empty or not Backend's envelope. The
 server `message` is never kept: user-visible text belongs to the apps. Tokens, headers and bodies are never logged.
 
 ## Request headers
@@ -127,6 +127,7 @@ send them.
 | `Authorization` | `Bearer <access token>`, absent without a token | `AccessTokenSource`, asked per request |
 | `X-App-Version` | `<versionName> (<build>); <platform>; <distribution>`, absent when `version` is `null` | `ClientVersion` |
 | `X-Client` | `kind=...; version=...; build=...; channel=...; source=...; commit=...; base=...; os=...; install=...`, absent when `client` is `null` | `ClientHeader` |
+| `Accept-Language` | the app's UI language (`ru`), so Backend's texts (scope titles) follow it; absent when `language` is `null` or blank | `language`, asked per request |
 
 `X-App-Version` names the build only, in printable ASCII: Android sends
 `<versionName> (<versionCode>); android; github|play` (`NetworkModule.provideClientVersion`), iOS
@@ -233,9 +234,8 @@ These Backend operations have no client function, on purpose; `NotMirrored` hold
 |---|---|
 | Every route under `/api/moderation` | ADR 0026: the moderation API is not ported. No Kotlin consumer; moderators work in Web, which uses `/api/admin` |
 | Every route under `/api/admin` | Web only: the admin pages |
-| Every route under `/api/web` | Web only: the browser sign-in and its session cookie; the apps approve a sign-in through `/api/users/me/web-login` |
-| Every route under `/api/pair` | The target device's side of pairing (create, poll); the apps open and approve under `/api/users/me/pair` |
-| Every route under `/api/agent` | The self-hosted agent's routes and the manual agent token; no app screen uses them yet |
+| Every route under `/api/pair` | The client's side of pairing (create, claim); the apps open and approve under `/api/users/me/pair` |
+| Every route under `/api/client` | The connected clients' own routes (agent, MCP, web); the app's bearer is refused there |
 | `GET /api/app/version` | The latest Android version as a bare string, kept for 2.0.x; the apps read `/api/app/version-info` |
 | `GET /api/users/me/roles` | Web only: the apps have no role-dependent screen |
 | `POST /api/sport/free-sign/entry/{id}/mark-satisfied` and its auto-sign twin | By entry ID, kept for released clients; the apps mark entries satisfied by lesson |

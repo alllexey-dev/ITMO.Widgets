@@ -99,7 +99,54 @@
       }
     ],
     "lastSeen": "2026-10-05T07:30:00Z",
-    "agentAccess": true
+    "agentAccess": true,
+    "clients": [
+      {
+        "kind": "ANDROID",
+        "name": null,
+        "version": "2.3.0",
+        "build": "20300",
+        "channel": "play",
+        "source": "alllexey-dev/ITMO.Widgets",
+        "commit": "abc1234",
+        "base": null,
+        "custom": false,
+        "os": "36",
+        "browser": null,
+        "firstSeenAt": "2026-09-01T12:00:00Z",
+        "lastSeenAt": "2026-10-05T07:30:00Z"
+      },
+      {
+        "kind": "AGENT",
+        "name": "Synthetic agent",
+        "version": "1.4.0",
+        "build": null,
+        "channel": "custom",
+        "source": "local",
+        "commit": null,
+        "base": null,
+        "custom": true,
+        "os": "linux-arm64",
+        "browser": null,
+        "firstSeenAt": "2026-09-10T12:00:00Z",
+        "lastSeenAt": "2026-10-05T07:00:00Z"
+      },
+      {
+        "kind": "WEB",
+        "name": null,
+        "version": "1a2b3c4",
+        "build": null,
+        "channel": "web",
+        "source": null,
+        "commit": "1a2b3c4",
+        "base": null,
+        "custom": false,
+        "os": null,
+        "browser": "chrome/131",
+        "firstSeenAt": "2026-10-01T12:00:00Z",
+        "lastSeenAt": "2026-10-04T20:00:00Z"
+      }
+    ]
   },
   "error": null
 }

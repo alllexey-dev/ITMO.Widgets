@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.social.FriendRequests
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
+import dev.alllexey.itmowidgets.core.testing.FakeDevicesOverview
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -40,7 +41,7 @@ class MeViewModelTest {
         val user = CurrentUser(123456, "Иванов Иван", null)
         val repository = FakeSessionRepository(SessionState.SignedIn(user))
 
-        val viewModel = MeViewModel(repository, FakeSocialRepository(), FakeCustomServicesRepository(true))
+        val viewModel = MeViewModel(repository, FakeSocialRepository(), FakeCustomServicesRepository(true), FakeDevicesOverview())
         advanceUntilIdle()
 
         val header = viewModel.uiState.value.header
@@ -53,7 +54,7 @@ class MeViewModelTest {
     @Test
     fun theHeaderFallsBackToBackendAndTakesTheGroupFromIt() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { currentUser.value = friendProfile(9).user }
-        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true))
+        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true), FakeDevicesOverview())
         advanceUntilIdle()
 
         val header = viewModel.uiState.value.header
@@ -89,7 +90,7 @@ class MeViewModelTest {
                 currentUser.value = friendProfile(9).user
             }
 
-            val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true))
+            val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true), FakeDevicesOverview())
             advanceUntilIdle()
 
             assertEquals(MeFriendsSummary.Content(friends = 2, incomingRequests = 1), viewModel.uiState.value.friends)
@@ -100,7 +101,7 @@ class MeViewModelTest {
     @Test
     fun disabledServicesAndErrorsAreReportedAsSuch() = runTest(main.dispatcher) {
         val social = FakeSocialRepository().apply { friends.value = LoadState.Disabled }
-        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(false))
+        val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(false), FakeDevicesOverview())
         advanceUntilIdle()
         assertEquals(MeFriendsSummary.Disabled, viewModel.uiState.value.friends)
 
@@ -113,7 +114,7 @@ class MeViewModelTest {
     fun reEnablingServicesRefreshesTheSocialData() = runTest(main.dispatcher) {
         val social = FakeSocialRepository()
         val services = FakeCustomServicesRepository(false)
-        MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, services)
+        MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, services, FakeDevicesOverview())
         advanceUntilIdle()
         assertEquals(1, social.refreshes)
 
@@ -127,7 +128,7 @@ class MeViewModelTest {
     fun aSilentRefreshOnReturnJoinsTheOneInFlightAndALaterOneReachesTheRepository() =
         runTest(main.dispatcher) {
             val social = FakeSocialRepository()
-            val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true))
+            val viewModel = MeViewModel(FakeSessionRepository(SessionState.SignedIn(null)), social, FakeCustomServicesRepository(true), FakeDevicesOverview())
 
             viewModel.refresh(RefreshMode.Silent)
             advanceUntilIdle()
@@ -141,7 +142,7 @@ class MeViewModelTest {
     @Test
     fun delegatesSignOutOnce() = runTest(main.dispatcher) {
         val repository = FakeSessionRepository(SessionState.SignedIn(null))
-        val viewModel = MeViewModel(repository, FakeSocialRepository(), FakeCustomServicesRepository(true))
+        val viewModel = MeViewModel(repository, FakeSocialRepository(), FakeCustomServicesRepository(true), FakeDevicesOverview())
 
         viewModel.signOut()
         viewModel.signOut()

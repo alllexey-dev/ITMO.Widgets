@@ -2,8 +2,8 @@ package dev.alllexey.itmowidgets.di
 
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.web.data.WebSessionDataCleaner
-import dev.alllexey.itmowidgets.feature.weblogin.data.TinkHpkeSender
-import dev.alllexey.itmowidgets.feature.weblogin.domain.HpkeSender
+import dev.alllexey.itmowidgets.feature.connections.data.TinkHpkeSender
+import dev.alllexey.itmowidgets.feature.connections.domain.HpkeSender
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 

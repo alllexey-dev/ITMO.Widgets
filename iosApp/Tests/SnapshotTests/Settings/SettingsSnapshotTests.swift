@@ -30,11 +30,6 @@ final class SettingsSnapshotTests: XCTestCase {
         assertPage(state, named: "sections-calendar", height: 1180, ax1Height: 1900)
     }
 
-    func testDevices() {
-        let state = SettingsFixtures.page(.devices, SettingsFixtures.pageState(notificationsGranted: true))
-        assertPage(state, named: "devices", height: 360, ax1Height: 640)
-    }
-
     func testAbout() {
         let state = SettingsFixtures.page(.about, SettingsFixtures.pageState(notificationsGranted: true))
         assertPage(state, named: "about", height: 760, ax1Height: 1500)

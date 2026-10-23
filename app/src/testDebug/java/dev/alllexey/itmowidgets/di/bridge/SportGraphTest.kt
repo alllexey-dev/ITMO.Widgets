@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.feature.sport.data.debug.SportLessonTemplateProv
 import dev.alllexey.itmowidgets.feature.sport.data.bell.SportBellSource
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportAgentBookedPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushHandler
-import dev.alllexey.itmowidgets.feature.weblogin.data.push.DeviceConnectedPushHandler
+import dev.alllexey.itmowidgets.feature.connections.data.push.DeviceConnectedPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportBookingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.data.repository.SportDataRepositoryImpl
 import dev.alllexey.itmowidgets.feature.sport.di.sportBellQualifier

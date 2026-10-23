@@ -18,7 +18,7 @@ import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.core.debug.BarsSessionProbe
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
 import dev.alllexey.itmowidgets.di.KoinStarter
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
 import io.ktor.client.engine.HttpClientEngine
 import java.util.concurrent.TimeUnit

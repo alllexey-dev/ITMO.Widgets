@@ -2,6 +2,8 @@ package dev.alllexey.itmowidgets.client
 
 import dev.alllexey.itmowidgets.client.app.AppApi
 import dev.alllexey.itmowidgets.client.app.KtorAppApi
+import dev.alllexey.itmowidgets.client.connections.ConnectionsApi
+import dev.alllexey.itmowidgets.client.connections.KtorConnectionsApi
 import dev.alllexey.itmowidgets.client.device.DeviceApi
 import dev.alllexey.itmowidgets.client.device.KtorDeviceApi
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
@@ -9,8 +11,6 @@ import dev.alllexey.itmowidgets.client.friends.KtorFriendsApi
 import dev.alllexey.itmowidgets.client.http.BackendHttp
 import dev.alllexey.itmowidgets.client.links.KtorSubjectLinksApi
 import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
-import dev.alllexey.itmowidgets.client.pairing.KtorPairingApi
-import dev.alllexey.itmowidgets.client.pairing.PairingApi
 import dev.alllexey.itmowidgets.client.reviews.KtorTeacherReviewsApi
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.client.schedule.KtorScheduleApi
@@ -28,7 +28,8 @@ import io.ktor.client.engine.HttpClientEngine
  * paths are absolute, so a path in [baseUrl] is replaced, as in Retrofit. [tokens] is asked once per request.
  * [engine] belongs to the caller (OkHttp on Android, Darwin on iOS) and is not closed by the client. [version] is sent
  * with every request as `X-App-Version` ([ClientVersion]) and [client] as `X-Client` ([ClientHeader], ADR 0034);
- * `null` (tests, the default) sends no such header.
+ * `null` (tests, the default) sends no such header. [language] is asked per request for the app's UI language (`ru`),
+ * sent as `Accept-Language` so that Backend's texts (scope titles) follow it; `null` or a blank answer sends none.
  *
  * Every call fails only with [dev.alllexey.itmowidgets.client.error.BackendException] or a cancellation. The client
  * checks neither `DemoMode` nor the custom-services opt-in: its holders do.
@@ -39,8 +40,9 @@ class BackendClient(
     engine: HttpClientEngine,
     version: ClientVersion? = null,
     client: ClientHeader? = null,
+    language: (() -> String?)? = null,
 ) {
-    private val http = BackendHttp(baseUrl, tokens, engine, version, client)
+    private val http = BackendHttp(baseUrl, tokens, engine, version, client, language)
 
     val users: UsersApi = KtorUsersApi(http)
     val friends: FriendsApi = KtorFriendsApi(http)
@@ -50,5 +52,5 @@ class BackendClient(
     val device: DeviceApi = KtorDeviceApi(http)
     val app: AppApi = KtorAppApi(http)
     val schedule: ScheduleApi = KtorScheduleApi(http)
-    val pairing: PairingApi = KtorPairingApi(http)
+    val connections: ConnectionsApi = KtorConnectionsApi(http)
 }

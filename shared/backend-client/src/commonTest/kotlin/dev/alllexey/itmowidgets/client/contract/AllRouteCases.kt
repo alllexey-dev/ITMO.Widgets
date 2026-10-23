@@ -1,10 +1,10 @@
 package dev.alllexey.itmowidgets.client.contract
 
 import dev.alllexey.itmowidgets.client.app.AppRouteCases
+import dev.alllexey.itmowidgets.client.connections.ConnectionsRouteCases
 import dev.alllexey.itmowidgets.client.device.DeviceRouteCases
 import dev.alllexey.itmowidgets.client.friends.FriendsRouteCases
 import dev.alllexey.itmowidgets.client.links.SubjectLinksRouteCases
-import dev.alllexey.itmowidgets.client.pairing.PairingRouteCases
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsRouteCases
 import dev.alllexey.itmowidgets.client.schedule.ScheduleRouteCases
 import dev.alllexey.itmowidgets.client.sport.SportRouteCases
@@ -21,5 +21,5 @@ object AllRouteCases {
         SportRouteCases.all +
         DeviceRouteCases.all +
         AppRouteCases.all +
-        PairingRouteCases.all
+        ConnectionsRouteCases.all
 }

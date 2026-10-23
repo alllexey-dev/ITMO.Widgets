@@ -139,10 +139,10 @@ ITMO.Widgets (`ConnectionViewModel`):
   the device; turning it on uploads them as private links on the next refresh
   of a subject ([resources](features/resources.md)). Every change redraws the
   widgets. In the demo the switch is disabled.
-- Connected: `Кто видит` ([below](#privacy)), then `Устройства`
-  (`SettingsPage.DEVICES`) with `Подключить устройство`
-  ([web sign-in](features/web-login.md)) and `Подключённые устройства`.
-  Not connected: `Что даёт подключение`.
+- Connected: `Кто видит` ([below](#privacy)); not connected: `Что даёт
+  подключение`. Devices and pairing live in Профиль → `Устройства`
+  ([connected clients](features/connections.md)). Turning the switch on sends
+  `PUT /api/users/me/consent` first, which enrolls the account on Backend.
 - `Что хранит сервер` opens a sheet (`ServicesStoredData`) that mirrors the
   Backend tables, with a link to the server code.
 - `Удалить аккаунт ITMO.Widgets` is shown with the switch off too, since an

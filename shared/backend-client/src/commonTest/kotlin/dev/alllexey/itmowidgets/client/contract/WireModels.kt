@@ -2,6 +2,24 @@ package dev.alllexey.itmowidgets.client.contract
 
 import dev.alllexey.itmowidgets.client.app.AppVersionInfo
 import dev.alllexey.itmowidgets.client.common.GroupData
+import dev.alllexey.itmowidgets.client.connections.ApprovePairingRequest
+import dev.alllexey.itmowidgets.client.connections.ApprovedPairing
+import dev.alllexey.itmowidgets.client.connections.ConnectionClient
+import dev.alllexey.itmowidgets.client.connections.ConnectionClientSerializer
+import dev.alllexey.itmowidgets.client.connections.ConnectionInfo
+import dev.alllexey.itmowidgets.client.connections.ConnectionScope
+import dev.alllexey.itmowidgets.client.connections.ConnectionScopeSerializer
+import dev.alllexey.itmowidgets.client.connections.InstallInfo
+import dev.alllexey.itmowidgets.client.connections.ItmoSession
+import dev.alllexey.itmowidgets.client.connections.ItmoStatus
+import dev.alllexey.itmowidgets.client.connections.ItmoStatusSerializer
+import dev.alllexey.itmowidgets.client.connections.PairingKind
+import dev.alllexey.itmowidgets.client.connections.PairingKindSerializer
+import dev.alllexey.itmowidgets.client.connections.PairingPreview
+import dev.alllexey.itmowidgets.client.connections.ScopeGrant
+import dev.alllexey.itmowidgets.client.connections.ScopeInfo
+import dev.alllexey.itmowidgets.client.connections.UpdateScopesRequest
+import dev.alllexey.itmowidgets.client.connections.UserDevices
 import dev.alllexey.itmowidgets.client.common.ModerationReportRequest
 import dev.alllexey.itmowidgets.client.common.RelationshipState
 import dev.alllexey.itmowidgets.client.common.RelationshipStateSerializer
@@ -30,15 +48,6 @@ import dev.alllexey.itmowidgets.client.links.SubjectLinkStatus
 import dev.alllexey.itmowidgets.client.links.SubjectLinkStatusSerializer
 import dev.alllexey.itmowidgets.client.links.SubjectLinksResponse
 import dev.alllexey.itmowidgets.client.links.UserRestriction
-import dev.alllexey.itmowidgets.client.pairing.AgentScope
-import dev.alllexey.itmowidgets.client.pairing.AgentScopeSerializer
-import dev.alllexey.itmowidgets.client.pairing.ApprovePairingRequest
-import dev.alllexey.itmowidgets.client.pairing.ConnectionInfo
-import dev.alllexey.itmowidgets.client.pairing.ConnectionKind
-import dev.alllexey.itmowidgets.client.pairing.ConnectionKindSerializer
-import dev.alllexey.itmowidgets.client.pairing.PairingKind
-import dev.alllexey.itmowidgets.client.pairing.PairingKindSerializer
-import dev.alllexey.itmowidgets.client.pairing.PairingPreview
 import dev.alllexey.itmowidgets.client.push.FriendshipEvent
 import dev.alllexey.itmowidgets.client.push.FriendshipEventSerializer
 import dev.alllexey.itmowidgets.client.reviews.OwnTeacherReview
@@ -84,13 +93,13 @@ import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportSectionRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportSectionSlot
 import dev.alllexey.itmowidgets.client.sport.model.UserSportBookingsResponse
+import dev.alllexey.itmowidgets.client.users.ConsentRequest
 import dev.alllexey.itmowidgets.client.users.IdTokenRequest
 import dev.alllexey.itmowidgets.client.users.SharingVisibility
 import dev.alllexey.itmowidgets.client.users.SharingVisibilitySerializer
 import dev.alllexey.itmowidgets.client.users.UserLookupRequest
 import dev.alllexey.itmowidgets.client.users.UserLookupResponse
 import dev.alllexey.itmowidgets.client.users.UserPrivacySettings
-import dev.alllexey.itmowidgets.client.users.WebLoginPreview
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import kotlin.enums.EnumEntries
@@ -123,10 +132,17 @@ object WireModels {
         model<UserLookupRequest>(),
         model<UserLookupResponse>(),
         model<UserPrivacySettings>(),
-        model<WebLoginPreview>(),
+        model<ConsentRequest>(),
         model<PairingPreview>(),
         model<ApprovePairingRequest>(),
+        model<ApprovedPairing>(),
+        model<ItmoSession>(),
+        model<ScopeInfo>(),
+        model<ScopeGrant>(),
         model<ConnectionInfo>(),
+        model<InstallInfo>(),
+        model<UserDevices>(),
+        model<UpdateScopesRequest>(),
         model<ResourceVoteRequest>(),
         model<ModerationReportRequest>(),
         model<SubjectLink>(),
@@ -183,8 +199,9 @@ object WireModels {
         wireEnum(SummaryScaleKindSerializer, SummaryScaleKind.entries),
         wireEnum(SummaryScaleValueSerializer, SummaryScaleValue.entries),
         wireEnum(PairingKindSerializer, PairingKind.entries),
-        wireEnum(ConnectionKindSerializer, ConnectionKind.entries),
-        wireEnum(AgentScopeSerializer, AgentScope.entries),
+        wireEnum(ConnectionClientSerializer, ConnectionClient.entries),
+        wireEnum(ConnectionScopeSerializer, ConnectionScope.entries),
+        wireEnum(ItmoStatusSerializer, ItmoStatus.entries),
     )
 
     private inline fun <reified T : Any> model(): WireModel = WireModel(T::class.simpleName!!, serializer<T>())

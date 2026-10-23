@@ -19,14 +19,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 57 key names
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 59 key names
  * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The four
  * `push_registered_*` keys are written only by iOS, whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 57 key names, each declared once`() {
+    fun `the app preferences keep their 59 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules.
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -37,7 +37,7 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(57, declared.map { it.name }.toSet().size)
+        assertEquals(59, declared.map { it.name }.toSet().size)
     }
 
     @Test
@@ -137,6 +137,9 @@ class PreferenceKeyParityTest {
             Key("PushCategoryPreferences.kt", "boolean", "sport_notifications_enabled"),
             Key("PushCategoryPreferences.kt", "boolean", "friends_notifications_enabled"),
             Key("PushCategoryPreferences.kt", "boolean", "connections_notifications_enabled"),
+            // «Устройства»: the sign-in label switch and the clients already reminded of their ending sign-in.
+            Key("SignInLabelPreferences.kt", "boolean", "sign_in_browser_like"),
+            Key("SignInLabelPreferences.kt", "stringSet", "connection_reminders"),
             Key("AppearancePreferences.kt", "string", "app_accent_color"),
             Key("AppearancePreferences.kt", "int", "app_accent_custom"),
             Key("AppearancePreferences.kt", "string", "app_theme_style"),

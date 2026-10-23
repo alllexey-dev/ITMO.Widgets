@@ -2,6 +2,7 @@
 
 **Amended by [0035](0035-ios-without-compose.md):** CMP `Res` serves Compose on Android only; iOS resolves
 `UiText` from the `.xcstrings` tables, Kotlin included.
+**Amended by [0036](0036-backend-scope-texts.md):** the scope texts of connected clients come from Backend.
 
 **Decision (2026-10-03).** Strings have one source, Android-syntax `strings_<owner>.xml` files in Russian, generated outward:
 - **Source.** `strings_<owner>.xml` in the owning module's `src/commonMain/composeResources/values/`;

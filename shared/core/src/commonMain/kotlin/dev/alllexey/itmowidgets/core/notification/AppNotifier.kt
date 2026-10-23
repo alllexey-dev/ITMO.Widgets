@@ -12,8 +12,10 @@ sealed interface NotificationDestination {
     data class RecordbookSubject(val args: RecordbookSubjectArgs) : NotificationDestination
     /** The recordbook with the BARS sign-in above it. */
     data object BarsLogin : NotificationDestination
-    /** «Подключённые устройства». */
-    data object Connections : NotificationDestination
+    /** «Устройства». */
+    data object Devices : NotificationDestination
+    /** One connected client of «Устройства». */
+    data class Connection(val id: String) : NotificationDestination
 }
 
 data class AppNotification(

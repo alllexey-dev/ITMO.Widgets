@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "data": {
+    "isu": 100001,
+    "connection": {
+      "id": "00000000-0000-4000-8000-000000000603",
+      "client": "web",
+      "name": "Chrome, macOS",
+      "version": "abc123",
+      "platform": null,
+      "scopes": [
+        {
+          "scope": {
+            "id": "user",
+            "title": "Всё, что видно в приложении",
+            "description": "Кроме входа в ИТМО"
+          },
+          "granted": true
+        }
+      ],
+      "createdAt": "2026-10-02T09:00:00Z",
+      "approvedAt": "2026-10-04T09:00:00Z",
+      "lastUsedAt": "2026-10-05T08:30:00Z",
+      "live": false,
+      "itmo": null,
+      "itmoStatus": "none",
+      "revokedAt": null
+    }
+  },
+  "error": null
+}

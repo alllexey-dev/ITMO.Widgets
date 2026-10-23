@@ -6,6 +6,7 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.connections.ConnectionsApi
 import dev.alllexey.itmowidgets.client.BuildIdentity
 import dev.alllexey.itmowidgets.client.ClientHeader
 import dev.alllexey.itmowidgets.client.ClientVersion
@@ -13,7 +14,6 @@ import dev.alllexey.itmowidgets.client.app.AppApi
 import dev.alllexey.itmowidgets.client.device.DeviceApi
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
-import dev.alllexey.itmowidgets.client.pairing.PairingApi
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.client.sport.SportApi
@@ -22,6 +22,7 @@ import dev.alllexey.itmowidgets.core.network.asBackendTokenSource
 import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.session.RefreshRejections
 import dev.alllexey.itmowidgets.core.storage.InstallIdPreferences
+import dev.alllexey.itmowidgets.core.text.APP_LANGUAGE
 import io.ktor.client.engine.HttpClientEngine
 import org.koin.dsl.module
 
@@ -51,11 +52,12 @@ val networkModule = module {
             tokens = get<MyItmoClient>().tokens.asBackendTokenSource(),
             engine = get(),
             version = get(),
-            client = get()
+            client = get(),
+            language = { APP_LANGUAGE },
         )
     }
     single<UsersApi> { get<BackendClient>().users }
-    single<PairingApi> { get<BackendClient>().pairing }
+    single<ConnectionsApi> { get<BackendClient>().connections }
     single<FriendsApi> { get<BackendClient>().friends }
     single<SportApi> { get<BackendClient>().sport }
     single<SubjectLinksApi> { get<BackendClient>().links }

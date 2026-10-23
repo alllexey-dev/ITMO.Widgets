@@ -4,6 +4,7 @@ import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmoapi.bars.auth.BarsSessionCode
 import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import kotlinx.coroutines.CancellationException
 
 /** Result of renewing the BARS session without a WebView. */

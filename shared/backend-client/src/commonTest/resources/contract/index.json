@@ -352,6 +352,14 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "adminSystem_clients",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/system/clients",
+    "file": "http/admin/adminSystem_clients.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "adminSystem_credentials",
     "kind": "http",
     "method": "GET",
@@ -424,30 +432,6 @@
     "minCore": "1.8.0"
   },
   {
-    "id": "agentAccess",
-    "kind": "http",
-    "method": "GET",
-    "path": "/api/agent/access",
-    "file": "http/agent/agentAccess.json",
-    "minCore": "1.8.0"
-  },
-  {
-    "id": "agentEvents",
-    "kind": "http",
-    "method": "GET",
-    "path": "/api/agent/events",
-    "file": "http/agent/agentEvents.json",
-    "minCore": "1.8.0"
-  },
-  {
-    "id": "agentMe",
-    "kind": "http",
-    "method": "GET",
-    "path": "/api/agent/me",
-    "file": "http/agent/agentMe.json",
-    "minCore": "1.8.0"
-  },
-  {
     "id": "appVersionInfo",
     "kind": "http",
     "method": "GET",
@@ -468,16 +452,8 @@
     "kind": "http",
     "method": "POST",
     "path": "/api/users/me/pair/{challengeId}/approve",
-    "file": "http/pairing/approvePairing.json",
+    "file": "http/connections/approvePairing.json",
     "minCore": "1.8.0"
-  },
-  {
-    "id": "approveWebLogin",
-    "kind": "http",
-    "method": "POST",
-    "path": "/api/users/me/web-login/{challengeId}/approve",
-    "file": "http/users/approveWebLogin.json",
-    "minCore": "1.7.0"
   },
   {
     "id": "cancelFriendRequest",
@@ -520,35 +496,51 @@
     "minCore": "1.2.0"
   },
   {
-    "id": "connections",
-    "kind": "http",
-    "method": "GET",
-    "path": "/api/users/me/connections",
-    "file": "http/pairing/connections.json",
-    "minCore": "1.8.0"
-  },
-  {
-    "id": "createAgentToken",
+    "id": "claimPairChallenge",
     "kind": "http",
     "method": "POST",
-    "path": "/api/agent/tokens",
-    "file": "http/agent/createAgentToken.json",
+    "path": "/api/pair/challenges/{challengeId}/claim",
+    "file": "http/connections/claimPairChallenge.json",
     "minCore": "1.8.0"
   },
   {
-    "id": "createPairing",
+    "id": "clientEvents",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/client/events",
+    "file": "http/client/clientEvents.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "clientMe",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/client/me",
+    "file": "http/client/clientMe.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "client_session",
+    "kind": "error",
+    "method": null,
+    "path": null,
+    "file": "errors/client_session.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "connectionItmoEnded",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/users/me/connections/{id}/itmo-ended",
+    "file": "http/connections/connectionItmoEnded.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "createPairChallenge",
     "kind": "http",
     "method": "POST",
     "path": "/api/pair/challenges",
-    "file": "http/pairing/createPairing.json",
-    "minCore": "1.8.0"
-  },
-  {
-    "id": "createSessionPairing",
-    "kind": "http",
-    "method": "POST",
-    "path": "/api/agent/pair/session",
-    "file": "http/pairing/createSessionPairing.json",
+    "file": "http/connections/createPairChallenge.json",
     "minCore": "1.8.0"
   },
   {
@@ -776,11 +768,19 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "not_enrolled",
+    "kind": "error",
+    "method": null,
+    "path": null,
+    "file": "errors/not_enrolled.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "openPairing",
     "kind": "http",
     "method": "POST",
     "path": "/api/users/me/pair/{code}/open",
-    "file": "http/pairing/openPairing.json",
+    "file": "http/connections/openPairing.json",
     "minCore": "1.8.0"
   },
   {
@@ -798,14 +798,6 @@
     "path": "/api/subjects/{subjectId}/links/pin",
     "file": "http/links/pinSubjectLink.json",
     "minCore": "1.7.0"
-  },
-  {
-    "id": "pollPairing",
-    "kind": "http",
-    "method": "GET",
-    "path": "/api/pair/challenges/{id}",
-    "file": "http/pairing/pollPairing.json",
-    "minCore": "1.8.0"
   },
   {
     "id": "reauth_required",
@@ -840,20 +832,20 @@
     "minCore": "1.2.0"
   },
   {
-    "id": "rejectPairing",
-    "kind": "http",
-    "method": "POST",
-    "path": "/api/users/me/pair/{challengeId}/reject",
-    "file": "http/pairing/rejectPairing.json",
-    "minCore": "1.8.0"
-  },
-  {
     "id": "removeFriend",
     "kind": "http",
     "method": "DELETE",
     "path": "/api/friends/{isu}",
     "file": "http/friends/removeFriend.json",
     "minCore": "1.2.0"
+  },
+  {
+    "id": "renewPairing",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/client/pair/renew",
+    "file": "http/client/renewPairing.json",
+    "minCore": "1.8.0"
   },
   {
     "id": "reportSubjectLink",
@@ -872,11 +864,11 @@
     "minCore": "1.7.0"
   },
   {
-    "id": "revokeAgentSelf",
+    "id": "revokeClientSelf",
     "kind": "http",
     "method": "DELETE",
-    "path": "/api/agent/self",
-    "file": "http/agent/revokeAgentSelf.json",
+    "path": "/api/client/self",
+    "file": "http/client/revokeClientSelf.json",
     "minCore": "1.8.0"
   },
   {
@@ -884,7 +876,7 @@
     "kind": "http",
     "method": "POST",
     "path": "/api/users/me/connections/{id}/revoke",
-    "file": "http/pairing/revokeConnection.json",
+    "file": "http/connections/revokeConnection.json",
     "minCore": "1.8.0"
   },
   {
@@ -918,6 +910,14 @@
     "path": "/api/friends/{isu}/request",
     "file": "http/friends/sendFriendRequest.json",
     "minCore": "1.2.0"
+  },
+  {
+    "id": "signOutInstall",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/users/me/installs/{instanceId}/sign-out",
+    "file": "http/connections/signOutInstall.json",
+    "minCore": "1.8.0"
   },
   {
     "id": "sportAutoSignLimits",
@@ -1000,6 +1000,30 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "updateClientStatus",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/client/status",
+    "file": "http/client/updateClientStatus.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "updateConnectionScopes",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/users/me/connections/{id}/scopes",
+    "file": "http/connections/updateConnectionScopes.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "updateConsent",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/users/me/consent",
+    "file": "http/users/updateConsent.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "updateIdTokenData",
     "kind": "http",
     "method": "PUT",
@@ -1029,6 +1053,14 @@
     "method": "POST",
     "path": "/api/sport/sections/{id}/occurrence",
     "file": "http/sport-sections/updateSportSectionOccurrence.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "userDevices",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/users/me/devices",
+    "file": "http/connections/userDevices.json",
     "minCore": "1.8.0"
   },
   {
@@ -1085,46 +1117,6 @@
     "method": "PUT",
     "path": "/api/reviews/{id}/vote",
     "file": "http/reviews/voteTeacherReview.json",
-    "minCore": "1.7.0"
-  },
-  {
-    "id": "webAuth_createChallenge",
-    "kind": "http",
-    "method": "POST",
-    "path": "/api/web/auth/challenges",
-    "file": "http/weblogin/webAuth_createChallenge.json",
-    "minCore": "1.8.0"
-  },
-  {
-    "id": "webAuth_logout",
-    "kind": "http",
-    "method": "POST",
-    "path": "/api/web/auth/logout",
-    "file": "http/weblogin/webAuth_logout.json",
-    "minCore": "1.8.0"
-  },
-  {
-    "id": "webAuth_me",
-    "kind": "http",
-    "method": "GET",
-    "path": "/api/web/auth/me",
-    "file": "http/weblogin/webAuth_me.json",
-    "minCore": "1.8.0"
-  },
-  {
-    "id": "webAuth_poll",
-    "kind": "http",
-    "method": "GET",
-    "path": "/api/web/auth/challenges/{id}",
-    "file": "http/weblogin/webAuth_poll.json",
-    "minCore": "1.8.0"
-  },
-  {
-    "id": "webLoginPreview",
-    "kind": "http",
-    "method": "GET",
-    "path": "/api/users/me/web-login/{code}",
-    "file": "http/users/webLoginPreview.json",
     "minCore": "1.7.0"
   }
 ]

@@ -6,12 +6,12 @@ import dev.alllexey.itmowidgets.client.common.UserData
 import dev.alllexey.itmowidgets.client.common.UserProfile as ClientUserProfile
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
+import dev.alllexey.itmowidgets.client.users.ConsentRequest
 import dev.alllexey.itmowidgets.client.users.IdTokenRequest
 import dev.alllexey.itmowidgets.client.users.UserLookupRequest
 import dev.alllexey.itmowidgets.client.users.UserLookupResponse
 import dev.alllexey.itmowidgets.client.users.UserPrivacySettings
 import dev.alllexey.itmowidgets.client.users.UsersApi
-import dev.alllexey.itmowidgets.client.users.WebLoginPreview
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -25,7 +25,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -664,9 +663,7 @@ class SocialRepositoryImplTest {
 
             override suspend fun updateIdTokenData(request: IdTokenRequest): Unit = unexpected("updateIdTokenData")
 
-            override suspend fun webLoginPreview(code: String): WebLoginPreview = unexpected("webLoginPreview")
-
-            override suspend fun approveWebLogin(challengeId: Uuid): Unit = unexpected("approveWebLogin")
+            override suspend fun updateConsent(request: ConsentRequest): Unit = unexpected("updateConsent")
 
             override suspend fun deleteMe(): Unit = unexpected("deleteMe")
         }

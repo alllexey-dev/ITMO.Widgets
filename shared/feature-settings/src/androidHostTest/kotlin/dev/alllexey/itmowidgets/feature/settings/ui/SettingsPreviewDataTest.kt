@@ -36,7 +36,6 @@ class SettingsPreviewDataTest {
             SettingsPage.ROOT to SettingsPreviewData.Root,
             SettingsPage.WIDGETS to SettingsPreviewData.widgets(local = LocalSettings(customServicesEnabled = true)),
             SettingsPage.SECTIONS to SettingsPreviewData.Sections,
-            SettingsPage.DEVICES to SettingsPreviewData.Devices,
             SettingsPage.ABOUT to SettingsPreviewData.About,
             SettingsPage.LICENSES to SettingsPreviewData.Licenses,
         )

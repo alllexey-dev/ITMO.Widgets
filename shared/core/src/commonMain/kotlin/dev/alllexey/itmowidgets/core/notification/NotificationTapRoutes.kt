@@ -25,7 +25,7 @@ import kotlinx.serialization.json.longOrNull
  * Where a tap on a notification opens the app (`docs/features/notifications.md`). A Backend push routes by the
  * payload type of its `data` envelope (Wire contract): a friendship event opens the actor's profile, a sport booking
  * (the phone's or an agent's) its lesson (the sport tab when the push names several), a new connection
- * «Подключённые устройства». A local notification of the iOS notifier carries its
+ * «Устройства». A local notification of the iOS notifier carries its
  * [NotificationDestination] as [userInfoOf] writes it, Android's entry action and its arguments as strings, which
  * `EntryRouteParser` reads as it reads Android's notification intents. The iOS notification delegate hands the route
  * to the shared route queue.
@@ -44,6 +44,9 @@ object NotificationTapRoutes {
     /** The key of the profile's ISU next to [AppEntryIntents.ACTION_OPEN_USER_PROFILE]. */
     const val ISU_KEY = "isu"
 
+    /** The key of the connection id next to [AppEntryIntents.ACTION_OPEN_CONNECTION]. */
+    const val CONNECTION_KEY = "connection"
+
     /**
      * The `userInfo` of a local notification that opens [destination]: plain strings only, so the system stores it
      * as it is. A subject's arguments use the keys of Android's intent extras ([RecordbookSubjectArgs]).
@@ -57,7 +60,9 @@ object NotificationTapRoutes {
         is NotificationDestination.RecordbookSubject ->
             action(AppEntryIntents.ACTION_OPEN_RECORDBOOK_SUBJECT) + destination.args.userInfo()
         NotificationDestination.BarsLogin -> action(AppEntryIntents.ACTION_OPEN_BARS_LOGIN)
-        NotificationDestination.Connections -> action(AppEntryIntents.ACTION_OPEN_CONNECTIONS)
+        NotificationDestination.Devices -> action(AppEntryIntents.ACTION_OPEN_DEVICES)
+        is NotificationDestination.Connection ->
+            action(AppEntryIntents.ACTION_OPEN_CONNECTION) + (CONNECTION_KEY to destination.id)
     }
 
     /**
@@ -78,7 +83,7 @@ object NotificationTapRoutes {
             FriendshipEventPayload.TYPE -> envelope.payload.actorIsu()?.let(::profileRoute)
             SportFreeSignLessonsPayload.TYPE, SportAutoSignLessonsPayload.TYPE, SportAgentBookedPayload.TYPE ->
                 sportRoute(envelope.payload.lessonId())
-            DeviceConnectedPayload.TYPE -> EntryRouteParser.CONNECTIONS
+            DeviceConnectedPayload.TYPE -> EntryRouteParser.DEVICES
             else -> null
         }
     }
@@ -89,6 +94,7 @@ object NotificationTapRoutes {
             action = action,
             isu = userInfo.int(ISU_KEY),
             subject = userInfo.subjectArgs(),
+            connection = userInfo[CONNECTION_KEY] as? String,
         )
     }
 
@@ -139,7 +145,8 @@ object NotificationTapRoutes {
         AppEntryIntents.ACTION_OPEN_RECORDBOOK,
         AppEntryIntents.ACTION_OPEN_RECORDBOOK_SUBJECT,
         AppEntryIntents.ACTION_OPEN_BARS_LOGIN,
-        AppEntryIntents.ACTION_OPEN_CONNECTIONS,
+        AppEntryIntents.ACTION_OPEN_DEVICES,
+        AppEntryIntents.ACTION_OPEN_CONNECTION,
     )
 
     private fun profileRoute(isu: Int) = EntryRoute(AppTab.ME, overlay = AppRoutes.UserProfile(isu))

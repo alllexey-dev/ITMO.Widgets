@@ -273,10 +273,10 @@ class ShellHostTest {
     }
 
     @Test
-    fun theDemoSessionRefusesMyItmoWebAndTheWebSignIn() {
+    fun theDemoSessionRefusesMyItmoWebPairingAndTheDevices() {
         sessions.state.value = SessionState.SignedIn(user = null, demo = true)
         launch(entry(Intent.ACTION_MAIN)).use { scenario ->
-            listOf(OPEN_WEB, OPEN_WEB_LOGIN).forEach { button ->
+            listOf(OPEN_WEB, OPEN_PAIRING, OPEN_DEVICES, OPEN_CONNECTION).forEach { button ->
                 ShadowToast.reset()
                 compose.onNodeWithText(button).performClick()
                 compose.waitForIdle()
@@ -361,7 +361,9 @@ class ShellHostTest {
     private companion object {
         const val ISU = 100001
         const val OPEN_WEB = "open:web"
-        const val OPEN_WEB_LOGIN = "open:web_login"
+        const val OPEN_PAIRING = "open:pairing"
+        const val OPEN_DEVICES = "open:devices"
+        const val OPEN_CONNECTION = "open:connection"
     }
 }
 
@@ -384,7 +386,9 @@ class ShellHostTestActivity : ComponentActivity() {
             entry<AppRoutes.TabRoot> { key, navigator ->
                 Column(Modifier.fillMaxSize().testTag("root:${key.tab}")) {
                     Button(onClick = { navigator.open(AppRoutes.MyItmoWeb) }) { Text("open:web") }
-                    Button(onClick = { navigator.open(AppRoutes.WebLogin()) }) { Text("open:web_login") }
+                    Button(onClick = { navigator.open(AppRoutes.Pairing()) }) { Text("open:pairing") }
+                    Button(onClick = { navigator.open(AppRoutes.Devices) }) { Text("open:devices") }
+                    Button(onClick = { navigator.open(AppRoutes.Connection("conn-1")) }) { Text("open:connection") }
                     Box(Modifier.fillMaxSize())
                 }
             }

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
 import android.webkit.CookieManager
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import kotlinx.coroutines.withContext
 
 /**

@@ -39,8 +39,9 @@ object RouteSamples {
         AppRoutes.SheetScores(
             SheetScoresArgs(5, "Математика", "2026/2027:1", "https://example.com/s", SheetScoresArgs.Step.TOTAL)
         ),
-        AppRoutes.WebLogin(),
-        AppRoutes.Connections,
+        AppRoutes.Pairing(),
+        AppRoutes.Devices,
+        AppRoutes.Connection("conn-1"),
         AppRoutes.ReviewEditor(teacher),
         AppRoutes.SubjectLinks(links),
         AppRoutes.LinkEditor(links, linkId = "link-1"),

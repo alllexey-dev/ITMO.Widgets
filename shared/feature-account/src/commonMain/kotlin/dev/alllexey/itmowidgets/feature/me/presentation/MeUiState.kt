@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.me.presentation
 
+import dev.alllexey.itmowidgets.core.connections.DevicesSummary
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CorePlurals
 import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
@@ -35,6 +36,8 @@ data class MeUiState(
     val header: MeHeader = MeHeader(),
     val friends: MeFriendsSummary = MeFriendsSummary.Loading,
     val signOutInProgress: Boolean = false,
+    /** The «Устройства» row: its count and a client's sign-in that needs the user. */
+    val devices: DevicesSummary = DevicesSummary(count = null, warning = null),
 ) {
     /** `3 друга, 1 заявка`; null while there is nothing to say. */
     val friendsSubtitle: UiText?

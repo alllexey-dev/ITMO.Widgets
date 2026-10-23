@@ -44,8 +44,6 @@ struct ShellDestination: Hashable {
 /// A sheet above the shell.
 enum ShellSheet: Hashable, Identifiable {
     case linkUnavailable
-    /// The web sign-in; `code` is a Universal Link's, checked as soon as the sheet opens.
-    case webLogin(code: String?)
     /// A feature's sheet key whose `RouteTarget` is `.swiftUISheet`.
     case route(ShellDestination)
 

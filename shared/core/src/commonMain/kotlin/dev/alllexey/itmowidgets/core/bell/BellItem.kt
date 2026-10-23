@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.time.Instant
 
 /** What a bell row is about; it picks the row's leading tile. */
-enum class BellKind { MARK, SCHEDULE_CHANGE, SPORT, FRIEND_REQUEST }
+enum class BellKind { MARK, SCHEDULE_CHANGE, SPORT, FRIEND_REQUEST, CONNECTION }
 
 /**
  * One event of the bell. [id] changes with the event's content, so a new mark of the same subject is new again.

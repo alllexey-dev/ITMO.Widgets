@@ -29,7 +29,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.RecordingMarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTestServer
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.MemoryBarsTokens
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OLD_HEADER
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksFileStore

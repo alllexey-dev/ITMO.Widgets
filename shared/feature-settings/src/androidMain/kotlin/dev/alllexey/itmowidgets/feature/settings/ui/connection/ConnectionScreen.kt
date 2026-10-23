@@ -55,7 +55,6 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_done
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
 import dev.alllexey.itmowidgets.shared.designsystem.ic_delete
-import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
 import dev.alllexey.itmowidgets.shared.designsystem.ic_folder
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_link
@@ -70,7 +69,6 @@ data class ConnectionActions(
     val onAudience: (PrivacyTopic, SharingVisibility) -> Unit = { _, _ -> },
     val onRetryPrivacy: () -> Unit = {},
     val onSource: () -> Unit = {},
-    val onDevices: () -> Unit = {},
     val onDeleteAccount: () -> Unit = {},
 )
 
@@ -79,7 +77,6 @@ object ConnectionTags {
     const val SCREEN = "connection"
     const val SWITCH = "connection_switch"
     const val AUDIENCES = "connection_audiences"
-    const val DEVICES = "connection_devices"
     const val STORED = "connection_stored"
     const val STORED_SHEET = "connection_stored_sheet"
     const val DELETE = "connection_delete"
@@ -120,18 +117,6 @@ fun ConnectionScreen(
                 StatusCard(state) { on -> if (on) consent = true else actions.onConnectedChange(false) }
                 if (state.connected) Audiences(state.privacy, actions) else Gives()
                 ListGroup(Modifier.padding(top = ItmoTheme.spacing.group)) {
-                    if (state.connected) {
-                        item {
-                            ListRow(
-                                text(SettingsStrings.connection_devices),
-                                Modifier.testTag(ConnectionTags.DEVICES),
-                                subtitle = text(SettingsStrings.connection_devices_list_text),
-                                icon = painterResource(Res.drawable.ic_devices),
-                                chevron = true,
-                                onClick = actions.onDevices,
-                            )
-                        }
-                    }
                     item {
                         ListRow(
                             text(if (state.connected) SettingsStrings.connection_stored_on else SettingsStrings.connection_stored_off),

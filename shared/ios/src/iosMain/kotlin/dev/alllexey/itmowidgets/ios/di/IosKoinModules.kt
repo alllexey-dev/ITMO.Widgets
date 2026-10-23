@@ -38,9 +38,9 @@ import dev.alllexey.itmowidgets.feature.sport.di.sportWidgetIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppStoreListing
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginDataModule
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginIosModule
-import dev.alllexey.itmowidgets.feature.weblogin.di.webLoginModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsIosModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
 import dev.alllexey.itmowidgets.ios.IosPlatform
 import kotlinx.datetime.LocalDate
 import org.koin.core.module.Module
@@ -68,9 +68,9 @@ object IosKoinModules {
         recordbookModule, recordbookIosModule(platform),
         // The schedule and sport widgets' App Group timelines and the refresh port sport asks after a booking.
         scheduleWidgetIosModule, sportWidgetIosModule,
-        // The web sign-in sheet, pairing's CryptoKit and LocalAuthentication ports and the update offer on their iOS
+        // «Устройства» and pairing with its CryptoKit and LocalAuthentication ports, and the update offer on its iOS
         // ports.
-        webLoginDataModule, webLoginModule, webLoginIosModule(platform), updateModule, updateIosModule,
+        connectionsDataModule, connectionsModule, connectionsIosModule(platform), updateModule, updateIosModule,
         // Сегодня and the bell over every feature's sources.
         homeModule,
         // The notifier with the bundle's string tables as the text resolver, the app refresh task and the schedule

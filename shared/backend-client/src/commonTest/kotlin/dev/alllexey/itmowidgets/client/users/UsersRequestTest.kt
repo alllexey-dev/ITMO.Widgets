@@ -2,7 +2,6 @@ package dev.alllexey.itmowidgets.client.users
 
 import dev.alllexey.itmowidgets.client.support.assertRequest
 import dev.alllexey.itmowidgets.client.support.record
-import dev.alllexey.itmowidgets.client.support.recordRequest
 import dev.alllexey.itmowidgets.client.support.runSuspend
 import io.ktor.http.HttpMethod
 import kotlin.test.Test
@@ -13,7 +12,7 @@ class UsersRequestTest {
 
     @Test
     fun everyPublicFunctionHasOneCase() {
-        assertEquals(10, UsersRouteCases.all.size)
+        assertEquals(9, UsersRouteCases.all.size)
         assertEquals(UsersRouteCases.all.size, UsersRouteCases.all.map { it.name }.toSet().size)
     }
 
@@ -65,24 +64,8 @@ class UsersRequestTest {
     }
 
     @Test
-    fun webLoginPreview() = runSuspend {
-        UsersRouteCases.webLoginPreview.assertRequest(HttpMethod.Get, "/api/users/me/web-login/K7M2QX9P")
-    }
-
-    @Test
-    fun webLoginCodeIsOneEncodedSegment() = runSuspend {
-        val request = recordRequest("webLoginPreview") { client.users.webLoginPreview("AB/C D?") }
-
-        assertEquals("/api/users/me/web-login/AB%2FC%20D%3F", request.path)
-        assertEquals(emptyList(), request.query)
-    }
-
-    @Test
-    fun approveWebLogin() = runSuspend {
-        UsersRouteCases.approveWebLogin.assertRequest(
-            HttpMethod.Post,
-            "/api/users/me/web-login/00000000-0000-0000-0000-000000000077/approve",
-        )
+    fun updateConsent() = runSuspend {
+        UsersRouteCases.updateConsent.assertRequest(HttpMethod.Put, "/api/users/me/consent", body = """{"version":1}""")
     }
 
     @Test

@@ -14,7 +14,7 @@ import dev.alllexey.itmowidgets.feature.sport.data.push.SportAgentBookedPushHand
 import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetSnapshotStoreImpl
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshotStore
-import dev.alllexey.itmowidgets.feature.weblogin.data.push.DeviceConnectedPushHandler
+import dev.alllexey.itmowidgets.feature.connections.data.push.DeviceConnectedPushHandler
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf

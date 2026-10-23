@@ -1,0 +1,8 @@
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "message": "This ITMO.ID session belongs to a connected client; call with its connection token",
+    "code": "client_session"
+  }
+}

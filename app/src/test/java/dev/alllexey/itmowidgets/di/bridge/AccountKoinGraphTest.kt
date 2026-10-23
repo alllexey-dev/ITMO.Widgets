@@ -8,14 +8,16 @@ import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.onboarding.OnboardingRepository
 import dev.alllexey.itmowidgets.core.session.SessionRepository
-import dev.alllexey.itmowidgets.core.weblogin.WebLoginRepository
 import dev.alllexey.itmowidgets.feature.auth.data.DataStoreDemoMode
+import dev.alllexey.itmowidgets.feature.connections.data.DevicesRepositoryImpl
+import dev.alllexey.itmowidgets.feature.connections.data.PairingRepositoryImpl
+import dev.alllexey.itmowidgets.feature.connections.domain.DevicesRepository
+import dev.alllexey.itmowidgets.feature.connections.domain.PairingRepository
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.onboarding.data.OnboardingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
-import dev.alllexey.itmowidgets.feature.weblogin.data.WebLoginRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.ui.InstallStateWatcher
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import org.junit.Assert.assertEquals
@@ -50,12 +52,13 @@ class AccountKoinGraphTest {
     }
 
     @Test
-    fun `Koin builds one update and one web sign-in repository`() {
+    fun `Koin builds one update, one devices and one pairing repository`() {
         bootApplication()
         val koin = GlobalContext.get()
 
         assertSame(koin.get<AppUpdateRepositoryImpl>(), koin.get<AppUpdateRepository>())
-        assertSame(koin.get<WebLoginRepositoryImpl>(), koin.get<WebLoginRepository>())
+        assertSame(koin.get<DevicesRepositoryImpl>(), koin.get<DevicesRepository>())
+        assertSame(koin.get<PairingRepositoryImpl>(), koin.get<PairingRepository>())
     }
 
     @Test

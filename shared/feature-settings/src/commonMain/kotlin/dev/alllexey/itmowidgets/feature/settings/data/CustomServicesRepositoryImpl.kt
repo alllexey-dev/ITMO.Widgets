@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.settings.data
 
+import dev.alllexey.itmowidgets.client.users.ConsentRequest
+import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
@@ -21,6 +23,7 @@ class CustomServicesRepositoryImpl(
     private val diagnostics: AppDiagnostics,
     private val demo: DemoMode,
     private val uploads: BackendUploadPreferences,
+    private val users: UsersApi,
 ) : CustomServicesRepository {
 
     /** The demo session reads as connected, so the social screens show its data; the stored choice is kept. */
@@ -37,12 +40,19 @@ class CustomServicesRepositoryImpl(
         // Backend may have lost the user's data meanwhile (a deleted account), so the next uploads go in full.
         uploads.clearSessionData()
         if (enabled) {
+            // The consent enrolls the user: until then Backend answers every other route 403 `not_enrolled`.
+            bestEffort { if (gate.mayCallBackend()) users.updateConsent(ConsentRequest(CONSENT_VERSION)) }
             // Opting in is the first moment the backend may learn who the user is;
             // without this the stored profile stays empty until the next launch.
             bestEffort { identitySync.sync() }
             bestEffort { tokenSync.sync() }
             bestEffort { devices.registerCurrentDevice() }
         }
+    }
+
+    private companion object {
+        /** The version of the services consent the app shows (`ServicesConsentSheet`). */
+        const val CONSENT_VERSION = 1
     }
 
     private suspend fun bestEffort(block: suspend () -> Unit) {

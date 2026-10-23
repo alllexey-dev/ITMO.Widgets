@@ -23,8 +23,6 @@ enum class SettingRowId(val key: String) {
     QR_TILE("qr_tile"),
     HOME_PASS_VISIBLE("home_pass_visible"),
     BARS("bars"),
-    PAIR_DEVICE("pair_device"),
-    CONNECTED_DEVICES("connected_devices"),
     SPORT_TEACHER_FILTER("sport_teacher_filter"),
     SPORT_TIME_FILTER("sport_time_filter"),
     REFRESH_WIDGETS("refresh_widgets"),
@@ -43,7 +41,6 @@ enum class SettingRowId(val key: String) {
     PAGE_NOTIFICATIONS("page_notifications"),
     PAGE_WIDGETS("page_widgets"),
     PAGE_SECTIONS("page_sections"),
-    PAGE_DEVICES("page_devices"),
     PAGE_ABOUT("page_about"),
     PAGE_LICENSES("page_licenses"),
     PAGE_APPEARANCE("page_appearance");
@@ -56,7 +53,6 @@ enum class SettingRowId(val key: String) {
             SettingsPage.NOTIFICATIONS -> PAGE_NOTIFICATIONS
             SettingsPage.WIDGETS -> PAGE_WIDGETS
             SettingsPage.SECTIONS -> PAGE_SECTIONS
-            SettingsPage.DEVICES -> PAGE_DEVICES
             SettingsPage.ABOUT -> PAGE_ABOUT
             SettingsPage.LICENSES -> PAGE_LICENSES
             SettingsPage.APPEARANCE -> PAGE_APPEARANCE

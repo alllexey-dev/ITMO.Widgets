@@ -92,7 +92,7 @@
     <string name="notification_sport_place_free">Освободилось место на занятии</string>
     <string name="notification_sport_agent_booked">%1$s, %2$s — записал «%3$s»</string>
     <string name="notification_device_connected_title">Подключено новое устройство</string>
-    <string name="notification_device_connected_agent">Свой клиент «%1$s» — если это не вы, отключите его</string>
+    <string name="notification_device_connected_agent">Устройство «%1$s» — если это не вы, отключите его</string>
     <string name="notification_device_connected_web">Вход на сайт ITMO.Widgets — если это не вы, отключите его</string>
     <string name="notification_device_connected_other">Новое устройство — если это не вы, отключите его</string>
     <!-- Widgets of the UX overhaul (W1 next lesson, W2 day, W3 sport), shared by Android and iOS -->

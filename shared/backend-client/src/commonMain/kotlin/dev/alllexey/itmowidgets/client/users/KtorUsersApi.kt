@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.client.http.BackendRoute
 import dev.alllexey.itmowidgets.client.http.jsonBody
 import io.ktor.http.HttpMethod
 import kotlinx.serialization.builtins.ListSerializer
-import kotlin.uuid.Uuid
 
 internal class KtorUsersApi(private val http: BackendHttp) : UsersApi {
 
@@ -33,11 +32,8 @@ internal class KtorUsersApi(private val http: BackendHttp) : UsersApi {
     override suspend fun myUserData(): UserData =
         http.call(route(HttpMethod.Get, "me", "data"), UserData.serializer())
 
-    override suspend fun webLoginPreview(code: String): WebLoginPreview =
-        http.call(route(HttpMethod.Get, "me", "web-login", code), WebLoginPreview.serializer())
-
-    override suspend fun approveWebLogin(challengeId: Uuid) =
-        http.callUnit(route(HttpMethod.Post, "me", "web-login", challengeId.toHexDashString(), "approve"))
+    override suspend fun updateConsent(request: ConsentRequest) =
+        http.callUnit(route(HttpMethod.Put, "me", "consent", body = jsonBody(request)))
 
     override suspend fun deleteMe() = http.callUnit(route(HttpMethod.Delete, "me"))
 

@@ -25,15 +25,16 @@ class MockBackend(
     baseUrl: String = TEST_BASE_URL,
     version: ClientVersion? = null,
     client: ClientHeader? = null,
+    language: (() -> String?)? = null,
     private val handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData = {
         ok("""{"success":true}""")
     },
 ) {
     val engine = MockEngine { request -> handler(request) }
 
-    internal val http = BackendHttp(baseUrl, tokens, engine, version, client)
+    internal val http = BackendHttp(baseUrl, tokens, engine, version, client, language)
 
-    val client = BackendClient(baseUrl, tokens, engine, version, client)
+    val client = BackendClient(baseUrl, tokens, engine, version, client, language)
 
     val requests: List<HttpRequestData> get() = engine.requestHistory
 

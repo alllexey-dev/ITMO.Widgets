@@ -52,7 +52,7 @@ limits. Start there; the documents below are the developer reference.
 - [QR pass](features/qr.md) - the pass, its cache, the tile.
 - [My ITMO in the app](features/my-itmo-web.md) - the web view and its navigation policy.
 - [Update offer](features/update.md) - the version check per distribution variant.
-- [Web sign-in](features/web-login.md) - approving a browser's or agent's sign-in.
+- [Connected clients](features/connections.md) - «Устройства», pairing agents, MCP servers and the web, ITMO.ID sessions.
 - [Demo session](features/demo.md) - the hidden entry and the gate in the repositories.
 - [App Links and sharing](features/app-links.md) - shared links and their routes.
 - [Debug tools](features/debug.md) - the debug-build screen.

@@ -49,7 +49,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepos
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
-import dev.alllexey.itmowidgets.feature.recordbook.data.bars.ItmoIdCookies
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
