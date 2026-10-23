@@ -71,8 +71,10 @@ internal class FakeDevicesRepository(initial: Devices? = null) : DevicesReposito
 /** The ITMO.ID sessions the phone's cookie lists; [ended] records every `end`. */
 internal class FakeItmoLogins(var answer: AppResult<ItmoLogins> = AppResult.Success(ItmoLogins.NoCookie)) : ItmoLoginsRepository {
     val ended = mutableListOf<List<String>>()
+    override val lastListed = MutableStateFlow<ItmoLogins.Listed?>(null)
 
-    override suspend fun list(): AppResult<ItmoLogins> = answer
+    override suspend fun list(): AppResult<ItmoLogins> =
+        answer.also { lastListed.value = ((it as? AppResult.Success)?.value as? ItmoLogins.Listed) ?: lastListed.value }
 
     override suspend fun end(sids: List<String>): AppResult<Unit> {
         ended += sids

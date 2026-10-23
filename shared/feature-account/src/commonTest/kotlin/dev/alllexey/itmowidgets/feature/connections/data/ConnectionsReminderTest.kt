@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.feature.connections.data.bell.ConnectionsBellSou
 import dev.alllexey.itmowidgets.feature.connections.domain.Devices
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoHealth
 import dev.alllexey.itmowidgets.feature.connections.presentation.FakeDevicesRepository
+import dev.alllexey.itmowidgets.feature.connections.presentation.FakeItmoLogins
 import dev.alllexey.itmowidgets.feature.connections.presentation.Samples
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -63,14 +64,14 @@ class ConnectionsReminderTest {
     }
 
     @Test
-    fun profileCountsInstallsAndLiveClientsAndNamesAClosedSignIn() = runTest {
+    fun profileCountsOtherDevicesAndLiveClientsAndNamesAClosedSignIn() = runTest {
         val closed = Samples.agent(health = ItmoHealth.CLOSED)
         val install = Samples.install(Samples.phoneId, current = true, sid = null)
         val devices = FakeDevicesRepository(Devices(listOf(closed, Samples.web()), listOf(install)))
 
-        val summary = DevicesOverviewImpl(devices, time).observe().first()
+        val summary = DevicesOverviewImpl(devices, FakeItmoLogins(), time).observe().first()
 
-        assertEquals(3, summary.count)
+        assertEquals(2, summary.count, "this phone is its own section, not counted")
         assertNotNull(summary.warning)
     }
 

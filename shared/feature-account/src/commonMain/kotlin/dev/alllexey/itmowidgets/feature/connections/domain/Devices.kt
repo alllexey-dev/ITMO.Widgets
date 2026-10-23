@@ -53,7 +53,22 @@ data class AppInstall(
     val current: Boolean,
 )
 
-data class Devices(val connections: List<Connection>, val installs: List<AppInstall>)
+data class Devices(val connections: List<Connection>, val installs: List<AppInstall>) {
+    /** «Подключённые»: revoked rows wait only for the phone to end their ITMO session. */
+    val liveConnections: List<Connection> get() = connections.filter { it.revokedAt == null }
+
+    /**
+     * «Мои устройства»: other installs with a device registration, or whose ITMO session is among [openSids] (null
+     * while ITMO.ID was not listed). The install id is new after every sign-in, so each earlier sign-in of a phone
+     * leaves a nameless row behind.
+     */
+    fun otherInstalls(openSids: Set<String>?): List<AppInstall> = installs.filter {
+        !it.current && (it.deviceName != null || (openSids != null && it.sid != null && it.sid in openSids))
+    }
+
+    /** What Профиль counts: exactly the rows of «Мои устройства» and «Подключённые», this phone not included. */
+    fun shownCount(openSids: Set<String>?): Int = otherInstalls(openSids).size + liveConnections.size
+}
 
 /**
  * One ITMO.ID session of the account as id.itmo.ru/activity shows it: [label] is ITMO's own («Chrome 141, Windows»).
@@ -100,6 +115,9 @@ sealed interface ItmoLogins {
 
 /** The account's ITMO.ID sessions through the phone's own cookie; refused in the demo session. */
 interface ItmoLoginsRepository {
+    /** The last successful listing, kept in memory so Профиль counts what «Устройства» showed. */
+    val lastListed: StateFlow<ItmoLogins.Listed?>
+
     suspend fun list(): AppResult<ItmoLogins>
 
     /** Ends [sids]; an already ended one is fine. `Unauthorized` when the cookie is gone. */

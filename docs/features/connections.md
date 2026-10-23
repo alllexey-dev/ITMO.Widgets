@@ -43,6 +43,8 @@ Two sources, joined by `sid`:
 - Session sheet «Завершить вход» and «Завершить все другие входы»: `DELETE /api/account/sessions/{sid}`.
 - Reconciliation (plan 6.2): after every load the phone ends the open sessions of revoked connections and reports
   `POST /api/users/me/connections/{id}/itmo-ended`; a `sid` ITMO.ID no longer lists is reported too.
+- Профиль counts exactly the rows of «Мои устройства» and «Подключённые» (`Devices.shownCount`, with the last ITMO.ID
+  listing of this screen); this phone is its own section and not counted.
 - After an action here, or a change from another screen (pairing, renewal, revoke), both sources load again at once
   and 3 s later: ITMO.ID and Backend show changes a moment late.
 - Labels, IP addresses and ITMO times stay on the phone; nothing from ITMO.ID is sent to Backend or logged.
