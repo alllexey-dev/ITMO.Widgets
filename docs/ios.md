@@ -63,7 +63,7 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   tabs with `ItmoDemoBanner` below each tab's stack.
 - Beta notice. On the tabs of a real session (never the demo or a fixture) `ShellView` shows `BetaNoticeSheet`
   (`Features/Onboarding/`) until it is closed once, a `UserDefaults` flag (`BetaNotice.shownKey`) that outlives
-  sign-out: no notifications yet, sport auto-booking with the app closed through
+  sign-out: no notifications yet, sport auto-booking only through
   [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent), widgets asking to sign in after some
   sideloading tools (AltStore and SideStore keep them working), questions in the Telegram channel. `О приложении`
   opens it again from an iOS-only row above the shared section.
