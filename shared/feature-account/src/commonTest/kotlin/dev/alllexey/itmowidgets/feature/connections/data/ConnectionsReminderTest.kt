@@ -64,14 +64,14 @@ class ConnectionsReminderTest {
     }
 
     @Test
-    fun profileCountsOtherDevicesAndLiveClientsAndNamesAClosedSignIn() = runTest {
+    fun profileCountsThisPhoneOtherDevicesAndLiveClientsAndNamesAClosedSignIn() = runTest {
         val closed = Samples.agent(health = ItmoHealth.CLOSED)
         val install = Samples.install(Samples.phoneId, current = true, sid = null)
         val devices = FakeDevicesRepository(Devices(listOf(closed, Samples.web()), listOf(install)))
 
         val summary = DevicesOverviewImpl(devices, FakeItmoLogins(), time).observe().first()
 
-        assertEquals(2, summary.count, "this phone is its own section, not counted")
+        assertEquals(3, summary.count, "this phone, the agent and the web")
         assertNotNull(summary.warning)
     }
 

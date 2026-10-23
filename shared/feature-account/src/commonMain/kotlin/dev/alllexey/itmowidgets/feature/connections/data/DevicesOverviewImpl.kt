@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 
-/** Профиль's «Устройства» row: the rows the screen shows besides this phone ([Devices.shownCount]), the first problem. */
+/** Профиль's «Устройства» row: the device and client rows the screen shows ([Devices.shownCount]), the first problem. */
 class DevicesOverviewImpl(
     private val devices: DevicesRepository,
     private val logins: ItmoLoginsRepository,

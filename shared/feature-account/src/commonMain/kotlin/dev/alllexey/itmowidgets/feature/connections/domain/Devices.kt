@@ -66,8 +66,8 @@ data class Devices(val connections: List<Connection>, val installs: List<AppInst
         !it.current && (it.deviceName != null || (openSids != null && it.sid != null && it.sid in openSids))
     }
 
-    /** What Профиль counts: exactly the rows of «Мои устройства» and «Подключённые», this phone not included. */
-    fun shownCount(openSids: Set<String>?): Int = otherInstalls(openSids).size + liveConnections.size
+    /** What Профиль counts: exactly the rows «Этот телефон», «Мои устройства» and «Подключённые» of the screen. */
+    fun shownCount(openSids: Set<String>?): Int = 1 + otherInstalls(openSids).size + liveConnections.size
 }
 
 /**
