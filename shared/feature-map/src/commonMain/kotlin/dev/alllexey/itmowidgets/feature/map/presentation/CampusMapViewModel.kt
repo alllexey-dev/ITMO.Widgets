@@ -231,7 +231,8 @@ class CampusMapViewModel(
         model.update { it.copy(catalog = catalog) }
         val lesson = args.lesson
         if (lesson == null) {
-            catalog.buildings.firstOrNull()?.let { show(it.id, room = null) } ?: model.update { it.copy(failure = AppError.NotFound) }
+            val default = catalog.buildings.firstOrNull { it.id == DEFAULT_BUILDING_ID } ?: catalog.buildings.firstOrNull()
+            default?.let { show(it.id, room = null) } ?: model.update { it.copy(failure = AppError.NotFound) }
             return@launchLoad
         }
         val building = resolver.resolve(lesson.mainBuildingId, lesson.buildingId, lesson.building, catalog.ids)
@@ -453,6 +454,8 @@ class CampusMapViewModel(
         const val ARG = "campus_map_args"
         private const val STOP_TIMEOUT_MILLIS = 5_000L
         private const val MAX_RESULTS = 30
+        /** Кронверкский пр., 49 (`kronva` in `itmo_buildings.json`): the plan the map opens without a lesson. */
+        private const val DEFAULT_BUILDING_ID = 13
         private val DAY_TIMEOUT = 2.seconds
         private val json = Json { ignoreUnknownKeys = true }
 

@@ -10,6 +10,8 @@ The campus map shows ITMO's indoor floor plans and plans «Маршрут» to a
 
 - Opened from `Маршрут` in the lesson sheet and on the Сегодня hero (`CampusMapArgs(lesson, route = true)`): the
   lesson's building on the floor of its room, the room selected and the route shown at once.
+- Opened from Профиль -> `Карта` (no lesson): Кронверкский пр., 49 (plan building 13), or the catalog's first
+  building when the mirror has no such plan.
 - The chrome follows itmo-map-web at phone width and stays opaque over the plan: back and search on top, the
   building menu and the place chips, the floors on the right edge, one compact card at the bottom (the room, the
   route or the results). No compass: the plan turns with the building's bearing. On iOS the map is a full-screen
