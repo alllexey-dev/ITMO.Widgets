@@ -97,7 +97,7 @@ class DevicesViewModelTest {
     }
 
     @Test
-    fun profileCountsExactlyTheRowsOfOtherDevicesAndClients() = runTest(main.dispatcher) {
+    fun profileCountsExactlyTheDeviceAndClientRows() = runTest(main.dispatcher) {
         // The owner's phone on 2026-10-23: earlier sign-ins left nameless installs, revoked clients wait for their end.
         val earlier = listOf(
             Samples.install(Uuid.random(), current = false, sid = "sid-ended", name = null),
@@ -108,8 +108,8 @@ class DevicesViewModelTest {
 
         val state = viewModel().also { advanceUntilIdle() }.uiState.value
 
-        assertEquals(state.installs.size + state.clients.size, overview.observe().first().count)
-        assertEquals(3, overview.observe().first().count, "the tablet, the agent and the web")
+        assertEquals(listOfNotNull(state.thisPhone).size + state.installs.size + state.clients.size, overview.observe().first().count)
+        assertEquals(4, overview.observe().first().count, "this phone, the tablet, the agent and the web")
     }
 
     @Test
