@@ -17,6 +17,19 @@ struct SettingsForm: View {
     var body: some View {
         if state.loaded {
             ItmoScreenStack {
+                if state.page == .about {
+                    // iOS only: the beta notice the shell shows once (`BetaNoticeSheet`).
+                    ItmoListGroup {
+                        ItmoRow(
+                            title: AppStrings.string("ios_beta_notice_title"),
+                            symbol: .smartphone,
+                            tone: .neutral,
+                            chevron: true,
+                            action: actions.openBetaNotice
+                        )
+                        .accessibilityIdentifier("settings.row.ios_beta_notice")
+                    }
+                }
                 ForEach(Array(state.sections.enumerated()), id: \.offset) { index, section in
                     SettingSectionView(
                         section: section, copy: SettingsIosCopy(system: system), pendingToggles: pendingToggles,
@@ -161,6 +174,7 @@ struct SettingsFormActions {
     var choose: (SettingRowId, String) -> Void = { _, _ in }
     var act: (SettingRowId) -> Void = { _ in }
     var open: (SettingsPage) -> Void = { _ in }
+    var openBetaNotice: () -> Void = {}
 }
 
 /// A row label with a value and an optional trailing symbol, in the colors of a plain row. The value sits at the

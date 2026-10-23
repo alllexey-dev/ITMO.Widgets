@@ -83,7 +83,7 @@ if [ -n "$(git status --porcelain --untracked-files=no 2> /dev/null)" ]; then
   dirty="-dirty"
   note "warning: uncommitted changes; build $build is $sha plus local edits"
 fi
-marketing=$(sed -n 's/^MARKETING_VERSION *= *\([0-9.]*\) *$/\1/p' iosApp/Config/Base.xcconfig)
+marketing=$(sed -n 's/^MARKETING_VERSION *= *\([0-9A-Za-z.-]*\) *$/\1/p' iosApp/Config/Base.xcconfig)
 [ -n "$marketing" ] || refuse "no MARKETING_VERSION in iosApp/Config/Base.xcconfig"
 
 out="iosApp/build/archive"

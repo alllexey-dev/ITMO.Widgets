@@ -61,6 +61,138 @@
         }
       }
     },
+    "ios_beta_agent_text" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда приложение закрыто, записывает itmo-widgets-agent на компьютере или сервере"
+          }
+        }
+      }
+    },
+    "ios_beta_agent_title" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автозапись на спорт"
+          }
+        }
+      }
+    },
+    "ios_beta_feedback_text" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В Telegram-канале ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "ios_beta_feedback_title" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вопросы и баги"
+          }
+        }
+      }
+    },
+    "ios_beta_notice_done" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Понятно"
+          }
+        }
+      }
+    },
+    "ios_beta_notice_text" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока не всё работает как на Android"
+          }
+        }
+      }
+    },
+    "ios_beta_notice_title" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бета для iPhone"
+          }
+        }
+      }
+    },
+    "ios_beta_notifications_text" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Колокольчик обновляется, только пока приложение открыто"
+          }
+        }
+      }
+    },
+    "ios_beta_notifications_title" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведомлений пока нет"
+          }
+        }
+      }
+    },
+    "ios_beta_widgets_text" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Так бывает после некоторых программ для установки. Надёжнее ставить через AltStore или SideStore"
+          }
+        }
+      }
+    },
+    "ios_beta_widgets_title" : {
+      "comment" : "Generated from strings_ios_beta.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виджеты просят войти"
+          }
+        }
+      }
+    },
     "ios_calendar_full_access_usage" : {
       "comment" : "Generated from strings_ios_calendar.xml",
       "extractionState" : "manual",

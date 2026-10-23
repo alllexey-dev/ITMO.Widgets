@@ -9,6 +9,12 @@ publication or deployment.
 The app is rebuilt on Kotlin Multiplatform: one shared Kotlin core (data, domain, view models) under Compose screens
 on Android and native SwiftUI screens in a new iOS app. Android keeps the features and the data of 2.2.
 
+### Prereleases
+
+- `2.3.0-beta.1` (20291, 2026-10-10) and `2.3.0-beta.2` (20292, 2026-10-11): an APK in the Telegram channel.
+- `2.3.0-beta.3` (20293, 2026-10-23): APKs per ABI (`arm64-v8a`, `armeabi-v7a`, `-Pitmo.abiSplit=true`) instead of
+  one universal APK, and an unsigned `.ipa` with the marketing version `2.3.0-beta.3`, in the Telegram channel.
+
 ### iOS app
 
 - A new app for iOS 26.1 and later: a Liquid Glass tab bar `Сегодня`, `Расписание`, `Зачётка`, `Спорт`, `Профиль`,
@@ -32,6 +38,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - A newer iOS release from Backend is offered with a link to the App Store; a Kotlin crash is saved to `Журнал
   ошибок`. The icon is Android's launcher icon with dark and tinted variants.
 - The session and BARS Keychain items stay on this device only, so a backup no longer restores them on another one.
+- `Бета для iPhone` once after the first sign-in and in `О приложении`: no notifications yet, sport auto-booking with
+  the app closed through `itmo-widgets-agent`, widgets that ask to sign in after some sideloading tools, questions in
+  the Telegram channel.
 
 ### Shell and look
 

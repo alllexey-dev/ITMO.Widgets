@@ -10,4 +10,7 @@ object ProjectLinks {
 
     /** Source code of the custom services Backend, shown during onboarding. */
     const val SERVICES_SOURCE_URL = "https://github.com/alllexey-dev/itmo-widgets-backend"
+
+    /** The agent that books sport and checks marks while the app is closed, linked from the iPhone beta notice. */
+    const val AGENT_URL = "https://github.com/alllexey-dev/itmo-widgets-agent"
 }

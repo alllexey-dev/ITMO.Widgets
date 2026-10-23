@@ -71,6 +71,12 @@ final class ShellSnapshotTests: XCTestCase {
         assertScreenAppearances(of: shell, named: "sheet", settle: 2.5)
     }
 
+    /// «Бета для iPhone» over the tabs, as the shell shows it once after the first sign-in.
+    func testBetaNotice() {
+        let shell = tabs(.today).sheet(isPresented: .constant(true)) { BetaNoticeSheet() }
+        assertScreenAppearances(of: shell, named: "beta", settle: 2.5)
+    }
+
     // MARK: Fixtures
 
     private func tabs(_ selection: ShellTab) -> some View {
