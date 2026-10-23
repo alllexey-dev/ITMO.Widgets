@@ -1,7 +1,9 @@
 <h1 align="center">ITMO.Widgets</h1>
 
 <p align="center">
-  <strong>Расписание, зачётка, спорт и QR-пропуск ИТМО на Android и iPhone</strong>
+  <strong>My ITMO, который вы заслужили</strong>
+  <br />
+  Расписание, зачётка, спорт и QR-пропуск ИТМО на Android и iPhone
 </p>
 
 <p align="center">
@@ -43,7 +45,7 @@
 | **Android, стабильная** | [2.2](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.2) | Android 8.0+ |
 
 - Бета ставится поверх 2.2 с сохранением данных; вернуться на 2.2 можно только переустановкой.
-- На iPhone пока нет push-уведомлений. Автозапись на спорт при закрытом приложении делает [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent).
+- На iPhone пока нет push-уведомлений, поэтому автозапись на спорт там работает только через [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent).
 - В Google Play приложения пока нет. Новые версии и ответы на вопросы — в [@itmowidgets](https://t.me/itmowidgets).
 
 ## Как выглядит
@@ -60,6 +62,15 @@
 <table>
   <tr><th>Сегодня</th><th>Пара</th><th>Маршрут</th><th>Спорт</th></tr>
   <tr><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/iphone-today-dark.webp"><img src="docs/images/readme/iphone-today.webp" width="180" alt="Сегодня"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/iphone-lesson-dark.webp"><img src="docs/images/readme/iphone-lesson.webp" width="180" alt="Пара"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/iphone-map-dark.webp"><img src="docs/images/readme/iphone-map.webp" width="180" alt="Маршрут"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/iphone-sport-dark.webp"><img src="docs/images/readme/iphone-sport.webp" width="180" alt="Спорт"></picture></td></tr>
+</table>
+
+**Виджеты**
+
+<table>
+  <tr><th>Пара</th><th>Спорт</th></tr>
+  <tr><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/widget-lesson-dark.webp"><img src="docs/images/readme/widget-lesson.webp" width="360" alt="Виджет «Пара»"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/widget-sport-dark.webp"><img src="docs/images/readme/widget-sport.webp" width="360" alt="Виджет «Спорт»"></picture></td></tr>
+  <tr><th>Расписание на день</th><th>Список пар</th></tr>
+  <tr><td valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/widget-day-dark.webp"><img src="docs/images/readme/widget-day.webp" width="360" alt="Виджет «Расписание на день»"></picture></td><td valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/widget-list-dark.webp"><img src="docs/images/readme/widget-list.webp" width="360" alt="Виджет «Список пар»"></picture></td></tr>
 </table>
 
 <p align="center">

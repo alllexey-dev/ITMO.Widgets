@@ -68,7 +68,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Когда приложение закрыто, записывает itmo-widgets-agent на компьютере или сервере"
+            "value" : "Без уведомлений работает только через itmo-widgets-agent на компьютере или сервере"
           }
         }
       }

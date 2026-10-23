@@ -38,8 +38,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - A newer iOS release from Backend is offered with a link to the App Store; a Kotlin crash is saved to `Журнал
   ошибок`. The icon is Android's launcher icon with dark and tinted variants.
 - The session and BARS Keychain items stay on this device only, so a backup no longer restores them on another one.
-- `Бета для iPhone` once after the first sign-in and in `О приложении`: no notifications yet, sport auto-booking with
-  the app closed through `itmo-widgets-agent`, widgets that ask to sign in after some sideloading tools, questions in
+- `Бета для iPhone` once after the first sign-in and in `О приложении`: no notifications yet, sport auto-booking only
+  through `itmo-widgets-agent`, widgets that ask to sign in after some sideloading tools, questions in
   the Telegram channel.
 
 ### Shell and look
