@@ -48,6 +48,9 @@ struct ItmoRow<Leading: View, Accessory: View>: View {
         }
     }
 
+    /// A long value (an ITMO.ID session label) goes under the title instead of squeezing it to a letter per line.
+    private var trailingBelow: Bool { (trailing?.count ?? 0) > 20 }
+
     private var label: some View {
         HStack(spacing: ItmoSpacing.content) {
             leading
@@ -60,10 +63,16 @@ struct ItmoRow<Leading: View, Accessory: View>: View {
                         .font(.itmo(.bodyMedium))
                         .foregroundStyle(.secondary)
                 }
+                if let trailing, trailingBelow {
+                    Text(verbatim: trailing)
+                        .font(.itmo(.bodyMedium))
+                        .foregroundStyle(.secondary)
+                }
                 if let pill {
                     ItmoStatusPill(pill: pill).padding(.top, 4)
                 }
             }
+            .multilineTextAlignment(.leading)
             Spacer(minLength: ItmoSpacing.compact)
             if let badge, badge > 0 {
                 Text(verbatim: "\(badge)")
@@ -74,14 +83,10 @@ struct ItmoRow<Leading: View, Accessory: View>: View {
                     .padding(.vertical, 2)
                     .background(ItmoColor.error, in: .capsule)
             }
-            if let trailing {
-                // Capped, so a long value (an ITMO.ID session label) wraps instead of squeezing the title.
+            if let trailing, !trailingBelow {
                 Text(verbatim: trailing)
                     .font(.itmo(.bodyLarge))
                     .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: 160, alignment: .trailing)
-                    .fixedSize(horizontal: false, vertical: true)
             }
             accessory
             if chevron {
