@@ -110,6 +110,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 - Профиль keeps the identity card, friends (or their gate), `Виджеты`, `Настройки`, the links (`Карта`, My ITMO) and
   `Выйти`.
+- `Выйти` ends the app's ITMO.ID session too, so old "Android, Chrome Mobile WebView" sessions no longer pile up on
+  `id.itmo.ru/activity`. Without an answer from ITMO.ID within 5 seconds the sign-out goes on and the session expires
+  there on its own (MyItmoApi 2.3.0).
 - Друзья has the people search on top, requests with `Принять` and `Отклонить` in the row, sent ones with
   `Отменить`.
 - One person card for any ISU: roles, the ISU with copy, `Написать отзыв`, `Добавить в друзья` or `Пригласить в

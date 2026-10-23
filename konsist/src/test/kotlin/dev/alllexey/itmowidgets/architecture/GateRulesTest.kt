@@ -60,9 +60,9 @@ class GateRulesTest {
 
     /**
      * MyItmoApi's `TokenManager.replaceTokens` writes the local `TokenStorage` under the refresh lock and sends no
-     * request, so a class whose every use of its `MyItmoClient` is `<client>.tokens.replaceTokens(`
-     * (`SessionTransitions`: sign-in, sign-out, demo start) is a token writer, not a network caller. Any other use of
-     * the parameter, a KDoc link included, brings the class back under the gate.
+     * request, so a class whose every use of its `MyItmoClient` is `<client>.tokens.replaceTokens(` is a token
+     * writer, not a network caller. Any other use of the parameter, a KDoc link included, brings the class back under
+     * the gate (`SessionTransitions` is: its sign-out calls ITMO.ID's logout).
      */
     private fun KoParameterDeclaration.onlyWritesTokens(): Boolean {
         if (MY_ITMO_CLIENT !in typeNames()) return false

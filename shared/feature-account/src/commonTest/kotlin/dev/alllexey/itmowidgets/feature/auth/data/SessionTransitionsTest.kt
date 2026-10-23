@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockEngineConfig
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -55,7 +56,14 @@ class SessionTransitionsTest {
         myItmo = MyItmoClient(
             MyItmoConfiguration.DEFAULT,
             storage = tokenStorage,
-            engine = MockEngine { request -> throw AssertionError("Unexpected request ${request.url}") },
+            engine = MockEngine(MockEngineConfig().apply {
+                dispatcher = this@SessionTransitionsTest.dispatcher
+                addHandler { request ->
+                    if (!request.url.encodedPath.endsWith("/logout")) throw AssertionError("Unexpected ${request.url}")
+                    order += "logout"
+                    throw IOException("offline")
+                }
+            }),
             clock = clock
         ),
         currentUserProvider = object : CurrentUserProvider {
@@ -68,6 +76,7 @@ class SessionTransitionsTest {
         fcmTokenSync = tokenSync,
         diagnostics = diagnostics,
         demoPreferences = demoPreferences,
+        demo = DataStoreDemoMode(demoPreferences),
         dispatchers = AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher)
     )
 
@@ -140,16 +149,38 @@ class SessionTransitionsTest {
     }
 
     @Test
-    fun signOutUnregistersTheDeviceBeforeClearingDataAndTokensIgnoringFailures() = runTest(dispatcher) {
-        cleaners = listOf(FailingCleaner(order), cleaner)
-        deviceSession.failUnregister = true
-        effects.failPrepare = true
-        effects.failSignedOut = true
+    fun signOutEndsTheItmoIdSessionAndUnregistersTheDeviceBeforeClearingDataAndTokensIgnoringFailures() =
+        runTest(dispatcher) {
+            cleaners = listOf(FailingCleaner(order), cleaner)
+            deviceSession.failUnregister = true
+            effects.failPrepare = true
+            effects.failSignedOut = true
 
-        transitions.signOut()
+            transitions.signOut("refresh")
 
-        assertEquals(listOf("unregister", "prepare", "clean", "clean", "tokens-cleared", "signed-out"), order)
-        assertNull(tokenStorage.stored)
+            assertEquals(
+                listOf("logout", "unregister", "prepare", "clean", "clean", "tokens-cleared", "signed-out"),
+                order
+            )
+            assertNull(tokenStorage.stored)
+            assertEquals(listOf("WARNING:Session:ITMO.ID logout failed"), diagnostics.messages)
+        }
+
+    @Test
+    fun signOutNeverCallsItmoIdForTheDemo() = runTest(dispatcher) {
+        demoPreferences.setDemoActive(true)
+        order.clear()
+
+        transitions.signOut("refresh")
+
+        assertEquals(listOf("unregister", "prepare", "clean", "tokens-cleared", "signed-out"), order)
+    }
+
+    @Test
+    fun signOutWithoutARefreshTokenSkipsTheItmoIdLogout() = runTest(dispatcher) {
+        transitions.signOut(null)
+
+        assertEquals(listOf("unregister", "prepare", "clean", "tokens-cleared", "signed-out"), order)
     }
 
     @Test
