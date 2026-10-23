@@ -75,9 +75,13 @@ struct ItmoRow<Leading: View, Accessory: View>: View {
                     .background(ItmoColor.error, in: .capsule)
             }
             if let trailing {
+                // Capped, so a long value (an ITMO.ID session label) wraps instead of squeezing the title.
                 Text(verbatim: trailing)
                     .font(.itmo(.bodyLarge))
                     .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 160, alignment: .trailing)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             accessory
             if chevron {

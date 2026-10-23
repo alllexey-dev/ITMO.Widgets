@@ -32,8 +32,8 @@ Two sources, joined by `sid`:
 | Section | Rows |
 |---|---|
 | connect | «Подключить устройство», or the server gate when the opt-in is off |
-| Этот телефон | the current install (or `PushDevice`'s name without the server); its sheet has no button |
-| Мои устройства | other installs; «Вход в ИТМО закончен» when ITMO.ID no longer lists its `sid` |
+| Этот телефон | the current install, named by `ThisPhone` (Android: the user-visible `Settings.Global.DEVICE_NAME`, kept on the phone; iOS: the model); its sheet has no button |
+| Мои устройства | other installs with a device registration (a name), or whose `sid` ITMO.ID still lists; «Вход в ИТМО закончен» when it no longer does. The install id is new after every sign-in, so earlier sign-ins of a phone leave nameless rows, which stay hidden |
 | Подключённые | live clients, a pill for a sign-in ending within 7 days or closed |
 | Другие входы в ITMO.ID | sessions that match no install, no client (live or revoked) and not this phone |
 | switch | «Выглядеть как обычный браузер» (`SignInLabel`) |
@@ -43,6 +43,8 @@ Two sources, joined by `sid`:
 - Session sheet «Завершить вход» and «Завершить все другие входы»: `DELETE /api/account/sessions/{sid}`.
 - Reconciliation (plan 6.2): after every load the phone ends the open sessions of revoked connections and reports
   `POST /api/users/me/connections/{id}/itmo-ended`; a `sid` ITMO.ID no longer lists is reported too.
+- After an action here, or a change from another screen (pairing, renewal, revoke), both sources load again at once
+  and 3 s later: ITMO.ID and Backend show changes a moment late.
 - Labels, IP addresses and ITMO times stay on the phone; nothing from ITMO.ID is sent to Backend or logged.
 
 ## A client (`ConnectedClientViewModel`)

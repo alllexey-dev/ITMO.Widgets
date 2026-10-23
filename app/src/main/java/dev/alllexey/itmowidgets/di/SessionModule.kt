@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.di
 
 import android.os.Build
+import android.provider.Settings
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.app.AndroidSessionLifecycleEffects
 import dev.alllexey.itmowidgets.core.connections.ThisPhone
@@ -62,7 +63,12 @@ val sessionModule = module {
             deviceName = androidDeviceName()
         )
     }
-    single { ThisPhone(androidDeviceName(), get<AppBuild>().version) }
+    // The name the user sees in the phone's settings ("Xiaomi 17 Pro"), for the Devices screen only: it may be
+    // personal, so Backend's registration keeps the model name.
+    single {
+        val shown = Settings.Global.getString(androidContext().contentResolver, Settings.Global.DEVICE_NAME)
+        ThisPhone(shown?.trim()?.ifEmpty { null } ?: androidDeviceName(), get<AppBuild>().version)
+    }
     single<SessionLifecycleEffects> {
         AndroidSessionLifecycleEffects(
             context = androidContext(),

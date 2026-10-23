@@ -164,10 +164,10 @@ internal object Samples {
         revokedAt = null,
     )
 
-    fun install(id: Uuid, current: Boolean, sid: String?) = AppInstall(
+    fun install(id: Uuid, current: Boolean, sid: String?, name: String? = if (current) "Google Pixel 8" else "iPad") = AppInstall(
         instanceId = id,
         ios = !current,
-        deviceName = if (current) "Google Pixel 8" else null,
+        deviceName = name,
         os = if (current) "36" else "26",
         version = "2.4.0",
         firstSeenAt = Instant.parse("2026-09-01T09:00:00Z"),

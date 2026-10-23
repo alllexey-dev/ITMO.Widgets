@@ -84,7 +84,7 @@ object ConnectionsSamples {
         facts = listOf(
             Fact(res(AccountStrings.connection_fact_connected), t("28 июля")),
             Fact(res(AccountStrings.devices_fact_activity), t("5 мин назад")),
-            Fact(res(AccountStrings.connection_fact_label), t("Chrome 155, Linux")),
+            Fact(res(AccountStrings.connection_fact_label), t("ITMO Widgets agent alllexey-srv bot 0, Linux")),
             Fact(res(AccountStrings.devices_fact_ip), t("95.161.221.17")),
         ),
         revoke = res(AccountStrings.connection_revoke),
