@@ -56,3 +56,5 @@ lives in the flow entry's store, so a replay starts on the first step with nothi
 - The same two steps; the calendar asks through `CalendarAccess`, the consent is the SwiftUI `ServicesConsentSheet`.
 - Notifications ask via `UNUserNotificationCenter`, re-read on foreground.
 - Debug: `-itmoOnboarding` shows the flow over the demo session.
+- After the flow, the first real session's tabs show the iPhone beta notice once (`BetaNoticeSheet`, [iOS
+  app](../ios.md#shell-and-routes)); `О приложении` opens it again.

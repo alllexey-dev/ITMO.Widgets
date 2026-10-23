@@ -3,13 +3,15 @@ import SwiftUI
 
 /// The app's root: the session gate (the sign-in screen while signed out, the first-run flow before the tabs of a
 /// new account), then the tab bar with one `NavigationStack` per tab, the demo banner above the tab bar while the demo
-/// session is open, and the shell's sheets; all of it light or dark as the appearance page says (`ThemeSpec.mode`).
+/// session is open, and the shell's sheets (the iPhone beta notice once on the tabs of the first real session); all of
+/// it light or dark as the appearance page says (`ThemeSpec.mode`).
 struct ShellView: View {
     @Bindable var router: AppRouter
     let session: ShellSession
     @State private var showPass = false
     @State private var themeMode = ThemeMode.system
     @State private var updateOffer = AppUpdateOffer()
+    @AppStorage(BetaNotice.shownKey) private var betaNoticeShown = false
 
     var body: some View {
         content
@@ -70,6 +72,9 @@ struct ShellView: View {
             .onAppear { router.shellMounted(true) }
             .onDisappear { router.shellMounted(false) }
             .appUpdateOffer(updateOffer, checks: checksForUpdate)
+            .sheet(isPresented: betaNotice(demo: demo)) {
+                BetaNoticeSheet()
+            }
         }
     }
 }
@@ -79,6 +84,14 @@ extension ShellView {
     private var checksForUpdate: Bool {
         session.gateway != nil
             && ShellGate.shared.checksForUpdate(session: session.state.sessionState, onboarding: session.onboarding)
+    }
+
+    /// The beta notice until it is closed, on a real session only: never the demo or a fixture session.
+    private func betaNotice(demo: Bool) -> Binding<Bool> {
+        Binding(
+            get: { session.gateway != nil && !demo && !betaNoticeShown },
+            set: { if !$0 { betaNoticeShown = true } }
+        )
     }
 }
 

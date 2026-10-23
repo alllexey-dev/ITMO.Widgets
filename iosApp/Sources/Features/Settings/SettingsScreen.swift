@@ -10,10 +10,10 @@ import WidgetKit
 /// The screen feeds the ViewModel what only iOS knows, on appear and on every return to the app: the notification
 /// permission and Background App Refresh. It answers the page's events with system pages, the router and a short
 /// message at the bottom; the calendar switch asks for calendar access (`CalendarAccess`), the `.ics` row opens
-/// `IcsExportSheet` and the root's BARS row `BarsLoginSheet`. The events of rows iOS does not list (the tile, the
-/// custom spoiler) never come. The widgets page
-/// is the gallery (`WidgetGalleryForm`): the screen loads its live previews whenever their settings change and tells
-/// the ViewModel how many widgets of each format WidgetKit has placed.
+/// `IcsExportSheet`, the root's BARS row `BarsLoginSheet` and the about page's iOS-only row `BetaNoticeSheet`.
+/// The events of rows iOS does not list (the tile, the custom spoiler) never come. The widgets page is the gallery
+/// (`WidgetGalleryForm`): the screen loads its live previews whenever their settings change and tells the ViewModel
+/// how many widgets of each format WidgetKit has placed.
 struct SettingsScreen: View {
     @State private var model: ObservableViewModel<SettingsViewModel, SettingsUiState>
     @State private var system = SettingsSystemState()
@@ -22,6 +22,7 @@ struct SettingsScreen: View {
     @State private var showsCalendarRationale = false
     @State private var showsIcsExport = false
     @State private var showsBarsLogin = false
+    @State private var showsBetaNotice = false
     @State private var widgetPreviews = WidgetGalleryPreviews()
     private let calendarAccess: CalendarAccess
     @Environment(AppRouter.self) private var router
@@ -86,6 +87,9 @@ struct SettingsScreen: View {
         .sheet(isPresented: $showsBarsLogin) {
             BarsLoginSheet { showsBarsLogin = false }
         }
+        .sheet(isPresented: $showsBetaNotice) {
+            BetaNoticeSheet()
+        }
         .accessibilityIdentifier("settings.page.\(model.state.page.name.lowercased())")
     }
 
@@ -113,7 +117,8 @@ struct SettingsScreen: View {
             },
             choose: { id, key in viewModel.onChoiceChanged(id: id, optionKey: key) },
             act: { id in viewModel.onAction(id: id) },
-            open: { page in router.open(AppRoutes.Settings(page: page.name)) }
+            open: { page in router.open(AppRoutes.Settings(page: page.name)) },
+            openBetaNotice: { showsBetaNotice = true }
         )
     }
 
