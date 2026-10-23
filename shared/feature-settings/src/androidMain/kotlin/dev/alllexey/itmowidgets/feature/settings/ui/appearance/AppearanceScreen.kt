@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeMode
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
@@ -71,6 +72,7 @@ import org.jetbrains.compose.resources.painterResource
 /** What «Оформление» asks of its host; every choice goes to `AppearanceViewModel` and applies at once. */
 data class AppearanceActions(
     val onBack: () -> Unit = {},
+    val onMode: (ThemeMode) -> Unit = {},
     val onAccent: (AccentColor) -> Unit = {},
     val onCustomColor: (Int) -> Unit = {},
     val onStyle: (ThemeStyle) -> Unit = {},
@@ -84,14 +86,15 @@ object AppearanceTags {
     const val SAMPLE = "appearance_sample"
     const val PICKER = "appearance_picker"
     const val BLACK = "appearance_black"
+    fun mode(mode: ThemeMode) = "appearance_mode_${mode.name.lowercase()}"
     fun accent(accent: AccentColor) = "appearance_accent_${accent.name.lowercase()}"
     fun style(style: ThemeStyle) = "appearance_style_${style.name.lowercase()}"
     fun contrast(contrast: ThemeContrast) = "appearance_contrast_${contrast.name.lowercase()}"
 }
 
 /**
- * «Оформление» (docs/settings.md, Appearance): the sample in the light and the dark theme on top, then one block per
- * choice, each visible at once: the colour as named swatches (the picker under them while `Свой цвет` is picked), the
+ * «Оформление» (docs/settings.md, Appearance): the sample in the theme the app keeps (both while it follows the system)
+ * on top, then one block per choice, each visible at once: light or dark as a segmented choice, the colour as named swatches (the picker under them while `Свой цвет` is picked), the
  * palette as small samples with what the picked one does, the contrast as a segmented choice and the black background.
  * A line says what a choice does where it is not obvious: `Как обои`, or why the colours are off under `Монохром`.
  */
@@ -119,7 +122,20 @@ fun AppearanceScreen(
                 .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
             verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
         ) {
-            AppearanceSample(state.theme, Modifier.testTag(AppearanceTags.SAMPLE))
+            AppearanceSample(
+                state.theme,
+                state.sampleDark,
+                state.sampleDescription.asString(),
+                Modifier.testTag(AppearanceTags.SAMPLE),
+            )
+
+            SectionHeader(text(SettingsStrings.settings_theme_mode_title))
+            SegmentedChoice(
+                options = state.modes.map { it.label.asString() },
+                selectedIndex = state.modes.indexOfFirst { it.mode == state.theme.mode }.coerceAtLeast(0),
+                onSelect = { actions.onMode(state.modes[it].mode) },
+                testTags = state.modes.map { AppearanceTags.mode(it.mode) },
+            )
 
             SectionHeader(text(SettingsStrings.settings_appearance_color))
             ListGroup {

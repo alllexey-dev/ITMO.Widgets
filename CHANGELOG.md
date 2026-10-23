@@ -44,6 +44,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   choice and `Чёрный фон`. Under `Монохром` the colours are dimmed with a line why. The defaults keep the look of 2.2;
   below Android 12 and on iOS the app is brand blue instead of the baseline purple. On iOS the colours reach the
   widgets only, which the page says.
+- `Тема` on `Оформление`: `Системная` (the default), `Светлая` or `Тёмная` for the app on both platforms, applied at
+  once and kept on sign-out. The sample shows only the kept theme on Android; `Светлая` hides `Чёрный фон`. Widgets
+  stay light or dark as the system is.
 - Material 3 Expressive: every bottom tab shows its label, the morphing loading indicator, a little expressive
   motion; reduced motion shows end states at once. Tonal buttons use the accent instead of a disabled-looking grey.
 - Every icon is a Material Symbols Rounded glyph; the selected tab shows the filled one. Android avatars are M3

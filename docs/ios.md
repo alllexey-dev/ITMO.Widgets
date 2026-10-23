@@ -148,7 +148,9 @@ without the filtering entitlement lists no push switch ([Degradations](#degradat
 `AppearanceScreen` over `AppearanceViewModel`. The first two report the system state as `SettingsScreen` does. The
 app's own screens keep the system's colours (`PlatformCapabilities.appColors` is off), so `AppearanceScreen` draws its
 sample as a widget, the one thing the colours reach, from `AppearanceColors` (the widgets' scheme, without Compose),
-and offers no black background ([settings](settings.md#ios-1)).
+and offers no black background ([settings](settings.md#ios-1)). Its `Тема` reaches the app through `ShellView`, which
+follows `AppearancePreferences.observeTheme()` and sets `preferredColorScheme` on the root, so sheets and alerts take
+it too; the widgets keep the system's.
 
 ## Connected clients
 

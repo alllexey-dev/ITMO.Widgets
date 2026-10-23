@@ -19,14 +19,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 59 key names
+ * `app_preferences.preferences_pb` is a stable identifier: released installs keep reading these 60 key names
  * with these defaults. A rename, a duplicate or a moved default is a data loss for every upgrading user. The four
  * `push_registered_*` keys are written only by iOS, whose app process opens the same file name.
  */
 class PreferenceKeyParityTest {
 
     @Test
-    fun `the app preferences keep their 59 key names, each declared once`() {
+    fun `the app preferences keep their 60 key names, each declared once`() {
         // The stores live in :app and in the main source sets of the shared modules.
         val sharedMain = File("../shared").walk()
             .filter { "${File.separator}build${File.separator}" !in it.path && "Main${File.separator}kotlin" in it.path }
@@ -37,7 +37,7 @@ class PreferenceKeyParityTest {
             .toList()
 
         assertEquals(EXPECTED.sortedWith(compareBy({ it.file }, { it.name })), declared)
-        assertEquals(59, declared.map { it.name }.toSet().size)
+        assertEquals(60, declared.map { it.name }.toSet().size)
     }
 
     @Test
@@ -144,6 +144,7 @@ class PreferenceKeyParityTest {
             Key("AppearancePreferences.kt", "int", "app_accent_custom"),
             Key("AppearancePreferences.kt", "string", "app_theme_style"),
             Key("AppearancePreferences.kt", "string", "app_theme_contrast"),
+            Key("AppearancePreferences.kt", "string", "app_theme_mode"),
             Key("AppearancePreferences.kt", "boolean", "app_dark_black"),
             Key("AppearancePreferences.kt", "boolean", "widgets_follow_app_theme"),
             Key("UtilityStorage.kt", "int", "registered_firebase_owner"),

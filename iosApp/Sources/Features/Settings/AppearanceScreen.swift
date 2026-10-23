@@ -5,6 +5,7 @@ import UIKit
 /// The appearance page (`settings_appearance_title`, `AppearanceViewModel`), as Android's `AppearanceScreen`: every
 /// choice on the page and applied at once. The app's own screens keep the system's colours on iOS, so the sample shows
 /// a widget, the one thing the colours reach (`PlatformCapabilities.appColors`), and the page has no black background.
+/// Light or dark applies to the app's screens (`ShellView`); the widgets keep the system's.
 struct AppearanceScreen: View {
     @State private var model = ObservableViewModel(AppearanceViewModel.self, state: \.uiState)
     @State private var message: SettingsMessage?
@@ -14,6 +15,7 @@ struct AppearanceScreen: View {
         AppearanceContent(
             state: model.state,
             actions: AppearanceActions(
+                mode: { viewModel.selectMode(mode: $0) },
                 accent: { viewModel.selectAccent(accent: $0) },
                 customColor: { viewModel.setCustomColor(argb: $0) },
                 style: { viewModel.selectStyle(style: $0) },
@@ -47,6 +49,7 @@ struct AppearanceScreen: View {
 
 /// What the page's choices do; snapshot tests pass no-ops.
 struct AppearanceActions {
+    var mode: (ThemeMode) -> Void = { _ in }
     var accent: (AccentColor) -> Void = { _ in }
     var customColor: (Int32) -> Void = { _ in }
     var style: (ThemeStyle) -> Void = { _ in }
@@ -67,6 +70,14 @@ struct AppearanceContent: View {
         ItmoScreenStack {
             if state.loaded {
                 sample
+                ItmoSectionHeader(title: AppStrings.string("settings_theme_mode_title"))
+                ItmoSegmentedChoice(
+                    label: AppStrings.string("settings_theme_mode_title"),
+                    options: state.modes.map(\.mode),
+                    selection: Binding(get: { state.theme.mode }, set: actions.mode)
+                ) { mode in state.modes.first { $0.mode == mode }?.label.resolved ?? mode.name }
+                .accessibilityIdentifier("appearance.mode")
+
                 ItmoSectionHeader(title: AppStrings.string("settings_appearance_color"))
                 ItmoListGroup(inset: ItmoKit.padding) {
                     swatches
@@ -115,11 +126,16 @@ struct AppearanceContent: View {
     /// The scheme in the light and the dark appearance on a small widget: a title, a card with a tile and a bar, a pill.
     private var sample: some View {
         HStack(spacing: ItmoSpacing.compact) {
-            AppearanceSampleWidget(theme: state.theme, dark: false, label: AppStrings.string("settings_appearance_light"))
-            AppearanceSampleWidget(theme: state.theme, dark: true, label: AppStrings.string("settings_appearance_dark"))
+            ForEach(state.sampleDark.map(\.boolValue), id: \.self) { dark in
+                AppearanceSampleWidget(
+                    theme: state.theme,
+                    dark: dark,
+                    label: AppStrings.string(dark ? "settings_appearance_dark" : "settings_appearance_light")
+                )
+            }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: AppStrings.string("settings_appearance_sample")))
+        .accessibilityLabel(Text(verbatim: state.sampleDescription.resolved))
         .accessibilityIdentifier("appearance.sample")
     }
 
@@ -279,7 +295,9 @@ private struct AppearanceSampleWidget: View {
 private extension ThemeSpec {
     /// The same choices with [accent]: SKIE bridges no default arguments of `copy`.
     func with(accent: AccentColor) -> ThemeSpec {
-        ThemeSpec(accent: accent, customArgb: customArgb, style: style, contrast: contrast, pureBlack: pureBlack)
+        ThemeSpec(
+            accent: accent, customArgb: customArgb, style: style, contrast: contrast, pureBlack: pureBlack, mode: mode
+        )
     }
 }
 

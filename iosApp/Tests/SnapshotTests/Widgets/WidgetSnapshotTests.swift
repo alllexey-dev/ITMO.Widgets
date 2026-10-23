@@ -219,7 +219,7 @@ final class WidgetSnapshotTests: XCTestCase {
     /// The teal preset while the widgets follow the app's theme: its palette comes from the shared writer.
     static let teal = ThemeSpec(
         accent: .teal, customArgb: ThemeSpec.companion.DEFAULT_CUSTOM_ARGB, style: .tonalSpot, contrast: .standard,
-        pureBlack: false
+        pureBlack: false, mode: .system
     )
 
     private func sport(_ state: SportWidgetSampleState, theme: ThemeSpec? = nil) async throws -> SportWidgetEntry {

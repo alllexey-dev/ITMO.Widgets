@@ -32,7 +32,6 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_dark
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_light
-import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_sample
 import dev.alllexey.itmowidgets.shared.compose.strings.settings_appearance_sample_action
 import dev.alllexey.itmowidgets.shared.designsystem.ic_star
 import org.jetbrains.compose.resources.painterResource
@@ -40,19 +39,25 @@ import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /**
- * [theme] on a small screen of the app, once in the light and once in the dark theme, whichever the phone shows now:
- * a heading, a card with a tile and a switch, a filled button. So contrast and the black background show even in the
- * light theme. It is a picture: TalkBack reads it as one element and nothing in it reacts.
+ * [theme] on a small screen of the app in each theme of [dark] (light, dark or both, whichever the phone shows now):
+ * a heading, a card with a tile and a switch, a filled button. So with both, contrast and the black background show
+ * even in the light theme. It is a picture: TalkBack reads it as [description] and nothing in it reacts.
  */
 @Composable
-internal fun AppearanceSample(theme: ThemeSpec, modifier: Modifier = Modifier) {
-    val description = stringResource(Res.string.settings_appearance_sample)
+internal fun AppearanceSample(
+    theme: ThemeSpec,
+    dark: List<Boolean>,
+    description: String,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
     ) {
-        SampleScreen(theme, dark = false, stringResource(Res.string.settings_appearance_light), Modifier.weight(1f))
-        SampleScreen(theme, dark = true, stringResource(Res.string.settings_appearance_dark), Modifier.weight(1f))
+        dark.forEach {
+            val label = if (it) Res.string.settings_appearance_dark else Res.string.settings_appearance_light
+            SampleScreen(theme, dark = it, stringResource(label), Modifier.weight(1f))
+        }
     }
 }
 

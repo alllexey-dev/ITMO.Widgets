@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.settings.ui.appearance
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assert
@@ -19,6 +22,7 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeMode
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.designsystem.components.controls.ColorPickerTags
@@ -43,6 +47,7 @@ class AppearanceScreenTest {
 
     private val calls = mutableListOf<Any>()
     private val actions = AppearanceActions(
+        onMode = { calls += it },
         onAccent = { calls += it },
         onCustomColor = { calls += it },
         onStyle = { calls += it },
@@ -58,10 +63,12 @@ class AppearanceScreenTest {
     fun everyChoiceIsOnThePageAndReportsAtOnce() = runComposeUiTest {
         show(AppearanceSamples.state())
 
+        onNodeWithTag(AppearanceTags.mode(ThemeMode.SYSTEM)).assertIsSelected().assert(hasText("Системная"))
+        onNodeWithTag(AppearanceTags.mode(ThemeMode.DARK)).assertIsNotSelected().performClick()
         onNodeWithTag(AppearanceTags.accent(AccentColor.WALLPAPER)).assertIsSelected().assert(hasText("Как обои"))
         onNodeWithText("Цвет берётся из обоев телефона и меняется вместе с ними").assertExists()
         onNodeWithTag(AppearanceTags.PICKER).assertDoesNotExist()
-        onNodeWithTag(AppearanceTags.accent(AccentColor.TEAL)).assertIsNotSelected().performClick()
+        onNodeWithTag(AppearanceTags.accent(AccentColor.TEAL)).assertIsNotSelected().performScrollTo().performClick()
         onNodeWithTag(AppearanceTags.style(ThemeStyle.TONAL_SPOT)).assertIsSelected()
         onNodeWithText("Мягкие цвета, как в Android по умолчанию").assertExists()
         // A semantics click: the sideways row is out of Robolectric's small window, which a gesture cannot reach.
@@ -71,7 +78,7 @@ class AppearanceScreenTest {
         onNodeWithTag(AppearanceTags.BLACK).performScrollTo().assertIsOff().performClick()
         assertTouchTargets()
 
-        assertEquals(listOf(AccentColor.TEAL, ThemeStyle.VIBRANT, ThemeContrast.HIGH, true), calls)
+        assertEquals(listOf(ThemeMode.DARK, AccentColor.TEAL, ThemeStyle.VIBRANT, ThemeContrast.HIGH, true), calls)
     }
 
     @Test
@@ -110,6 +117,20 @@ class AppearanceScreenTest {
         onNodeWithTag(AppearanceTags.SAMPLE).assert(hasContentDescription("Пример оформления в светлой и тёмной теме"))
         onNodeWithTag(AppearanceTags.SAMPLE).assertHasNoClickAction()
         onNodeWithText("Записаться").assertDoesNotExist()
+    }
+
+    @Test
+    fun aKeptThemeShowsItsSampleAloneAndTheLightOneDropsTheBlackBackground() = runComposeUiTest {
+        var theme by mutableStateOf(AppearanceSamples.DARK)
+        setContent { ItmoTheme(dark = false) { AppearanceScreen(AppearanceSamples.state(theme), actions) } }
+
+        onNodeWithTag(AppearanceTags.SAMPLE).assert(hasContentDescription("Пример оформления в тёмной теме"))
+        onNodeWithTag(AppearanceTags.mode(ThemeMode.DARK)).assertIsSelected()
+        onNodeWithTag(AppearanceTags.BLACK).performScrollTo().assertExists()
+
+        theme = theme.copy(mode = ThemeMode.LIGHT)
+        onNodeWithTag(AppearanceTags.SAMPLE).assert(hasContentDescription("Пример оформления в светлой теме"))
+        onNodeWithTag(AppearanceTags.BLACK).assertDoesNotExist()
     }
 
     @Test

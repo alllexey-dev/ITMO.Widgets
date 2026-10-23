@@ -116,6 +116,8 @@
     <string name="settings_appearance_light">Светлая тема</string>
     <string name="settings_appearance_dark">Тёмная тема</string>
     <string name="settings_appearance_sample">Пример оформления в светлой и тёмной теме</string>
+    <string name="settings_appearance_sample_light">Пример оформления в светлой теме</string>
+    <string name="settings_appearance_sample_dark">Пример оформления в тёмной теме</string>
     <string name="settings_appearance_sample_action">Записаться</string>
     <string name="settings_theme_style_tonal_spot">Спокойная</string>
     <string name="settings_theme_style_tonal_spot_description">Мягкие цвета, как в Android по умолчанию</string>
@@ -131,6 +133,10 @@
     <string name="settings_theme_style_neutral_description">Приглушённые, почти серые цвета</string>
     <string name="settings_theme_style_monochrome">Монохром</string>
     <string name="settings_theme_style_monochrome_description">Только оттенки серого</string>
+    <string name="settings_theme_mode_title">Тема</string>
+    <string name="settings_theme_mode_system">Системная</string>
+    <string name="settings_theme_mode_light">Светлая</string>
+    <string name="settings_theme_mode_dark">Тёмная</string>
     <string name="settings_theme_contrast_title">Контраст</string>
     <string name="settings_theme_contrast_standard">Обычный</string>
     <string name="settings_theme_contrast_medium">Средний</string>

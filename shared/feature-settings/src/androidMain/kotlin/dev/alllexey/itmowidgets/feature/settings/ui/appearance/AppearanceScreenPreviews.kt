@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.settings.ui.appearance
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import dev.alllexey.itmowidgets.core.settings.ThemeMode
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ColorSource
@@ -30,4 +31,18 @@ internal class AppearanceScreenMonochromePreview {
     @Preview(name = "monochrome", heightDp = 1300)
     @Composable
     fun AppearanceScreen() = AppearancePreview(AppearanceSamples.MONOCHROME)
+}
+
+/** `Светлая`: the light sample only, no `Чёрный фон`. */
+internal class AppearanceScreenLightModePreview {
+    @Preview(name = "light-mode", heightDp = 1200)
+    @Composable
+    fun AppearanceScreen() = AppearancePreview(ThemeSpec(mode = ThemeMode.LIGHT))
+}
+
+/** `Тёмная` with `Чёрный фон`: the dark sample only. */
+internal class AppearanceScreenDarkModePreview {
+    @Preview(name = "dark-mode", heightDp = 1300)
+    @Composable
+    fun AppearanceScreen() = AppearancePreview(AppearanceSamples.DARK)
 }

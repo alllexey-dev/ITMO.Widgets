@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.settings.AccentColor
 import dev.alllexey.itmowidgets.core.settings.ThemeContrast
+import dev.alllexey.itmowidgets.core.settings.ThemeMode
 import dev.alllexey.itmowidgets.core.settings.ThemeSpec
 import dev.alllexey.itmowidgets.core.settings.ThemeStyle
 import dev.alllexey.itmowidgets.feature.settings.domain.SettingsRepository
@@ -36,6 +37,8 @@ class AppearanceViewModel(
     val uiState: StateFlow<AppearanceUiState> = repository.observeLocalSettings()
         .map { local -> appearanceState(local.theme, capabilities) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, AppearanceUiState())
+
+    fun selectMode(mode: ThemeMode) = update { it.copy(mode = mode) }
 
     fun selectAccent(accent: AccentColor) = update { it.copy(accent = accent) }
 

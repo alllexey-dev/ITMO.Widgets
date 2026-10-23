@@ -13,6 +13,8 @@ data class ThemeSpec(
     val contrast: ThemeContrast = ThemeContrast.STANDARD,
     /** Black background and surfaces in the dark theme; the light theme ignores it. */
     val pureBlack: Boolean = false,
+    /** Light or dark for the app's screens; the widgets keep the launcher's (docs/settings.md, Appearance). */
+    val mode: ThemeMode = ThemeMode.SYSTEM,
 ) {
     companion object {
         /** The brand blue `#4984E2`: what «Свой цвет» starts from. */
@@ -29,6 +31,13 @@ enum class ThemeStyle {
     CONTENT,
     NEUTRAL,
     MONOCHROME,
+}
+
+/** Whether the app is light or dark: as the system, or always one. Names are stored in `app_theme_mode`. */
+enum class ThemeMode {
+    SYSTEM,
+    LIGHT,
+    DARK,
 }
 
 /** Material's contrast levels 0, 0.5 and 1. Names are stored in `app_theme_contrast`. */
