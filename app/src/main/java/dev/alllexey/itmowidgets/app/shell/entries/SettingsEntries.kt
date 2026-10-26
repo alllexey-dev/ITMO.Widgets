@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.material.snackbar.Snackbar
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.app.WidgetPinPreviews
 import dev.alllexey.itmowidgets.app.shell.ActivityRoutes
 import dev.alllexey.itmowidgets.app.shell.EntryRegistry
 import dev.alllexey.itmowidgets.app.shell.Nav3AppNavigator
@@ -218,7 +219,8 @@ private fun SettingsEntry(key: AppRoutes.Settings, navigator: Nav3AppNavigator) 
 
 /**
  * The widgets gallery: each card and the open sheet draw their own real widget preview, and `Добавить` pins one
- * through the launcher; a pinned widget is counted again at once.
+ * through the launcher, whose dialog shows the user's own widget ([WidgetPinPreviews]); a pinned widget is counted
+ * again at once.
  */
 @Composable
 private fun WidgetsGalleryEntry(
@@ -242,8 +244,11 @@ private fun WidgetsGalleryEntry(
         actions = actions,
         galleryActions = WidgetsGalleryActions(
             onAdd = { format ->
-                if (!pins.isSupported || !pins.request(WidgetProviders.of(format))) {
-                    snackbar(view, R.string.widget_pin_failed, Snackbar.LENGTH_SHORT)
+                scope.launch {
+                    val preview = if (pins.isSupported) KoinStarter.ensureStarted(context).get<WidgetPinPreviews>().of(format) else null
+                    if (!pins.isSupported || !pins.request(WidgetProviders.of(format), preview)) {
+                        snackbar(view, R.string.widget_pin_failed, Snackbar.LENGTH_SHORT)
+                    }
                 }
             },
         ),

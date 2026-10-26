@@ -31,7 +31,7 @@ import org.koin.dsl.module
  * sync are `scheduleDataModule`'s, the widget snapshot file `componentBindingsModule`'s.
  */
 val androidScheduleModule = module {
-    single { WidgetRefreshCoordinator(androidContext()) } binds
+    single { WidgetRefreshCoordinator(androidContext(), get()) } binds
         arrayOf(WidgetRefreshRequester::class, ScheduleWidgetRefreshRequester::class)
     factoryOf(::AndroidScheduleChangeNotifier) { bind<ScheduleChangeNotifier>() }
     factoryOf(::AndroidPhoneCalendars) { bind<PhoneCalendars>() }

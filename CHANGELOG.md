@@ -182,6 +182,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - A lesson opens its sheet, a booking or queue its sport lesson.
 - `Виджеты` is a gallery of whole live previews with `Добавить` (Android) or `Как добавить` (iOS) and each format's
   settings in a sheet; `Завтрашние пары вечером` is on by default.
+- Android: `Добавить` shows your own widget in the launcher's dialog (the cached schedule, sport's last snapshot, the
+  pass under its spoiler; the sample until there is data), and on Android 15+ the widget picker shows the widgets
+  with the current settings and theme instead of fixed images.
 - `Виджеты в цвет темы` (on by default) paints the widgets in the app's colours; with dynamic colours off the QR
   stays black on white.
 - List widgets placed in 2.2 stay lists. Schedule widgets work again on Android 8-11 and follow the launcher's corner
@@ -214,6 +217,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   provisioning profile.
 - iOS widgets placed before sign-in leave the signed-out state as soon as the app signs in, not at their next
   hourly timeline.
+- The `Виджеты` previews follow the phone's light or dark mode as placed widgets do, also when `Тема` forces the
+  other one (Android and iOS).
 - Android text without its own colour is never black in the dark theme: the theme gives every screen `onSurface`,
   not only the ones inside a `Surface`.
 

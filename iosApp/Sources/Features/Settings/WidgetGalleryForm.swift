@@ -169,12 +169,21 @@ enum WidgetFamilySizes {
     static let large = CGSize(width: 364, height: 382)
 }
 
+extension EnvironmentValues {
+    /// The system's light or dark mode where the app's theme mode forces one (`ShellView`), nil where the app
+    /// follows the system: a placed widget follows the system, so the gallery draws its widgets in it.
+    @Entry var systemColorScheme: ColorScheme?
+}
+
 /// A widget laid out at `size`, shrunk to the width it gets, with the home screen's corner, on a wallpaper of the
-/// app's container roles. Nothing in it is a button: the gallery's own controls are below it.
+/// app's container roles; the widget in the system's mode, the wallpaper in the app's. Nothing in it is a button: the
+/// gallery's own controls are below it.
 struct WidgetStage<Content: View>: View {
     let size: CGSize
     var lock = false
     @ViewBuilder let content: Content
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.systemColorScheme) private var systemColorScheme
 
     var body: some View {
         Color.clear
@@ -184,6 +193,7 @@ struct WidgetStage<Content: View>: View {
                 GeometryReader { geometry in
                     let scale = geometry.size.width / size.width
                     content
+                        .environment(\.colorScheme, systemColorScheme ?? colorScheme)
                         .frame(width: size.width, height: size.height)
                         .clipShape(.rect(cornerRadius: 22, style: .continuous))
                         .scaleEffect(scale, anchor: .topLeading)

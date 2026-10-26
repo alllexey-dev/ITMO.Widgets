@@ -150,7 +150,24 @@ Settings: the `Пропуск` sheet of the gallery ([settings](../settings.md#q
 - Launcher picker: `previewImage` PNGs (`res/drawable{,-night}-420dpi/widget_*_preview.png`) are the real
   renderers on the sample day, written by `WidgetPreviewImagesTest` with `ITMO_WRITE_WIDGET_PREVIEWS=1`; the Android
   12+ `previewLayout`s show the same images. Regenerate them whenever a widget layout changes.
+- Android 15+ picker: `WidgetPickerPreviews` replaces those images for `Пара`, `Расписание на день`, `Список пар`
+  and `Спорт` with the sample drawn with the current widget settings and theme (`AppWidgetManager.setWidgetPreview`).
+  The system rate-limits the call, so it runs only when an input changed since the system last took them (stored in
+  `DeviceHintPreferences`): the app's install or update time, the system's mode, the widget palette, the schedule
+  widget settings; checked at app start, on a configuration change and with every `refreshAll`, two seconds after
+  the last call. A refused call is retried at the next check. The pass keeps its static image.
+- Pin dialog: `Добавить` passes `EXTRA_APPWIDGET_PREVIEW` (`WidgetPinPreviews`), the widget as it will be placed:
+  the schedule from the cache (`ScheduleWidgetDataProvider.load(refresh = false)`, without queued sport rows), sport
+  from its last snapshot, the pass under its spoiler whatever the setting. Without data (signed out, nothing cached,
+  no sport snapshot yet) it is the sample. Nothing starts a request, and a demo session shows its demo data. The
+  classic list has no dialog preview below Android 12L (its compat rows need a placed widget's id). A launcher may
+  ignore the extra and show the static preview.
 - The gallery's previews: real renderers on sample data via `core/ui/widget.WidgetPreviewFactory`, each laid out at
   its launcher size and shrunk as a whole to its card's width; `QrPreviewBitmapCache` holds at most four bitmap
   pairs, off the main thread. Previews never register a host, create PendingIntents, touch the network or write
   snapshots.
+- Every launcher-side preview (the gallery's, the pin dialog's, the picker's) draws in the system's light or dark
+  mode, as the placed widget does, not in the one `Тема` forces on the app: Android wraps the context with
+  `Context.inSystemNightMode()` (`WidgetColors.kt`, the system's night bits over the app theme), iOS's `WidgetStage`
+  takes `systemColorScheme`, which `ShellView` reads from the screen while `Тема` is not `Системная`. The
+  gallery's wallpaper backdrop stays in the app's colours.

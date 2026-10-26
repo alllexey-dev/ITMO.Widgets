@@ -87,7 +87,9 @@ so the activity's configuration carries it: `isSystemInDarkTheme()`, the
 default of `ItmoTheme(dark = ...)`, the Views, the system bars and the WebViews
 all read it; a change recreates the activities. iOS sets `preferredColorScheme`
 on `ShellView`. Never read the phone's own mode for an app screen; the widgets
-(`WidgetColors`, `observeWidgetTheme()` drops the mode) keep the launcher's.
+(`WidgetColors`, `observeWidgetTheme()` drops the mode) keep the launcher's,
+and so do their previews in the gallery (`Context.inSystemNightMode()`,
+iOS `systemColorScheme`; [widgets](features/widgets.md#previews)).
 
 - The seed: `Как обои` the wallpaper's (`system_accent1_500`, the brand blue
   without one), `Фирменный` the brand blue `#4984E2`, `Свой цвет` the user's,

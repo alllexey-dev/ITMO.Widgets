@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.app
 
 import android.app.Application
+import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
 import dev.alllexey.itmowidgets.core.diagnostics.DiagnosticsCrashHandler
 import dev.alllexey.itmowidgets.core.diagnostics.FileAppDiagnostics
@@ -50,6 +51,14 @@ class ItmoWidgetsApplication : Application() {
         applicationScope.launch(Dispatchers.Main) {
             appearance.observeTheme().map { it.mode }.collect { AppCompatDelegate.setDefaultNightMode(it.nightMode) }
         }
+        // After an install or an update; a no-op while the picker already has these previews.
+        koin.get<WidgetPickerPreviews>().publish()
+    }
+
+    /** The system's light or dark mode or the wallpaper's colours may have changed the picker's previews. */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        KoinStarter.ensureStarted(this).get<WidgetPickerPreviews>().publish()
     }
 }
 
