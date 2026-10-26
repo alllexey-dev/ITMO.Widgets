@@ -143,9 +143,18 @@ struct MeContent: View {
         }
     }
 
-    /// The campus map, the Wi-Fi, the university's site and the project's pages.
+    /// ISU messages, the campus map, the Wi-Fi, the university's site and the project's pages.
     private var links: some View {
         ItmoListGroup {
+            ItmoRow(
+                title: AppStrings.string("me_isu_messages"),
+                subtitle: AppStrings.string("me_isu_messages_subtitle"),
+                symbol: .mail,
+                tone: .neutral,
+                chevron: true,
+                action: { actions.open(AppRoutes.IsuMessages.shared) }
+            )
+            .accessibilityIdentifier("isu_messages_row")
             ItmoRow(
                 title: AppStrings.string("me_map"),
                 subtitle: AppStrings.string("me_map_subtitle"),

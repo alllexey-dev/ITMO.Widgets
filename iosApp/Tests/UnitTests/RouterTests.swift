@@ -627,6 +627,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.LessonDetails(args: lesson), .swiftUISheet),
             (AppRoutes.PendingSportDetails(args: pendingSport), .swiftUISheet),
             (AppRoutes.CampusMap(args: CampusMapArgs(lesson: lesson, route: true)), .fullScreen),
+            (AppRoutes.IsuMessages.shared, .swiftUI),
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .swiftUISheet),
             // The link report is a form sheet over the actions sheet that asks for it.
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),

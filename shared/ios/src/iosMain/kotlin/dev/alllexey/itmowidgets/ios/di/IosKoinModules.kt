@@ -11,6 +11,8 @@ import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapIosModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
+import dev.alllexey.itmowidgets.feature.messages.di.messagesIosModule
+import dev.alllexey.itmowidgets.feature.messages.di.messagesModule
 import dev.alllexey.itmowidgets.feature.wifi.di.wifiModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
@@ -95,6 +97,8 @@ object IosKoinModules {
         reviewsModule, reviewsIosModule, resourcesModule, resourcesIosModule,
         // The campus map over the mirror; the previous lesson comes from the schedule's `DayLessonsGateway`.
         campusMapModule, campusMapIosModule,
+        // ISU messages over the core ISU client; attachments in the temporary directory.
+        messagesModule, messagesIosModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record, the build's site until then. */

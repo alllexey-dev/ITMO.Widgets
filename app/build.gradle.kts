@@ -189,6 +189,7 @@ dependencies {
     implementation(project(":shared:feature-resources"))
     implementation(project(":shared:feature-reviews"))
     implementation(project(":shared:feature-map"))
+    implementation(project(":shared:feature-messages"))
     implementation(project(":shared:feature-account"))
     // @Preview of the Compose screens that stay in :app (debug tools); DebugToolsScreenshotTest renders them.
     implementation(libs.compose.ui.tooling.preview)

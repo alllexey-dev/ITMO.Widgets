@@ -20,7 +20,8 @@ settings: [Settings](../settings.md).
   warning pill, [connected clients](connections.md)), `Настройки` (every setting, the connection, privacy and
   notifications included)
   and developer tools only in Android debug builds ([Debug tools](debug.md)).
-- Links: `Карта` (`AppRoutes.CampusMap()`, [campus map](map.md)), `Wi-Fi` (`AppRoutes.Wifi`, [Wi-Fi](wifi.md)), `My ITMO` ([My ITMO in the app](my-itmo-web.md); the
+- Links: `Сообщения ИСУ` (`AppRoutes.IsuMessages`, [ISU messages](isu-messages.md)), `Карта`
+  (`AppRoutes.CampusMap()`, [campus map](map.md)), `Wi-Fi` (`AppRoutes.Wifi`, [Wi-Fi](wifi.md)), `My ITMO` ([My ITMO in the app](my-itmo-web.md); the
   demo refuses it), the Telegram channel and GitHub; then `Выйти`.
 - The rows name no route themselves: `MeActions` reaches the host, which maps them: the gate to
   `AppRoutes.Settings(SERVICES)`, widgets to `AppRoutes.Settings(WIDGETS)`, settings to the root.

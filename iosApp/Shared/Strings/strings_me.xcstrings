@@ -157,6 +157,30 @@
         }
       }
     },
+    "me_isu_messages" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщения ИСУ"
+          }
+        }
+      }
+    },
+    "me_isu_messages_subtitle" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Письма преподавателей и деканата"
+          }
+        }
+      }
+    },
     "me_map" : {
       "comment" : "Generated from strings_me.xml",
       "extractionState" : "manual",

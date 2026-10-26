@@ -5,14 +5,22 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.cookies.AcceptAllCookiesStorage
 import io.ktor.client.plugins.cookies.CookiesStorage
-import io.ktor.client.request.get
+import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.header
+import io.ktor.client.request.request
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.bodyAsBytes
+import io.ktor.http.ContentType
 import io.ktor.http.Cookie
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.Parameters
 import io.ktor.http.Url
+import io.ktor.http.contentLength
+import io.ktor.http.contentType
 import io.ktor.http.hostWithPort
+import io.ktor.http.parameters
 import io.ktor.http.renderSetCookieHeader
 import io.ktor.http.setCookie
 
@@ -52,28 +60,56 @@ class IsuWebClient(engine: HttpClientEngine, private val cookies: ItmoIdCookies)
         return fetched.takeIf { it.sessionOf(app) != null }
     }
 
-    /** Follows redirects from [start] to a page; null when the chain reaches ITMO.ID's sign-in. */
-    private suspend fun fetch(jar: CookiesStorage, start: Url): Fetched? {
+    /**
+     * The answer of APEX's on-demand [process] of [app] (`wwv_flow.show`, as the page's own JavaScript asks it) with
+     * [arguments] as `x01`, `x02`, ...; null when ISU or ITMO.ID wants a new sign-in.
+     */
+    internal suspend fun process(session: IsuSession, app: Int, page: Int, process: String, arguments: List<String>): Fetched? {
+        require(arguments.size <= MAX_ARGUMENTS)
+        val form = parameters {
+            append("p_flow_id", app.toString())
+            append("p_flow_step_id", page.toString())
+            append("p_instance", session.id)
+            append("p_request", "APPLICATION_PROCESS=$process")
+            arguments.forEachIndexed { index, value -> append("x${(index + 1).toString().padStart(2, '0')}", value) }
+        }
+        return fetch(session.jar, apexUrl("wwv_flow.show"), form = form)
+    }
+
+    /** The answer of [query] (`f?p=...`) in [session]'s cookies, at most [maxBytes]; null when a new sign-in is needed. */
+    internal suspend fun file(session: IsuSession, query: String, maxBytes: Int): Fetched? =
+        fetch(session.jar, apexUrl(query), maxBytes = maxBytes)
+
+    /**
+     * Follows redirects from [start] to a page; null when the chain reaches ITMO.ID's sign-in. A [form] is POSTed to
+     * [start]; redirects after it are GETs, as a browser follows them.
+     */
+    private suspend fun fetch(jar: CookiesStorage, start: Url, form: Parameters? = null, maxBytes: Int = MAX_PAGE_BYTES): Fetched? {
         var url = start
+        var body = form
         repeat(MAX_REDIRECTS) {
-            val response = request(jar, url) ?: return null
+            val response = request(jar, url, body) ?: return null
             val location = response.headers[HttpHeaders.Location]
             if (response.status.value in REDIRECTS && location != null) {
                 url = url.resolve(location)
+                body = null
                 return@repeat
             }
-            val body = response.bodyAsText()
-            if (url.host == ITMO_ID_HOST || LOGIN_FORM in body) return null
+            if ((response.contentLength() ?: 0) > maxBytes) throw IsuException("ISU answer is too large")
+            val bytes = response.bodyAsBytes()
+            if (bytes.size > maxBytes) throw IsuException("ISU answer is too large")
+            val html = response.contentType()?.match(ContentType.Text.Html) != false
+            if (url.host == ITMO_ID_HOST || html && LOGIN_FORM in bytes.decodeToString()) return null
             if (response.status.value != OK || !url.isApex()) {
                 throw IsuException("ISU answered ${response.status.value}")
             }
-            return Fetched(url, body)
+            return Fetched(url, bytes, html)
         }
         throw IsuException("ISU redirected more than $MAX_REDIRECTS times")
     }
 
     /** One request with the cookies of its host; null when ITMO.ID is asked but the phone has no SSO cookies. */
-    private suspend fun request(jar: CookiesStorage, url: Url): HttpResponse? {
+    private suspend fun request(jar: CookiesStorage, url: Url, form: Parameters? = null): HttpResponse? {
         if (url.protocol.name != "https") throw IsuException("ISU redirected to plain HTTP")
         return when (url.host) {
             ITMO_ID_HOST -> {
@@ -84,7 +120,7 @@ class IsuWebClient(engine: HttpClientEngine, private val cookies: ItmoIdCookies)
             }
             in ISU_HOSTS -> {
                 val header = jar.get(url).joinToString("; ") { "${it.name}=${it.value}" }
-                send(url, header.ifEmpty { null }).also { response ->
+                send(url, header.ifEmpty { null }, form).also { response ->
                     response.setCookie().forEach { jar.addCookie(url, it.withDefaultPath(url)) }
                 }
             }
@@ -92,11 +128,19 @@ class IsuWebClient(engine: HttpClientEngine, private val cookies: ItmoIdCookies)
         }
     }
 
-    private suspend fun send(url: Url, cookieHeader: String?): HttpResponse = http.get(url) {
-        header(HttpHeaders.UserAgent, USER_AGENT)
-        header(HttpHeaders.Accept, "text/html")
-        cookieHeader?.let { header(HttpHeaders.Cookie, it) }
-    }
+    private suspend fun send(url: Url, cookieHeader: String?, form: Parameters? = null): HttpResponse =
+        http.request(url) {
+            header(HttpHeaders.UserAgent, USER_AGENT)
+            cookieHeader?.let { header(HttpHeaders.Cookie, it) }
+            if (form == null) {
+                method = HttpMethod.Get
+                header(HttpHeaders.Accept, "text/html")
+            } else {
+                method = HttpMethod.Post
+                header("X-Requested-With", "XMLHttpRequest")
+                setBody(FormDataContent(form))
+            }
+        }
 
     /** [location] against this address: absolute, host-relative (`/...`) or relative to its directory (`f?p=...`). */
     private fun Url.resolve(location: String): Url = when {
@@ -120,8 +164,10 @@ class IsuWebClient(engine: HttpClientEngine, private val cookies: ItmoIdCookies)
 
     private fun Url.isApex(): Boolean = host in ISU_HOSTS && encodedPath.startsWith(APEX_PATH)
 
-    /** A page ISU served: where the redirects ended and its HTML. */
-    internal class Fetched(val url: Url, val body: String) {
+    /** A page ISU served: where the redirects ended, its bytes and whether it is HTML. */
+    internal class Fetched(val url: Url, val bytes: ByteArray, val html: Boolean) {
+        val body: String by lazy { bytes.decodeToString() }
+
         /** The APEX session number of `f?p=<app>:<page>:<session>` in the final address. */
         fun sessionOf(app: Int): String? =
             Regex("""(?:^|&)p=$app:[^:&]*:([0-9]+)""").find(url.encodedQuery)?.groupValues?.get(1)
@@ -135,6 +181,8 @@ class IsuWebClient(engine: HttpClientEngine, private val cookies: ItmoIdCookies)
         const val APEX_PATH = "/pls/apex/"
         const val PORTAL = 2143
         const val MAX_REDIRECTS = 10
+        const val MAX_ARGUMENTS = 10
+        const val MAX_PAGE_BYTES = 4 * 1024 * 1024
         const val OK = 200
         val REDIRECTS = 300..399
         const val LOGIN_FORM = "id=\"kc-form-login\""
@@ -165,6 +213,25 @@ class IsuSession internal constructor(
         val fetched = client.page(this, app, page) ?: return null
         fetched.sessionOf(app)?.let { id = it }
         return fetched.body
+    }
+
+    /**
+     * The answer of APEX's on-demand [process] on [app]:[page] with [arguments] as `x01`, `x02`, ... (the JSON the
+     * page's JavaScript reads); null when ISU lost the session (a page instead of the answer). Only processes that
+     * change nothing in ISU may be named.
+     */
+    suspend fun process(app: Int, page: Int, process: String, arguments: List<String>): String? {
+        val fetched = client.process(this, app, page, process, arguments) ?: return null
+        return fetched.body.takeUnless { it.trimStart().startsWith("<") }
+    }
+
+    /**
+     * A file ISU serves at [query] (`f?p=<app>:0::<download request>...`, as the page links it), at most [maxBytes];
+     * null when ISU lost the session (a page instead of the file).
+     */
+    suspend fun download(query: String, maxBytes: Int): ByteArray? {
+        val fetched = client.file(this, query, maxBytes) ?: return null
+        return fetched.bytes.takeUnless { fetched.html }
     }
 
     override fun toString(): String = "IsuSession(redacted)"

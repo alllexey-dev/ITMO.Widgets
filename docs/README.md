@@ -38,6 +38,7 @@ limits. Start there; the documents below are the developer reference.
 - [Schedule changes](features/schedule-changes.md) - the on-device check and its notification.
 - [Calendar](features/calendar.md) - calendar sync and `.ics` export.
 - [Campus map](features/map.md) - floor plans, room mapping, the router.
+- [ISU messages](features/isu-messages.md) - the own ISU inbox, read on the device.
 - [Sport](features/sport.md) - catalog, bookings, queues.
 - [Recordbook](features/recordbook.md) - the MyITMO record book and the BARS overlay.
 - [Subject page](features/subject-page.md) - one subject's result, links, teachers, lessons.

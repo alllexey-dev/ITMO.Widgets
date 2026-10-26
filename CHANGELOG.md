@@ -184,6 +184,13 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   Back on Android closes the map's layers one at a time (picking a route end, the route, the search, the room, the
   place chip) before it leaves the map.
 
+### ISU messages
+
+- A prototype `Сообщения ИСУ` in Профиль on both platforms: the own ISU inbox and archive, read on the device through
+  the shared ISU client (ADR 0037). Unread counter, ten messages a page, a message's text without HTML,
+  links in the browser, attachments in the system viewer. Opening a message leaves it unread in ISU; nothing goes to
+  Backend. The demo shows fictional messages.
+
 ### Widgets
 
 - Rebuilt on one shared snapshot (RemoteViews on Android, WidgetKit on iOS): `Пара` with the lesson to go to and a
