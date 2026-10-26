@@ -7,6 +7,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.widget.RemoteViews
+import androidx.core.os.bundleOf
 import androidx.core.content.ContextCompat
 import dev.alllexey.itmowidgets.core.navigation.WidgetProviders
 
@@ -51,11 +53,15 @@ class WidgetPinRequester(context: Context) {
         receiver = null
     }
 
-    /** Returns false when the launcher refused to show the dialog at all. */
-    fun request(providerClassName: String): Boolean {
+    /**
+     * Returns false when the launcher refused to show the dialog at all. [preview] is the widget the dialog shows; a
+     * launcher without one shows the provider's static preview.
+     */
+    fun request(providerClassName: String, preview: RemoteViews? = null): Boolean {
         val provider = ComponentName(appContext, providerClassName)
+        val extras = preview?.let { bundleOf(AppWidgetManager.EXTRA_APPWIDGET_PREVIEW to it) }
         return try {
-            manager.requestPinAppWidget(provider, null, successCallback(providerClassName))
+            manager.requestPinAppWidget(provider, extras, successCallback(providerClassName))
         } catch (_: IllegalStateException) {
             false
         }

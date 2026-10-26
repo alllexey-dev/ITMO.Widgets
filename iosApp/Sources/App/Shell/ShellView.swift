@@ -10,6 +10,8 @@ struct ShellView: View {
     let session: ShellSession
     @State private var showPass = false
     @State private var themeMode = ThemeMode.system
+    @State private var systemColorScheme = ColorScheme.light
+    @Environment(\.scenePhase) private var scenePhase
     @State private var updateOffer = AppUpdateOffer()
     @AppStorage(BetaNotice.shownKey) private var betaNoticeShown = false
 
@@ -41,6 +43,13 @@ struct ShellView: View {
                     .id(sheet.id)
                     .environment(router)
             }
+            // The screen keeps the system's mode under the window's forced one; a change made in Control Center or
+            // Settings is read when the app becomes active again.
+            .onChange(of: scenePhase, initial: true) {
+                let screen = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen
+                systemColorScheme = screen?.traitCollection.userInterfaceStyle == .dark ? .dark : .light
+            }
+            .environment(\.systemColorScheme, themeMode == .system ? nil : systemColorScheme)
             // On the root, so the window and every sheet and alert take it.
             .preferredColorScheme(themeMode.colorScheme)
     }

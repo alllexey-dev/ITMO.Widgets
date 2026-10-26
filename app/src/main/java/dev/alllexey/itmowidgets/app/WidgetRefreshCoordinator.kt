@@ -6,11 +6,15 @@ import dev.alllexey.itmowidgets.feature.qr.work.QrWidgetWork
 import dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetWork
 import dev.alllexey.itmowidgets.feature.settings.domain.WidgetRefreshRequester
 import dev.alllexey.itmowidgets.feature.sport.work.SportWidgetWork
+
 class WidgetRefreshCoordinator(
     private val context: Context,
+    private val pickerPreviews: WidgetPickerPreviews,
 ) : WidgetRefreshRequester, ScheduleWidgetRefreshRequester {
 
+    /** After a widget setting or the theme changed: the placed widgets and the picker's previews. */
     override fun refreshAll() {
+        pickerPreviews.publish()
         QrWidgetWork.enqueueUpdate(context, force = true)
         ScheduleWidgetWork.enqueueUpdate(context, force = true)
         SportWidgetWork.enqueueUpdate(context, force = true)
