@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
@@ -44,6 +43,7 @@ import dev.alllexey.itmowidgets.core.settings.WidgetFormat
 import dev.alllexey.itmowidgets.core.settings.WidgetPreviewSettings
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
+import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
@@ -171,7 +171,7 @@ private fun CardAction(card: WidgetCard, actions: WidgetsGalleryActions) {
             tone = Tone.Success,
             icon = painterResource(Res.drawable.ic_check),
         )
-        WidgetCardAction.ADD -> FilledTonalButton(
+        WidgetCardAction.ADD -> TonalButton(
             onClick = { actions.onAdd(card.format) },
             contentPadding = PaddingValues(horizontal = ItmoTheme.spacing.content),
             modifier = Modifier.testTag(WidgetsGalleryTags.add(card.format)),
