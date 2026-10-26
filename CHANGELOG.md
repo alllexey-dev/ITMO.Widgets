@@ -170,6 +170,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   chips, dark in the dark theme. `Маршрут` in the lesson sheet and on the Сегодня hero opens it.
 - Plans come from the mirror on map.alllexey.dev and stay on the device (ADR 0033); `Лицензии` names their source.
 - Opened from Профиль, the map starts at Кронверкский пр., 49.
+- A room opened from a place chip's list keeps the chip: closing the room, or Back on Android, shows the list again.
+  Back on Android closes the map's layers one at a time (picking a route end, the route, the search, the room, the
+  place chip) before it leaves the map.
 
 ### Widgets
 

@@ -106,7 +106,8 @@ class CampusMapViewModel(
 
     /**
      * A place chip, again to clear it. The plan goes to the closest floor that has the place and to its first room
-     * there, so the floor shown is never one without it.
+     * there, so the floor shown is never one without it. A chosen place closes the room card (not a route end being
+     * picked), so its list shows.
      */
     fun selectPlace(place: Place?) = model.update { state ->
         val chosen = place.takeIf { it != state.place }
@@ -114,6 +115,7 @@ class CampusMapViewModel(
             .minWithOrNull(compareBy<MapRoom>({ abs(it.level - state.level) }, { it.level }))
         state.copy(
             place = chosen,
+            selected = state.selected.takeIf { chosen == null || state.picking != null },
             query = "",
             trip = state.trip.takeIf { state.picking != null },
             level = nearest?.level ?: state.level,
@@ -131,7 +133,8 @@ class CampusMapViewModel(
         }
         if (model.value.plan?.building?.id != result.buildingId) show(result.buildingId, room = null)
         val room = model.value.plan?.plan?.room(result.roomId) ?: return@launchLoad
-        model.update { it.copy(selected = room.id, level = room.level, focus = room.point, query = "", place = null) }
+        // The place stays: the room covers its list, and Back or closing the room shows the list again.
+        model.update { it.copy(selected = room.id, level = room.level, focus = room.point, query = "") }
     }
 
     /** «Сюда» to the selected room: from the previous lesson for the lesson's own room, else from the entrance. */
@@ -221,6 +224,22 @@ class CampusMapViewModel(
     fun closeTrip() = model.update { it.copy(trip = null, picking = null) }
 
     fun closeRoom() = model.update { it.copy(selected = null, approximate = null) }
+
+    /** The system Back over the plan ([CampusMapUiState.Plan.canGoBack]): closes the top layer ([popped]). */
+    fun back() = model.update { popped(it) ?: it }
+
+    /**
+     * What Back leaves, one layer at a time like a back stack: picking a route end, the route, the typed search, the
+     * room (back to the place's list), the place; null when nothing is left and Back leaves the map.
+     */
+    private fun popped(state: Model): Model? = when {
+        state.picking != null && state.trip?.to != null -> state.copy(picking = null, query = "", place = null)
+        state.trip != null -> state.copy(trip = null, picking = null)
+        state.query.isNotBlank() -> state.copy(query = "")
+        state.selected != null -> state.copy(selected = null, approximate = null)
+        state.place != null -> state.copy(place = null)
+        else -> null
+    }
 
     private fun start() = launchLoad {
         model.value = Model()
@@ -380,6 +399,7 @@ class CampusMapViewModel(
                 UiText.Res(MapStrings.map_room_missing, listOf(it.text))
             },
             loading = state.loading,
+            canGoBack = popped(state) != null,
         )
     }
 
@@ -413,7 +433,8 @@ class CampusMapViewModel(
             .flatMap { (id, rooms) -> RoomSearch.search(state.query, rooms).map { it to id } }
             .take(MAX_RESULTS)
             .map { (room, id) -> SearchResult(id, room.id, RoomTexts.title(room), RoomTexts.subtitle(room, label(id)), RoomTexts.icon(room)) }
-        return SearchView(state.query, chips, results, elsewhere, state.picking)
+        val covered = state.place != null && state.selected != null && state.picking == null
+        return SearchView(state.query, chips, results, elsewhere, state.picking, covered)
     }
 
     private val MapRoom.point: MapPoint get() = MapPoint(longitude, latitude)

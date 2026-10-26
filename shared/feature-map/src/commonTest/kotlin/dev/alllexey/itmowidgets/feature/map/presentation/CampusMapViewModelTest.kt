@@ -204,6 +204,60 @@ class CampusMapViewModelTest {
     }
 
     @Test
+    fun backClosesTheRoomThenThePlaceThenLeavesTheMap() = runTest(main.dispatcher) {
+        val vm = viewModel(null)
+        collect(vm)
+        assertFalse(plan(vm).canGoBack)
+        vm.selectPlace(Place.RESTROOMS)
+        vm.openResult(plan(vm).search.results.single())
+
+        val room = plan(vm)
+        assertEquals(77L, room.room?.roomId)
+        assertFalse(room.search.active)
+        assertEquals(Place.RESTROOMS, room.search.places.single { it.selected }.place)
+
+        vm.back()
+        val list = plan(vm)
+        assertNull(list.room)
+        assertTrue(list.search.active)
+        assertEquals(listOf(77L), list.search.results.map { it.roomId })
+
+        vm.back()
+        assertFalse(plan(vm).search.active)
+        assertFalse(plan(vm).canGoBack)
+    }
+
+    @Test
+    fun closingARoomOpenedFromAPlaceShowsThePlaceAgain() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"))
+        collect(vm)
+        vm.selectPlace(Place.RESTROOMS)
+        assertNull(plan(vm).room)
+        vm.openResult(plan(vm).search.results.single())
+        assertEquals(77L, plan(vm).room?.roomId)
+
+        vm.closeRoom()
+
+        assertTrue(plan(vm).search.active)
+        assertEquals(Place.RESTROOMS, plan(vm).search.places.single { it.selected }.place)
+    }
+
+    @Test
+    fun backClosesTheRouteBeforeItsRoom() = runTest(main.dispatcher) {
+        val vm = viewModel(lesson(room = "2403"), route = true)
+        collect(vm)
+        assertNotNull(plan(vm).trip)
+
+        vm.back()
+        assertNull(plan(vm).trip)
+        assertEquals(UiText.Dynamic("2403"), plan(vm).room?.title)
+
+        vm.back()
+        assertNull(plan(vm).room)
+        assertFalse(plan(vm).canGoBack)
+    }
+
+    @Test
     fun aPlaceChipGoesToTheClosestFloorThatHasThePlace() = runTest(main.dispatcher) {
         val vm = viewModel(lesson(room = "2403"))
         collect(vm)
