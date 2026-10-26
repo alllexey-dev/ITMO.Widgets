@@ -18,8 +18,8 @@ import kotlin.uuid.Uuid
  *
  * @property teacherIsu Positive; checked on decode and construction.
  * @property providerUrl The Reviews project page of the teacher.
- * @property knownTeacher The teacher appears in a loaded academic pair, the ISU flow cache, an active Reviews copy
- *   or a published review; apps use it to offer writing a review.
+ * @property knownTeacher The teacher appears in a loaded academic pair, the sport catalog, the ISU flow cache, an
+ *   active Reviews copy or a published review; apps use it to offer writing a review.
  * @property summary The shown AI summary; absent or `null` without one or while an admin hides it.
  */
 @Serializable
@@ -134,3 +134,22 @@ internal object TeacherReviewStatusSerializer : UnknownTolerantEnumSerializer<Te
     TeacherReviewStatus.entries,
     TeacherReviewStatus.UNKNOWN,
 )
+
+/**
+ * The answer of `GET /api/teachers/{isu}/reviews/hints` for the review editor.
+ *
+ * @property teacherIsu Positive; checked on decode and construction.
+ * @property coach The teacher has lessons in Backend's sport catalog; Backend verifies reviews of coaches at once.
+ * @property subjects Subject titles to suggest, most likely first: the subjects of the teacher's stored academic
+ *   pairs, after `Физическая культура` for a coach.
+ */
+@Serializable
+data class TeacherReviewHints(
+    val teacherIsu: Int,
+    val coach: Boolean,
+    val subjects: List<String>,
+) {
+    init {
+        require(teacherIsu > 0) { "teacherIsu is positive" }
+    }
+}

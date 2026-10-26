@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.core.reviews.SummaryTag
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
@@ -81,6 +82,8 @@ internal class FakeTeacherReviewsRepository : TeacherReviewsRepository {
     var deleteResult: AppResult<TeacherReviews> = AppResult.Failure(AppError.CustomServicesDisabled)
     var voteResult: AppResult<TeacherReviews> = AppResult.Failure(AppError.CustomServicesDisabled)
     var reportResult: AppResult<TeacherReviews> = AppResult.Failure(AppError.CustomServicesDisabled)
+    var hintsResult: AppResult<TeacherReviewHints> = AppResult.Failure(AppError.CustomServicesDisabled)
+    var hintsGate: suspend () -> Unit = {}
     var mutationGate: suspend () -> Unit = {}
     val actions = mutableListOf<String>()
     var lastDraft: TeacherReviewDraft? = null
@@ -94,6 +97,11 @@ internal class FakeTeacherReviewsRepository : TeacherReviewsRepository {
         calls += 1
         gate()
         return results[isu] ?: AppResult.Failure(AppError.CustomServicesDisabled)
+    }
+
+    override suspend fun editorHints(isu: Int): AppResult<TeacherReviewHints> {
+        hintsGate()
+        return hintsResult
     }
 
     override fun observeUpdates(): Flow<TeacherReviews> = updates

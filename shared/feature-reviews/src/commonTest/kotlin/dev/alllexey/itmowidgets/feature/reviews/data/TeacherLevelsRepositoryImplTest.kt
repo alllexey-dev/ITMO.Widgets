@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.client.common.ResourceVoteRequest
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.reviews.SaveTeacherReviewRequest
 import dev.alllexey.itmowidgets.client.reviews.SummaryLevel
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsResponse
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryLevel
@@ -237,6 +238,7 @@ class TeacherLevelsRepositoryImplTest {
         }
 
         override suspend fun teacherReviews(isu: Int): TeacherReviewsResponse = unexpected()
+        override suspend fun teacherReviewHints(isu: Int): TeacherReviewHints = unexpected()
         override suspend fun saveMyTeacherReview(isu: Int, request: SaveTeacherReviewRequest): TeacherReviewsResponse = unexpected()
         override suspend fun deleteMyTeacherReview(isu: Int): TeacherReviewsResponse = unexpected()
         override suspend fun voteTeacherReview(id: Uuid, request: ResourceVoteRequest): TeacherReviewsResponse = unexpected()

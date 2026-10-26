@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": {
+    "teacherIsu": 200001,
+    "coach": true,
+    "subjects": [
+      "Физическая культура",
+      "Математический анализ"
+    ]
+  },
+  "error": null
+}

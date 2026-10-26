@@ -105,9 +105,9 @@ subject page ([subject page](subject-page.md)) say the tone in words instead (`T
 - The section exists while connected when there is at least one review, an own
   review or `Написать`.
 - `Написать` needs Backend's `canWrite`, no own review yet and a person who
-  teaches: Backend's `knownTeacher` (teaches a loaded academic pair, a cached ISU
-  flow, has a Reviews copy or a published review; a room booking does not count)
-  or any My ITMO position.
+  teaches: Backend's `knownTeacher` (teaches a loaded academic pair or a lesson
+  of the sport catalog, a cached ISU flow, has a Reviews copy or a published
+  review; a room booking does not count) or any My ITMO position.
 - The heading count includes the own review. The own review is
   `OwnTeacherReviewRow`; others are `TeacherReviewRow` in one connected group
   ([design](../design.md#connected-groups)).
@@ -128,11 +128,23 @@ subject page ([subject page](subject-page.md)) say the tone in words instead (`T
 
 - A form sheet: no drag or outside-tap dismissal; Back or close with changes
   asks before discarding.
-- Subject suggestions are the subjects of the viewer's own academic lessons with
-  this teacher, newest first; their flows go into the draft as `flowIds`,
-  candidates for Backend's check. Suggestions and flows grow as schedule weeks
-  answer; a save does not wait and sends the flows collected so far; an
-  unavailable history gives no suggestions and no error.
+- Subject suggestions merge two sources. The viewer's own academic lessons with
+  this teacher give subjects, newest first, and their flows go into the draft as
+  `flowIds`, candidates for Backend's check; they grow as schedule weeks answer,
+  and a save does not wait and sends the flows collected so far. Backend's
+  editor hints (`TeacherReviewsRepository.editorHints`,
+  `GET /api/teachers/{isu}/reviews/hints`, asked once when the editor opens,
+  not cached) give the subjects Backend knows the teacher by and whether the
+  teacher is a coach of its sport catalog. Order: for a coach Backend's first
+  subject (`Физическая культура`), then the own subjects, then the rest of
+  Backend's, without repeats. Either source failing gives fewer suggestions and
+  no error. The demo answers hints locally (`DemoReviews.hints`: the demo
+  coaches get `Физическая культура`).
+- A new review of a coach starts with Backend's first subject, once and only
+  while the subject is empty; it is the opening value, so closing without edits
+  asks nothing, and the user may change or clear it. The flag lives in
+  `SavedStateHandle`, so a cleared subject stays clear after process death. An
+  edited review is never prefilled.
 - Fields, initial values and mode live in `SavedStateHandle` (text survives
   process death); the first opening starts from the cached own review.
 - One save at a time; success closes, failure keeps the sheet with a snackbar.
@@ -144,8 +156,10 @@ both survive recreation. Not dismissable while sending.
 
 ## Verification of authors
 
-Backend decides "taught the author" through ISU flows; the app only sends
-candidate flows and shows `verified`. `PENDING` and `UNVERIFIED` look the same,
+Backend decides "taught the author" through ISU flows, and trusts every review
+of a coach of its sport catalog
+([Backend ADR 0037](../../../itmo-widgets-backend/docs/decisions/0037-sport-teacher-reviews.md));
+the app only sends candidate flows and shows `verified`. `PENDING` and `UNVERIFIED` look the same,
 a review is never rejected because of the ISU check, and the check does not
 affect the order.
 

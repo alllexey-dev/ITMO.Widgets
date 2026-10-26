@@ -18,7 +18,7 @@ class TeacherReviewsRequestTest {
 
     @Test
     fun everyPublicFunctionHasOneCase() {
-        assertEquals(6, TeacherReviewsRouteCases.all.size)
+        assertEquals(7, TeacherReviewsRouteCases.all.size)
         assertEquals(TeacherReviewsRouteCases.all.size, TeacherReviewsRouteCases.all.map { it.name }.toSet().size)
     }
 
@@ -69,6 +69,11 @@ class TeacherReviewsRequestTest {
             "/api/teachers/summary-levels",
             query = listOf("isu" to "123456", "isu" to "234567"),
         )
+    }
+
+    @Test
+    fun teacherReviewHints() = runSuspend {
+        TeacherReviewsRouteCases.teacherReviewHints.assertRequest(HttpMethod.Get, "/api/teachers/$TEACHER/reviews/hints")
     }
 
     @Test

@@ -968,6 +968,14 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "teacherReviewHints",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/teachers/{isu}/reviews/hints",
+    "file": "http/reviews/teacherReviewHints.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "teacherReviews",
     "kind": "http",
     "method": "GET",

@@ -4,6 +4,7 @@
 http/reviews/deleteMyTeacherReview.json
 http/reviews/reportTeacherReview.json
 http/reviews/saveMyTeacherReview.json
+http/reviews/teacherReviewHints.json
 http/reviews/teacherReviews.json
 http/reviews/teacherSummaryLevels.json
 http/reviews/voteTeacherReview.json

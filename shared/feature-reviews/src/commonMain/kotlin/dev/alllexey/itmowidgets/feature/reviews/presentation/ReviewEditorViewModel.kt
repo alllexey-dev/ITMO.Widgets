@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.navigation.TeacherReviewArgs
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewLimits
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessonsGateway
@@ -17,7 +18,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Writes the viewer's review of a teacher, or edits the one in the cached reviews. */
+/**
+ * Writes the viewer's review of a teacher, or edits the one in the cached reviews. Subject suggestions merge the
+ * viewer's own lessons with the teacher and Backend's hints; a new review of a coach starts with Backend's first
+ * suggestion, `Физическая культура`, once, while the subject is still empty.
+ */
 class ReviewEditorViewModel(
     private val handle: SavedStateHandle,
     private val repository: TeacherReviewsRepository,
@@ -29,6 +34,8 @@ class ReviewEditorViewModel(
     private val eventQueue = EventQueue<ReviewEditorEvent>()
     /** Flows of the viewer's lessons with the teacher, growing as the schedule weeks answer. */
     private var flowIds: Set<Long> = emptySet()
+    private var ownSubjects: List<String> = emptyList()
+    private var hints: TeacherReviewHints? = null
 
     val uiState: StateFlow<ReviewEditorUiState> = state.asStateFlow()
 
@@ -39,10 +46,37 @@ class ReviewEditorViewModel(
             lessons.taughtBy(teacherIsu).collect { result ->
                 if (result is AppResult.Success) {
                     flowIds = result.value.flowIds
-                    state.update { it.copy(suggestions = result.value.subjects) }
+                    ownSubjects = result.value.subjects
+                    state.update { it.copy(suggestions = suggestions()) }
                 }
             }
         }
+        viewModelScope.launch {
+            val result = repository.editorHints(teacherIsu)
+            if (result is AppResult.Success) {
+                hints = result.value
+                state.update { it.copy(suggestions = suggestions()) }
+                prefillCoachSubject(result.value)
+            }
+        }
+    }
+
+    /** A coach's first hint leads; then the viewer's own subjects, newest first; then the rest of Backend's. */
+    private fun suggestions(): List<String> {
+        val backend = hints?.subjects.orEmpty()
+        val lead = if (hints?.coach == true) backend.take(1) else emptyList()
+        return (lead + ownSubjects + backend).distinct()
+    }
+
+    /** Only a new review with an empty subject, once: the flag survives process death, so a cleared field stays clear. */
+    private fun prefillCoachSubject(hints: TeacherReviewHints) {
+        if (handle.get<Boolean>(KEY_PREFILLED) == true) return
+        handle[KEY_PREFILLED] = true
+        val subject = hints.subjects.firstOrNull()
+        if (!hints.coach || subject == null || state.value.editing || state.value.subject.isNotEmpty()) return
+        handle[KEY_SUBJECT] = subject
+        handle[KEY_INITIAL_SUBJECT] = subject
+        state.update { it.copy(subject = subject) }
     }
 
     fun onSubjectChanged(subject: String) {
@@ -129,5 +163,6 @@ class ReviewEditorViewModel(
         const val KEY_INITIAL_TEXT = "review_editor_initial_text"
         const val KEY_INITIAL_ANONYMOUS = "review_editor_initial_anonymous"
         const val KEY_EDITING = "review_editor_editing"
+        const val KEY_PREFILLED = "review_editor_prefilled"
     }
 }

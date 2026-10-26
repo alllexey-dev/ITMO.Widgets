@@ -14,7 +14,10 @@ data class ReviewEditorUiState(
     val subject: String = "",
     val text: String = "",
     val anonymous: Boolean = true,
-    /** Subjects of the viewer's own lessons with the teacher, newest first. */
+    /**
+     * Subjects to pick: for a coach `Физическая культура` first, then the viewer's own lessons with the teacher,
+     * newest first, then the other subjects Backend knows the teacher by.
+     */
     val suggestions: List<String> = emptyList(),
     val subjectError: ReviewFieldError? = null,
     val textError: ReviewFieldError? = null,

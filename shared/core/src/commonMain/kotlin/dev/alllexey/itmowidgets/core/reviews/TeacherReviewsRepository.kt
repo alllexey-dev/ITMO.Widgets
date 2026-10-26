@@ -13,6 +13,9 @@ interface TeacherReviewsRepository {
     fun cachedReviews(isu: Int): TeacherReviews?
     suspend fun reviews(isu: Int): AppResult<TeacherReviews>
 
+    /** Editor suggestions for a teacher; not cached. */
+    suspend fun editorHints(isu: Int): AppResult<TeacherReviewHints>
+
     /** Fresh reviews of a teacher after every successful mutation. */
     fun observeUpdates(): Flow<TeacherReviews>
 

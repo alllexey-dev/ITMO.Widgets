@@ -147,6 +147,7 @@
           "score": -4,
           "hidden": true,
           "verification": "PENDING",
+          "verifiedBasis": null,
           "verifiedFlowId": null
         },
         "author": {
@@ -283,6 +284,7 @@
           "score": 0,
           "hidden": false,
           "verification": "UNVERIFIED",
+          "verifiedBasis": null,
           "verifiedFlowId": null
         },
         "author": {
@@ -548,6 +550,7 @@
           "score": -4,
           "hidden": false,
           "verification": "VERIFIED",
+          "verifiedBasis": "ISU_FLOW",
           "verifiedFlowId": 7001
         },
         "author": {

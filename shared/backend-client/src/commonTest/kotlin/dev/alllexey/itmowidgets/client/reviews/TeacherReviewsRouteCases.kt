@@ -23,6 +23,7 @@ object TeacherReviewsRouteCases {
         reviews.reportTeacherReview(fixtures.namedId, report)
     }
     val teacherSummaryLevels = RouteCase("teacherSummaryLevels") { reviews.teacherSummaryLevels(isus) }
+    val teacherReviewHints = RouteCase("teacherReviewHints") { reviews.teacherReviewHints(TEACHER) }
 
     val all: List<RouteCase> = listOf(
         teacherReviews,
@@ -31,5 +32,6 @@ object TeacherReviewsRouteCases {
         voteTeacherReview,
         reportTeacherReview,
         teacherSummaryLevels,
+        teacherReviewHints,
     )
 }

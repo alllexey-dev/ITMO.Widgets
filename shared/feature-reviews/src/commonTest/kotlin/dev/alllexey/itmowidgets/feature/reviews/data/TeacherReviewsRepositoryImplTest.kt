@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.client.common.UserCapabilities
 import dev.alllexey.itmowidgets.client.common.UserData
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.reviews.SaveTeacherReviewRequest
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewKind
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewStatus
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
@@ -62,6 +63,7 @@ import dev.alllexey.itmowidgets.client.reviews.SummaryScaleKind as WireScaleKind
 import dev.alllexey.itmowidgets.client.reviews.SummaryScaleValue as WireScaleValue
 import dev.alllexey.itmowidgets.client.reviews.TeacherReview as WireReview
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsResponse as WireTeacherReviews
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints as CoreReviewHints
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummary as WireSummary
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryScale as WireScale
 
@@ -80,6 +82,23 @@ class TeacherReviewsRepositoryImplTest {
 
         assertEquals(0, api.calls)
         assertNull(repository.cachedReviews(100001))
+    }
+
+    @Test
+    fun editorHintsPassTheGateAndMapCleanSubjects() = runTest {
+        val api = FakeTeacherReviewsApi().apply {
+            hints = TeacherReviewHints(100001, coach = true, subjects = listOf("Физическая культура", " Физика ", "", "Физика"))
+        }
+        val disabled = TeacherReviewsRepositoryImpl(FakeBackendGate(false), api, backgroundScope, FixedAcademicTime(), noDemo(), testAppDispatchers())
+        assertEquals(AppResult.Failure(AppError.CustomServicesDisabled), disabled.editorHints(100001))
+        assertEquals(0, api.calls)
+
+        val repository = TeacherReviewsRepositoryImpl(FakeBackendGate(true), api, backgroundScope, FixedAcademicTime(), noDemo(), testAppDispatchers())
+
+        assertEquals(
+            AppResult.Success(CoreReviewHints(100002, coach = true, subjects = listOf("Физическая культура", "Физика"))),
+            repository.editorHints(100002),
+        )
     }
 
     @Test
@@ -737,6 +756,14 @@ class TeacherReviewsRepositoryImplTest {
 
         override suspend fun teacherSummaryLevels(isus: List<Int>): List<TeacherSummaryLevel> =
             throw AssertionError("Reviews never ask for levels")
+
+        var hints = TeacherReviewHints(100001, coach = false, subjects = emptyList())
+
+        override suspend fun teacherReviewHints(isu: Int): TeacherReviewHints {
+            calls += 1
+            failure?.let { throw it }
+            return hints.copy(teacherIsu = isu)
+        }
 
         private suspend fun record(method: String, vararg arguments: Any): WireTeacherReviews {
             requests += Request(method, arguments.toList())
