@@ -30,14 +30,23 @@ sealed interface SheetScoresUiState {
         val selected: SheetCell?,
         val decision: SheetTotalDecision? = null,
         val choice: TotalChoice? = null,
+        val activityCell: SheetCell? = null,
     ) : SheetScoresUiState {
         /** The total the sheet shows: the current one, else the automatic one; null when there is neither. */
         val shown: SheetCell? get() = selected ?: decision?.total
 
         /** The candidate columns with a value, the automatic total first, at most [CANDIDATES]. */
         val candidates: List<SheetCell>
-            get() = decision?.candidates.orEmpty().filter { it.value.isNotEmpty() }
-                .distinctBy { it.tab to it.column }.take(CANDIDATES)
+            get() {
+                val list = decision?.candidates.orEmpty().filter { it.value.isNotEmpty() }
+                    .distinctBy { it.tab to it.column }
+                val withActivity = if (activityCell != null && activityCell.value.isNotEmpty() && list.none { it.headerPath == activityCell.headerPath }) {
+                    list + activityCell
+                } else {
+                    list
+                }
+                return withActivity.take(CANDIDATES)
+            }
 
         /** «Вернуть авто» resets a hand-picked total to an automatic one that differs. */
         val canReset: Boolean get() = choice == TotalChoice.MANUAL && decision != null && decision.total != selected
@@ -46,6 +55,9 @@ sealed interface SheetScoresUiState {
         val note: UiText?
             get() {
                 val shown = shown ?: return null
+                if (shown.headerPath == SheetTotals.ACTIVITIES_SUM_PATH) {
+                    return UiText.Res(RecordbookStrings.sheet_scores_reason_activity_sum)
+                }
                 if (choice == TotalChoice.MANUAL && shown != decision?.total) return UiText.Res(RecordbookStrings.sheet_scores_manual)
                 val decision = decision?.takeIf { it.total == shown } ?: return null
                 return UiText.Res(REASONS.getValue(decision.reason), listOf(shortTitle(shown)))
@@ -53,14 +65,15 @@ sealed interface SheetScoresUiState {
 
         /** [note] asks the viewer to check the total: it is unsure and was not confirmed. */
         val unsure: Boolean
-            get() = decision?.confidence == TotalConfidence.LOW && decision.total == shown && choice != TotalChoice.AUTO
+            get() = (decision?.confidence == TotalConfidence.LOW && decision.total == shown && choice != TotalChoice.AUTO) ||
+                shown?.headerPath == SheetTotals.ACTIVITIES_SUM_PATH
 
         /** The own row's cells around [shown] in its tab, for the preview: [PREVIEW] on each side. */
         val preview: List<SheetCell>
             get() {
                 val shown = shown ?: return emptyList()
                 val row = cells.filter { it.tab == shown.tab }
-                val at = row.indexOf(shown).coerceAtLeast(0)
+                val at = if (row.contains(shown)) row.indexOf(shown) else minOf(shown.column, row.lastIndex).coerceAtLeast(0)
                 return row.subList(maxOf(0, at - PREVIEW), minOf(row.size, at + PREVIEW + 1))
             }
 

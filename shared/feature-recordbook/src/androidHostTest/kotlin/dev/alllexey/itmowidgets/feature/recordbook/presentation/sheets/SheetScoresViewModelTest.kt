@@ -7,13 +7,16 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.recordbook.TEST_IDENTITY
 import dev.alllexey.itmowidgets.feature.recordbook.TEST_SHEET_URL
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.CsvGrid
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.OwnIdentity
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.RowSearch
+import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetGrid
@@ -22,6 +25,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRows
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotals
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
@@ -251,4 +255,87 @@ class SheetScoresViewModelTest {
         assertEquals(SheetScoresUiState.Done, vm.uiState.value)
     }
 
+    @Test fun `a sheet without total formula offers activity sum candidate chip and allows manual pick`() = runTest(main.dispatcher) {
+        val matanTab = SheetTab(1, "МатАн")
+        val book = testWorkbook(matanTab to "matan.csv")
+        val student = OwnIdentity(100004, "Тестов Тест Тестович", "Тестов", "Тест", "Тестович")
+        repository.inspections += ready(book, SheetRows.find(book, student))
+
+        val vm = model()
+        runCurrent()
+
+        assertEquals(SheetScoresUiState.Done, vm.uiState.value)
+        val connected = repository.connected.single()
+        assertEquals("", connected.total.value)
+        assertEquals(TotalChoice.AUTO_CHECK, connected.choice)
+        assertEquals(24, connected.total.column)
+        assertEquals("Итого", connected.total.headerPath)
+
+        // Now test Step.TOTAL with this score
+        repository.scores.value = listOf(
+            sheetScore(
+                scope = scope,
+                url = TEST_SHEET_URL,
+                tabGid = matanTab.gid,
+                tabName = matanTab.name,
+                rowKey = "100004",
+                column = SheetColumnRef("Итого", 24),
+                value = "",
+            ).copy(choice = TotalChoice.AUTO_CHECK)
+        )
+        repository.inspections += ready(book, SheetRows.find(book, student))
+        val vmTotal = model(Step.TOTAL)
+        runCurrent()
+
+        val picker = vmTotal.pickTotal()
+        assertEquals("", picker.shown?.value)
+        assertEquals(
+            UiText.Res(RecordbookStrings.sheet_scores_reason_empty, listOf(UiText.Dynamic("Итого"))),
+            picker.note,
+        )
+
+        // Activity sum chip is present in candidates
+        val activityCandidate = picker.candidates.single { it.headerPath == SheetTotals.ACTIVITIES_SUM_PATH }
+        assertEquals("3", activityCandidate.value)
+        assertEquals(
+            UiText.Res(RecordbookStrings.sheet_scores_chip, listOf(UiText.Dynamic("Сумма работ"), "3")),
+            picker.chip(activityCandidate),
+        )
+
+        // Picking the activity chip saves as MANUAL
+        vmTotal.pickTotal(activityCandidate)
+        runCurrent()
+
+        assertEquals(SheetScoresUiState.Done, vmTotal.uiState.value)
+        val changed = repository.totals.single()
+        assertEquals(SheetTotals.ACTIVITIES_SUM_PATH, changed.total.headerPath)
+        assertEquals("3", changed.total.value)
+        assertEquals(TotalChoice.MANUAL, changed.choice)
+
+        // Reviewing with MANUAL activity sum shows activity note and allows reset
+        repository.scores.value = listOf(
+            sheetScore(
+                scope = scope,
+                url = TEST_SHEET_URL,
+                tabGid = matanTab.gid,
+                tabName = matanTab.name,
+                rowKey = "100004",
+                column = SheetColumnRef(SheetTotals.ACTIVITIES_SUM_PATH, 24),
+                value = "3",
+            ).copy(choice = TotalChoice.MANUAL)
+        )
+        repository.inspections += ready(book, SheetRows.find(book, student))
+        val vmManual = model(Step.TOTAL)
+        runCurrent()
+
+        val manualPicker = vmManual.pickTotal()
+        assertEquals("3", manualPicker.shown?.value)
+        assertEquals(SheetTotals.ACTIVITIES_SUM_PATH, manualPicker.shown?.headerPath)
+        assertEquals(
+            UiText.Res(RecordbookStrings.sheet_scores_reason_activity_sum),
+            manualPicker.note,
+        )
+        assertTrue(manualPicker.unsure)
+        assertTrue(manualPicker.canReset)
+    }
 }

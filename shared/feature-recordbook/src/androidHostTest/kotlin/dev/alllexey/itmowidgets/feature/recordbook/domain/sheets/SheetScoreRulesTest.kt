@@ -47,6 +47,30 @@ class SheetScoreRulesTest {
         assertEquals(ok(null), SheetScoreRules.read(emptied, score))
     }
 
+    @Test fun `activity sum column computes total of activity columns`() {
+        val matanGrid = SheetFixtures.csv("matan.csv")
+        val matanScore = SheetScore(
+            scope = ResourceScope(1, "Математический анализ", "2026-1"),
+            url = "https://docs.google.com/spreadsheets/d/1TestSheetIdForUnitTests_0123456789-abc/edit",
+            tabGid = 1,
+            tabName = "МатАн",
+            rowKey = "100004",
+            keyColumn = 0,
+            keyKind = KeyKind.ISU,
+            column = SheetColumnRef(SheetTotals.ACTIVITIES_SUM_PATH, 24),
+            value = null,
+            baseline = null,
+            tracked = true,
+            status = SheetStatus.OK,
+            updatedAt = earlier,
+            connectedAt = connected,
+        )
+        assertEquals(ok("3"), SheetScoreRules.read(matanGrid, matanScore))
+
+        val noPointsScore = matanScore.copy(rowKey = "100002")
+        assertEquals(ok(null), SheetScoreRules.read(matanGrid, noPointsScore))
+    }
+
     @Test fun `a missing row or column is a status`() {
         assertEquals(SheetReading(null, SheetStatus.ROW_NOT_FOUND), SheetScoreRules.read(grid, score.copy(rowKey = "999999")))
         assertEquals(

@@ -82,6 +82,7 @@
     <string name="sheet_scores_reason_empty">Столбец «%1$s» пока пуст у всех</string>
     <string name="sheet_scores_reason_weak">Столбца «Итог» нет, взят «%1$s»</string>
     <string name="sheet_scores_reason_not_points">В столбце «%1$s» не баллы</string>
+    <string name="sheet_scores_reason_activity_sum">Сумма баллов за работы (локальный расчёт)</string>
     <string name="sheet_scores_manual">Выбрано вручную</string>
     <string name="sheet_scores_reset_auto">Вернуть авто</string>
     <string name="sheet_scores_other_cell">Другая ячейка</string>

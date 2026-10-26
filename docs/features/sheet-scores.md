@@ -80,7 +80,7 @@ action.
   with the real total of each tab (`truth.tsv`); no test opens a sheet over the network.
 - The column is stored as `gid` + header path; a reading finds the same path (nearest to the old index
   when repeated), falls back to the old index while the tab is that wide, else the column is not
-  found. Values are shown as the sheet shows them, never recomputed.
+  found. Values are shown as the sheet shows them, never silently recomputed. When a sheet lacks a populated total column, the total picker offers an explicit «Сумма работ» candidate chip that sums points across activity columns (lessons, tests, homework, labs) upon user selection.
 
 ## On the subject page
 

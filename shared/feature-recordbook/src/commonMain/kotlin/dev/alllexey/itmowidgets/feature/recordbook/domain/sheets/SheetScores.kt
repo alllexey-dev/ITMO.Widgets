@@ -62,11 +62,16 @@ object SheetScoreRules {
         val tab = SheetTabGrid(SheetTab(score.tabGid, score.tabName), grid)
         val match = SheetRows.locate(tab, score.rowKey, score.keyKind, score.keyColumn)
             ?: return SheetReading(null, SheetStatus.ROW_NOT_FOUND)
+        if (score.column.headerPath == SheetTotals.ACTIVITIES_SUM_PATH) {
+            val sum = SheetTotals.activitySum(grid, match)
+            return SheetReading(sum, SheetStatus.OK)
+        }
         val first = SheetHeaders.firstDataRow(grid, match.row, match.keyColumn, match.kind)
         val paths = SheetHeaders.paths(grid, first, match.keyColumn)
         val column = SheetTotals.find(paths, score.column, grid.width)
             ?: return SheetReading(null, SheetStatus.COLUMN_NOT_FOUND)
-        return SheetReading(grid.cell(match.row, column).trim().ifEmpty { null }, SheetStatus.OK)
+        val explicit = grid.cell(match.row, column).trim().ifEmpty { null }
+        return SheetReading(explicit, SheetStatus.OK)
     }
 
     /**
