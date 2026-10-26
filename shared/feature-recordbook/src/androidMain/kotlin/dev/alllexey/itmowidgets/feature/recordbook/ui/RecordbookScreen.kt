@@ -19,8 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -43,6 +41,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoWavyProgress
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuGroup
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
@@ -91,7 +92,6 @@ import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_sources_action
 import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_subject_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_drop_down
 import dev.alllexey.itmowidgets.shared.designsystem.ic_assignment
-import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
@@ -176,37 +176,23 @@ private fun PeriodAction(periods: RecordbookPeriods, onSelect: (Long, Int) -> Un
             Text(periods.label.asString())
             Icon(painterResource(KitRes.drawable.ic_arrow_drop_down), contentDescription = stringResource(Res.string.recordbook_period_label))
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            periods.groups.forEach { group ->
-                group.program?.let { program ->
-                    Text(
-                        program,
-                        Modifier.padding(horizontal = ItmoTheme.spacing.group, vertical = ItmoTheme.spacing.compact),
-                        color = ItmoTheme.colorScheme.primary,
-                        style = ItmoTheme.typography.labelLarge,
-                    )
-                }
-                group.options.forEach { option ->
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(option.title.asString(), style = ItmoTheme.typography.bodyLarge)
-                                Text(option.detail.asString(), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodySmall)
-                            }
-                        },
-                        onClick = {
-                            expanded = false
-                            onSelect(option.programId, option.semester)
-                        },
-                        trailingIcon = if (option.selected) {
-                            { Icon(painterResource(KitRes.drawable.ic_check), contentDescription = null) }
-                        } else {
-                            null
-                        },
-                    )
-                }
-            }
-        }
+        ItmoMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            groups = periods.groups.map { group ->
+                ItmoMenuGroup(
+                    group.options.map { option ->
+                        ItmoMenuItem(
+                            option.title.asString(),
+                            { onSelect(option.programId, option.semester) },
+                            supportingText = option.detail.asString(),
+                            selected = option.selected,
+                        )
+                    },
+                    label = group.program,
+                )
+            },
+        )
     }
 }
 

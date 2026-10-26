@@ -28,6 +28,7 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuGroup
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.services.ServicesConsentSheet
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
@@ -273,7 +274,13 @@ private fun AudienceRow(topic: PrivacyTopic, value: SharingVisibility, enabled: 
         ItmoMenu(
             expanded = menu,
             onDismissRequest = { menu = false },
-            groups = listOf(SharingVisibility.entries.map { option -> ItmoMenuItem(option.label(), { actions.onAudience(topic, option) }) }),
+            groups = listOf(
+                ItmoMenuGroup(
+                    SharingVisibility.entries.map { option ->
+                        ItmoMenuItem(option.label(), { actions.onAudience(topic, option) }, selected = option == value)
+                    },
+                ),
+            ),
             modifier = Modifier.align(Alignment.TopEnd),
         )
     }

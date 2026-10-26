@@ -22,19 +22,48 @@ private fun ItmoMenuPreview() = ItmoPreview {
     Box(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
         ItmoMenuPanel(
             groups = listOf(
-                listOf(
-                    ItmoMenuItem("Открыть", {}, painterResource(Res.drawable.ic_open_in_new)),
-                    ItmoMenuItem("Скопировать ссылку", {}, painterResource(Res.drawable.ic_content_copy)),
-                    ItmoMenuItem("Изменить", {}, painterResource(Res.drawable.ic_edit), enabled = false),
-                ),
-                listOf(
-                    ItmoMenuItem("Пожаловаться", {}, painterResource(Res.drawable.ic_flag)),
-                    ItmoMenuItem(
-                        "Удалить",
-                        onClick = {},
-                        icon = painterResource(Res.drawable.ic_delete),
-                        destructive = true,
+                ItmoMenuGroup(
+                    listOf(
+                        ItmoMenuItem("Открыть", {}, painterResource(Res.drawable.ic_open_in_new)),
+                        ItmoMenuItem("Скопировать ссылку", {}, painterResource(Res.drawable.ic_content_copy)),
+                        ItmoMenuItem("Изменить", {}, painterResource(Res.drawable.ic_edit), enabled = false),
                     ),
+                ),
+                ItmoMenuGroup(
+                    listOf(
+                        ItmoMenuItem("Пожаловаться", {}, painterResource(Res.drawable.ic_flag)),
+                        ItmoMenuItem(
+                            "Удалить",
+                            onClick = {},
+                            icon = painterResource(Res.drawable.ic_delete),
+                            destructive = true,
+                        ),
+                    ),
+                ),
+            ),
+            onDismissRequest = {},
+        )
+    }
+}
+
+/** The record book's period picker: two programmes under their names, two-line items, the current one checked. */
+@Preview
+@Composable
+private fun ItmoMenuPickerPreview() = ItmoPreview {
+    Box(Modifier.padding(ItmoTheme.spacing.screenMargin)) {
+        ItmoMenuPanel(
+            groups = listOf(
+                ItmoMenuGroup(
+                    listOf(
+                        ItmoMenuItem("3 семестр", {}, supportingText = "2 курс, 2026/2027", selected = true),
+                        ItmoMenuItem("2 семестр", {}, supportingText = "1 курс, 2025/2026"),
+                        ItmoMenuItem("1 семестр", {}, supportingText = "1 курс, 2025/2026"),
+                    ),
+                    label = "Программная инженерия",
+                ),
+                ItmoMenuGroup(
+                    listOf(ItmoMenuItem("2 семестр", {}, supportingText = "1 курс, 2024/2025", enabled = false)),
+                    label = "Подготовительное отделение",
                 ),
             ),
             onDismissRequest = {},

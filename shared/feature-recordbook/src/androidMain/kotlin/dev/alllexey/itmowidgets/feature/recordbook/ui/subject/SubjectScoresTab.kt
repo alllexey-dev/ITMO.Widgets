@@ -36,6 +36,7 @@ import dev.alllexey.itmowidgets.designsystem.components.charts.GradeScale
 import dev.alllexey.itmowidgets.designsystem.components.charts.GradeScaleTick
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ChoiceDialog
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuGroup
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
@@ -193,11 +194,13 @@ private fun SheetLine(sheet: SubjectSheetLine, actions: RecordbookSubjectActions
                 expanded = menu,
                 onDismissRequest = { menu = false },
                 groups = listOf(
-                    listOf(
-                        ItmoMenuItem(stringResource(Res.string.sheet_scores_open), { actions.onOpenLink(sheet.url) }),
-                        ItmoMenuItem(stringResource(Res.string.sheet_scores_change_total), { actions.onOpenSheetScores(sheet.changeTotal) }),
+                    ItmoMenuGroup(
+                        listOf(
+                            ItmoMenuItem(stringResource(Res.string.sheet_scores_open), { actions.onOpenLink(sheet.url) }),
+                            ItmoMenuItem(stringResource(Res.string.sheet_scores_change_total), { actions.onOpenSheetScores(sheet.changeTotal) }),
+                        ),
                     ),
-                    listOf(ItmoMenuItem(stringResource(Res.string.sheet_scores_disconnect), actions.onDisconnectSheet, destructive = true)),
+                    ItmoMenuGroup(listOf(ItmoMenuItem(stringResource(Res.string.sheet_scores_disconnect), actions.onDisconnectSheet, destructive = true))),
                 ),
             )
         }

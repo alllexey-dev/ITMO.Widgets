@@ -193,6 +193,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   `_`); earlier sign-ins of the same phone no longer show as other devices; this phone is named as in its settings;
   the screen reloads a moment after a change; the pull indicator is no longer cut by the header.
 - A list row with a long value (`Вход виден как`) wraps the value instead of squeezing the title, on both platforms.
+- Android menus with two-line items (the `Зачётка` semester picker) give each item room: Material's 12 dp above and
+  below, so the second line no longer touches the next item. Every Android menu is one `ItmoMenu` now: the semester
+  picker, the map's building menu and the privacy audience menu mark the current choice with a check.
 - Recordbook exams and coursework sharing a My ITMO entry ID keep their own labels, scores, attention state and
   subject pages on Android and iOS.
 - When ITMO.ID rejects the refresh token the session ends with a message; a timeout or a server error keeps it.

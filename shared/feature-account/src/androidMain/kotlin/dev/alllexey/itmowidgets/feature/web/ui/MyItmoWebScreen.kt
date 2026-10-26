@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuGroup
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
@@ -173,7 +174,7 @@ private fun OverflowMenu(onOpenExternal: () -> Unit) {
         ItmoMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            groups = listOf(listOf(ItmoMenuItem(stringResource(Res.string.my_itmo_web_external), onOpenExternal))),
+            groups = listOf(ItmoMenuGroup(listOf(ItmoMenuItem(stringResource(Res.string.my_itmo_web_external), onOpenExternal)))),
         )
     }
 }

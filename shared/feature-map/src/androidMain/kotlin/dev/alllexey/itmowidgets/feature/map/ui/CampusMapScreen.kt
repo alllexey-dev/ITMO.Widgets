@@ -25,8 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +59,9 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuGroup
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
@@ -104,7 +105,6 @@ import dev.alllexey.itmowidgets.shared.compose.strings.map_search_empty
 import dev.alllexey.itmowidgets.shared.compose.strings.map_search_hint
 import dev.alllexey.itmowidgets.shared.compose.strings.map_search_other_buildings
 import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
-import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_left
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
@@ -295,22 +295,13 @@ private fun BuildingPill(buildings: List<BuildingChip>, onBuilding: (Int) -> Uni
         ) {
             Icon(painterResource(KitRes.drawable.ic_location_on), null, Modifier.size(ChipIconSize), tint = ItmoTheme.colorScheme.primary)
         }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            buildings.forEach { building ->
-                DropdownMenuItem(
-                    text = { Text(building.label, fontWeight = if (building.selected) FontWeight.SemiBold else null) },
-                    onClick = {
-                        open = false
-                        onBuilding(building.id)
-                    },
-                    trailingIcon = if (building.selected) {
-                        { Icon(painterResource(KitRes.drawable.ic_check), null, tint = ItmoTheme.colorScheme.primary) }
-                    } else {
-                        null
-                    },
-                )
-            }
-        }
+        ItmoMenu(
+            expanded = open,
+            onDismissRequest = { open = false },
+            groups = listOf(
+                ItmoMenuGroup(buildings.map { building -> ItmoMenuItem(building.label, { onBuilding(building.id) }, selected = building.selected) }),
+            ),
+        )
     }
 }
 
