@@ -24,6 +24,9 @@ The campus map shows ITMO's indoor floor plans and plans «Маршрут» to a
   the target entrance.
 - Browse: the search over the shown building, then the other buildings; the place chips show only what the building
   has; a tap on the plan selects the room under it.
+- A room opened from a place's list covers it and the chip stays selected; closing the room shows the list again.
+  The system Back (Android) closes one layer at a time, as a back stack: picking a route end, the route, the typed
+  search, the room, the place; then it leaves the map (`CampusMapViewModel.back`, `Plan.canGoBack`).
 - Decoding, hashing, the style JSON, the icons and the router run off the main thread.
 - A building without a plan (Вяземский, Чайковского today): `У корпуса нет плана` with `Открыть в Картах`. No mirror
   and no stored copy: the error state with `Повторить`. The attribution `План: Университет ИТМО` comes from the

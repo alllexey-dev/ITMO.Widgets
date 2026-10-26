@@ -18,7 +18,8 @@ sealed interface CampusMapUiState {
     /**
      * The plan: what the native [map] view draws, the [buildings] and [levels] to switch, the selected [room] or the
      * [trip], the [search] panel and a [notice] about a lesson room that is not on the plan. [loading] while a building
-     * or a route is on its way: the plan stays and a spinner says so.
+     * or a route is on its way: the plan stays and a spinner says so. [canGoBack] while Back has a layer to close
+     * (`CampusMapViewModel.back`) before it leaves the map.
      */
     data class Plan(
         val map: MapScene,
@@ -29,6 +30,7 @@ sealed interface CampusMapUiState {
         val search: SearchView,
         val notice: UiText?,
         val loading: Boolean = false,
+        val canGoBack: Boolean = false,
     ) : CampusMapUiState
 }
 
@@ -104,6 +106,7 @@ enum class TripStepKind(val icon: String) {
 /**
  * Search over the shown building, then [elsewhere] in the others; [places] filter by kind when the query is empty.
  * While [picking] a route end it is open from the start, with the building's entrances before anything is typed.
+ * [covered] while a room opened from the place's list is shown over it: the place stays selected, the list closed.
  */
 data class SearchView(
     val query: String,
@@ -111,8 +114,9 @@ data class SearchView(
     val results: List<SearchResult>,
     val elsewhere: List<SearchResult>,
     val picking: RouteEnd? = null,
+    val covered: Boolean = false,
 ) {
-    val active: Boolean get() = query.isNotBlank() || places.any { it.selected } || picking != null
+    val active: Boolean get() = !covered && (query.isNotBlank() || places.any { it.selected } || picking != null)
     val empty: Boolean get() = active && results.isEmpty() && elsewhere.isEmpty()
 }
 
