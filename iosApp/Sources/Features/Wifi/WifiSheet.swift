@@ -1,17 +1,13 @@
-import NetworkExtension
 import Shared
 import SwiftUI
 import UniformTypeIdentifiers
 
 /// The Wi-Fi sheet over the shared `WifiViewModel` (docs/features/wifi.md): ITMO-Corp, the login and the password from
-/// ISU with copy buttons, and the connect button (`wifi_connect`), which asks iOS to join the network with
-/// `NEHotspotConfiguration` (EAP-PEAP, the server checked by the name `wifi.it.itmo.ru`). A build without the Hotspot
-/// Configuration entitlement, or any other refusal, copies the password instead and says where to paste it; iOS has
-/// no link to its Wi-Fi settings.
+/// ISU with copy buttons and the manual settings. No quick connect on iOS: `NEHotspotConfiguration` needs the Hotspot
+/// Configuration capability, which re-signed builds do not get, so the user pastes the password in the Wi-Fi settings.
 struct WifiSheet: View {
     @State private var model = ObservableViewModel(WifiViewModel.self, state: \.uiState)
     @State private var message: SettingsMessage?
-    @State private var isConnecting = false
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -43,10 +39,6 @@ struct WifiSheet: View {
                 toggle: { model.viewModel.togglePassword() },
                 copy: { text, secret in copy(text, secret: secret, confirm: true) }
             )
-            ItmoProgressButton(title: AppStrings.string("wifi_connect"), symbol: .wifi, isInProgress: isConnecting) {
-                Task { await connect(credentials) }
-            }
-            .accessibilityIdentifier("wifi.connect")
         } else {
             switch onEnum(of: state.status) {
             case .noPassword:
@@ -74,31 +66,6 @@ struct WifiSheet: View {
                 if let url = URL(string: ItmoWifi.shared.ISU_PAGE_URL) { openURL(url) }
             })
         )
-    }
-
-    /// Saves and joins ITMO-Corp; a refusal other than the user's own copies the password for the manual way.
-    private func connect(_ credentials: WifiCredentials) async {
-        let eap = NEHotspotEAPSettings()
-        eap.supportedEAPTypes = [NSNumber(value: NEHotspotEAPSettings.EAPType.EAPPEAP.rawValue)]
-        eap.username = credentials.login
-        eap.password = credentials.password
-        eap.trustedServerNames = [ItmoWifi.shared.SERVER_DOMAIN]
-        let configuration = NEHotspotConfiguration(ssid: ItmoWifi.shared.SSID, eapSettings: eap)
-        isConnecting = true
-        defer { isConnecting = false }
-        do {
-            try await NEHotspotConfigurationManager.shared.apply(configuration)
-            show("wifi_saved")
-        } catch let error as NSError where error.domain == NEHotspotConfigurationErrorDomain
-            && error.code == NEHotspotConfigurationError.alreadyAssociated.rawValue {
-            show("wifi_saved")
-        } catch let error as NSError where error.domain == NEHotspotConfigurationErrorDomain
-            && error.code == NEHotspotConfigurationError.userDenied.rawValue {
-            // The user said no in the system's alert.
-        } catch {
-            copy(credentials.password, secret: true, confirm: false)
-            show("wifi_save_failed")
-        }
     }
 
     /// A secret stays on this device and leaves the pasteboard after two minutes.

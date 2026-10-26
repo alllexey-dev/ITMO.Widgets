@@ -44,10 +44,10 @@ minutes on iOS). A note gives the manual settings.
   `Сеть ITMO-Corp сохранена`, or a copied password with the hint when it fails.
 - **Android 8-10, no ISRG root, or no dialog.** The password is copied and the Wi-Fi settings open with
   `Пароль скопирован: выберите ITMO-Corp и введите логин`.
-- **iOS.** `NEHotspotConfiguration(ssid:eapSettings:)` with PEAP, the login, the password and
-  `trustedServerNames = ["wifi.it.itmo.ru"]`. It needs `com.apple.developer.networking.HotspotConfiguration`, which
-  only the `.signed` entitlements carry; an unsigned build, a refused configuration or a simulator copies the
-  password instead ([degradations](../ios.md#degradations)).
+- **iOS.** No quick connect and no `Подключиться`: `NEHotspotConfiguration` needs the Hotspot Configuration
+  capability, which the app does not take because its builds are re-signed by the user (AltStore, SideStore). The
+  password is copied and pasted in the Wi-Fi settings with the manual settings from the note
+  ([degradations](../ios.md#degradations)).
 
 Not verified on a device on the real network: the server check (system roots plus domain) is inferred from the
 certificate a Mac accepted on `ITMO-Corp`.

@@ -253,8 +253,7 @@ each bundle's Info.plist (`AppGroupID`, `KeychainGroup`) and entitlements; code 
 Builds are unsigned by default, which is all the simulator and CI need. The ignored
 `iosApp/Config/Signing.local.xcconfig` (included by `Base.xcconfig`) sets `DEVELOPMENT_TEAM`,
 `ITMO_CODE_SIGN_IDENTITY = Apple Development` and `ITMO_ENTITLEMENTS_VARIANT = .signed`, which switches every target to
-its `.signed` entitlements, the only place for push, associated domains and the Hotspot Configuration capability (the
-Wi-Fi quick connect; enable `Hotspot` on the App ID). No team ID is committed. The owner's copy
+its `.signed` entitlements, the only place for push and associated domains. No team ID is committed. The owner's copy
 also sets `ITMO_BUILD_CHANNEL = official` ([build identity](building.md#build-identity)); nobody else sets it.
 
 ## Data sharing
@@ -360,7 +359,7 @@ calendar sync), keeps Android's periods in
 | BARS in the background | only through the Keychain cookie copy | a background run has about 30 s and no window |
 | Notification channels | one switch | iOS has no channels |
 | Push, Universal Links, dropped-push filtering | not available in unsigned builds | they need the Apple developer account |
-| Wi-Fi quick connect | signed builds only; elsewhere `Подключиться` copies the password, and there is no link to the Wi-Fi settings | `NEHotspotConfiguration` needs the Hotspot Configuration capability; iOS has no public Wi-Fi settings URL |
+| Wi-Fi quick connect | none: the sheet has no `Подключиться`, the password is copied and pasted in the Wi-Fi settings by hand | `NEHotspotConfiguration` needs the Hotspot Configuration capability, which re-signed builds do not get; iOS has no public Wi-Fi settings URL |
 | Push switches (`Спорт`, `Друзья`, `Новые устройства`) | hidden, every push shows | dropping a push needs `com.apple.developer.usernotifications.filtering`, not granted yet |
 | Update offer | App Store page only, nothing while `APP_STORE_ID` is empty | no other channel on iOS |
 | Debug tools | launch arguments instead | the debug tools are Android-only (ADR 0016) |
