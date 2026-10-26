@@ -67,6 +67,7 @@ import dev.alllexey.itmowidgets.client.reviews.TeacherReviewStatus
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewStatusSerializer
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsResponse
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummary
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryLevel
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryScale
 import dev.alllexey.itmowidgets.client.schedule.LessonDto
@@ -157,6 +158,7 @@ object WireModels {
         model<TeacherSummary>(),
         model<TeacherSummaryScale>(),
         model<TeacherSummaryLevel>(),
+        model<TeacherReviewHints>(),
         model<SaveTeacherReviewRequest>(),
         model<LessonSyncRequest>(),
         model<LessonDto>(),

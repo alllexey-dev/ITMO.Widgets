@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
 import dev.alllexey.itmowidgets.core.reviews.SummaryTag
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
@@ -27,6 +28,7 @@ import dev.alllexey.itmowidgets.client.reviews.SummaryLevel as WireSummaryLevel
 import dev.alllexey.itmowidgets.client.reviews.SummaryScaleKind as WireScaleKind
 import dev.alllexey.itmowidgets.client.reviews.SummaryScaleValue as WireScaleValue
 import dev.alllexey.itmowidgets.client.reviews.TeacherReview as WireReview
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewHints as WireReviewHints
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsResponse as WireTeacherReviews
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummary as WireTeacherSummary
 
@@ -42,6 +44,12 @@ internal fun WireTeacherReviews.toModel() = TeacherReviews(
     canReport = canReport,
     knownTeacher = knownTeacher,
     summary = summary?.toModel(),
+)
+
+internal fun WireReviewHints.toModel() = TeacherReviewHints(
+    isu = teacherIsu,
+    coach = coach,
+    subjects = subjects.map(String::trim).filter(String::isNotEmpty).distinct(),
 )
 
 internal fun ReviewReportReason.toWire(): ReportReason = when (this) {

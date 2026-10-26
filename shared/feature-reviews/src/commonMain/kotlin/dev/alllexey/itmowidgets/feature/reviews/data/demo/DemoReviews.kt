@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.reviews.data.demo
 
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.demo.DemoPerson
+import dev.alllexey.itmowidgets.core.demo.DemoSportSlots
 import dev.alllexey.itmowidgets.core.demo.DemoStudy
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.ReviewOrigin
@@ -12,6 +13,7 @@ import dev.alllexey.itmowidgets.core.reviews.SummaryScaleValue
 import dev.alllexey.itmowidgets.core.reviews.SummaryTag
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
 import dev.alllexey.itmowidgets.core.reviews.TeacherReview
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherSummary
 import kotlinx.datetime.DateTimeUnit
@@ -36,6 +38,12 @@ object DemoReviews {
             knownTeacher = true,
             summary = SUMMARIES[isu]
         )
+    }
+
+    /** Demo coaches teach only physical education; academic suggestions come from the demo schedule. */
+    fun hints(isu: Int): TeacherReviewHints {
+        val coach = DemoSportSlots.ALL.any { it.coach.isu == isu }
+        return TeacherReviewHints(isu, coach, if (coach) listOf(SPORT_SUBJECT) else emptyList())
     }
 
     /** Tones of the teachers whose summary is confident enough to show one. */
@@ -63,6 +71,9 @@ object DemoReviews {
 
     private fun scales(vararg values: Pair<SummaryScaleKind, Pair<SummaryScaleValue, String?>>) =
         values.map { (kind, value) -> SummaryScale(kind, value.first, value.second) }
+
+    /** Backend's first suggestion for a coach. */
+    private const val SPORT_SUBJECT = "Физическая культура"
 
     private val REVIEWS: Map<Int, List<DemoReview>> = mapOf(
         DemoPeople.MATH_TEACHER.isu to listOf(

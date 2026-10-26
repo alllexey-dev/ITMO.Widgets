@@ -37,6 +37,9 @@ internal class KtorTeacherReviewsApi(private val http: BackendHttp) : TeacherRev
             ListSerializer(TeacherSummaryLevel.serializer()),
         )
 
+    override suspend fun teacherReviewHints(isu: Int): TeacherReviewHints =
+        http.call(BackendRoute(HttpMethod.Get, teacherSegments(isu) + "hints"), TeacherReviewHints.serializer())
+
     private suspend fun reviews(route: BackendRoute): TeacherReviewsResponse =
         http.call(route, TeacherReviewsResponse.serializer())
 

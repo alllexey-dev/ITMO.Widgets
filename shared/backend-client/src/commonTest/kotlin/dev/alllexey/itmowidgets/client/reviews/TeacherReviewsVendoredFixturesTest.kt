@@ -36,6 +36,9 @@ class TeacherReviewsVendoredFixturesTest {
         ResponseClaim("http/reviews/teacherSummaryLevels.json", ListSerializer(TeacherSummaryLevel.serializer())) {
             reviews.teacherSummaryLevels(listOf(TEACHER))
         },
+        ResponseClaim("http/reviews/teacherReviewHints.json", TeacherReviewHints.serializer()) {
+            reviews.teacherReviewHints(TEACHER)
+        },
     )
 
     private val requests = listOf(

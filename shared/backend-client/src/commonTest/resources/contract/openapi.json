@@ -2915,6 +2915,37 @@
         ]
       }
     },
+    "/api/teachers/{isu}/reviews/hints": {
+      "get": {
+        "operationId": "teacherReview_hints",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "isu",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseTeacherReviewHints"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
     "/api/teachers/{isu}/reviews/mine": {
       "delete": {
         "operationId": "teacherReview_delete",
@@ -6799,6 +6830,39 @@
           "success"
         ]
       },
+      "ApiResponseTeacherReviewHints": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TeacherReviewHints"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
       "ApiResponseTeacherReviewsResponse": {
         "type": "object",
         "properties": {
@@ -7876,6 +7940,16 @@
               "UNVERIFIED"
             ]
           },
+          "verifiedBasis": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ISU_FLOW",
+              "SPORT_TEACHER"
+            ]
+          },
           "verifiedFlowId": {
             "type": [
               "integer",
@@ -7895,6 +7969,7 @@
           "teacherIsu",
           "teacherName",
           "verification",
+          "verifiedBasis",
           "verifiedFlowId"
         ]
       },
@@ -9629,6 +9704,29 @@
           "verified",
           "writtenBeforeYear",
           "writtenOn"
+        ]
+      },
+      "TeacherReviewHints": {
+        "type": "object",
+        "properties": {
+          "coach": {
+            "type": "boolean"
+          },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "teacherIsu": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "coach",
+          "subjects",
+          "teacherIsu"
         ]
       },
       "TeacherReviewRevision": {

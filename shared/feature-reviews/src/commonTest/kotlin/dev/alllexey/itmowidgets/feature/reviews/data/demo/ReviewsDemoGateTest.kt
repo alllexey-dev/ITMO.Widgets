@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.reviews.data.demo
 import dev.alllexey.itmowidgets.client.common.ModerationReportRequest
 import dev.alllexey.itmowidgets.client.common.ResourceVoteRequest
 import dev.alllexey.itmowidgets.client.reviews.SaveTeacherReviewRequest
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsResponse
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryLevel
@@ -16,6 +17,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.reviews.data.TeacherReviewsRepositoryImpl
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints as CoreReviewHints
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -52,6 +54,21 @@ class ReviewsDemoGateTest {
         assertEquals(refused, repository.save(DemoPeople.MATH_TEACHER.isu, draft))
     }
 
+    @Test
+    fun editorHintsComeFromTheDemoSet() = runTest {
+        val demo = FakeDemoMode(active = true)
+        val repository = TeacherReviewsRepositoryImpl(
+            FakeBackendGate(optedIn = false, demo), UnreachableReviews, backgroundScope, FixedAcademicTime(), demo,
+            dispatchers = StandardTestDispatcher(testScheduler).let { AppDispatchers(io = it, default = it, main = it) },
+        )
+
+        val coach = (repository.editorHints(DemoPeople.VOLLEYBALL_COACH.isu) as AppResult.Success).value
+        val math = (repository.editorHints(DemoPeople.MATH_TEACHER.isu) as AppResult.Success).value
+
+        assertEquals(CoreReviewHints(DemoPeople.VOLLEYBALL_COACH.isu, coach = true, subjects = listOf("Физическая культура")), coach)
+        assertEquals(CoreReviewHints(DemoPeople.MATH_TEACHER.isu, coach = false, subjects = emptyList()), math)
+    }
+
     /** Core 2.0's reviews area that fails the test on any call: the demo session must not reach Backend. */
     private object UnreachableReviews : TeacherReviewsApi {
         override suspend fun teacherReviews(isu: Int): TeacherReviewsResponse = unreachable("teacherReviews")
@@ -64,6 +81,7 @@ class ReviewsDemoGateTest {
             unreachable("reportTeacherReview")
         override suspend fun teacherSummaryLevels(isus: List<Int>): List<TeacherSummaryLevel> =
             unreachable("teacherSummaryLevels")
+        override suspend fun teacherReviewHints(isu: Int): TeacherReviewHints = unreachable("teacherReviewHints")
 
         private fun unreachable(call: String): Nothing = throw AssertionError("The demo session called Backend: $call")
     }

@@ -19,6 +19,17 @@ data class TeacherReviews(
     val summary: TeacherSummary? = null,
 )
 
+/**
+ * What the review editor offers for a teacher, from Backend's stored data. [coach]: the teacher has lessons in the
+ * sport catalog. [subjects] are subject titles to suggest, most likely first; for a coach the first is
+ * `Физическая культура`.
+ */
+data class TeacherReviewHints(
+    val isu: Int,
+    val coach: Boolean,
+    val subjects: List<String>,
+)
+
 /** A published review as another viewer sees it; [myVote] is -1, 0 or 1. */
 data class TeacherReview(
     val id: String,

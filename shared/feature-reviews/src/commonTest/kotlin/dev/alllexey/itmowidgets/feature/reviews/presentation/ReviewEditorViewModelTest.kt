@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLessonsGateway
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherReviewsRepository
@@ -114,6 +115,50 @@ class ReviewEditorViewModelTest {
 
         lessons.answer(AppResult.Success(TeacherLessons(setOf(7L, 3L), listOf("Физика", "Механика")))); runCurrent()
         assertEquals(listOf("Физика", "Механика"), vm.uiState.value.suggestions)
+    }
+
+    @Test fun aNewReviewOfACoachStartsWithPhysicalEducationAndItLeadsTheSuggestions() = runTest(main.dispatcher) {
+        repository.hintsResult = AppResult.Success(TeacherReviewHints(TEACHER, coach = true, subjects = listOf(SPORT, "Физика")))
+        lessons.answer(AppResult.Success(TeacherLessons(setOf(7L), listOf("Механика", "Физика"))))
+
+        val vm = model()
+
+        assertEquals(SPORT, vm.uiState.value.subject)
+        assertEquals(listOf(SPORT, "Механика", "Физика"), vm.uiState.value.suggestions)
+        assertFalse(vm.hasChanges(), "The prefill is the opening value")
+        vm.onSubjectChanged("Волейбол")
+        assertEquals("Волейбол", vm.uiState.value.subject)
+    }
+
+    @Test fun theCoachPrefillNeverTouchesAnEditATypedSubjectOrAClearedOneAfterProcessDeath() = runTest(main.dispatcher) {
+        repository.hintsResult = AppResult.Success(TeacherReviewHints(TEACHER, coach = true, subjects = listOf(SPORT)))
+        repository.cached = mapOf(TEACHER to teacherReviews(TEACHER, mine = ownReview().copy(subject = null)))
+        assertEquals("", model().uiState.value.subject)
+
+        repository.cached = emptyMap()
+        val gate = CompletableDeferred<Unit>()
+        repository.hintsGate = { gate.await() }
+        val typed = model().apply { onSubjectChanged("Плавание") }
+        gate.complete(Unit); runCurrent()
+        assertEquals("Плавание", typed.uiState.value.subject)
+
+        repository.hintsGate = {}
+        val handle = handle()
+        model(handle).onSubjectChanged("")
+        val restored = model(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+        assertEquals("", restored.uiState.value.subject)
+    }
+
+    @Test fun anAcademicTeacherKeepsOwnSubjectsFirstAndFailedHintsStaySilent() = runTest(main.dispatcher) {
+        repository.hintsResult = AppResult.Success(TeacherReviewHints(TEACHER, coach = false, subjects = listOf("Физика", "Оптика")))
+        lessons.answer(AppResult.Success(TeacherLessons(setOf(7L), listOf("Механика"))))
+        val vm = model()
+        assertEquals("", vm.uiState.value.subject)
+        assertEquals(listOf("Механика", "Физика", "Оптика"), vm.uiState.value.suggestions)
+
+        repository.hintsResult = AppResult.Failure(AppError.Network)
+        val own = FakeTeacherLessonsGateway().apply { answer(AppResult.Success(TeacherLessons(setOf(7L), listOf("Механика")))) }
+        assertEquals(listOf("Механика"), model(lessons = own).uiState.value.suggestions)
     }
 
     @Test fun saveSendsTheTrimmedDraftWithTheHistoryFlows() = runTest(main.dispatcher) {
@@ -256,5 +301,6 @@ class ReviewEditorViewModelTest {
         const val TEACHER = 123456
         const val VALID_TEXT = "Понятно объясняет материал и подробно отвечает на вопросы."
         const val EMOJI = "\uD83D\uDE00"
+        const val SPORT = "Физическая культура"
     }
 }

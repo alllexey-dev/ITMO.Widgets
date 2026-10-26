@@ -11,7 +11,7 @@ import kotlin.uuid.Uuid
  * (`COMMUNITY`, always premoderated) and copies from the Reviews project (`REVIEWS`) of one teacher, with votes,
  * reports and the AI summary. Semantics are in Backend's `teacher-reviews.md` contract.
  *
- * Every route except [teacherSummaryLevels] answers with the fresh [TeacherReviewsResponse] of the review's teacher
+ * Every route except [teacherSummaryLevels] and [teacherReviewHints] answers with the fresh [TeacherReviewsResponse] of the review's teacher
  * for the viewer. The viewer's capabilities come in `canWrite`, `canVote` and `canReport`; a restricted action is
  * 403 `restricted` ([BackendException.Forbidden.code]). Values outside Backend's rules (ISU outside
  * `100000..9999999` on a write, a review of oneself, text or `flowIds` limits, a link report reason) are 400
@@ -65,4 +65,11 @@ interface TeacherReviewsApi {
      */
     @Throws(BackendException::class, CancellationException::class)
     suspend fun teacherSummaryLevels(isus: List<Int>): List<TeacherSummaryLevel>
+
+    /**
+     * `GET /api/teachers/{isu}/reviews/hints`: what the review editor offers for the teacher, from data Backend
+     * already stores. An unknown positive ISU answers `coach = false` and no subjects; `isu <= 0` is 400.
+     */
+    @Throws(BackendException::class, CancellationException::class)
+    suspend fun teacherReviewHints(isu: Int): TeacherReviewHints
 }

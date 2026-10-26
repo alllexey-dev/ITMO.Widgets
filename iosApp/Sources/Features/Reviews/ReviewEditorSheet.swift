@@ -4,7 +4,7 @@ import SwiftUI
 /// The review editor (`AppRoutes.ReviewEditor`, from `teacher_review_write` or an own review on a teacher's profile)
 /// over the shared `ReviewEditorViewModel`, a form sheet at full height as on Android: a drag down does not close it,
 /// and the close button asks `review_discard_title` before unsaved changes are dropped. The optional subject with the
-/// subjects of the viewer's lessons with the teacher as chips, the text with its counter and the minimum as a hint
+/// view model's suggestions (own lessons and Backend hints) as chips, the text with its counter and the minimum as a hint
 /// that turns into the error on send, `review_anonymous` with its warning when off. A saved review closes the sheet; a failed
 /// save says why over it.
 struct ReviewEditorSheetView: View {

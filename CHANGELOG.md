@@ -133,6 +133,10 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   ITMO.Widgets`, then `Преподавание` (the lesson they give now, the subjects they teach you, the AI summary and
   reviews) and `Учёба` (groups, schedule, sport and friends you may open). Someone's hidden data is simply absent.
 - Another user's sport is titled `Спорт` with their given name after it and shows lesson cards.
+- Reviews of sport coaches: the editor asks Backend for subject suggestions when it opens
+  (`GET /api/teachers/{isu}/reviews/hints`), merged with the subjects of your own lessons; a new review of a coach
+  starts with `Физическая культура`, which you can change. Backend verifies reviews of coaches of its sport catalog
+  at once and lists coaches as teachers, so `Написать` appears in a coach's profile (Backend ADR 0037).
 - Teachers in the lesson sheet and on the subject page show their My ITMO photo, initials without one.
 - `Устройства` (a Профиль row with the count and a warning) lists this phone, your other app installs, connected
   clients (agents, MCP servers, browsers) and every other ITMO.ID sign-in of the account, with IP addresses as

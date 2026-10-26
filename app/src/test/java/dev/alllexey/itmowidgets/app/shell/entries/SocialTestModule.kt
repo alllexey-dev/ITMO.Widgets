@@ -13,6 +13,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
 import dev.alllexey.itmowidgets.core.session.CurrentUser
@@ -106,6 +107,7 @@ private object NoPerson : PersonRepository {
 private object NoReviews : TeacherReviewsRepository {
     override fun cachedReviews(isu: Int): TeacherReviews? = null
     override suspend fun reviews(isu: Int): AppResult<TeacherReviews> = AppResult.Failure(AppError.NotFound)
+    override suspend fun editorHints(isu: Int): AppResult<TeacherReviewHints> = AppResult.Failure(AppError.NotFound)
     override fun observeUpdates(): Flow<TeacherReviews> = emptyFlow()
     override suspend fun save(isu: Int, draft: TeacherReviewDraft): AppResult<TeacherReviews> = error("no reviews")
     override suspend fun delete(isu: Int): AppResult<TeacherReviews> = error("no reviews")

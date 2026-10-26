@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.reviews.ReviewReportReason
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewLimits
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewsRepository
@@ -73,6 +74,12 @@ class TeacherReviewsRepositoryImpl(
             if (!isCurrent(generation)) AppResult.Failure(AppError.CustomServicesDisabled)
             else result.also { if (it is AppResult.Success) put(it.value, isu) }
         }
+    }
+
+    override suspend fun editorHints(isu: Int): AppResult<TeacherReviewHints> {
+        if (demo.isActive()) return AppResult.Success(DemoReviews.hints(isu))
+        if (!backend.mayCallBackend()) return AppResult.Failure(AppError.CustomServicesDisabled)
+        return withContext(dispatchers.io) { appResultOf(Throwable::toAppError) { api.teacherReviewHints(isu).toModel() } }
     }
 
     override fun observeUpdates(): Flow<TeacherReviews> = updates.asSharedFlow()
