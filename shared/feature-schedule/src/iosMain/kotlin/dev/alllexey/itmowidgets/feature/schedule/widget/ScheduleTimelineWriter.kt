@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.text.buildingShortTitle
 import dev.alllexey.itmowidgets.core.text.roomShortTitle
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetTimelineLoadResult
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.DayWidgetContent
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimeline
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetTimelineJson
@@ -194,9 +195,13 @@ private suspend fun ScheduleWidgetSnapshot.withShortLocations(texts: UiTextResol
         lesson = next.lesson?.withShortLocations(texts),
         rest = next.rest.map { it.withShortLocations(texts) },
     ),
-    day = day.copy(lessons = day.lessons.map { it.withShortLocations(texts) }),
+    day = day.withShortLocations(texts),
+    week = week.map { it.withShortLocations(texts) },
     officialFallback = officialFallback?.withShortLocations(texts),
 )
+
+private suspend fun DayWidgetContent.withShortLocations(texts: UiTextResolver) =
+    copy(lessons = lessons.map { it.withShortLocations(texts) })
 
 private suspend fun WidgetLesson.withShortLocations(texts: UiTextResolver) = copy(
     room = room?.let { texts.resolve(roomShortTitle(it)) },

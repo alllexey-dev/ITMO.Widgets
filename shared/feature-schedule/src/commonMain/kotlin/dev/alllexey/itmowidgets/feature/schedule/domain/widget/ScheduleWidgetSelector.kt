@@ -26,8 +26,8 @@ import kotlinx.datetime.toLocalDateTime
 
 /**
  * What the next-lesson and the day widget show at an instant, from the own schedule days ([LessonDay], the same days
- * Сегодня and the schedule draw, with their changes and sport queues). Only today and tomorrow of the instant are
- * read. A queue never becomes the lesson to go to; a cancelled lesson stays on the day widget only.
+ * Сегодня and the schedule draw, with their changes and sport queues). Today and tomorrow of the instant decide both
+ * widgets; the [WEEK_AHEAD] days after today are the cards widget's pages. A queue never becomes the lesson to go to; a cancelled lesson stays on the day widget only.
  */
 class ScheduleWidgetSelector {
 
@@ -46,6 +46,7 @@ class ScheduleWidgetSelector {
         val snapshot = ScheduleWidgetSnapshot(
             next = next(today, tomorrow, wall, preferences.display.compact),
             day = day(today, tomorrow, wall, preferences.display.full),
+            week = week(days, wall, preferences.display.full),
             officialFallback = if (queued.isEmpty()) null else select(days.withoutQueues(), now, timeZone, preferences).snapshot,
             pendingValidUntil = queued.minOrNull()?.let { minOf(it, now + PERIODIC_UPDATE_DELAY) }?.toString(),
         ).withTextSizes(preferences.display)
@@ -57,7 +58,7 @@ class ScheduleWidgetSelector {
      * [select] at [from] and at every later instant before [until] where its snapshot can change: lesson starts and
      * ends, an hour before a start (the `сейчас` line), the early switch before an end, midnights. Adjacent snapshots that differ only in the `сейчас` minute merge;
      * an entry whose day shows the line carries a [NowTick] every [TICK] for it. [days] cover the dates of [from]
-     * through the day after the last instant before [until].
+     * through the [WEEK_AHEAD]th day after the last instant before [until].
      */
     fun timeline(
         days: List<LessonDay>,
@@ -211,6 +212,30 @@ class ScheduleWidgetSelector {
         )
     }
 
+    /** The [WEEK_AHEAD] days after today as planned days: every lesson upcoming, no `сейчас` line. */
+    private fun week(days: List<LessonDay>, wall: Wall, settings: FullScheduleWidgetSettings): List<DayWidgetContent> =
+        (1..WEEK_AHEAD).map { offset ->
+            val date = wall.today.plus(offset, DateTimeUnit.DAY)
+            val all = wall.lessonsOn(days, date)
+            val held = all.filter { !it.cancelled }
+            if (all.isEmpty()) return@map DayWidgetContent(WidgetContentKind.EMPTY, date = date.toString())
+            DayWidgetContent(
+                kind = WidgetContentKind.CONTENT,
+                date = date.toString(),
+                summary = DaySummary(
+                    kind = DaySummaryKind.PLANNED,
+                    lessons = held.count { !it.isSport() },
+                    sport = held.any { it.isSport() },
+                    from = held.firstOrNull()?.start?.format(DateTexts.TIME),
+                    to = held.maxOfOrNull { it.end }?.format(DateTexts.TIME),
+                ),
+                lessons = all.map { it.toWidget(wall, date, showTeacher = !settings.hideTeacher) },
+                gaps = gaps(all),
+                axisStart = all.minOf { it.start.minutes() } / MINUTES_PER_HOUR * MINUTES_PER_HOUR,
+                axisEnd = all.maxOf { it.end.minutes() } + AXIS_TAIL_MINUTES,
+            )
+        }
+
     private fun summary(
         today: List<DayLesson>,
         showTomorrow: Boolean,
@@ -306,6 +331,8 @@ class ScheduleWidgetSelector {
         val TICK: Duration = 5.minutes
         private val MINIMUM_UPDATE_DELAY: Duration = 5.seconds
         private const val REST = 2
+        /** The cards widget pages from today through the sixth day after it. */
+        const val WEEK_AHEAD = 6
         private const val MINUTES_PER_HOUR = 60
         /** The line shows from an hour before the first lesson, so the axis does not start at dawn. */
         private const val NOW_LEAD_MINUTES = 60

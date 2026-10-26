@@ -147,6 +147,22 @@ class ScheduleWidgetSelectorTest {
     }
 
     @Test
+    fun theWeekHoldsTheSixDaysAfterTodayAsPlannedDays() {
+        val week = select("12:22", preferences(hideTeacher = true)).week
+
+        assertEquals((8..13).map { "2026-09-${it.toString().padStart(2, '0')}" }, week.map { it.date })
+        val tomorrow = week.first()
+        assertEquals(WidgetContentKind.CONTENT, tomorrow.kind)
+        assertEquals(listOf(LABELS.algorithms, LABELS.history, LABELS.swimming), tomorrow.lessons.map { it.subject })
+        assertTrue(tomorrow.lessons.all { it.state == WidgetLessonState.UPCOMING && it.teacher == null })
+        assertEquals(DaySummary(DaySummaryKind.PLANNED, lessons = 2, sport = true, from = "10:00", to = "16:50"), tomorrow.summary)
+        assertNull(tomorrow.now)
+        assertTrue(week.drop(1).all { it.kind == WidgetContentKind.EMPTY })
+        // The official twin pages without the queue.
+        assertEquals(2, select("12:22").officialFallback?.week?.first()?.lessons?.size)
+    }
+
+    @Test
     fun theNextUpdateIsTheNextBoundary() {
         val selection = selector.select(days, at("12:22"), ZONE, preferences(showNextLessonEarly = true))
 

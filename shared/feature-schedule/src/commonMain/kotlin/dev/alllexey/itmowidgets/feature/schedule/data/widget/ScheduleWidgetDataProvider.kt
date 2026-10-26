@@ -23,7 +23,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 /**
- * The schedule widgets' data: the own [ScheduleDays] of today and tomorrow (the days Сегодня draws, with their changes
+ * The schedule widgets' data: the own [ScheduleDays] of today and the week ahead (the days Сегодня draws, with their changes
  * and, while the queue rows are on, the sport queues), signed-out and unavailable states. [load] with `refresh` fetches
  * first, as every scheduled update does; without it, for the minute ticks of Android's countdown and `сейчас` line, it
  * reads the cache only and starts no request.
@@ -39,7 +39,7 @@ class ScheduleWidgetDataProvider(
 ) {
 
     suspend fun load(refresh: Boolean = true): ScheduleWidgetLoadResult {
-        val fetched = fetch(refresh) { today -> today.plus(1, DateTimeUnit.DAY) }
+        val fetched = fetch(refresh) { today -> today.plus(ScheduleWidgetSelector.WEEK_AHEAD, DateTimeUnit.DAY) }
         return when (fetched) {
             FetchedSchedule.SignedOut -> signedOut()
             FetchedSchedule.Unavailable -> ScheduleWidgetLoadResult.Unavailable
@@ -60,9 +60,9 @@ class ScheduleWidgetDataProvider(
      */
     suspend fun loadTimeline(until: Instant): ScheduleWidgetTimelineLoadResult {
         require(timeProvider.now() < until) { "Timeline ends at $until, which is not after now" }
-        // The selector reads tomorrow of every instant, so the range ends the day after the last covered instant.
+        // The selector reads the week ahead of every instant, so the range ends that far after the last covered instant.
         val lastDay = (until - 1.nanoseconds).toLocalDateTime(timeProvider.timeZone).date
-        return when (val fetched = fetch(refresh = true) { lastDay.plus(1, DateTimeUnit.DAY) }) {
+        return when (val fetched = fetch(refresh = true) { lastDay.plus(ScheduleWidgetSelector.WEEK_AHEAD, DateTimeUnit.DAY) }) {
             FetchedSchedule.SignedOut -> ScheduleWidgetTimelineLoadResult.Available(
                 singleEntry(signedOut().selection.snapshot, until)
             )

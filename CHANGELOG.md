@@ -245,6 +245,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   an unsigned `.ipa` with no secrets, also in a fork.
 - `scripts/verify.sh` is the one build entry point; a PR runs the fast checks for what it touches, the rest runs on
   `master`, nightly or with the `full-ci` label ([testing](docs/testing.md#ci)). Release builds ship baseline profiles.
+- The schedule widgets' snapshot (Android's file and iOS timeline 2) carries the six days after today (`week`, an
+  additive field) for day paging; widget refreshes fetch today through the sixth day after it.
 - Gradle 9.7, AGP 9.3, Kotlin 2.4.20, compileSdk 37, minSdk 26, targetSdk 36.
 
 ## 2.2 — 2026-10-03

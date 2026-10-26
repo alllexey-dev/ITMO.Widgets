@@ -260,6 +260,162 @@
           "axisEnd": 1115,
           "now": 742
         },
+        "week": [
+          {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "PLANNED",
+              "lessons": 2,
+              "sport": true,
+              "from": "10:00",
+              "to": "16:50"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "UPCOMING",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": true,
+                "queuePosition": 2,
+                "queueTotal": 5,
+                "lesson": {
+                  "pairId": 8,
+                  "date": "2026-09-08",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 600,
+            "axisEnd": 1015
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -515,6 +671,128 @@
             "axisEnd": 1115,
             "now": 742
           },
+          "week": [
+            {
+              "kind": "CONTENT",
+              "date": "2026-09-08",
+              "tomorrow": false,
+              "summary": {
+                "kind": "PLANNED",
+                "lessons": 2,
+                "sport": false,
+                "from": "10:00",
+                "to": "13:10"
+              },
+              "lessons": [
+                {
+                  "subject": "Алгоритмы и структуры данных",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "startMinute": 600,
+                  "endMinute": 690,
+                  "typeId": 1,
+                  "state": "UPCOMING",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 6,
+                    "date": "2026-09-08",
+                    "subjectName": "Алгоритмы и структуры данных",
+                    "typeId": 1,
+                    "format": "",
+                    "start": "10:00",
+                    "end": "11:30",
+                    "room": "1404",
+                    "building": "Биржевая линия, 14"
+                  }
+                },
+                {
+                  "subject": "История",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "startMinute": 700,
+                  "endMinute": 790,
+                  "typeId": 3,
+                  "state": "UPCOMING",
+                  "room": "311",
+                  "building": "улица Чайковского, 11",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 7,
+                    "date": "2026-09-08",
+                    "subjectName": "История",
+                    "typeId": 3,
+                    "format": "",
+                    "start": "11:40",
+                    "end": "13:10",
+                    "room": "311",
+                    "building": "улица Чайковского, 11"
+                  }
+                }
+              ],
+              "gaps": [],
+              "axisStart": 600,
+              "axisEnd": 795
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -789,6 +1067,162 @@
           "axisEnd": 1115,
           "now": 790
         },
+        "week": [
+          {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "PLANNED",
+              "lessons": 2,
+              "sport": true,
+              "from": "10:00",
+              "to": "16:50"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "UPCOMING",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": true,
+                "queuePosition": 2,
+                "queueTotal": 5,
+                "lesson": {
+                  "pairId": 8,
+                  "date": "2026-09-08",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 600,
+            "axisEnd": 1015
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -1015,6 +1449,128 @@
             "axisEnd": 1115,
             "now": 790
           },
+          "week": [
+            {
+              "kind": "CONTENT",
+              "date": "2026-09-08",
+              "tomorrow": false,
+              "summary": {
+                "kind": "PLANNED",
+                "lessons": 2,
+                "sport": false,
+                "from": "10:00",
+                "to": "13:10"
+              },
+              "lessons": [
+                {
+                  "subject": "Алгоритмы и структуры данных",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "startMinute": 600,
+                  "endMinute": 690,
+                  "typeId": 1,
+                  "state": "UPCOMING",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 6,
+                    "date": "2026-09-08",
+                    "subjectName": "Алгоритмы и структуры данных",
+                    "typeId": 1,
+                    "format": "",
+                    "start": "10:00",
+                    "end": "11:30",
+                    "room": "1404",
+                    "building": "Биржевая линия, 14"
+                  }
+                },
+                {
+                  "subject": "История",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "startMinute": 700,
+                  "endMinute": 790,
+                  "typeId": 3,
+                  "state": "UPCOMING",
+                  "room": "311",
+                  "building": "улица Чайковского, 11",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 7,
+                    "date": "2026-09-08",
+                    "subjectName": "История",
+                    "typeId": 3,
+                    "format": "",
+                    "start": "11:40",
+                    "end": "13:10",
+                    "room": "311",
+                    "building": "улица Чайковского, 11"
+                  }
+                }
+              ],
+              "gaps": [],
+              "axisStart": 600,
+              "axisEnd": 795
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -1354,6 +1910,162 @@
           "axisEnd": 1115,
           "now": 920
         },
+        "week": [
+          {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "PLANNED",
+              "lessons": 2,
+              "sport": true,
+              "from": "10:00",
+              "to": "16:50"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "UPCOMING",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": true,
+                "queuePosition": 2,
+                "queueTotal": 5,
+                "lesson": {
+                  "pairId": 8,
+                  "date": "2026-09-08",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 600,
+            "axisEnd": 1015
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -1581,6 +2293,128 @@
             "axisEnd": 1115,
             "now": 920
           },
+          "week": [
+            {
+              "kind": "CONTENT",
+              "date": "2026-09-08",
+              "tomorrow": false,
+              "summary": {
+                "kind": "PLANNED",
+                "lessons": 2,
+                "sport": false,
+                "from": "10:00",
+                "to": "13:10"
+              },
+              "lessons": [
+                {
+                  "subject": "Алгоритмы и структуры данных",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "startMinute": 600,
+                  "endMinute": 690,
+                  "typeId": 1,
+                  "state": "UPCOMING",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 6,
+                    "date": "2026-09-08",
+                    "subjectName": "Алгоритмы и структуры данных",
+                    "typeId": 1,
+                    "format": "",
+                    "start": "10:00",
+                    "end": "11:30",
+                    "room": "1404",
+                    "building": "Биржевая линия, 14"
+                  }
+                },
+                {
+                  "subject": "История",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "startMinute": 700,
+                  "endMinute": 790,
+                  "typeId": 3,
+                  "state": "UPCOMING",
+                  "room": "311",
+                  "building": "улица Чайковского, 11",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 7,
+                    "date": "2026-09-08",
+                    "subjectName": "История",
+                    "typeId": 3,
+                    "format": "",
+                    "start": "11:40",
+                    "end": "13:10",
+                    "room": "311",
+                    "building": "улица Чайковского, 11"
+                  }
+                }
+              ],
+              "gaps": [],
+              "axisStart": 600,
+              "axisEnd": 795
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -1862,6 +2696,162 @@
           "axisEnd": 1115,
           "now": 1010
         },
+        "week": [
+          {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "PLANNED",
+              "lessons": 2,
+              "sport": true,
+              "from": "10:00",
+              "to": "16:50"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "UPCOMING",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": true,
+                "queuePosition": 2,
+                "queueTotal": 5,
+                "lesson": {
+                  "pairId": 8,
+                  "date": "2026-09-08",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 600,
+            "axisEnd": 1015
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -2063,6 +3053,128 @@
             "axisEnd": 1115,
             "now": 1010
           },
+          "week": [
+            {
+              "kind": "CONTENT",
+              "date": "2026-09-08",
+              "tomorrow": false,
+              "summary": {
+                "kind": "PLANNED",
+                "lessons": 2,
+                "sport": false,
+                "from": "10:00",
+                "to": "13:10"
+              },
+              "lessons": [
+                {
+                  "subject": "Алгоритмы и структуры данных",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "startMinute": 600,
+                  "endMinute": 690,
+                  "typeId": 1,
+                  "state": "UPCOMING",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 6,
+                    "date": "2026-09-08",
+                    "subjectName": "Алгоритмы и структуры данных",
+                    "typeId": 1,
+                    "format": "",
+                    "start": "10:00",
+                    "end": "11:30",
+                    "room": "1404",
+                    "building": "Биржевая линия, 14"
+                  }
+                },
+                {
+                  "subject": "История",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "startMinute": 700,
+                  "endMinute": 790,
+                  "typeId": 3,
+                  "state": "UPCOMING",
+                  "room": "311",
+                  "building": "улица Чайковского, 11",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 7,
+                    "date": "2026-09-08",
+                    "subjectName": "История",
+                    "typeId": 3,
+                    "format": "",
+                    "start": "11:40",
+                    "end": "13:10",
+                    "room": "311",
+                    "building": "улица Чайковского, 11"
+                  }
+                }
+              ],
+              "gaps": [],
+              "axisStart": 600,
+              "axisEnd": 795
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -2281,6 +3393,162 @@
           "axisEnd": 1115,
           "now": 1020
         },
+        "week": [
+          {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "PLANNED",
+              "lessons": 2,
+              "sport": true,
+              "from": "10:00",
+              "to": "16:50"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "UPCOMING",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": true,
+                "queuePosition": 2,
+                "queueTotal": 5,
+                "lesson": {
+                  "pairId": 8,
+                  "date": "2026-09-08",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 600,
+            "axisEnd": 1015
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -2483,6 +3751,128 @@
             "axisEnd": 1115,
             "now": 1020
           },
+          "week": [
+            {
+              "kind": "CONTENT",
+              "date": "2026-09-08",
+              "tomorrow": false,
+              "summary": {
+                "kind": "PLANNED",
+                "lessons": 2,
+                "sport": false,
+                "from": "10:00",
+                "to": "13:10"
+              },
+              "lessons": [
+                {
+                  "subject": "Алгоритмы и структуры данных",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "startMinute": 600,
+                  "endMinute": 690,
+                  "typeId": 1,
+                  "state": "UPCOMING",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 6,
+                    "date": "2026-09-08",
+                    "subjectName": "Алгоритмы и структуры данных",
+                    "typeId": 1,
+                    "format": "",
+                    "start": "10:00",
+                    "end": "11:30",
+                    "room": "1404",
+                    "building": "Биржевая линия, 14"
+                  }
+                },
+                {
+                  "subject": "История",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "startMinute": 700,
+                  "endMinute": 790,
+                  "typeId": 3,
+                  "state": "UPCOMING",
+                  "room": "311",
+                  "building": "улица Чайковского, 11",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 7,
+                    "date": "2026-09-08",
+                    "subjectName": "История",
+                    "typeId": 3,
+                    "format": "",
+                    "start": "11:40",
+                    "end": "13:10",
+                    "room": "311",
+                    "building": "улица Чайковского, 11"
+                  }
+                }
+              ],
+              "gaps": [],
+              "axisStart": 600,
+              "axisEnd": 795
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -2764,6 +4154,162 @@
           "axisStart": 600,
           "axisEnd": 1015
         },
+        "week": [
+          {
+            "kind": "CONTENT",
+            "date": "2026-09-08",
+            "tomorrow": false,
+            "summary": {
+              "kind": "PLANNED",
+              "lessons": 2,
+              "sport": true,
+              "from": "10:00",
+              "to": "16:50"
+            },
+            "lessons": [
+              {
+                "subject": "Алгоритмы и структуры данных",
+                "start": "10:00",
+                "end": "11:30",
+                "startMinute": 600,
+                "endMinute": 690,
+                "typeId": 1,
+                "state": "UPCOMING",
+                "room": "1404",
+                "building": "Биржевая линия, 14",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 6,
+                  "date": "2026-09-08",
+                  "subjectName": "Алгоритмы и структуры данных",
+                  "typeId": 1,
+                  "format": "",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14"
+                }
+              },
+              {
+                "subject": "История",
+                "start": "11:40",
+                "end": "13:10",
+                "startMinute": 700,
+                "endMinute": 790,
+                "typeId": 3,
+                "state": "UPCOMING",
+                "room": "311",
+                "building": "улица Чайковского, 11",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": false,
+                "queuePosition": 0,
+                "queueTotal": 0,
+                "lesson": {
+                  "pairId": 7,
+                  "date": "2026-09-08",
+                  "subjectName": "История",
+                  "typeId": 3,
+                  "format": "",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "room": "311",
+                  "building": "улица Чайковского, 11"
+                }
+              },
+              {
+                "subject": "Плавание",
+                "start": "15:20",
+                "end": "16:50",
+                "startMinute": 920,
+                "endMinute": 1010,
+                "typeId": 11,
+                "state": "UPCOMING",
+                "room": "бассейн",
+                "building": "улица Ломоносова, 9",
+                "teacher": "Иванов И. И.",
+                "online": false,
+                "changed": false,
+                "cancelled": false,
+                "queued": true,
+                "queuePosition": 2,
+                "queueTotal": 5,
+                "lesson": {
+                  "pairId": 8,
+                  "date": "2026-09-08",
+                  "subjectName": "Плавание",
+                  "typeId": 11,
+                  "format": "",
+                  "start": "15:20",
+                  "end": "16:50",
+                  "room": "бассейн",
+                  "building": "улица Ломоносова, 9"
+                }
+              }
+            ],
+            "gaps": [
+              {
+                "startMinute": 790,
+                "endMinute": 920
+              }
+            ],
+            "axisStart": 600,
+            "axisEnd": 1015
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -2903,6 +4449,128 @@
             "axisStart": 600,
             "axisEnd": 795
           },
+          "week": [
+            {
+              "kind": "CONTENT",
+              "date": "2026-09-08",
+              "tomorrow": false,
+              "summary": {
+                "kind": "PLANNED",
+                "lessons": 2,
+                "sport": false,
+                "from": "10:00",
+                "to": "13:10"
+              },
+              "lessons": [
+                {
+                  "subject": "Алгоритмы и структуры данных",
+                  "start": "10:00",
+                  "end": "11:30",
+                  "startMinute": 600,
+                  "endMinute": 690,
+                  "typeId": 1,
+                  "state": "UPCOMING",
+                  "room": "1404",
+                  "building": "Биржевая линия, 14",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 6,
+                    "date": "2026-09-08",
+                    "subjectName": "Алгоритмы и структуры данных",
+                    "typeId": 1,
+                    "format": "",
+                    "start": "10:00",
+                    "end": "11:30",
+                    "room": "1404",
+                    "building": "Биржевая линия, 14"
+                  }
+                },
+                {
+                  "subject": "История",
+                  "start": "11:40",
+                  "end": "13:10",
+                  "startMinute": 700,
+                  "endMinute": 790,
+                  "typeId": 3,
+                  "state": "UPCOMING",
+                  "room": "311",
+                  "building": "улица Чайковского, 11",
+                  "teacher": "Иванов И. И.",
+                  "online": false,
+                  "changed": false,
+                  "cancelled": false,
+                  "queued": false,
+                  "queuePosition": 0,
+                  "queueTotal": 0,
+                  "lesson": {
+                    "pairId": 7,
+                    "date": "2026-09-08",
+                    "subjectName": "История",
+                    "typeId": 3,
+                    "format": "",
+                    "start": "11:40",
+                    "end": "13:10",
+                    "room": "311",
+                    "building": "улица Чайковского, 11"
+                  }
+                }
+              ],
+              "gaps": [],
+              "axisStart": 600,
+              "axisEnd": 795
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -3118,6 +4786,62 @@
           "axisStart": 600,
           "axisEnd": 1015
         },
+        "week": [
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-14",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -3260,6 +4984,62 @@
             "axisStart": 600,
             "axisEnd": 795
           },
+          "week": [
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-14",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -3476,6 +5256,62 @@
           "axisEnd": 1015,
           "now": 540
         },
+        "week": [
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-14",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -3619,6 +5455,62 @@
             "axisEnd": 795,
             "now": 540
           },
+          "week": [
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-14",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -3880,6 +5772,62 @@
           "axisEnd": 1015,
           "now": 600
         },
+        "week": [
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-14",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -4023,6 +5971,62 @@
             "axisEnd": 795,
             "now": 600
           },
+          "week": [
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-14",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -4279,6 +6283,62 @@
           "axisEnd": 1015,
           "now": 690
         },
+        "week": [
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-14",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -4392,6 +6452,62 @@
             "axisEnd": 795,
             "now": 690
           },
+          "week": [
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-14",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -4585,6 +6701,62 @@
           "axisEnd": 1015,
           "now": 700
         },
+        "week": [
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-14",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "CONTENT",
@@ -4699,6 +6871,62 @@
             "axisEnd": 795,
             "now": 700
           },
+          "week": [
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-14",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -4895,6 +7123,62 @@
           "axisEnd": 1015,
           "now": 790
         },
+        "week": [
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-14",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "officialFallback": {
           "next": {
             "kind": "EMPTY",
@@ -4916,6 +7200,62 @@
             "axisStart": 0,
             "axisEnd": 0
           },
+          "week": [
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-09",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-10",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-11",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-12",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-13",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            },
+            {
+              "kind": "EMPTY",
+              "date": "2026-09-14",
+              "tomorrow": false,
+              "lessons": [],
+              "gaps": [],
+              "axisStart": 0,
+              "axisEnd": 0
+            }
+          ],
           "compactTextSize": "NORMAL",
           "fullTextSize": "LARGE"
         },
@@ -5049,6 +7389,62 @@
           "axisStart": 0,
           "axisEnd": 0
         },
+        "week": [
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-09",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-10",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-11",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-12",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-13",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          },
+          {
+            "kind": "EMPTY",
+            "date": "2026-09-14",
+            "tomorrow": false,
+            "lessons": [],
+            "gaps": [],
+            "axisStart": 0,
+            "axisEnd": 0
+          }
+        ],
         "compactTextSize": "NORMAL",
         "fullTextSize": "LARGE"
       },
