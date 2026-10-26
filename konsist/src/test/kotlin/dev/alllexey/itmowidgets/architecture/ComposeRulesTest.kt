@@ -67,6 +67,14 @@ class ComposeRulesTest {
             .assertFalse { file -> EXPRESSIVE_API in file.text }
     }
 
+    @Test
+    fun `menus are drawn only by the design system`() {
+        // ItmoMenu is the one menu, so one- and two-line items keep Material's spacing everywhere.
+        composeFilesOutsideDesignSystem().assertFalse { file ->
+            file.imports.any { it.name.removePrefix(MATERIAL3) in MATERIAL_MENUS }
+        }
+    }
+
     /** `<Name>Screen`, `<Name>SheetContent` and `<Name>Dialog` composables of every shared module. */
     private fun statelessCandidates(): List<KoFunctionDeclaration> = sharedFiles()
         .flatMap { it.composables() }
@@ -108,6 +116,8 @@ class ComposeRulesTest {
         const val DESIGN_SYSTEM = "/shared/designsystem/"
         const val PREVIEW_DIRECTORY = "/preview/"
         const val EXPRESSIVE_API = "ExperimentalMaterial3ExpressiveApi"
+        const val MATERIAL3 = "androidx.compose.material3."
+        val MATERIAL_MENUS = setOf("DropdownMenu", "DropdownMenuItem", "DropdownMenuPopup", "ExposedDropdownMenuBox")
 
         val STATELESS = Regex("""[A-Z]\w*(Screen|SheetContent|Dialog)""")
         val SCREEN = Regex("""[A-Z]\w*(Screen|SheetContent)""")

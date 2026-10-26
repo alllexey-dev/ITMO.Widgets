@@ -389,7 +389,7 @@ drawing its own variant.
 | `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer |
 | `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link |
 | `InfoDialog` | A message with one button |
-| `ItmoMenu` | The one menu of actions anchored to its parent, groups with separators, destructive items in the error colour |
+| `ItmoMenu`, `ItmoMenuGroup`, `ItmoMenuItem` | The one Android menu anchored to its parent, for actions and pickers: groups with separators and an optional label, two-line items with supporting text and Material's 12 dp around them, the current choice checked, destructive items in the error colour; no screen draws `DropdownMenu` itself |
 | `ScoreRing` | The sport score ring |
 | `GradeScale` | A 0-100 bar with grade ticks |
 | `TimelineMarker`, `TimelineLine` | The schedule timeline |

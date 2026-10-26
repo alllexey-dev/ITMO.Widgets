@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuGroup
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.components.rows.VoteLabels
 import dev.alllexey.itmowidgets.designsystem.kit.overlap
@@ -118,7 +119,7 @@ internal fun ReviewMoreButton(items: List<ItmoMenuItem>, enabled: Boolean, modif
             modifier = Modifier.size(MoreIconSize),
             tint = ItmoTheme.colorScheme.onSurfaceVariant,
         )
-        if (visible) ItmoMenu(expanded, onDismissRequest = { expanded = false }, groups = listOf(items))
+        if (visible) ItmoMenu(expanded, onDismissRequest = { expanded = false }, groups = listOf(ItmoMenuGroup(items)))
     }
 }
 

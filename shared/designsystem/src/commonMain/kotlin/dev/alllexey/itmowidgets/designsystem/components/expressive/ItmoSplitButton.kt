@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenu
+import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuGroup
 import dev.alllexey.itmowidgets.designsystem.components.menus.ItmoMenuItem
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
@@ -50,7 +51,7 @@ fun ItmoSplitButton(
         ItmoMenu(
             expanded = menuExpanded,
             onDismissRequest = { onMenuExpandedChange(false) },
-            groups = listOf(options.map { ItmoMenuItem(it.label, it.onClick) }),
+            groups = listOf(ItmoMenuGroup(options.map { ItmoMenuItem(it.label, it.onClick) })),
         )
     }
     MaterialSplitButton(label, onClick, menuLabel, menuExpanded, onMenuExpandedChange, modifier, enabled, menu)
