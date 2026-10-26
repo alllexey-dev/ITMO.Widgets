@@ -7,6 +7,8 @@
 	<array>
 		<string>$(APP_GROUP_ID)</string>
 	</array>
+	<key>com.apple.developer.networking.HotspotConfiguration</key>
+	<true/>
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(KEYCHAIN_GROUP)</string>

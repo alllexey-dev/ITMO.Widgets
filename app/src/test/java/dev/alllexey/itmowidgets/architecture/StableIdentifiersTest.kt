@@ -331,6 +331,7 @@ class StableIdentifiersTest {
         val NO_BACKUP_FILES = listOf(
             "myitmo_tokens.enc",
             "bars_tokens.enc",
+            "wifi_credentials.enc",
             "widgets/schedule_snapshot.json",
             "debug/academic_date_override",
             "debug/sport_score_override",

@@ -1,0 +1,21 @@
+<resources>
+    <string name="wifi_title">Wi-Fi</string>
+    <string name="wifi_network">Сеть</string>
+    <string name="wifi_login">Логин</string>
+    <string name="wifi_password">Пароль</string>
+    <string name="wifi_password_show">Показать пароль</string>
+    <string name="wifi_password_hide">Скрыть пароль</string>
+    <string name="wifi_copy_login">Скопировать логин</string>
+    <string name="wifi_copy_password">Скопировать пароль</string>
+    <string name="wifi_copied">Скопировано</string>
+    <string name="wifi_connect">Подключиться</string>
+    <string name="wifi_manual">Вручную: метод EAP — PEAP, этап 2 — MSCHAPV2, сертификат — системный, домен — %1$s</string>
+    <string name="wifi_saved">Сеть ITMO-Corp сохранена</string>
+    <string name="wifi_save_failed">Сеть не сохранилась. Пароль скопирован: выберите ITMO-Corp в настройках Wi-Fi</string>
+    <string name="wifi_copied_open_settings">Пароль скопирован: выберите ITMO-Corp и введите логин</string>
+    <string name="wifi_no_password_title">Пароля Wi-Fi ещё нет</string>
+    <string name="wifi_no_password_description">Получите его в ИСУ кнопкой «Получить или изменить пароль Wi-Fi» и вернитесь сюда.</string>
+    <string name="wifi_sign_in_title">ИСУ не открылась</string>
+    <string name="wifi_sign_in_description">На телефоне нет входа в ITMO.ID. Посмотрите пароль в ИСУ или войдите в приложение заново.</string>
+    <string name="wifi_open_isu">Открыть ИСУ</string>
+</resources>

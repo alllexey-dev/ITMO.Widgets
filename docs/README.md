@@ -50,6 +50,7 @@ limits. Start there; the documents below are the developer reference.
 - [Notifications](features/notifications.md) - push, token sync, local notifications, channels.
 - [Widgets](features/widgets.md) - schedule, sport and QR widgets.
 - [QR pass](features/qr.md) - the pass, its cache, the tile.
+- [Wi-Fi](features/wifi.md) - ITMO-Corp, the password from ISU, the quick connect.
 - [My ITMO in the app](features/my-itmo-web.md) - the web view and its navigation policy.
 - [Update offer](features/update.md) - the version check per distribution variant.
 - [Connected clients](features/connections.md) - «Устройства», pairing agents, MCP servers and the web, ITMO.ID sessions.

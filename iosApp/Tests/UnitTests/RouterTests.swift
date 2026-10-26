@@ -632,6 +632,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.ReportLink(args: links, linkId: "link-1"), .notOnIOS),
             (AppRoutes.LinkUnavailable.shared, .sheet(.linkUnavailable)),
             (AppRoutes.CancelBookingConfirm(lessonId: 42), .notOnIOS),
+            (AppRoutes.Wifi.shared, .swiftUISheet),
         ]
     }
 }

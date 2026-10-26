@@ -53,7 +53,8 @@ object RouteSamples {
         AppRoutes.ReportReview(teacher, "review-1"),
         AppRoutes.ReportLink(links, "link-1"),
         AppRoutes.LinkUnavailable,
-        AppRoutes.CancelBookingConfirm(42)
+        AppRoutes.CancelBookingConfirm(42),
+        AppRoutes.Wifi
     )
 
     fun ofKind(kind: RouteKind): List<AppRoute> = all.filter { it.kind == kind }

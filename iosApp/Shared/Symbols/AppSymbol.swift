@@ -116,6 +116,7 @@ enum AppSymbol: String, CaseIterable {
     case volumeUp = "volume_up"
     case weekend = "weekend"
     case widgets = "widgets"
+    case wifi = "wifi"
     case work = "work"
 
     /// The SF Symbol name, or the asset name of a custom symbol image when `isCustom`.
@@ -235,6 +236,7 @@ enum AppSymbol: String, CaseIterable {
         case .volumeUp: "speaker.wave.2"
         case .weekend: "sofa"
         case .widgets: "square.grid.2x2"
+        case .wifi: "wifi"
         case .work: "briefcase"
         }
     }
