@@ -17,7 +17,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewMo
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 
 /**
- * The real next-lesson, day or classic list widget on the sample Monday at 12:22 ([SchedulePreviewScenario]), with the settings
+ * The real next-lesson, day, cards or classic list widget on the sample Monday at 12:22 ([SchedulePreviewScenario]), with the settings
  * being edited: the widgets gallery and its sheets draw it. No host, no PendingIntents, no snapshot written.
  */
 class ScheduleSettingsPreview(
@@ -65,7 +65,7 @@ class ScheduleSettingsPreview(
         /** The launcher size (dp) the preview of [format] is drawn at before the gallery fits it to its card. */
         fun size(format: ScheduleWidgetFormat) = when (format) {
             ScheduleWidgetFormat.COMPACT -> SizeF(NEXT_WIDTH_DP, NEXT_HEIGHT_DP)
-            ScheduleWidgetFormat.FULL -> SizeF(DAY_WIDTH_DP, DAY_HEIGHT_DP)
+            ScheduleWidgetFormat.FULL, ScheduleWidgetFormat.CARDS -> SizeF(DAY_WIDTH_DP, DAY_HEIGHT_DP)
             ScheduleWidgetFormat.LIST -> SizeF(DAY_WIDTH_DP, LIST_HEIGHT_DP)
         }
 
@@ -109,6 +109,8 @@ class ScheduleSettingsPreview(
                     NextLessonWidgetRenderer.layout(context, snapshot, palette, scenario.instant(moment), widgetId = null, medium = true)
                 ScheduleWidgetFormat.FULL ->
                     DayWidgetRenderer.layout(context, snapshot, palette, SizeF(DAY_WIDTH_DP, DAY_HEIGHT_DP), widgetId = null)
+                ScheduleWidgetFormat.CARDS ->
+                    CardsWidgetRenderer.layout(context, snapshot, palette, SizeF(DAY_WIDTH_DP, DAY_HEIGHT_DP), page = 0, widgetId = null)
                 ScheduleWidgetFormat.LIST -> error("The classic list is a collection: draw it with view()")
             }
         }

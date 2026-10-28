@@ -29,7 +29,7 @@ internal fun WidgetPlaceholder(settings: WidgetPreviewSettings, modifier: Modifi
     val size = when (settings) {
         is WidgetPreviewSettings.Schedule -> when (settings.format) {
             ScheduleWidgetFormat.COMPACT -> modifier.height(180.dp)
-            ScheduleWidgetFormat.FULL -> modifier.height(330.dp)
+            ScheduleWidgetFormat.FULL, ScheduleWidgetFormat.CARDS -> modifier.height(330.dp)
             ScheduleWidgetFormat.LIST -> modifier.height(250.dp)
         }
         is WidgetPreviewSettings.Sport, is WidgetPreviewSettings.Qr -> modifier.wrapContentWidth().size(150.dp)

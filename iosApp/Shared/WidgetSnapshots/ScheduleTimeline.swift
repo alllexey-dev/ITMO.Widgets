@@ -113,6 +113,20 @@ struct ScheduleWidgetSnapshot: Equatable, Decodable {
     }
 }
 
+extension ScheduleWidgetSnapshot {
+    /// The cards widget's pages, Kotlin's `cardsPages`: the day the day widget shows (today, or tomorrow once today
+    /// is over), then each day of `week` after it.
+    var cardsPages: [DayContent] {
+        guard let week, !week.isEmpty else { return [day] }
+        return day.tomorrow ? week : [day] + week
+    }
+
+    /// How many days after today the first of `cardsPages` is, Kotlin's `cardsFirstOffset`.
+    var cardsFirstOffset: Int {
+        day.tomorrow && !(week ?? []).isEmpty ? 1 : 0
+    }
+}
+
 /// What a widget shows besides its content (Kotlin's `WidgetContentKind`).
 enum WidgetContentKind: String, Decodable {
     case loading = "LOADING"

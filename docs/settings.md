@@ -184,13 +184,14 @@ user's data), what it shows, `Добавить` (Android pins it through the lau
 a widget from the app: it shows `Как добавить` and, below the cards, the Lock
 Screen widgets and the `Пропуск` Control. A format's settings open in a sheet
 with its preview; a change applies at once to every placed widget of the
-format. `Пара`, `Расписание на день` and `Спорт` carry a `Бета` pill
+format. `Пара`, `Расписание на день`, `Карточки` and `Спорт` carry a `Бета` pill
 (`WidgetCard.beta`). Below the cards: `Виджеты в цвет темы`.
 
 | Format | Settings | Defaults |
 |---|---|---|
 | `Пара` (next lesson) | `Следующая пара заранее`, `Размер текста` | early switch on; `Обычный` |
 | `Расписание на день` | `Скрывать прошедшие пары`, `Показывать преподавателя`, `Завтрашние пары вечером`, `Размер текста` | past lessons shown; teacher shown; tomorrow on; `Обычный` |
+| `Карточки` | the same rows and keys as `Расписание на день`; today's past lessons never show, whatever `Скрывать прошедшие пары` says | as `Расписание на день` |
 | `Список пар` (the classic list of 2.2) | the same rows and keys as `Расписание на день` | as `Расписание на день` |
 | `Спорт` | none | |
 | `Пропуск` | [QR widget](#qr-widget) | |

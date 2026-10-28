@@ -205,6 +205,9 @@
     <string name="settings_widget_next_description">Сейчас и далее</string>
     <string name="settings_widget_day_title">Расписание на день</string>
     <string name="settings_widget_day_description">С линией «сейчас»</string>
+    <string name="settings_widget_cards_title">Карточки</string>
+    <string name="settings_widget_cards_description">Пары карточками, стрелки листают неделю</string>
+    <string name="settings_widget_cards_note">Эти настройки общие с «Расписанием на день». Прошедшие пары сегодня карточки не показывают.</string>
     <string name="settings_widget_list_title">Список пар</string>
     <string name="settings_widget_list_description">Пары дня по порядку, как раньше</string>
     <string name="settings_widget_list_note">Эти настройки общие с «Расписанием на день».</string>

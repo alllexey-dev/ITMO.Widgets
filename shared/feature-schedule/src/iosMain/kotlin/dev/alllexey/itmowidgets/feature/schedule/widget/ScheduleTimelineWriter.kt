@@ -60,7 +60,7 @@ class ScheduleTimelineTriggers(
 
 /**
  * Keeps [FILE] in the App Group container on the schedule widgets' timeline (`ScheduleWidgetTimeline`, from now to the
- * end of tomorrow) and reloads both schedule widget kinds after each write; the widget extension links no Kotlin and
+ * end of tomorrow) and reloads every schedule widget kind after each write; the widget extension links no Kotlin and
  * only picks the entry of the moment (docs/ios.md, Data sharing).
  *
  * The rooms and buildings in the file are the short titles Android's widget shows (`roomShortTitle`,
@@ -168,13 +168,14 @@ class ScheduleTimelineWriter(
         }
 
         /**
-         * The WidgetKit kinds of the lesson widget, the classic list (the day widget's kind before the day to scale)
-         * and the day widget, stable identifiers (`StableIdentifiersTests`).
+         * The WidgetKit kinds of the lesson widget, the classic list (the day widget's kind before the day to scale),
+         * the day widget and the cards, stable identifiers (`StableIdentifiersTests`).
          */
         const val SINGLE_LESSON_KIND = "dev.alllexey.itmowidgets.widget.single-lesson"
         const val DAY_SCHEDULE_KIND = "dev.alllexey.itmowidgets.widget.day-schedule"
         const val DAY_TIMELINE_KIND = "dev.alllexey.itmowidgets.widget.day-timeline"
-        val KINDS = listOf(SINGLE_LESSON_KIND, DAY_SCHEDULE_KIND, DAY_TIMELINE_KIND)
+        const val CARDS_KIND = "dev.alllexey.itmowidgets.widget.cards"
+        val KINDS = listOf(SINGLE_LESSON_KIND, DAY_SCHEDULE_KIND, DAY_TIMELINE_KIND, CARDS_KIND)
 
         /** Longer than a schedule refresh takes, shorter than a user's next pull to refresh. */
         val OWN_REFRESH_WINDOW = 1.minutes

@@ -45,7 +45,7 @@ Each bundle runs in its own process; they share only the App Group container and
 | Target | Kotlin | Does |
 |---|---|---|
 | `ITMOWidgets` (app) | `Shared` | every screen and network request, DataStore, the Keychain session, the App Group writers, background refresh, local notifications, push registration |
-| `ITMOWidgetsWidgets` | none | next-lesson, day, sport and QR widgets and the QR Control; reads App Group files, never calls the network |
+| `ITMOWidgetsWidgets` | none | next-lesson, day, cards, sport and QR widgets and the QR Control; reads App Group files, never calls the network |
 | `ITMOWidgetsNotificationService` | none | the sport booking of a push and its text; Swift micro-client for MyITMO and Backend |
 
 - Only the app has DataStore and a Koin graph. An extension that needs a fact reads a versioned JSON file the app
@@ -241,7 +241,7 @@ Frozen from the first TestFlight build; `iosApp/Tests/UnitTests/StableIdentifier
 | Bundle IDs | `dev.alllexey.itmowidgets`, `.widgets`, `.notification-service` |
 | App Group | `group.dev.alllexey.itmowidgets` (all three) |
 | Keychain access group | `$(AppIdentifierPrefix)dev.alllexey.itmowidgets.shared` (app and notification service) |
-| Widget kinds | `dev.alllexey.itmowidgets.widget.qr`, `.widget.single-lesson` (next lesson and Lock Screen), `.widget.day-schedule` (the classic list, the day widget of the first builds), `.widget.day-timeline` (the day to scale), `.widget.sport` |
+| Widget kinds | `dev.alllexey.itmowidgets.widget.qr`, `.widget.single-lesson` (next lesson and Lock Screen), `.widget.day-schedule` (the classic list, the day widget of the first builds), `.widget.day-timeline` (the day to scale), `.widget.cards`, `.widget.sport` |
 | Control kind | `dev.alllexey.itmowidgets.control.qr` |
 | Quick action types | `dev.alllexey.itmowidgets.qr_pass`, `dev.alllexey.itmowidgets.today` |
 | Background task | `dev.alllexey.itmowidgets.refresh` |
@@ -274,7 +274,8 @@ placeholder state (`AppGroupSnapshot`, `SnapshotReaderTests`).
 | session-v1.json | `SessionSnapshotWriter` on every session change, reloading every widget kind | widgets, notification service |
 | qr-pass-v1.json | `QrPassSnapshotWriter` (`:shared:feature-qr`) | QR widget |
 | qr-widget-v1.json | `RevealQrIntent` in the widget extension | QR widget |
-| schedule-timeline-v2.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`) on the session, widget options, foreground, cached schedule and after a booking | next-lesson and day widgets |
+| cards-widget-v1.json | `TurnCardsPageIntent` in the widget extension | cards widget |
+| schedule-timeline-v2.json | `ScheduleTimelineWriter` (`:shared:feature-schedule`) on the session, widget options, foreground, cached schedule and after a booking | next-lesson, day, classic list and cards widgets |
 | sport-widget-v1.json | `SportWidgetWriter` (`:shared:feature-sport`) on the session and widget theme, after a booking and as the `sport-widget` refresh step | sport widget |
 | `locks/<name>.lock` | `FileCrossProcessLock` (`flock`), held only around the guarded call | app, notification service |
 | `sport-results/<lesson>-<millis>.json` | `SportResultInbox` in the notification service, one per booked or refused queue lesson, moved in place whole | `AppGroupSportResultInbox` (`:shared:feature-sport`), which moves each into the bell's `SportResultLog` and deletes it |
@@ -299,9 +300,18 @@ The widget extension reads App Group files on each timeline request and makes no
   whose `validFrom` has passed and, inside it, the last `nowTicks` minute; countdowns are the system's live text on
   `until` (`WidgetCountdown`) and the lesson's progress is drawn at each entry's date (`WidgetLessonProgress`), so
   Swift computes no time.
+- Cards widget (`CardsWidget`, kind `.widget.cards`, medium and large): Android's `Карточки` on the same timeline.
+  Its pages are `cardsPages` (the day widget's day, then the snapshot's `week`); the cards that fit in the size the
+  widget gets (`CardsLayout.fit`, Android's rule) and the row folding the rest; the current lesson's wavy progress
+  (`WavyProgress`, a `WaveLine` shape trimmed at the entry's `now` minute, so it moves at the 5-minute ticks) and its
+  live minutes when the next-lesson content counts down to its end. The arrows are `Button(intent:
+  TurnCardsPageIntent(page:base:))`: a widget has no instance id, so every placed cards widget turns together; the
+  intent writes cards-widget-v1.json (page, `until` 5 minutes on, the first page's date), and `CardsWidgetTimeline`
+  shows the page in the entries before `until` whose first page is still that date (a midnight or the end of today
+  turns back) and adds an entry at `until`. Each tap reloads the timeline, a small part of the daily budget.
 - Sport widget (`Extensions/Widgets/Sport/`, medium and small): the score ring, the remaining points and the nearest
   bookings or queues from sport-widget-v1.json.
-- The picker names of the next-lesson, day and sport widgets end in `(бета)` (`widget_*_name`), as the gallery's `Бета`
+- The picker names of the next-lesson, day, cards and sport widgets end in `(бета)` (`widget_*_name`), as the gallery's `Бета`
   pills.
 - The pass widget and the pass Control (`Extensions/Widgets/Controls/`) are titled `settings_widget_pass_title`; the
   Control opens the pass sheet through `OpenRouteIntent`.

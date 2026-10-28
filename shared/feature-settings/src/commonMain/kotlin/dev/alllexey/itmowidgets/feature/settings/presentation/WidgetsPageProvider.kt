@@ -166,6 +166,11 @@ internal class WidgetGalleryRows(private val capabilities: PlatformCapabilities,
                     WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL, theme), daySections(local), sample
                 ),
                 card(
+                    state, WidgetFormat.CARDS, SettingsStrings.settings_widget_cards_title, SettingsStrings.settings_widget_cards_description,
+                    WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.CARDS, theme), daySections(local),
+                    UiText.Res(SettingsStrings.settings_widget_cards_note)
+                ),
+                card(
                     state, WidgetFormat.LIST, SettingsStrings.settings_widget_list_title, SettingsStrings.settings_widget_list_description,
                     WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.LIST, theme), daySections(local),
                     UiText.Res(SettingsStrings.settings_widget_list_note)
@@ -361,7 +366,7 @@ internal class WidgetGalleryRows(private val capabilities: PlatformCapabilities,
 
     private companion object {
         /** The widgets of the UX overhaul, still being refined; the classic list and the pass are not. */
-        val BETA = setOf(WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.SPORT)
+        val BETA = setOf(WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.CARDS, WidgetFormat.SPORT)
     }
 }
 

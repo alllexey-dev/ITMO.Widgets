@@ -8,6 +8,7 @@ import WidgetKit
 struct WidgetGalleryPreviews: Equatable {
     var next: ScheduleWidgetEntry?
     var day: ScheduleWidgetEntry?
+    var cards: ScheduleWidgetEntry?
     var list: ScheduleWidgetEntry?
     var sport: SportWidgetEntry?
     var pass: QrWidgetEntry?
@@ -24,6 +25,7 @@ struct WidgetGalleryPreviews: Equatable {
                 let entry = json.flatMap { scheduleEntry(Data($0.utf8), at: moment) }
                 switch card.format {
                 case .day: previews.day = entry
+                case .cards: previews.cards = entry
                 case .list: previews.list = entry
                 default: previews.next = entry
                 }

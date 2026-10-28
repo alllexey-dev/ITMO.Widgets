@@ -79,13 +79,15 @@ final class StableIdentifiersTests: XCTestCase {
         )
     }
 
-    /// The next-lesson widget, the classic list (the first builds' day widget) and the day widget keep their kinds, the
+    /// The next-lesson widget, the classic list (the first builds' day widget), the day widget and the cards keep their kinds, the
     /// app's writer reloads them by name and writes the timeline file they read; the day's header opens the schedule
     /// on today, a lesson its sheet.
     func testScheduleWidgets() {
         XCTAssertEqual(NextLessonWidget.kind, "dev.alllexey.itmowidgets.widget.single-lesson")
         XCTAssertEqual(ClassicListWidget.kind, "dev.alllexey.itmowidgets.widget.day-schedule")
         XCTAssertEqual(DayWidget.kind, "dev.alllexey.itmowidgets.widget.day-timeline")
+        XCTAssertEqual(CardsWidget.kind, "dev.alllexey.itmowidgets.widget.cards")
+        XCTAssertEqual(CardsWidgetPage.fileName, "cards-widget-v1.json")
         XCTAssertEqual(WidgetRoute.today, RouteURL.url(id: "today"))
         XCTAssertEqual(ScheduleTimeline.fileName, "schedule-timeline-v2.json")
         XCTAssertEqual(

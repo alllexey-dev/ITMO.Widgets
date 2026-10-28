@@ -15,6 +15,8 @@ struct ScheduleWidgetEntry: TimelineEntry, Equatable {
     var palette: WidgetPalette? = nil
     /// Live in WidgetKit; frozen at the sample's moment in the gallery and the snapshot tests.
     var clock: WidgetClock = .live
+    /// The cards widget's page of `cardsPages` (`CardsWidgetPage`); the other widgets ignore it.
+    var cardsPage = 0
 
     /// Progress is rendered from this entry's instant; only the countdown text uses the live system clock.
     var progressDate: Date {
