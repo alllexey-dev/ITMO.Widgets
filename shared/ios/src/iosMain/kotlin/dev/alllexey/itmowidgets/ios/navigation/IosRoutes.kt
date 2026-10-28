@@ -94,6 +94,7 @@ object IosRoutes {
         AppRoutes.Pairing::class to RouteFeature.ACCOUNT,
         AppRoutes.Devices::class to RouteFeature.ACCOUNT,
         AppRoutes.Connection::class to RouteFeature.ACCOUNT,
+        AppRoutes.Wifi::class to RouteFeature.ACCOUNT,
         AppRoutes.Settings::class to RouteFeature.SETTINGS,
         AppRoutes.Diagnostics::class to RouteFeature.SETTINGS,
         AppRoutes.DebugTools::class to RouteFeature.DEBUG,

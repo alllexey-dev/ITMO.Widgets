@@ -73,6 +73,8 @@ import dev.alllexey.itmowidgets.feature.update.ui.toBundle
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoBrowser
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebContent
 import dev.alllexey.itmowidgets.feature.web.ui.openExternalPage
+import dev.alllexey.itmowidgets.feature.wifi.presentation.WifiViewModel
+import dev.alllexey.itmowidgets.feature.wifi.ui.WifiRoute
 import dev.alllexey.itmowidgets.feature.connections.data.BiometricDeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
@@ -88,7 +90,7 @@ import org.koin.core.parameter.parametersOf
 
 /**
  * The account keys: sign-in and the first-run flow (the gate
- * surfaces), «Устройства», a client's screen and the «Подключить устройство» sheet, My ITMO in the browser, the update offer keyed by the feature's
+ * surfaces), «Устройства», a client's screen and the «Подключить устройство» sheet, My ITMO in the browser, the Wi-Fi sheet, the update offer keyed by the feature's
  * [UpdateRoutes.AppUpdate], and the debug tools when [debugTools] (debug builds only, as the Me row that opens them).
  * The shell's guard refuses pairing, «Устройства» and My ITMO in the demo session before they open.
  */
@@ -108,6 +110,7 @@ internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
     }
     entry<AppRoutes.Connection> { key, navigator -> ConnectionEntry(key.id, navigator, onBack = { navigator.close(key) }) }
     entry<AppRoutes.MyItmoWeb> { key, navigator -> MyItmoWebEntry(onClose = { navigator.close(key) }) }
+    entry<AppRoutes.Wifi> { key, navigator -> WifiEntry(onClose = { navigator.close(key) }) }
     entry<UpdateRoutes.AppUpdate>(args = { it.args.toBundle() }) { key, navigator ->
         AppUpdateEntry(onClose = { navigator.close(key) })
     }
@@ -135,6 +138,7 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenDevices = { navigator.open(AppRoutes.Devices) },
     onOpenWidgets = { navigator.open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) },
     onOpenMap = { navigator.open(AppRoutes.CampusMap()) },
+    onOpenWifi = { navigator.open(AppRoutes.Wifi) },
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },
     onOpenDebugTools = { navigator.open(AppRoutes.DebugTools) },
@@ -288,6 +292,14 @@ private fun MyItmoWebEntry(onClose: () -> Unit) {
         onPauseOrDispose { browser.onPause() }
     }
     MyItmoWebContent(browser, onClose, snackbars)
+}
+
+/** The Wi-Fi sheet; `Войти через ITMO.ID` runs the BARS sign-in for its ITMO.ID cookies and reads ISU again after it. */
+@Composable
+private fun WifiEntry(onClose: () -> Unit) {
+    val viewModel: WifiViewModel = entryViewModel()
+    val signIn = rememberBarsLogin(onSignedIn = viewModel::start, intent = ActivityRoutes::itmoIdLogin)
+    WifiRoute(onClose = onClose, onSignIn = signIn, viewModel = viewModel)
 }
 
 /** The update offer: its update button runs the distribution's `UpdateAction` on this activity. */

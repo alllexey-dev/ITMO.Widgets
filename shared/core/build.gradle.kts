@@ -34,11 +34,9 @@ kotlin {
             // iosCoreModule, the core bindings of the iOS Koin graph; Android's come from :app's Koin modules.
             api(libs.koin.core)
         }
+        // A mock engine for the ISU client's redirects and the refresh and demo checks of the iOS graph.
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
-        }
-        // A counting engine for the refresh and demo checks of the iOS graph.
-        iosTest.dependencies {
             implementation(libs.ktor.client.mock)
         }
     }

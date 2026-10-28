@@ -19,6 +19,8 @@
     <string name="me_widgets_title">Виджеты</string>
     <string name="me_map">Карта</string>
     <string name="me_map_subtitle">Корпуса и аудитории</string>
+    <string name="me_wifi">Wi-Fi</string>
+    <string name="me_wifi_subtitle">Логин и пароль ITMO-Corp</string>
     <string name="me_my_itmo">My ITMO</string>
     <string name="me_my_itmo_subtitle">Сайт университета</string>
     <string name="me_telegram">Telegram</string>

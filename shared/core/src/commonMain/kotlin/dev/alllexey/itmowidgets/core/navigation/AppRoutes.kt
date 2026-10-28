@@ -155,6 +155,13 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** The Wi-Fi sheet of Профиль: ITMO-Corp, the login and the password from ISU, and the quick connect. */
+    @Serializable
+    data object Wifi : AppRoute {
+        override val kind get() = RouteKind.SHEET
+        override val sheetPolicy get() = SheetPolicy()
+    }
+
     /** One connected client of «Устройства» by its connection [id]; refused in the demo session. */
     @Serializable
     data class Connection(val id: String) : AppRoute {
@@ -275,6 +282,7 @@ object AppRoutes {
         subclass(ReportLink::class)
         subclass(LinkUnavailable::class)
         subclass(CancelBookingConfirm::class)
+        subclass(Wifi::class)
     }
 }
 

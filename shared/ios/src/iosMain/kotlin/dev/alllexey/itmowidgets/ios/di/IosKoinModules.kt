@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapIosModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
+import dev.alllexey.itmowidgets.feature.wifi.di.wifiModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
@@ -79,6 +80,8 @@ object IosKoinModules {
         // The me tab, friends, search, profiles and a user's friends; the invitation names the App Store page or the
         // site.
         socialModule, socialIosModule(inviteUrl()), meModule,
+        // The Wi-Fi sheet over ISU.
+        wifiModule,
         // The schedule feed, another user's schedule, the lesson sheet, the month sheet and the friend picker (over
         // social's `FriendRepository`).
         scheduleModule, scheduleDataModule, scheduleIosModule(),

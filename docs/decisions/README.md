@@ -42,3 +42,4 @@ and keep their numbers.
 - [0034 One client header and one activity table for client statistics](0034-client-stats.md) - accepted
 - [0035 The iOS framework links no Compose](0035-ios-without-compose.md) - accepted
 - [0036 Scope texts of connected clients come from Backend](0036-backend-scope-texts.md) - accepted
+- [0037 ISU is read on the device with the phone's ITMO.ID session](0037-on-device-isu-client.md) - accepted

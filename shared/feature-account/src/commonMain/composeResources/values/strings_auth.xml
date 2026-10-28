@@ -2,7 +2,6 @@
     <string name="demo_entered">Демо-режим</string>
     <string name="auth_tagline">Пары, пропуск, баллы и спорт ИТМО — в приложении и в виджетах</string>
     <string name="auth_reauthentication_description">Сессия истекла. Войдите снова, чтобы продолжить.</string>
-    <string name="auth_login_itmo_id">Войти через ITMO.ID</string>
     <string name="auth_login_refresh_token">Другие способы входа</string>
     <string name="auth_official_page_notice">Логин и пароль — только на странице ITMO.ID</string>
     <string name="auth_sign_in">Войти</string>

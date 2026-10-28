@@ -143,7 +143,7 @@ struct MeContent: View {
         }
     }
 
-    /// The campus map, the university's site and the project's pages.
+    /// The campus map, the Wi-Fi, the university's site and the project's pages.
     private var links: some View {
         ItmoListGroup {
             ItmoRow(
@@ -155,6 +155,15 @@ struct MeContent: View {
                 action: { actions.open(AppRoutes.CampusMap(args: CampusMapArgs(lesson: nil, route: false))) }
             )
             .accessibilityIdentifier("map_row")
+            ItmoRow(
+                title: AppStrings.string("me_wifi"),
+                subtitle: AppStrings.string("me_wifi_subtitle"),
+                symbol: .wifi,
+                tone: .neutral,
+                chevron: true,
+                action: { actions.open(AppRoutes.Wifi.shared) }
+            )
+            .accessibilityIdentifier("wifi_row")
             external("me_my_itmo", "me_my_itmo_subtitle", .language, id: "my_itmo_row") {
                 actions.open(AppRoutes.MyItmoWeb.shared)
             }

@@ -113,6 +113,7 @@
     <string name="sport_cancel_booking_action">Отменить запись</string>
     <string name="auth_initializing">Проверяем сессию</string>
     <string name="auth_signing_in">Входим</string>
+    <string name="auth_login_itmo_id">Войти через ITMO.ID</string>
     <string name="auth_web_title">Вход через ITMO.ID</string>
     <string name="auth_web_error">Страница ITMO.ID не открылась.</string>
     <string name="sport_details_title">Занятие</string>

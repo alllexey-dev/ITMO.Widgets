@@ -52,6 +52,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_language
 import dev.alllexey.itmowidgets.shared.designsystem.ic_logout
 import dev.alllexey.itmowidgets.shared.designsystem.ic_map
+import dev.alllexey.itmowidgets.shared.designsystem.ic_wifi
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
@@ -77,6 +78,8 @@ data class MeActions(
     val onOpenDevices: () -> Unit = {},
     /** The campus map, without a lesson to show. */
     val onOpenMap: () -> Unit = {},
+    /** The Wi-Fi sheet: the network, the login and the password from ISU. */
+    val onOpenWifi: () -> Unit = {},
     /** The official site in the app's web view. */
     val onOpenMyItmo: () -> Unit = {},
     val onOpenSettings: () -> Unit = {},
@@ -98,6 +101,7 @@ object MeTestTags {
     const val GATE = "people_gate"
     const val WIDGETS_ROW = "widgets_row"
     const val MAP_ROW = "map_row"
+    const val WIFI_ROW = "wifi_row"
     const val MY_ITMO_ROW = "my_itmo_row"
     const val SETTINGS_ROW = "settings_row"
     const val DEVICES_ROW = "devices_row"
@@ -295,7 +299,7 @@ private fun App(devices: DevicesSummary, showDebugTools: Boolean, actions: MeAct
     }
 }
 
-/** The campus map, the university's site and the project's pages. */
+/** The campus map, the Wi-Fi, the university's site and the project's pages. */
 @Composable
 private fun Links(actions: MeActions) {
     ListGroup {
@@ -308,6 +312,17 @@ private fun Links(actions: MeActions) {
                 iconTone = Tone.Neutral,
                 chevron = true,
                 onClick = actions.onOpenMap,
+            )
+        }
+        item {
+            ListRow(
+                text(AccountStrings.me_wifi),
+                Modifier.testTag(MeTestTags.WIFI_ROW),
+                subtitle = text(AccountStrings.me_wifi_subtitle),
+                icon = painterResource(Res.drawable.ic_wifi),
+                iconTone = Tone.Neutral,
+                chevron = true,
+                onClick = actions.onOpenWifi,
             )
         }
         item {

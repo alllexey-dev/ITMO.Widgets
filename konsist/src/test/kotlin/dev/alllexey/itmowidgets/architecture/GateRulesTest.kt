@@ -101,7 +101,7 @@ class GateRulesTest {
             "$BACKEND_CLIENT_PACKAGE.BackendClient"
         )
 
-        /** My ITMO, BARS, ITMO.ID, Backend and Ktor; the public web OkHttp client is matched by its qualifier. */
+        /** My ITMO, BARS, ITMO.ID, ISU, Backend and Ktor; the public web OkHttp client is matched by its qualifier. */
         val networkClients = backendClients + setOf(
             "api.myitmo.MyItmo",
             "api.myitmo.MyItmoApi",
@@ -109,7 +109,8 @@ class GateRulesTest {
             MY_ITMO_CLIENT,
             "dev.alllexey.itmoapi.bars.BarsClient",
             "dev.alllexey.itmoapi.itmoid.ItmoIdClient",
-            "io.ktor.client.HttpClient"
+            "io.ktor.client.HttpClient",
+            "dev.alllexey.itmowidgets.core.network.IsuWebClient"
         )
     }
 }

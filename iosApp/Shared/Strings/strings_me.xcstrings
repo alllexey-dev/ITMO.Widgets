@@ -300,6 +300,30 @@
           }
         }
       }
+    },
+    "me_wifi" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi"
+          }
+        }
+      }
+    },
+    "me_wifi_subtitle" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Логин и пароль ITMO-Corp"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

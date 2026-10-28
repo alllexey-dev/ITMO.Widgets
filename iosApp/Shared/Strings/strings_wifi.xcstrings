@@ -1,0 +1,234 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "wifi_connect" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключиться"
+          }
+        }
+      }
+    },
+    "wifi_copied" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировано"
+          }
+        }
+      }
+    },
+    "wifi_copied_open_settings" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль скопирован: выберите ITMO-Corp и введите логин"
+          }
+        }
+      }
+    },
+    "wifi_copy_login" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать логин"
+          }
+        }
+      }
+    },
+    "wifi_copy_password" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать пароль"
+          }
+        }
+      }
+    },
+    "wifi_login" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Логин"
+          }
+        }
+      }
+    },
+    "wifi_manual" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вручную: метод EAP — PEAP, этап 2 — MSCHAPV2, сертификат — системный, домен — %1$@"
+          }
+        }
+      }
+    },
+    "wifi_network" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеть"
+          }
+        }
+      }
+    },
+    "wifi_no_password_description" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получите его в ИСУ кнопкой «Получить или изменить пароль Wi-Fi» и вернитесь сюда."
+          }
+        }
+      }
+    },
+    "wifi_no_password_title" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароля Wi-Fi ещё нет"
+          }
+        }
+      }
+    },
+    "wifi_open_isu" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть ИСУ"
+          }
+        }
+      }
+    },
+    "wifi_password" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль"
+          }
+        }
+      }
+    },
+    "wifi_password_hide" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть пароль"
+          }
+        }
+      }
+    },
+    "wifi_password_show" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать пароль"
+          }
+        }
+      }
+    },
+    "wifi_save_failed" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеть не сохранилась. Пароль скопирован: выберите ITMO-Corp в настройках Wi-Fi"
+          }
+        }
+      }
+    },
+    "wifi_saved" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеть ITMO-Corp сохранена"
+          }
+        }
+      }
+    },
+    "wifi_sign_in_description" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войдите в ITMO.ID на этом телефоне, и пароль появится здесь."
+          }
+        }
+      }
+    },
+    "wifi_sign_in_title" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИСУ не открылась"
+          }
+        }
+      }
+    },
+    "wifi_title" : {
+      "comment" : "Generated from strings_wifi.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

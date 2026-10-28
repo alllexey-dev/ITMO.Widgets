@@ -19,6 +19,7 @@ import dev.alllexey.itmowidgets.core.diagnostics.IosAppDiagnostics
 import dev.alllexey.itmowidgets.core.diagnostics.OsLogAppLog
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.network.BackendOrigin
+import dev.alllexey.itmowidgets.core.network.IsuWebClient
 import dev.alllexey.itmowidgets.core.network.asBackendTokenSource
 import dev.alllexey.itmowidgets.core.network.darwinHttpEngine
 import dev.alllexey.itmowidgets.core.platform.AppBundleVersion
@@ -166,6 +167,8 @@ fun iosCoreModule(
     single { KeychainTokenStorage(get(), get()) } binds arrayOf(TokenStorage::class, SessionTokenStore::class)
     single<HttpClientEngine> { darwinHttpEngine() }
     single { RefreshRejections() }
+    // The on-device ISU client over the same engine and the Keychain copy of the ITMO.ID cookies.
+    single { IsuWebClient(get(), get()) }
     single<MyItmoClient> {
         MyItmoClient(
             MyItmoConfiguration.DEFAULT,

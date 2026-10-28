@@ -25,6 +25,18 @@
         }
       }
     },
+    "auth_login_itmo_id" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти через ITMO.ID"
+          }
+        }
+      }
+    },
     "auth_signing_in" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

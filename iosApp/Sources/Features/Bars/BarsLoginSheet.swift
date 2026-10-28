@@ -8,7 +8,8 @@ import WebKit
 /// usually signs in at once. Only the exact HTTPS callback is consumed; its `state` is checked in Kotlin.
 /// A failed page or sign-in shows an error with a retry, which also clears WebKit's cookies so another ITMO.ID account
 /// can sign in, as on Android. Leaving the sheet copies the ITMO.ID cookies to the Keychain (`ItmoIdCookieExport`).
-/// `onSignedIn` runs once the session is stored; the caller dismisses the sheet.
+/// `onSignedIn` runs once the session is stored and the cookies are copied; the caller dismisses the sheet. ISU's
+/// screens open the same sign-in with `title` `auth_web_title` for the ITMO.ID cookies it leaves.
 struct BarsLoginSheet: View {
     @State private var model = ObservableViewModel<BarsLoginViewModel, BarsLoginUiState>(state: \.uiState) { store in
         guard let model = store.resolve(
@@ -22,12 +23,13 @@ struct BarsLoginSheet: View {
     @State private var page = BarsLoginPage()
     @Environment(\.dismiss) private var dismiss
 
+    var title = AppStrings.string("recordbook_bars_login")
     let onSignedIn: () -> Void
 
     var body: some View {
         NavigationStack {
             content(model.state)
-                .navigationTitle(Text(verbatim: AppStrings.string("recordbook_bars_login")))
+                .navigationTitle(Text(verbatim: title))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -37,8 +39,14 @@ struct BarsLoginSheet: View {
                 }
         }
         .observing(model)
-        .onEvents(of: model, \.events) { _ in onSignedIn() }
-        .onDisappear(perform: Self.copyCookies)
+        .onEvents(of: model, \.events) { _ in
+            // The caller may read ISU at once, and the ISU client reads the Keychain copy.
+            Task {
+                await Self.copyCookies()
+                onSignedIn()
+            }
+        }
+        .onDisappear { Task { await Self.copyCookies() } }
         .accessibilityIdentifier("bars.login")
     }
 
@@ -86,9 +94,9 @@ struct BarsLoginSheet: View {
         }
     }
 
-    private static func copyCookies() {
+    private static func copyCookies() async {
         guard let export = IosKoin.shared.get(type: ItmoIdCookieExport.self) as? ItmoIdCookieExport else { return }
-        Task { try? await export.run() }
+        try? await export.run()
     }
 }
 

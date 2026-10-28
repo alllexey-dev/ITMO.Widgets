@@ -219,11 +219,12 @@ class StringOwnershipTest {
         val SHARED_FILES = setOf("common", PLATFORM)
         val CATALOG_FILES = setOf(
             "app", "common", "platform", "debug", "qr", "home", "schedule", "sport", "recordbook", "social",
-            "settings", "resources", "reviews", "auth", "onboarding", "me", "connections", "web", "update", "map"
+            "settings", "resources", "reviews", "auth", "onboarding", "me", "connections", "web", "update", "map",
+            "wifi"
         )
         // Only production source sets: src/debug previews and the test source sets may show any module's screens.
         val PRODUCTION_SETS = listOf("main", "github", "play")
-        val ACCOUNT_FILES = setOf("auth", "onboarding", "me", "connections", "web", "update")
+        val ACCOUNT_FILES = setOf("auth", "onboarding", "me", "connections", "web", "update", "wifi")
         val FEATURE_UNITS = CATALOG_FILES.associateWith { it }
         val LITERAL_FREE_DIRS = setOf("layout", "menu", "navigation", "xml")
         val LAUNCHER_PREVIEW_LAYOUTS = setOf("widget_lesson_list_preview", "widget_single_lesson_preview")

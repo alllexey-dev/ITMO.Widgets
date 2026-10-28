@@ -18,6 +18,7 @@ import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
 import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
+import dev.alllexey.itmowidgets.core.network.IsuWebClient
 import dev.alllexey.itmowidgets.core.network.asBackendTokenSource
 import dev.alllexey.itmowidgets.core.platform.AppBuild
 import dev.alllexey.itmowidgets.core.session.RefreshRejections
@@ -31,6 +32,8 @@ val networkModule = module {
     // closes it; it lives as long as the process.
     single<HttpClientEngine> { defaultEngine() }
     single { RefreshRejections() }
+    // The on-device ISU client over the same engine and the WebView's ITMO.ID cookies.
+    single { IsuWebClient(get(), get()) }
     // MyItmoApi 2.x over the session's TokenStorage; its `tokens` is the only refresher and writer. A refresh ITMO.ID
     // rejects is reported to the session through RefreshRejections.
     single<MyItmoClient> {

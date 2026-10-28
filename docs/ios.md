@@ -281,7 +281,7 @@ placeholder state (`AppGroupSnapshot`, `SnapshotReaderTests`).
 
 Keychain (`KeychainSecureStore`, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, never synchronised or restored
 from a backup on another device): `myitmo_tokens` (app and
-notification service; refreshed inside the `myitmo-refresh` lock), `bars_tokens.enc` and `itmo_id_cookies` (app).
+notification service; refreshed inside the `myitmo-refresh` lock), `bars_tokens.enc`, `itmo_id_cookies` and `wifi_credentials.enc` (app).
 Sign-out clears the Keychain items, the App Group files (keeping `locks` and system metadata) and WebKit's data.
 
 ## Widgets
@@ -359,6 +359,7 @@ calendar sync), keeps Android's periods in
 | BARS in the background | only through the Keychain cookie copy | a background run has about 30 s and no window |
 | Notification channels | one switch | iOS has no channels |
 | Push, Universal Links, dropped-push filtering | not available in unsigned builds | they need the Apple developer account |
+| Wi-Fi quick connect | none: the sheet has no `Подключиться`, the password is copied and pasted in the Wi-Fi settings by hand | `NEHotspotConfiguration` needs the Hotspot Configuration capability, which re-signed builds do not get; iOS has no public Wi-Fi settings URL |
 | Push switches (`Спорт`, `Друзья`, `Новые устройства`) | hidden, every push shows | dropping a push needs `com.apple.developer.usernotifications.filtering`, not granted yet |
 | Update offer | App Store page only, nothing while `APP_STORE_ID` is empty | no other channel on iOS |
 | Debug tools | launch arguments instead | the debug tools are Android-only (ADR 0016) |

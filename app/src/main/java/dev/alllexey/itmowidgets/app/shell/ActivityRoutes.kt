@@ -28,6 +28,13 @@ object ActivityRoutes {
     /** BARS sign-in, for a result to the recordbook screens, or plainly from `ACTION_OPEN_BARS_LOGIN`. */
     fun barsLogin(context: Context): Intent = Intent(context, BarsLoginActivity::class.java)
 
+    /**
+     * The BARS sign-in titled `Вход через ITMO.ID`, for a result to ISU's screens: it leaves the ITMO.ID cookies the
+     * on-device ISU client reads.
+     */
+    fun itmoIdLogin(context: Context): Intent =
+        barsLogin(context).putExtra(BarsLoginActivity.EXTRA_ITMO_ID_TITLE, true)
+
     /** Picks and crops a spoiler image in `SpoilerCropActivity`; settings and the first-run flow reach it. */
     fun spoilerCrop(): ActivityResultContract<Uri, SpoilerCropResult> = SpoilerCropContract()
 }
