@@ -48,6 +48,24 @@ class IsuWebClientTest {
     }
 
     @Test
+    fun anIsuCookieWithoutPathReachesOtherApexAddresses() = runTest {
+        val client = client { request ->
+            when (request.url.encodedPath) {
+                "/pls/apex/f" -> if (request.url.encodedQuery == "p=2143:1") {
+                    redirect("$APEX/apex_authentication.callback", setCookie = "ISU_AP_COOKIE=apex; Secure")
+                } else {
+                    respond("<html>portal</html>")
+                }
+                "/pls/apex/apex_authentication.callback" -> redirect("$APEX/f?p=2143:1:777")
+                else -> error("Unexpected ${request.url}")
+            }
+        }
+
+        assertEquals("777", client.signIn()?.id)
+        assertEquals(listOf(null, "ISU_AP_COOKIE=apex", "ISU_AP_COOKIE=apex"), requests.map { it.headers[HttpHeaders.Cookie] })
+    }
+
+    @Test
     fun withoutSsoCookiesItAsksNothingOfItmoIdAndNeedsTheUser() = runTest {
         cookies.header = null
         val client = client { redirect("$AUTH?client_id=isu") }

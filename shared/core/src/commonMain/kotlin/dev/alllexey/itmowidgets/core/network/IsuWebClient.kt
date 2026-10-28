@@ -85,7 +85,7 @@ class IsuWebClient(engine: HttpClientEngine, private val cookies: ItmoIdCookies)
             in ISU_HOSTS -> {
                 val header = jar.get(url).joinToString("; ") { "${it.name}=${it.value}" }
                 send(url, header.ifEmpty { null }).also { response ->
-                    response.setCookie().forEach { jar.addCookie(url, it) }
+                    response.setCookie().forEach { jar.addCookie(url, it.withDefaultPath(url)) }
                 }
             }
             else -> throw IsuException("ISU redirected to another host")
@@ -105,6 +105,13 @@ class IsuWebClient(engine: HttpClientEngine, private val cookies: ItmoIdCookies)
         location.startsWith("/") -> Url("${protocol.name}://$hostWithPort$location")
         else -> Url("${protocol.name}://$hostWithPort${encodedPath.substringBeforeLast('/')}/$location")
     }
+
+    /**
+     * A cookie without `Path` gets the directory of [url] (RFC 6265 default-path): Ktor's jar would take the whole path,
+     * so ISU's session cookies set on `/pls/apex/f` would never reach `/pls/apex/wwv_flow.show`.
+     */
+    private fun Cookie.withDefaultPath(url: Url): Cookie =
+        if (path?.startsWith("/") == true) this else copy(path = url.encodedPath.substringBeforeLast('/').ifEmpty { "/" })
 
     /** A parsed cookie back as the `Set-Cookie` line a WebView stores, without Ktor's own `${'$'}x-enc` marker. */
     private fun setCookieLine(cookie: Cookie): String = with(cookie) {
