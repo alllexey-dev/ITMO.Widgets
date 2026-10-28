@@ -17,6 +17,8 @@
     <string name="me_gate_reason">Друзья, приватность и вход на сайт работают через сервер ITMO.Widgets. Расписание, зачётка и спорт работают и без него.</string>
     <string name="me_gate_fix">Подключить</string>
     <string name="me_widgets_title">Виджеты</string>
+    <string name="me_isu_messages">Сообщения ИСУ</string>
+    <string name="me_isu_messages_subtitle">Письма преподавателей и деканата</string>
     <string name="me_map">Карта</string>
     <string name="me_map_subtitle">Корпуса и аудитории</string>
     <string name="me_wifi">Wi-Fi</string>

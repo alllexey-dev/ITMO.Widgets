@@ -139,6 +139,7 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenWidgets = { navigator.open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) },
     onOpenMap = { navigator.open(AppRoutes.CampusMap()) },
     onOpenWifi = { navigator.open(AppRoutes.Wifi) },
+    onOpenIsuMessages = { navigator.open(AppRoutes.IsuMessages) },
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },
     onOpenDebugTools = { navigator.open(AppRoutes.DebugTools) },

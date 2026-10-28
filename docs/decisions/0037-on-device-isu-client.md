@@ -23,3 +23,6 @@ there unchanged.
 A missing SSO cookie or ITMO.ID's sign-in form means the user is needed (a refresh-token sign-in has no cookies);
 clients show a way to the page in the browser instead of asking for a password. Nothing is written in ISU: no
 client calls a state-changing APEX process.
+`IsuSession` reads pages (`page`), the JSON of APEX's on-demand processes the pages' own JavaScript asks
+(`process`, a `wwv_flow.show` POST; ISU messages' `MAIN_FN`) and files (`download`, with a size cap); a process may be
+named there only when it changes nothing in ISU.

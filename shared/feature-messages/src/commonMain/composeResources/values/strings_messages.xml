@@ -1,0 +1,38 @@
+<resources>
+    <!-- The screen -->
+    <string name="isu_messages_title">Сообщения ИСУ</string>
+    <string name="isu_messages_inbox">Входящие</string>
+    <string name="isu_messages_archive">Архив</string>
+    <string name="isu_messages_more">Показать ещё</string>
+    <string name="isu_messages_more_failed">Не загрузилось. Повторить</string>
+    <string name="isu_messages_unread">Не прочитано</string>
+    <string name="isu_messages_attachments_accessibility">Вложений: %1$d</string>
+    <plurals name="isu_messages_unread_count">
+        <item quantity="one">%1$d непрочитанное</item>
+        <item quantity="few">%1$d непрочитанных</item>
+        <item quantity="many">%1$d непрочитанных</item>
+        <item quantity="other">%1$d непрочитанных</item>
+    </plurals>
+
+    <!-- Empty and error states -->
+    <string name="isu_messages_empty_inbox">Сообщений нет</string>
+    <string name="isu_messages_empty_inbox_text">Здесь появятся письма преподавателей и деканата из ИСУ за этот год</string>
+    <string name="isu_messages_empty_archive">В архиве пусто</string>
+    <string name="isu_messages_empty_archive_text">Сообщения прошлых лет ИСУ хранит в архиве</string>
+    <string name="isu_messages_error">Сообщения не загрузились</string>
+    <string name="isu_messages_sign_in">ИСУ не узнаёт вход</string>
+    <string name="isu_messages_sign_in_text">Войдите в ITMO.ID на этом телефоне, и сообщения откроются.</string>
+
+    <!-- One message -->
+    <string name="isu_messages_files">Вложения</string>
+    <string name="isu_messages_unread_note">В ИСУ сообщение останется непрочитанным: приложение только читает список.</string>
+    <string name="isu_messages_kind_pdf">PDF</string>
+    <string name="isu_messages_kind_word">Документ Word</string>
+    <string name="isu_messages_kind_excel">Таблица Excel</string>
+    <string name="isu_messages_kind_image">Изображение</string>
+    <string name="isu_messages_kind_archive">Архив</string>
+    <string name="isu_messages_kind_file">Файл</string>
+    <string name="isu_messages_file_failed">Файл не скачался</string>
+    <string name="isu_messages_no_viewer">Нет приложения, чтобы открыть этот файл</string>
+    <string name="isu_messages_link_failed">Не удалось открыть ссылку</string>
+</resources>

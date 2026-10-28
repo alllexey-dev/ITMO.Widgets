@@ -1,0 +1,342 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "isu_messages_archive" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Архив"
+          }
+        }
+      }
+    },
+    "isu_messages_attachments_accessibility" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вложений: %1$lld"
+          }
+        }
+      }
+    },
+    "isu_messages_empty_archive" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В архиве пусто"
+          }
+        }
+      }
+    },
+    "isu_messages_empty_archive_text" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщения прошлых лет ИСУ хранит в архиве"
+          }
+        }
+      }
+    },
+    "isu_messages_empty_inbox" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщений нет"
+          }
+        }
+      }
+    },
+    "isu_messages_empty_inbox_text" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Здесь появятся письма преподавателей и деканата из ИСУ за этот год"
+          }
+        }
+      }
+    },
+    "isu_messages_error" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщения не загрузились"
+          }
+        }
+      }
+    },
+    "isu_messages_file_failed" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл не скачался"
+          }
+        }
+      }
+    },
+    "isu_messages_files" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вложения"
+          }
+        }
+      }
+    },
+    "isu_messages_inbox" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Входящие"
+          }
+        }
+      }
+    },
+    "isu_messages_kind_archive" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Архив"
+          }
+        }
+      }
+    },
+    "isu_messages_kind_excel" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таблица Excel"
+          }
+        }
+      }
+    },
+    "isu_messages_kind_file" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл"
+          }
+        }
+      }
+    },
+    "isu_messages_kind_image" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изображение"
+          }
+        }
+      }
+    },
+    "isu_messages_kind_pdf" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDF"
+          }
+        }
+      }
+    },
+    "isu_messages_kind_word" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документ Word"
+          }
+        }
+      }
+    },
+    "isu_messages_link_failed" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось открыть ссылку"
+          }
+        }
+      }
+    },
+    "isu_messages_more" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать ещё"
+          }
+        }
+      }
+    },
+    "isu_messages_more_failed" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не загрузилось. Повторить"
+          }
+        }
+      }
+    },
+    "isu_messages_no_viewer" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет приложения, чтобы открыть этот файл"
+          }
+        }
+      }
+    },
+    "isu_messages_sign_in" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИСУ не узнаёт вход"
+          }
+        }
+      }
+    },
+    "isu_messages_sign_in_text" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войдите в ITMO.ID на этом телефоне, и сообщения откроются."
+          }
+        }
+      }
+    },
+    "isu_messages_title" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщения ИСУ"
+          }
+        }
+      }
+    },
+    "isu_messages_unread" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не прочитано"
+          }
+        }
+      }
+    },
+    "isu_messages_unread_count" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld непрочитанных"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld непрочитанных"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld непрочитанное"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld непрочитанных"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "isu_messages_unread_note" : {
+      "comment" : "Generated from strings_messages.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В ИСУ сообщение останется непрочитанным: приложение только читает список."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

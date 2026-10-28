@@ -7,12 +7,17 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.HttpRequestData
 import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import io.ktor.http.parseQueryString
 import io.ktor.utils.io.errors.IOException
+import io.ktor.http.content.OutgoingContent
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
@@ -112,6 +117,56 @@ class IsuWebClientTest {
     @Test
     fun aRedirectLoopEnds() = runTest {
         assertFailsWith<IsuException> { client { redirect("$APEX/f?p=2143:1") }.signIn() }
+    }
+
+    @Test
+    fun aProcessIsPostedInTheSessionAndAPageInsteadIsALostSession() = runTest {
+        var lost = false
+        val client = client { request ->
+            when (request.url.toString()) {
+                "$APEX/f?p=2143:1" -> redirect("$APEX/f?p=2143:1:777", setCookie = "ORA_WWV_APP_2422=apex; Path=/; Secure")
+                "$APEX/f?p=2143:1:777" -> respond("<html>portal</html>")
+                "$APEX/wwv_flow.show" ->
+                    if (lost) respond("<html>session ended</html>") else respond("{\"incoming\": []}", headers = headersOf(HttpHeaders.ContentType, "application/json"))
+                else -> error("Unexpected ${request.url}")
+            }
+        }
+        val session = assertNotNull(client.signIn())
+
+        val answer = session.process(2422, 4, "MAIN_FN", listOf("999001", "1"))
+        lost = true
+
+        assertEquals("{\"incoming\": []}", answer)
+        assertNull(session.process(2422, 4, "MAIN_FN", listOf("999001", "2")))
+        val post = requests[2]
+        assertEquals(HttpMethod.Post, post.method)
+        assertEquals("ORA_WWV_APP_2422=apex", post.headers[HttpHeaders.Cookie])
+        val form = parseQueryString((post.body as OutgoingContent.ByteArrayContent).bytes().decodeToString())
+        assertEquals("2422", form["p_flow_id"])
+        assertEquals("4", form["p_flow_step_id"])
+        assertEquals("777", form["p_instance"])
+        assertEquals("APPLICATION_PROCESS=MAIN_FN", form["p_request"])
+        assertEquals(listOf("999001", "1"), listOf(form["x01"], form["x02"]))
+    }
+
+    @Test
+    fun aDownloadFollowsApexAndRefusesAPageOrTooMuch() = runTest {
+        val pdf = "%PDF-1.4 synthetic".encodeToByteArray()
+        val client = client { request ->
+            when (request.url.toString()) {
+                "$APEX/f?p=2143:1" -> redirect("$APEX/f?p=2143:1:777")
+                "$APEX/f?p=2143:1:777" -> respond("<html>portal</html>")
+                "$APEX/f?p=2422:0::DWNLD_F_GEN:NO::FILE:aa" -> redirect("f?p=2422:0:777:DWNLD_F_GEN:NO::FILE:aa")
+                "$APEX/f?p=2422:0:777:DWNLD_F_GEN:NO::FILE:aa" -> respond(pdf, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/pdf"))
+                "$APEX/f?p=2422:0::DWNLD_F_GEN:NO::FILE:bb" -> respond("<html>login</html>", headers = headersOf(HttpHeaders.ContentType, "text/html"))
+                else -> error("Unexpected ${request.url}")
+            }
+        }
+        val session = assertNotNull(client.signIn())
+
+        assertContentEquals(pdf, session.download("f?p=2422:0::DWNLD_F_GEN:NO::FILE:aa", 1024))
+        assertNull(session.download("f?p=2422:0::DWNLD_F_GEN:NO::FILE:bb", 1024))
+        assertFailsWith<IsuException> { session.download("f?p=2422:0::DWNLD_F_GEN:NO::FILE:aa", 4) }
     }
 
     private fun client(answer: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): IsuWebClient =

@@ -57,7 +57,7 @@ class LayerRulesTest {
                         FEATURE_DATA.containsMatchIn(import.name)
                 } ||
                     "Throwable" in file.text ||
-                    ".message" in file.text
+                    THROWABLE_MESSAGE.containsMatchIn(file.text)
             }
     }
 
@@ -140,6 +140,9 @@ class LayerRulesTest {
             "dev.alllexey.itmoapi.",
             "dev.alllexey.itmowidgets.client."
         )
+        /** `error.message`, but not a `feature.messages` package. */
+        val THROWABLE_MESSAGE = Regex("""\.message\b""")
+
         val FEATURE_DATA = Regex("""^dev\.alllexey\.itmowidgets\.feature\.\w+\.data\.""")
         val FEATURE_OUTER_LAYER =
             Regex("""^dev\.alllexey\.itmowidgets\.feature\.\w+\.(data|presentation|ui|work)\.""")

@@ -36,6 +36,7 @@ enum class RouteFeature {
     RESOURCES,
     CALENDAR,
     MAP,
+    MESSAGES,
     DEBUG,
 }
 
@@ -110,6 +111,7 @@ object IosRoutes {
         AppRoutes.LessonDetails::class to RouteFeature.SCHEDULE,
         AppRoutes.PendingSportDetails::class to RouteFeature.SCHEDULE,
         AppRoutes.CampusMap::class to RouteFeature.MAP,
+        AppRoutes.IsuMessages::class to RouteFeature.MESSAGES,
         AppRoutes.UserSport::class to RouteFeature.SPORT,
         AppRoutes.SportPoints::class to RouteFeature.SPORT,
         AppRoutes.CancelBookingConfirm::class to RouteFeature.SPORT,

@@ -224,6 +224,12 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** ISU messages (`Сообщения ИСУ`, docs/features/isu-messages.md): the inbox and the archive, read-only. */
+    @Serializable
+    data object IsuMessages : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
     @Serializable
     data class ReportReview(val args: TeacherReviewArgs, val reviewId: String) : AppRoute {
         override val kind get() = RouteKind.DIALOG
@@ -278,6 +284,7 @@ object AppRoutes {
         subclass(LessonDetails::class)
         subclass(PendingSportDetails::class)
         subclass(CampusMap::class)
+        subclass(IsuMessages::class)
         subclass(ReportReview::class)
         subclass(ReportLink::class)
         subclass(LinkUnavailable::class)

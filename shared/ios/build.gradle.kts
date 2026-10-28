@@ -42,6 +42,8 @@ kotlin {
             export(project(":shared:feature-resources"))
             // The campus map's ViewModel, its style and samples.
             export(project(":shared:feature-map"))
+            // The ISU messages ViewModel and its samples.
+            export(project(":shared:feature-messages"))
         }
     }
 
@@ -54,6 +56,7 @@ kotlin {
             api(project(":shared:feature-schedule"))
             api(project(":shared:feature-sport"))
             api(project(":shared:feature-map"))
+            api(project(":shared:feature-messages"))
             api(project(":shared:feature-recordbook"))
             api(project(":shared:feature-social"))
             api(project(":shared:feature-settings"))
