@@ -183,6 +183,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - Rebuilt on one shared snapshot (RemoteViews on Android, WidgetKit on iOS): `Пара` with the lesson to go to and a
   live countdown, `Расписание на день` to scale with the `сейчас` line, `Список пар` (the classic list), and the new
   `Спорт` with the score ring and the nearest booking. `Пара`, `Расписание на день` and `Спорт` are beta.
+- New `Карточки` widget (beta, Android 4 x 2 to 4 x 4): the day's lessons as cards with the type chip, room and
+  teacher; the current lesson with a wavy progress and the minutes left; what does not fit folds into `ещё N пары`.
+  Arrows page through the week and return to today 5 minutes after the last tap and at midnight.
 - A lesson opens its sheet, a booking or queue its sport lesson.
 - `Виджеты` is a gallery of whole live previews with `Добавить` (Android) or `Как добавить` (iOS) and each format's
   settings in a sheet; `Завтрашние пары вечером` is on by default.

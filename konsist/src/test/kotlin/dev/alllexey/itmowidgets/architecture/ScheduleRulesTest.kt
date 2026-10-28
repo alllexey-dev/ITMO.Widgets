@@ -72,6 +72,7 @@ class ScheduleRulesTest {
             "$SCHEDULE_PACKAGE.ui.widget.SingleLessonWidgetProvider",
             "$SCHEDULE_PACKAGE.ui.widget.DayScheduleWidgetProvider",
             "$SCHEDULE_PACKAGE.ui.widget.DayTimelineWidgetProvider",
+            "$SCHEDULE_PACKAGE.ui.widget.CardsWidgetProvider",
             "$SCHEDULE_PACKAGE.ui.widget.ScheduleWidgetRemoteViewsService",
             "$SCHEDULE_PACKAGE.work.ScheduleWidgetRefreshReceiver",
             "$SCHEDULE_PACKAGE.work.ScheduleWidgetUpdateWorker",

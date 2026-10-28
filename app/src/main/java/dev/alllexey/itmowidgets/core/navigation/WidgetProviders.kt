@@ -22,6 +22,10 @@ object WidgetProviders {
     const val DAY_TIMELINE =
         "dev.alllexey.itmowidgets.feature.schedule.ui.widget.DayTimelineWidgetProvider"
 
+    /** The cards, new in 2.3. */
+    const val CARDS =
+        "dev.alllexey.itmowidgets.feature.schedule.ui.widget.CardsWidgetProvider"
+
     const val QR_CODE =
         "dev.alllexey.itmowidgets.feature.qr.ui.widget.QrCodeWidgetProvider"
 
@@ -32,6 +36,7 @@ object WidgetProviders {
     fun of(format: WidgetFormat): String = when (format) {
         WidgetFormat.NEXT -> SINGLE_LESSON
         WidgetFormat.DAY -> DAY_TIMELINE
+        WidgetFormat.CARDS -> CARDS
         WidgetFormat.LIST -> DAY_SCHEDULE
         WidgetFormat.SPORT -> SPORT
         WidgetFormat.PASS -> QR_CODE

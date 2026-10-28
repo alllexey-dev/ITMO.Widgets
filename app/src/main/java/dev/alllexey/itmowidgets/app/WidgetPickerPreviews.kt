@@ -73,6 +73,6 @@ class WidgetPickerPreviews(
 
     private companion object {
         const val SETTLE_MILLIS = 2_000L
-        val SCHEDULE_FORMATS = listOf(WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.LIST)
+        val SCHEDULE_FORMATS = listOf(WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.CARDS, WidgetFormat.LIST)
     }
 }

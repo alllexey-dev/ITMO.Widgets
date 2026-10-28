@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The elapsed part of the current lesson in the cards widget: M3 Expressive's wavy indicator as a white stroke,
+     tinted per render (ADR 0021, amended for widgets). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="234dp"
+    android:height="12dp"
+    android:viewportWidth="234"
+    android:viewportHeight="12">
+
+    <path
+        android:pathData="M2,6 q5,-7 10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0 t10,0"
+        android:strokeWidth="3"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round" />
+</vector>

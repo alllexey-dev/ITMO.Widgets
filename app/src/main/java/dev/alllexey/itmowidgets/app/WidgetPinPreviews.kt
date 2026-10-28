@@ -42,7 +42,7 @@ class WidgetPinPreviews(
         val context = appContext.inSystemNightMode()
         val palette = palettes.current()
         when (format) {
-            WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.LIST -> {
+            WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.CARDS, WidgetFormat.LIST -> {
                 val own = (schedule.load(refresh = false) as? ScheduleWidgetLoadResult.Available)?.selection?.snapshot?.withoutPendingSport()
                 val kind = if (format == WidgetFormat.NEXT) own?.next?.kind else own?.day?.kind
                 if (own != null && (kind == WidgetContentKind.CONTENT || kind == WidgetContentKind.EMPTY)) {

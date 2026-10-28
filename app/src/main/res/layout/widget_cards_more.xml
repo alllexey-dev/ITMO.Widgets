@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The cards widget's last row when the rest do not fit: the first one left (time and type) and how many are left. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/more_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    tools:ignore="UseAppTint">
+
+    <android.widget.ImageView
+        android:id="@+id/more_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_shape_card" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="7dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="7dp">
+
+        <TextView
+            android:id="@+id/more_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/widget_on_surface_variant"
+            android:textSize="14sp"
+            tools:text="13:30 · Лабораторная" />
+
+        <!-- Both children match the pill: a wrap_content FrameLayout stretches match_parent children to its size only
+             when there are two of them. -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp">
+
+            <android.widget.ImageView
+                android:id="@+id/more_pill_background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="fitXY"
+                android:src="@drawable/widget_shape_pill" />
+
+            <TextView
+                android:id="@+id/more_count"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="3dp"
+                android:textColor="@color/widget_on_surface"
+                android:textSize="13sp"
+                tools:text="ещё 1 пара" />
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

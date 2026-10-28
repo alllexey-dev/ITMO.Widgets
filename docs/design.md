@@ -555,7 +555,9 @@ rules do not apply to them.
   `widget_*` colours with the containers the new widgets use: the wallpaper's
   on Android 12+, the M3 baseline `#6750A4` below; the status tones of
   `очередь` and `записаны` are fixed); on Android 12+ they follow the launcher's widget corner
-  radius. Rules in [Widgets](features/widgets.md).
+  radius. The cards widget adds lesson type chips (the type colour faint behind its name, the name darkened on
+  light and lightened on dark) and M3 Expressive's wavy progress on the current lesson (ADR 0021, amended).
+  Rules in [Widgets](features/widgets.md).
 - The quick-settings tile icon `res/drawable/ic_tile_qr.xml` (Material Symbols
   `qr_code`, white, no theme tint: SystemUI colours tile icons and resolves no
   app theme attributes).

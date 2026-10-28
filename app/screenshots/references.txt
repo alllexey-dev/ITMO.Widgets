@@ -24,6 +24,13 @@ Widget_day-short-off
 Widget_list-off
 Widget_list-teal
 Widget_list-evening-off
+Widget_cards-off
+Widget_cards-teal
+Widget_cards-tomorrow-off
+Widget_cards-morning-off
+Widget_cards-evening-off
+Widget_cards-medium-off
+Widget_cards-small-off
 Widget_sport-small-off
 Widget_sport-queue-off
 Widget_sport-queue-teal

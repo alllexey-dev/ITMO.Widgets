@@ -1393,6 +1393,126 @@
         }
       }
     },
+    "widget_cards_description" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пары карточками, день за днём"
+          }
+        }
+      }
+    },
+    "widget_cards_dot" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "widget_cards_more" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld пары"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld пар"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld пара"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ещё %1$lld пары"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "widget_cards_name" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки (бета)"
+          }
+        }
+      }
+    },
+    "widget_cards_next" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий день"
+          }
+        }
+      }
+    },
+    "widget_cards_none" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "пар нет"
+          }
+        }
+      }
+    },
+    "widget_cards_prev" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий день"
+          }
+        }
+      }
+    },
+    "widget_cards_remaining" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ещё %1$@"
+          }
+        }
+      }
+    },
     "widget_day_description" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",

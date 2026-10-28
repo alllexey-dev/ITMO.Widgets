@@ -29,6 +29,7 @@ import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewSc
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetPreferences
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
+import dev.alllexey.itmowidgets.feature.schedule.ui.widget.CardsWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.DayWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.NextLessonWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleSettingsPreview
@@ -74,6 +75,12 @@ class WidgetsScreenshotTest(
         DayEvening("day-evening", 320, 330),
         DayShort("day-short", 320, 330),
         List("list", 320, 250),
+        Cards("cards", 320, 330),
+        CardsTomorrow("cards-tomorrow", 320, 330),
+        CardsMorning("cards-morning", 320, 330),
+        CardsEvening("cards-evening", 320, 330),
+        CardsMedium("cards-medium", 320, 250),
+        CardsSmall("cards-small", 320, 170),
         ListEvening("list-evening", 320, 250),
         SportSmall("sport-small", 170, 170),
         SportQueue("sport-queue", 340, 170),
@@ -136,6 +143,12 @@ class WidgetsScreenshotTest(
             val schedule = { format: ScheduleWidgetFormat, moment: SchedulePreviewMoment ->
                 ScheduleSettingsPreview.views(context, scenario, WidgetPreviewSettings.Schedule(ScheduleWidgetSettings(), format, theme), moment)
             }
+            val cards = { moment: SchedulePreviewMoment, page: Int ->
+                CardsWidgetRenderer.layout(
+                    context, scenario.snapshot(ScheduleWidgetSettings(), moment, ScheduleSettingsPreview.labels(context)),
+                    theme?.widgetPalette(context), SizeF(case.widthDp.toFloat(), case.heightDp.toFloat()), page, widgetId = null,
+                )
+            }
             val sport = { medium: Boolean, state: SportWidgetSampleState ->
                 SportSettingsPreview.views(context, WidgetPreviewSettings.Sport(theme), medium, state)
             }
@@ -158,6 +171,10 @@ class WidgetsScreenshotTest(
                 Case.DayMorning -> schedule(ScheduleWidgetFormat.FULL, SchedulePreviewMoment.MORNING)
                 Case.DayEvening -> schedule(ScheduleWidgetFormat.FULL, SchedulePreviewMoment.EVENING)
                 Case.DayShort -> DayWidgetRenderer.layout(context, shortDay(context), theme?.widgetPalette(context), SizeF(320f, 330f), widgetId = null)
+                Case.Cards, Case.CardsMedium, Case.CardsSmall -> cards(SchedulePreviewMoment.LESSON, 0)
+                Case.CardsTomorrow -> cards(SchedulePreviewMoment.LESSON, 1)
+                Case.CardsMorning -> cards(SchedulePreviewMoment.MORNING, 0)
+                Case.CardsEvening -> cards(SchedulePreviewMoment.EVENING, 0)
                 Case.SportSmall -> sport(false, SportWidgetSampleState.QUEUE)
                 Case.SportQueue -> sport(true, SportWidgetSampleState.QUEUE)
                 Case.SportBooked -> sport(true, SportWidgetSampleState.BOOKED)
@@ -193,7 +210,7 @@ class WidgetsScreenshotTest(
             "Widget_${case.state}-${theme?.accent?.name?.lowercase() ?: "off"}"
 
         /** The teal palette is checked on the widgets that draw the most roles. */
-        private val THEMED = setOf(Case.NextMedium, Case.Day, Case.List, Case.SportQueue, Case.Qr)
+        private val THEMED = setOf(Case.NextMedium, Case.Day, Case.List, Case.Cards, Case.SportQueue, Case.Qr)
 
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}_{1}_{2}")

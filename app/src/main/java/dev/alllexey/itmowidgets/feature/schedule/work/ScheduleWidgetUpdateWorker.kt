@@ -9,9 +9,12 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.di.KoinStarter
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetLoadResult
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.CardsWidgetPageStore
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSelector
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshotStore
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.currentPages
+import dev.alllexey.itmowidgets.feature.schedule.domain.widget.nextReset
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetProviders
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -45,13 +48,15 @@ internal class ScheduleWidgetUpdate(koin: Koin, private val context: Context) {
     private val diagnostics: AppDiagnostics by lazy { koin.get() }
     private val palettes: WidgetPaletteSource by lazy { koin.get() }
     private val time: AcademicTimeProvider by lazy { koin.get() }
+    private val cardsPages: CardsWidgetPageStore by lazy { koin.get() }
 
     suspend fun run(refresh: Boolean) {
         val singleIds = ScheduleWidgetProviders.singleLessonIds(context)
         val dayIds = ScheduleWidgetProviders.dayIds(context)
         // The classic list draws no clock: a minute tick (refresh = false) leaves it alone.
         val listIds = if (refresh) ScheduleWidgetProviders.listIds(context) else ScheduleWidgetProviders.NONE
-        if (singleIds.isEmpty() && dayIds.isEmpty() && listIds.isEmpty()) {
+        val cardsIds = ScheduleWidgetProviders.cardsIds(context)
+        if (singleIds.isEmpty() && dayIds.isEmpty() && listIds.isEmpty() && cardsIds.isEmpty()) {
             ScheduleWidgetWork.cancelIfUnused(context)
             return
         }
@@ -79,10 +84,17 @@ internal class ScheduleWidgetUpdate(koin: Koin, private val context: Context) {
         currentCoroutineContext().ensureActive()
         if (store.currentGeneration() != generation) return
         val now = time.now()
-        ScheduleWidgetProviders.render(context, snapshot, palettes.current(), now, singleIds, dayIds, listIds)
+        val pages = cardsPages.currentPages(cardsIds, now, time.timeZone)
+        ScheduleWidgetProviders.render(context, snapshot, palettes.current(), now, singleIds, dayIds, listIds, cardsIds, pages)
         if (refresh) ScheduleWidgetWork.scheduleNext(context, nextUpdate)
-        if (snapshot.isLive && (singleIds.isNotEmpty() || dayIds.isNotEmpty())) ScheduleWidgetWork.scheduleTick(context, untilNextMinute(now.toEpochMilliseconds()))
-        else ScheduleWidgetWork.cancelTick(context)
+        // A turned cards widget needs one more tick to return to its first page.
+        val reset = cardsPages.nextReset(cardsIds, now, time.timeZone)
+        when {
+            snapshot.isLive && (singleIds.isNotEmpty() || dayIds.isNotEmpty() || cardsIds.isNotEmpty()) ->
+                ScheduleWidgetWork.scheduleTick(context, untilNextMinute(now.toEpochMilliseconds()))
+            reset != null -> ScheduleWidgetWork.scheduleTick(context, reset + TICK_LATENESS_MILLIS.milliseconds)
+            else -> ScheduleWidgetWork.cancelTick(context)
+        }
     }
 
     private suspend fun fallbackSnapshot(): ScheduleWidgetSnapshot {
