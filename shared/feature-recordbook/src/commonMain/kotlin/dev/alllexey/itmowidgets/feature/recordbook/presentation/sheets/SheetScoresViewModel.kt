@@ -138,21 +138,44 @@ class SheetScoresViewModel(
         }
         matches = book.tabs.mapNotNull { SheetRows.locate(it, score.rowKey, score.keyKind, score.keyColumn) }
         if (matches.isEmpty()) return fail(SheetStatus.ROW_NOT_FOUND)
+        val decision = decide(book, matches)
         val cells = cellsOf(book, matches)
-        _state.value = SheetScoresUiState.PickTotal(cells, current(book, score, cells), decide(book, matches), score.choice)
+        val activity = activityCell(book, matches)
+        _state.value = SheetScoresUiState.PickTotal(
+            cells = cells,
+            selected = current(book, score, cells),
+            decision = decision,
+            choice = score.choice,
+            activityCell = activity,
+        )
     }
 
     /** The cells of [rows]; an automatic total is saved at once, otherwise the viewer picks it. */
     private suspend fun choose(book: SheetWorkbook, rows: List<SheetRowMatch>) {
         matches = rows
-        val cells = cellsOf(book, rows)
         val decision = decide(book, rows)
+        val cells = cellsOf(book, rows)
+        val activity = activityCell(book, rows)
         if (decision == null || step == Step.TOTAL) {
-            _state.value = SheetScoresUiState.PickTotal(cells, null, decision)
+            _state.value = SheetScoresUiState.PickTotal(cells, null, decision, activityCell = activity)
             return
         }
         val row = rows.first { it.tab == decision.total.tab }
-        save(row, decision.total, autoChoice(decision), fallback = SheetScoresUiState.PickTotal(cells, decision.total, decision))
+        save(
+            row,
+            decision.total,
+            autoChoice(decision),
+            fallback = SheetScoresUiState.PickTotal(cells, decision.total, decision, activityCell = activity),
+        )
+    }
+
+    private fun activityCell(book: SheetWorkbook, rows: List<SheetRowMatch>): SheetCell? {
+        for (row in rows) {
+            val tab = book.tabs.firstOrNull { it.tab == row.tab } ?: continue
+            val cell = SheetTotals.activityCell(tab, row)
+            if (cell != null) return cell
+        }
+        return null
     }
 
     private fun decide(book: SheetWorkbook, rows: List<SheetRowMatch>): SheetTotalDecision? =
@@ -183,6 +206,11 @@ class SheetScoresViewModel(
     private fun current(book: SheetWorkbook, score: SheetScore, cells: List<SheetCell>): SheetCell? {
         val tab: SheetTabGrid = book.tabs.firstOrNull { it.tab.gid == score.tabGid } ?: return null
         val row = matches.firstOrNull { it.tab == tab.tab } ?: return null
+        if (score.column.headerPath == SheetTotals.ACTIVITIES_SUM_PATH) {
+            val sum = SheetTotals.activitySum(tab.grid, row) ?: score.value.orEmpty()
+            val column = minOf(score.column.index, tab.grid.width - 1).coerceAtLeast(0)
+            return SheetCell(tab.tab, column, SheetTotals.ACTIVITIES_SUM_PATH, sum)
+        }
         val first = SheetHeaders.firstDataRow(tab.grid, row.row, row.keyColumn, row.kind)
         val column = SheetTotals.find(SheetHeaders.paths(tab.grid, first, row.keyColumn), score.column, tab.grid.width)
         return cells.firstOrNull { it.tab == tab.tab && it.column == column }

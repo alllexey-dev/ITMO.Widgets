@@ -103,6 +103,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - The subject page has tabs `Баллы`, `Пары` and `Материалы` that also turn by a swipe. The LMS link is gone.
 - Connected sheets find the right total far more often (1805 of 1816 students on 13 real sheets); a doubtful total
   shows `Проверьте итог`, and `Вернуть авто` undoes a hand-picked one.
+- Connected sheets offer an opt-in «Сумма работ» candidate chip to track the sum of activity points when the sheet has no populated total column.
 - Links and teacher reviews vote with like and dislike thumbs; deleting an own link asks first; a flow link shows
   `после проверки` while Backend premoderates it.
 

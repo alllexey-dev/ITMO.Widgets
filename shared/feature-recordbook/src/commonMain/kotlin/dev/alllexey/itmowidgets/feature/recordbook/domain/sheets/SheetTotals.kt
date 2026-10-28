@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.domain.sheets
 
+import dev.alllexey.itmowidgets.feature.recordbook.domain.formatRecordbookNumber
+
 /** A cell of the own row: its tab, column, header path and the value as the sheet shows it. */
 data class SheetCell(val tab: SheetTab, val column: Int, val headerPath: String, val value: String) {
     override fun toString(): String = "SheetCell(tab=${tab.gid}, column=$column)"
@@ -31,6 +33,17 @@ data class SheetTotalDecision(val total: SheetCell, val reason: TotalReason, val
 
 /** The cells of the own row and which of them is the total. Pure. */
 object SheetTotals {
+
+    /** Header path of a user-opted activity points sum (lessons, tests, homework, labs). */
+    const val ACTIVITIES_SUM_PATH = "Сумма работ"
+
+    /** Word prefixes of an assignment or activity column header rather than a total or meta-info. */
+    private val ACTIVITY_PREFIXES = listOf(
+        "ср", "кр", "ргр", "дз", "лр", "пр", "лаб", "практик", "семинар",
+        "тест", "test", "quiz", "speak", "writ", "read", "listen",
+        "активн", "бонус", "питч", "доклад",
+    )
+    private val LESSON_WORDS = listOf("занятие", "пара", "неделя", "week", "lesson")
 
     /**
      * Header words of a total, the strongest group first; a multi-word entry matches consecutive words and the last
@@ -166,13 +179,62 @@ object SheetTotals {
         return found
     }
 
+    /**
+     * Calculates the sum of points in activity columns (lessons, tests, homework, labs) to the left of [beforeColumn]
+     * for [match]'s row; null when there are no such activity points.
+     */
+    fun activitySum(grid: SheetGrid, match: SheetRowMatch, beforeColumn: Int = grid.width): String? {
+        val first = SheetHeaders.firstDataRow(grid, match.row, match.keyColumn, match.kind)
+        val students = (first until grid.height).filter {
+            SheetIdentity.personKind(grid.cell(it, match.keyColumn)) == match.kind
+        }.ifEmpty { listOf(match.row) }
+        val paths = SheetHeaders.paths(grid, first, match.keyColumn)
+        val totalCol = paths.indices.firstOrNull { c -> rank(paths[c])?.let { TIERS[it.group] == 0 } == true }
+        val limit = minOf(beforeColumn, totalCol ?: grid.width, grid.width)
+        val label = SheetText.normalize(match.label)
+        val pointColumns = (0 until limit).filter { c ->
+            c != match.keyColumn &&
+                !SheetIdentity.holds(grid.cell(match.row, c), match.key, match.kind) &&
+                (label.isEmpty() || SheetText.normalize(grid.cell(match.row, c)) != label) &&
+                isActivityColumn(paths[c], grid, students, c)
+        }
+        val numbers = pointColumns.mapNotNull { c ->
+            number(grid.cell(match.row, c))?.takeIf { it != 0.0 && kotlin.math.abs(it) <= MAX_POINTS }
+        }
+        if (numbers.isEmpty()) return null
+        return formatRecordbookNumber(numbers.sum())
+    }
+
+    /** A synthetic candidate cell for the sum of activity points in [tab], if any. */
+    fun activityCell(tab: SheetTabGrid, match: SheetRowMatch, beforeColumn: Int = tab.grid.width): SheetCell? {
+        val sum = activitySum(tab.grid, match, beforeColumn) ?: return null
+        val column = minOf(beforeColumn, tab.grid.width - 1).coerceAtLeast(0)
+        return SheetCell(tab.tab, column, ACTIVITIES_SUM_PATH, sum)
+    }
+
+    private fun isActivityColumn(path: String, grid: SheetGrid, students: List<Int>, column: Int): Boolean {
+        if (!holdsPoints(grid, students, column)) return false
+        val words = SheetText.tokens(path)
+        if (words.any { it.startsWith("посещаем") || it.startsWith("attend") }) return false
+        val segments = path.split(SheetHeaders.SEPARATOR).map(SheetText::normalize)
+        val hasActivityWord = words.any { word ->
+            ACTIVITY_PREFIXES.any { word.startsWith(it) } ||
+                word == "hw" || (words.contains("h") && words.contains("w"))
+        }
+        val hasLessonNumber = segments.any { segment ->
+            segment.trim().toIntOrNull() in 1..100 ||
+                words.indices.any { i -> words[i] in LESSON_WORDS && words.getOrNull(i + 1)?.toIntOrNull() != null }
+        }
+        return hasActivityWord || hasLessonNumber
+    }
+
     private fun isPoints(text: String): Boolean = number(text)?.let { it != 0.0 && kotlin.math.abs(it) <= MAX_POINTS } == true
 
     /**
      * Whether a column holds points rather than a variant, an ISU or a date: its non-zero numbers repeat across the
      * students (a score of 7 is common, a variant number is not) and none is above [MAX_POINTS].
      */
-    private fun holdsPoints(grid: SheetGrid, students: List<Int>, column: Int): Boolean {
+    internal fun holdsPoints(grid: SheetGrid, students: List<Int>, column: Int): Boolean {
         val values = students.mapNotNull { number(grid.cell(it, column)) }.filter { it != 0.0 }
         return values.isNotEmpty() && values.all { kotlin.math.abs(it) <= MAX_POINTS } &&
             (values.size < MIN_EVIDENCE || values.distinct().size * 2 <= values.size)

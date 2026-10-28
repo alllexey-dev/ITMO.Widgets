@@ -1477,6 +1477,18 @@
         }
       }
     },
+    "sheet_scores_reason_activity_sum" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сумма баллов за работы (локальный расчёт)"
+          }
+        }
+      }
+    },
     "sheet_scores_reason_empty" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",

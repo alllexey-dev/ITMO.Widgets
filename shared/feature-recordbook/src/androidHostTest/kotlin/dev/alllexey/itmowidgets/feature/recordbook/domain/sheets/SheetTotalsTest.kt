@@ -2,7 +2,9 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.sheets
 
 import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** [SheetTotals] on small synthetic tabs, one per trap seen in real sheets (docs/features/sheet-scores.md). */
@@ -267,6 +269,63 @@ class SheetTotalsTest {
         assertEquals(1234.0, SheetTotals.number("1 234")!!, 0.0)
         assertNull(SheetTotals.number("85%"))
         assertNull(SheetTotals.number("5A"))
+    }
+
+    @Test fun `an empty total column remains empty without silent fallback`() {
+        val sheetTab = tab(
+            0, "",
+            "ISU ID,FULL NAME,H/W 1,H/W 2,Speaking,Total for the semester",
+            *roster("7,7,10,", "7,7,10,", "7,7,10,", "6,7,10,"),
+        )
+        val decision = decide(sheetTab)!!
+
+        assertEquals("F", decision.letter)
+        assertEquals("", decision.total.value)
+        assertEquals(TotalReason.EMPTY_FOR_ALL, decision.reason)
+        assertEquals(TotalConfidence.LOW, decision.confidence)
+
+        // Activity sum computes points across activity columns
+        val match = SheetRowMatch(sheetTab.tab, 1, 0, "100000", KeyKind.ISU, "0")
+        assertEquals("24", SheetTotals.activitySum(sheetTab.grid, match))
+        val activityCell = SheetTotals.activityCell(sheetTab, match)!!
+        assertEquals(SheetTotals.ACTIVITIES_SUM_PATH, activityCell.headerPath)
+        assertEquals("24", activityCell.value)
+
+        // Student with no points has null activity sum
+        val noPointsMatch = SheetRowMatch(sheetTab.tab, 0, 0, "100000", KeyKind.ISU, "0")
+        val noPointsTab = tab(
+            0, "",
+            "ISU ID,FULL NAME,H/W 1,H/W 2,Speaking,Total for the semester",
+            *roster(",,,", "7,7,10,", "7,7,10,", "6,7,10,"),
+        )
+        assertNull(SheetTotals.activitySum(noPointsTab.grid, noPointsMatch))
+        assertNull(SheetTotals.activityCell(noPointsTab, noPointsMatch))
+    }
+
+    @Test fun `matan journal without total formula leaves total empty and provides activity sum`() {
+        val grid = SheetTabGrid(SheetTab(1, "МатАн"), SheetFixtures.csv("matan.csv"))
+        val studentWithPoints = OwnIdentity(100004, "Тестов Тест Тестович", "Тестов", "Тест", "Тестович")
+        val foundWithPoints = (SheetRows.find(SheetWorkbook(url, listOf(grid)), studentWithPoints) as RowSearch.Found).matches
+        val decisionWithPoints = SheetTotals.decide(listOf(grid), foundWithPoints)!!
+
+        assertEquals("Y", decisionWithPoints.letter)
+        assertEquals("", decisionWithPoints.total.value)
+        assertEquals(TotalReason.EMPTY_FOR_ALL, decisionWithPoints.reason)
+        assertEquals(TotalConfidence.LOW, decisionWithPoints.confidence)
+
+        assertEquals("3", SheetTotals.activitySum(grid.grid, foundWithPoints.first()))
+        val activityCell = SheetTotals.activityCell(grid, foundWithPoints.first())!!
+        assertEquals(SheetTotals.ACTIVITIES_SUM_PATH, activityCell.headerPath)
+        assertEquals("3", activityCell.value)
+
+        val studentNoPoints = OwnIdentity(100002, "Примеров Пример Примерович", "Примеров", "Пример", "Примерович")
+        val foundNoPoints = (SheetRows.find(SheetWorkbook(url, listOf(grid)), studentNoPoints) as RowSearch.Found).matches
+        val decisionNoPoints = SheetTotals.decide(listOf(grid), foundNoPoints)!!
+
+        assertEquals("Y", decisionNoPoints.letter)
+        assertEquals("", decisionNoPoints.total.value)
+        assertNull(SheetTotals.activitySum(grid.grid, foundNoPoints.first()))
+        assertNull(SheetTotals.activityCell(grid, foundNoPoints.first()))
     }
 
     @Test fun `the column is found again by its path`() {
