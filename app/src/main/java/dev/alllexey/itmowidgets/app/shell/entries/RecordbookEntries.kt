@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
 import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.view.View
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -177,15 +179,21 @@ private fun SheetScoresEntry(onClose: () -> Unit) {
     )
 }
 
-/** Starts the BARS sign-in in `BarsLoginActivity` for a result; [onSignedIn] runs after a completed one. */
+/**
+ * Starts the BARS sign-in in `BarsLoginActivity` for a result; [onSignedIn] runs after a completed one. ISU's screens
+ * pass [ActivityRoutes.itmoIdLogin], the same sign-in titled for ITMO.ID.
+ */
 @Composable
-private fun rememberBarsLogin(onSignedIn: () -> Unit): () -> Unit {
+internal fun rememberBarsLogin(
+    onSignedIn: () -> Unit,
+    intent: (Context) -> Intent = ActivityRoutes::barsLogin,
+): () -> Unit {
     val context = LocalContext.current
     val currentOnSignedIn by rememberUpdatedState(onSignedIn)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == Activity.RESULT_OK) currentOnSignedIn()
     }
-    return remember(launcher, context) { { launcher.launch(ActivityRoutes.barsLogin(context)) } }
+    return remember(launcher, context) { { launcher.launch(intent(context)) } }
 }
 
 /** An https link outside the app (t.me in Telegram); without a handler a snackbar says so, as `openLink` does. */

@@ -147,7 +147,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   the ITMO.ID sign-in it already has; the password is hidden until shown, both copy. On Android `Подключиться` saves the
   network with the system's dialog on 11+ (PEAP, the server checked by `wifi.it.itmo.ru`); elsewhere it copies the
   password and opens the Wi-Fi settings. On iOS the password is copied and pasted by hand. The password stays in the phone's secure storage and goes on
-  sign-out.
+  sign-out. Without an ITMO.ID sign-in on the phone the sheet offers `Войти через ITMO.ID` (the BARS sign-in, titled
+  for ITMO.ID) and reads ISU again after it.
 - 7 days before a client's ITMO sign-in ends, the bell and a notification remind you to renew it.
 - `Выглядеть как обычный браузер` (on by default) decides how new sign-ins look on id.itmo.ru: as a browser, or as
   `ITMO Widgets ... bot`. It applies to the app's own sign-in too.

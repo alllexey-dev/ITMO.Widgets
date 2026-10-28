@@ -28,7 +28,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-/** No JavaScript bridge or token interception: only the exact HTTPS OAuth callback is consumed. */
+/**
+ * No JavaScript bridge or token interception: only the exact HTTPS OAuth callback is consumed. With
+ * [EXTRA_ITMO_ID_TITLE] the same sign-in is titled `Вход через ITMO.ID`: ISU's screens open it for the ITMO.ID
+ * cookies it leaves in the WebView.
+ */
 class BarsLoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private val viewModel: BarsLoginViewModel by viewModel()
@@ -44,7 +48,8 @@ class BarsLoginActivity : AppCompatActivity() {
             view.updatePadding(left = edges.left, top = edges.top, right = edges.right, bottom = edges.bottom)
             insets
         }
-        binding.loginToolbar.setTitle(R.string.recordbook_bars_login)
+        val itmoIdTitle = intent.getBooleanExtra(EXTRA_ITMO_ID_TITLE, false)
+        binding.loginToolbar.setTitle(if (itmoIdTitle) R.string.auth_web_title else R.string.recordbook_bars_login)
         binding.loginToolbar.setNavigationOnClickListener { finish() }
         binding.loginSwipeRefresh.isEnabled = false
         configureBrowser()
@@ -132,5 +137,10 @@ class BarsLoginActivity : AppCompatActivity() {
             destroy()
         }
         super.onDestroy()
+    }
+
+    companion object {
+        /** Titles the page `Вход через ITMO.ID` instead of `Войти в БАРС`. */
+        const val EXTRA_ITMO_ID_TITLE = "itmo_id_title"
     }
 }

@@ -31,10 +31,15 @@ portal) and `eduroam` (guests of other institutions) are not offered.
 ## Sheet
 
 `WifiViewModel.start()` shows the stored credentials at once and reads ISU again each time the sheet opens; a failed
-read keeps them. Without stored credentials the sheet shows loading, `Пароля Wi-Fi ещё нет`, `ИСУ не открылась`
-(both with `Открыть ИСУ`, the page in the browser) or the error with a retry. The password is dots until the eye
+read keeps them. Without stored credentials the sheet shows loading, `Пароля Wi-Fi ещё нет` (`Открыть ИСУ`, the
+page in the browser), `ИСУ не открылась` or the error with a retry. The password is dots until the eye
 button; the copy buttons copy the login or the password (marked sensitive on Android, local-only and expiring in two
 minutes on iOS). A note gives the manual settings.
+
+`ИСУ не открылась` offers `Войти через ITMO.ID`: the BARS sign-in (`BarsLoginActivity`, iOS `BarsLoginSheet`) titled
+`Вход через ITMO.ID` (`ActivityRoutes.itmoIdLogin`, the sheet's `title`). It signs in to ITMO.ID in the WebView,
+refuses another account, completes the BARS session and leaves the SSO cookies `IsuWebClient` reads (iOS copies them
+to the Keychain before it returns); a completed sign-in calls `start()` again. There is no second sign-in for ISU.
 
 ## Quick connect
 

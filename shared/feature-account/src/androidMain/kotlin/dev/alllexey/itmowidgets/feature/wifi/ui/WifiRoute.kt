@@ -24,11 +24,12 @@ import org.koin.compose.viewmodel.koinViewModel
 /**
  * The Wi-Fi sheet with its Koin ViewModel, which reads ISU each time the sheet starts. `Подключиться` opens the
  * system's dialog that saves ITMO-Corp with the login and password (Android 11+); an older system, a phone without the
- * Let's Encrypt roots or a dialog that fails copies the password and opens the Wi-Fi settings instead. Android hosts it
+ * Let's Encrypt roots or a dialog that fails copies the password and opens the Wi-Fi settings instead. [onSignIn] is
+ * `Войти через ITMO.ID` without an ITMO.ID session on the phone; the shell reads ISU again after it. Android hosts it
  * in the shell's `Wifi` sheet; iOS draws the same view model in SwiftUI (`WifiSheet`).
  */
 @Composable
-fun WifiRoute(onClose: () -> Unit, viewModel: WifiViewModel = koinViewModel()) {
+fun WifiRoute(onClose: () -> Unit, onSignIn: () -> Unit, viewModel: WifiViewModel = koinViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbars = remember { SnackbarHostState() }
@@ -74,6 +75,7 @@ fun WifiRoute(onClose: () -> Unit, viewModel: WifiViewModel = koinViewModel()) {
         onCopyPassword = { if (context.copyToClipboard(texts.password, it, secret = true)) show(texts.copied) },
         onTogglePassword = viewModel::togglePassword,
         onOpenIsu = { if (!context.openPage(ItmoWifi.ISU_PAGE_URL)) show(texts.linkFailed) },
+        onSignIn = onSignIn,
         onRetry = viewModel::start,
     )
     WifiSheetContent(state, actions, snackbarHostState = snackbars)

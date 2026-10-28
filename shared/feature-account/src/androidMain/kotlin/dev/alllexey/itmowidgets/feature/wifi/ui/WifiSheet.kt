@@ -28,6 +28,7 @@ import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateActionStyle
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
@@ -55,6 +56,8 @@ data class WifiActions(
     val onTogglePassword: () -> Unit = {},
     /** ISU's Wi-Fi page in the browser. */
     val onOpenIsu: () -> Unit = {},
+    /** The ITMO.ID sign-in that leaves the phone the session ISU needs. */
+    val onSignIn: () -> Unit = {},
     val onRetry: () -> Unit = {},
 )
 
@@ -65,12 +68,13 @@ object WifiTestTags {
     const val TOGGLE = "wifi_password_toggle"
     const val CONNECT = "wifi_connect"
     const val STATE = "wifi_state"
+    const val SIGN_IN = "wifi_sign_in"
 }
 
 /**
  * The Wi-Fi sheet: the network, the login and the password (dots until shown) with copy buttons, the manual settings
  * as a note, and `Подключиться` at the bottom; without credentials the state of reading ISU instead: no password yet
- * or no ITMO.ID session (both open ISU's page), an error with a retry, or loading. Stateless; [WifiRoute] feeds it.
+ * (opens ISU's page), no ITMO.ID session (`Войти через ITMO.ID`), an error with a retry, or loading. Stateless; [WifiRoute] feeds it.
  */
 @Composable
 fun WifiSheetContent(
@@ -207,7 +211,12 @@ private fun Status(status: WifiStatus, actions: WifiActions) {
             ContentStateSize.Compact,
             painterResource(Res.drawable.ic_wifi),
             text(AccountStrings.wifi_sign_in_description),
-            openIsu,
+            ContentStateAction(
+                text(CoreStrings.auth_login_itmo_id),
+                actions.onSignIn,
+                ContentStateActionStyle.Filled,
+                Modifier.testTag(WifiTestTags.SIGN_IN),
+            ),
         )
         is WifiStatus.Failed -> ContentState(
             text(CoreStrings.common_load_error_title),

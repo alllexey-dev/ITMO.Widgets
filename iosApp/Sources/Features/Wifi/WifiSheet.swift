@@ -3,11 +3,13 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// The Wi-Fi sheet over the shared `WifiViewModel` (docs/features/wifi.md): ITMO-Corp, the login and the password from
-/// ISU with copy buttons and the manual settings. No quick connect on iOS: `NEHotspotConfiguration` needs the Hotspot
+/// ISU with copy buttons and the manual settings; without an ITMO.ID session on the phone `auth_login_itmo_id` opens
+/// `BarsLoginSheet` and reads ISU again after it. No quick connect on iOS: `NEHotspotConfiguration` needs the Hotspot
 /// Configuration capability, which re-signed builds do not get, so the user pastes the password in the Wi-Fi settings.
 struct WifiSheet: View {
     @State private var model = ObservableViewModel(WifiViewModel.self, state: \.uiState)
     @State private var message: SettingsMessage?
+    @State private var showsSignIn = false
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -24,6 +26,12 @@ struct WifiSheet: View {
             }
         }
         .animation(.default, value: message?.id)
+        .sheet(isPresented: $showsSignIn) {
+            BarsLoginSheet(title: AppStrings.string("auth_web_title")) {
+                showsSignIn = false
+                model.viewModel.start()
+            }
+        }
         .observing(model)
         .accessibilityIdentifier("wifi.sheet")
         .onAppear { model.viewModel.start() }
@@ -42,9 +50,13 @@ struct WifiSheet: View {
         } else {
             switch onEnum(of: state.status) {
             case .noPassword:
-                unavailable("wifi_no_password_title", "wifi_no_password_description")
+                unavailable("wifi_no_password_title", "wifi_no_password_description", action: "wifi_open_isu") {
+                    if let url = URL(string: ItmoWifi.shared.ISU_PAGE_URL) { openURL(url) }
+                }
             case .signInRequired:
-                unavailable("wifi_sign_in_title", "wifi_sign_in_description")
+                unavailable("wifi_sign_in_title", "wifi_sign_in_description", action: "auth_login_itmo_id") {
+                    showsSignIn = true
+                }
             case let .failed(failed):
                 ItmoErrorView(
                     title: AppStrings.string("common_load_error_title"),
@@ -57,14 +69,14 @@ struct WifiSheet: View {
         }
     }
 
-    private func unavailable(_ title: String, _ description: String) -> some View {
+    private func unavailable(
+        _ title: String, _ description: String, action: String, run: @escaping () -> Void
+    ) -> some View {
         ItmoEmptyView(
             symbol: .wifi,
             title: AppStrings.string(title),
             description: AppStrings.string(description),
-            action: (AppStrings.string("wifi_open_isu"), {
-                if let url = URL(string: ItmoWifi.shared.ISU_PAGE_URL) { openURL(url) }
-            })
+            action: (AppStrings.string(action), run)
         )
     }
 

@@ -72,6 +72,7 @@ import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
 import dev.alllexey.itmowidgets.feature.me.ui.MeTestTags
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.ui.ONBOARDING_ROOT_TEST_TAG
+import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateReminder
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
@@ -83,6 +84,11 @@ import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateTestTags
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebTestTags
+import dev.alllexey.itmowidgets.feature.wifi.domain.WifiAccess
+import dev.alllexey.itmowidgets.feature.wifi.domain.WifiCredentials
+import dev.alllexey.itmowidgets.feature.wifi.domain.WifiRepository
+import dev.alllexey.itmowidgets.feature.wifi.presentation.WifiViewModel
+import dev.alllexey.itmowidgets.feature.wifi.ui.WifiTestTags
 import kotlin.time.Instant
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
@@ -111,8 +117,8 @@ import org.robolectric.shadows.ShadowToast
 /**
  * The account keys in the Compose shell with the real [shellEntries] and Koin ViewModels on synthetic data: sign-in
  * and the first-run flow fill the window, the Me tab root opens its route-map routes, pairing and «Устройства» have
- * entries, My ITMO in the browser, the update offer and the debug tools render and close themselves, the demo session
- * refuses pairing, «Устройства» and My ITMO, the update key survives saving, and a release registry has no debug tools.
+ * entries, My ITMO in the browser, the update offer and the debug tools render and close themselves, the Wi-Fi sheet
+ * signs in to ITMO.ID for a result, the demo session refuses pairing, «Устройства» and My ITMO, the update key survives saving, and a release registry has no debug tools.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = PreviewHostApplication::class)
@@ -126,6 +132,7 @@ class AccountEntriesTest {
 
     private val sessions = FakeSessionRepository(SessionState.SignedIn(user = null))
     private val updates = FakeAppUpdateRepository()
+    private val wifi = NoIsuSession()
     private val navigator = Nav3AppNavigator(ShellBackStack(AppTab.ME))
     private var surface by mutableStateOf<ShellSurface>(ShellSurface.Tabs(demoBanner = false))
     private lateinit var koin: Koin
@@ -164,6 +171,7 @@ class AccountEntriesTest {
                             FakeMarkTracking(),
                         )
                     }
+                    viewModel { WifiViewModel(wifi) }
                     single<WidgetPreviewFactory> { NoPreviews }
                     single { ShareLinkFactory("https://widgets.alllexey.dev") }
                     single<UpdateAction> { NoUpdateAction }
@@ -287,6 +295,23 @@ class AccountEntriesTest {
     }
 
     @Test
+    fun wifiWithoutAnItmoIdSessionSignsInForAResultAndReadsIsuAgain() {
+        show()
+        act { open(AppRoutes.Wifi) }
+        compose.onNodeWithTag(WifiTestTags.SIGN_IN).performClick()
+        compose.waitForIdle()
+
+        val started = shadowOf(compose.activity).nextStartedActivityForResult
+        assertEquals(BarsLoginActivity::class.java.name, started.intent.component?.className)
+        assertTrue(started.intent.getBooleanExtra(BarsLoginActivity.EXTRA_ITMO_ID_TITLE, false))
+
+        val reads = wifi.reads
+        compose.runOnIdle { shadowOf(compose.activity).receiveResult(started.intent, Activity.RESULT_OK, null) }
+        compose.waitForIdle()
+        assertEquals(reads + 1, wifi.reads)
+    }
+
+    @Test
     fun theUpdateOfferReadsItsKeyAndClosesItself() {
         show()
         act { open(UpdateRoutes.of(UPDATE)) }
@@ -396,6 +421,16 @@ class AccountEntriesTest {
                 override val view: View = View(context)
                 override fun bind(settings: WidgetPreviewSettings) = Unit
             }
+    }
+
+    /** ISU wants the user every time: the phone has no ITMO.ID session. */
+    private class NoIsuSession : WifiRepository {
+        var reads = 0
+        override suspend fun cached(): WifiCredentials? = null
+        override suspend fun refresh(): AppResult<WifiAccess> {
+            reads++
+            return AppResult.Success(WifiAccess.SignInRequired)
+        }
     }
 
     private object NoUpdateAction : UpdateAction {

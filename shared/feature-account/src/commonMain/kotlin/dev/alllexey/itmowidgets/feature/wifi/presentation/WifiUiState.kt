@@ -24,7 +24,7 @@ sealed interface WifiStatus {
     /** ISU has no Wi-Fi password: it is issued on ISU's page. */
     data object NoPassword : WifiStatus
 
-    /** ISU needs the user's sign-in, which the app cannot do; the page opens in the browser. */
+    /** The phone has no ITMO.ID session for ISU; `Войти через ITMO.ID` signs in and the sheet starts again. */
     data object SignInRequired : WifiStatus
 
     /** Reading failed and nothing is stored. */

@@ -73,6 +73,7 @@ import dev.alllexey.itmowidgets.feature.update.ui.toBundle
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoBrowser
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebContent
 import dev.alllexey.itmowidgets.feature.web.ui.openExternalPage
+import dev.alllexey.itmowidgets.feature.wifi.presentation.WifiViewModel
 import dev.alllexey.itmowidgets.feature.wifi.ui.WifiRoute
 import dev.alllexey.itmowidgets.feature.connections.data.BiometricDeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
@@ -109,7 +110,7 @@ internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
     }
     entry<AppRoutes.Connection> { key, navigator -> ConnectionEntry(key.id, navigator, onBack = { navigator.close(key) }) }
     entry<AppRoutes.MyItmoWeb> { key, navigator -> MyItmoWebEntry(onClose = { navigator.close(key) }) }
-    entry<AppRoutes.Wifi> { key, navigator -> WifiRoute(onClose = { navigator.close(key) }, viewModel = entryViewModel()) }
+    entry<AppRoutes.Wifi> { key, navigator -> WifiEntry(onClose = { navigator.close(key) }) }
     entry<UpdateRoutes.AppUpdate>(args = { it.args.toBundle() }) { key, navigator ->
         AppUpdateEntry(onClose = { navigator.close(key) })
     }
@@ -291,6 +292,14 @@ private fun MyItmoWebEntry(onClose: () -> Unit) {
         onPauseOrDispose { browser.onPause() }
     }
     MyItmoWebContent(browser, onClose, snackbars)
+}
+
+/** The Wi-Fi sheet; `Войти через ITMO.ID` runs the BARS sign-in for its ITMO.ID cookies and reads ISU again after it. */
+@Composable
+private fun WifiEntry(onClose: () -> Unit) {
+    val viewModel: WifiViewModel = entryViewModel()
+    val signIn = rememberBarsLogin(onSignedIn = viewModel::start, intent = ActivityRoutes::itmoIdLogin)
+    WifiRoute(onClose = onClose, onSignIn = signIn, viewModel = viewModel)
 }
 
 /** The update offer: its update button runs the distribution's `UpdateAction` on this activity. */

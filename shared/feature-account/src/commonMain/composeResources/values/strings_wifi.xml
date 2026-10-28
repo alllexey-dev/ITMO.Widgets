@@ -16,6 +16,6 @@
     <string name="wifi_no_password_title">Пароля Wi-Fi ещё нет</string>
     <string name="wifi_no_password_description">Получите его в ИСУ кнопкой «Получить или изменить пароль Wi-Fi» и вернитесь сюда.</string>
     <string name="wifi_sign_in_title">ИСУ не открылась</string>
-    <string name="wifi_sign_in_description">На телефоне нет входа в ITMO.ID. Посмотрите пароль в ИСУ или войдите в приложение заново.</string>
+    <string name="wifi_sign_in_description">Войдите в ITMO.ID на этом телефоне, и пароль появится здесь.</string>
     <string name="wifi_open_isu">Открыть ИСУ</string>
 </resources>
