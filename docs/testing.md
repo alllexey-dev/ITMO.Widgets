@@ -69,7 +69,8 @@ scripts/verify.sh shots all --gallery /tmp/shots        # render everything into
 - A failed comparison writes `<name>_compare.png` (reference, diff, new) to
   `<module>/build/outputs/roborazzi/`; CI uploads them as `screenshot-diffs-*`.
 - Baselines recorded on macOS verify on CI's Linux runner under a small
-  per-pixel tolerance (`ShotsCompare` in `shared/testing`). Record on a Mac.
+  per-pixel tolerance, and a capture may have up to 0.01% such pixels (thin vector
+  strokes anti-alias differently; `ShotsCompare` in `shared/testing`). Record on a Mac.
 - Captures also run accessibility checks (touch targets, labels, contrast).
 - Galleries are for review only; never copy a gallery PNG into `screenshots/`.
 
