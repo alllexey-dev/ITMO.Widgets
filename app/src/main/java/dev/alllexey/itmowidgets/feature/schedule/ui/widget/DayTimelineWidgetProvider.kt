@@ -52,7 +52,7 @@ class DayTimelineWidgetProvider : AppWidgetProvider(), KoinComponent {
         val pending = goAsync()
         scope.launch {
             try {
-                ScheduleWidgetProviders.render(context, store.read(), palettes.current(), time.now(), singleIds = NONE, dayIds = ids, listIds = NONE)
+                ScheduleWidgetProviders.render(context, store.read(), palettes.current(), time.now(), singleIds = NONE, dayIds = ids, listIds = NONE, cardsIds = NONE)
                 // WorkManager toggling its own components re-sends APPWIDGET_UPDATE: only the throttled
                 // enqueue and the kept periodic job may follow, or the widget refreshes in a loop.
                 if (scheduleUpdate) {

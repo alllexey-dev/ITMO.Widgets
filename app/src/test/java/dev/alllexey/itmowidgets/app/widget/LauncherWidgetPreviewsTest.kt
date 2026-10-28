@@ -62,6 +62,11 @@ class LauncherWidgetPreviewsTest {
 
         previews.publishNow()
         assertNotNull(shown())
+        assertNotNull(
+            manager.getWidgetPreview(
+                ComponentName(context, WidgetProviders.CARDS), Process.myUserHandle(), AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN
+            )
+        )
 
         manager.removeWidgetPreview(next, AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN)
         previews.publishNow()

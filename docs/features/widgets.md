@@ -3,9 +3,9 @@
 Product behaviour: [Как это работает: виджеты](../how-it-works/widgets.md). Settings: [the widgets
 gallery](../settings.md#widgets-gallery).
 
-Five home-screen widgets: the next lesson (`Пара`, small and medium), the day (`Расписание на день`, large) and sport
-(`Спорт`, small and medium), labelled beta (`(бета)` in the picker names, a `Бета` pill in the gallery); the classic
-list `Список пар` of 2.2; and the QR pass. Android draws them as RemoteViews (ADR 0027) from
+Six home-screen widgets: the next lesson (`Пара`, small and medium), the day (`Расписание на день`, large), the
+cards (`Карточки`, Android 4 x 2 to 4 x 4) and sport (`Спорт`, small and medium), labelled beta (`(бета)` in the
+picker names, a `Бета` pill in the gallery); the classic list `Список пар` of 2.2; and the QR pass. Android draws them as RemoteViews (ADR 0027) from
 WorkManager workers and alarms; the app never registers a widget host. iOS draws them in WidgetKit from App Group
 timelines ([iOS widgets](../ios.md#widgets)).
 
@@ -46,7 +46,22 @@ timelines ([iOS widgets](../ios.md#widgets)).
   inline `RemoteCollectionItems` with ids from their identity; `ScheduleWidgetRemoteViewsService` serves the same rows
   to a launcher that still binds 2.2's adapter. The end marker stays only when every row, measured at the launcher's
   smallest size, fits above it, so it never shows cut. It reads the day widget's settings (`full_widget_*`). The list
-  draws no clock, so the minute tick skips it.
+  draws no clock, so the minute tick skips it; the minute tick redraws the next-lesson, day and cards widgets.
+- The cards widget (`CardsWidgetProvider`, `Карточки`) pages through `cardsPages()`: the day `day` shows (today,
+  or tomorrow once today is over), then the days of `week` after it, through the sixth day after today. The title is
+  `Сегодня`, `Завтра` or the weekday; the subtitle the date and `ещё 3 пары`, `4 пары и спорт`, `на сегодня всё` or
+  `пар нет`. A card per lesson (today's past ones are left out, whatever `скрывать прошедшие пары` says): the start
+  over the end, the subject, the type chip (`отменена` and the queue on the warning tone) and `room · teacher` (the
+  teacher per the day widget's setting). The current lesson, or else the next one, sits on the primary container;
+  the current one adds the wavy progress (`widget_progress_wave` over `widget_progress_track`, clip drawables moved
+  by `setImageLevel` on the minute tick) and `ещё N мин`. No scrolling: from API 31 one layout per launcher size, the
+  cards that fit (estimated heights per text size, `CardsWidgetRenderer.fit`) and a last row `13:30 · Лабораторная`
+  with `ещё 2 пары` for the rest; at least one card.
+- Its arrows send `ACTION_PAGE` to the provider with the target page; `CardsWidgetPageStore` keeps
+  `cards_widget_page_<appWidgetId>` (page and tap time) in `app_preferences`, and the widget redraws at once. The page
+  holds 5 minutes after the last tap (`CardsWidgetPage.RESET_AFTER`) and ends at midnight or when the clock goes
+  back; a turned widget that draws no clock gets one more tick at the reset, a live one returns on its minute tick.
+  Removing a widget forgets its page. Settings are the day widget's (`full_widget_*`).
 - Placed widgets keep their provider: a list placed in 2.2 is `DayScheduleWidgetProvider` and stays a list; the day widget is a
   new provider that no release had shipped (ADR 0027, amended 2026-10-18).
 - Snapshot: kotlinx JSON in `noBackupFilesDir/widgets/schedule_snapshot.json` (`ScheduleWidgetSnapshotStoreImpl`,
@@ -153,8 +168,8 @@ Settings: the `Пропуск` sheet of the gallery ([settings](../settings.md#q
 - Launcher picker: `previewImage` PNGs (`res/drawable{,-night}-420dpi/widget_*_preview.png`) are the real
   renderers on the sample day, written by `WidgetPreviewImagesTest` with `ITMO_WRITE_WIDGET_PREVIEWS=1`; the Android
   12+ `previewLayout`s show the same images. Regenerate them whenever a widget layout changes.
-- Android 15+ picker: `WidgetPickerPreviews` replaces those images for `Пара`, `Расписание на день`, `Список пар`
-  and `Спорт` with the sample drawn with the current widget settings and theme (`AppWidgetManager.setWidgetPreview`).
+- Android 15+ picker: `WidgetPickerPreviews` replaces those images for `Пара`, `Расписание на день`, `Карточки`,
+  `Список пар` and `Спорт` with the sample drawn with the current widget settings and theme (`AppWidgetManager.setWidgetPreview`).
   The system rate-limits the call, so it runs only when an input changed since the system last took them (stored in
   `DeviceHintPreferences`): the app's install or update time, the system's mode, the widget palette, the schedule
   widget settings; checked at app start, on a configuration change and with every `refreshAll`, two seconds after
@@ -163,7 +178,8 @@ Settings: the `Пропуск` sheet of the gallery ([settings](../settings.md#q
   the schedule from the cache (`ScheduleWidgetDataProvider.load(refresh = false)`, without queued sport rows), sport
   from its last snapshot, the pass under its spoiler whatever the setting. Without data (signed out, nothing cached,
   no sport snapshot yet) it is the sample. Nothing starts a request, and a demo session shows its demo data. The
-  classic list has no dialog preview below Android 12L (its compat rows need a placed widget's id). A launcher may
+  classic list has no dialog preview below Android 12L (its compat rows need a placed widget's id). The cards show
+  their first page. A launcher may
   ignore the extra and show the static preview.
 - The gallery's previews: real renderers on sample data via `core/ui/widget.WidgetPreviewFactory`, each laid out at
   its launcher size and shrunk as a whole to its card's width; `QrPreviewBitmapCache` holds at most four bitmap

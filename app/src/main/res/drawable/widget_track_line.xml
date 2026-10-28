@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The time left of the current lesson in the cards widget: a flat track ending in a stop dot, white, tinted per
+     render. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="234dp"
+    android:height="12dp"
+    android:viewportWidth="234"
+    android:viewportHeight="12">
+
+    <path
+        android:pathData="M2,6 H222"
+        android:strokeWidth="3"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M231,6 m-2.5,0 a2.5,2.5 0,1 1,5 0 a2.5,2.5 0,1 1,-5 0" />
+</vector>

@@ -1,6 +1,9 @@
 # 0021 Material 3 Expressive through one token schema
 
 **Amended by [0031](0031-swiftui-ios-screens.md):** the iOS token clause below.
+**Amended 2026-10-26 (owner):** a widget may draw M3 Expressive's wavy progress indicator for the current lesson
+(the cards widget): on Android two clipped vector drawables moved by their image level (RemoteViews, ADR 0027), on
+iOS a SwiftUI `Shape`. Everything else in widgets keeps the res palette and shapes.
 
 **Decision (2026-10-03).** The Android look is Material 3 Expressive (M3E), driven by
 one token schema in `:shared:designsystem`.
@@ -23,7 +26,7 @@ one token schema in `:shared:designsystem`.
   `Itmo*` wrappers, so a switch of the material3 line stays local; no raw colour,
   `.dp` spacing or font size outside it (Konsist enforces it).
 - Widgets, the QR tile, shortcuts and notification icons keep their res palette;
-  no M3E there (ADR 0027).
+  no M3E there (ADR 0027), except the wavy lesson progress (amendment above).
 - iOS: `scripts/ios/gen-tokens.py` regenerates `Tokens.generated.swift` from
   `itmo-tokens.json` whenever the tokens change (`check-tokens.sh` fails while it
   is stale). SwiftUI screens use native iOS controls and take colour, spacing and

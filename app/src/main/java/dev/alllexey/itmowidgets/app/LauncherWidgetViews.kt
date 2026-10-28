@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.settings.WidgetPalette
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewMoment
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.SchedulePreviewScenario
 import dev.alllexey.itmowidgets.feature.schedule.domain.widget.ScheduleWidgetSnapshot
+import dev.alllexey.itmowidgets.feature.schedule.ui.widget.CardsWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.DayWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.NextLessonWidgetRenderer
 import dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleListWidgetRenderer
@@ -33,6 +34,9 @@ internal object LauncherWidgetViews {
         when (format) {
             WidgetFormat.NEXT -> NextLessonWidgetRenderer.layout(context, snapshot, palette, now, widgetId = null, medium = true)
             WidgetFormat.DAY -> DayWidgetRenderer.layout(context, snapshot, palette, ScheduleSettingsPreview.size(ScheduleWidgetFormat.FULL), widgetId = null)
+            // The first page: a widget not yet placed has no arrows to turn.
+            WidgetFormat.CARDS ->
+                CardsWidgetRenderer.layout(context, snapshot, palette, ScheduleSettingsPreview.size(ScheduleWidgetFormat.FULL), page = 0, widgetId = null)
             // Inline rows from 12L; below it RemoteViewsCompat keeps them for a placed widget's id in its own service.
             WidgetFormat.LIST -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
                 ScheduleListWidgetRenderer.views(

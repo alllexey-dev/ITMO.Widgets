@@ -111,7 +111,7 @@ shows (`domain/widget/ScheduleWidgetSelector.kt`).
   `load()`, writes `widgets/schedule_snapshot.json` through
   `ScheduleWidgetSnapshotStoreImpl` and renders RemoteViews through
   `ScheduleWidgetProviders` for `SingleLessonWidgetProvider`,
-  `DayTimelineWidgetProvider` and `DayScheduleWidgetProvider` (the classic list). `WidgetRefreshCoordinator` asks for a refresh
+  `DayTimelineWidgetProvider`, `CardsWidgetProvider` and `DayScheduleWidgetProvider` (the classic list). `WidgetRefreshCoordinator` asks for a refresh
   after actions that change the schedule.
 - **iOS.** `ScheduleTimelineWriter` (`shared/feature-schedule/src/iosMain`)
   calls `loadTimeline(until)` and writes the timeline to the App Group;

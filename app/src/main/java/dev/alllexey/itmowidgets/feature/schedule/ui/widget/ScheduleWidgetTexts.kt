@@ -125,7 +125,7 @@ internal class ScheduleWidgetTexts(private val context: Context) {
     fun gap(minutes: Int): String = context.getString(R.string.widget_day_window, durationText(minutes).resolve(context))
 
     /** `2 пары и спорт`, `2 пары`, `спорт`. */
-    private fun lessons(summary: DaySummary): String {
+    fun lessons(summary: DaySummary): String {
         val count = context.resources.getQuantityString(R.plurals.widget_day_lessons, summary.lessons, summary.lessons)
         return when {
             summary.lessons == 0 -> context.getString(R.string.widget_day_sport_only)

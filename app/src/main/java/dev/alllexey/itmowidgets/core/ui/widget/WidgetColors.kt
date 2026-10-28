@@ -59,6 +59,12 @@ class WidgetColors(private val context: Context, private val palette: WidgetPale
         }
     }
 
+    /** Calls [method] of [viewId] with [light] or [dark] as the launcher's mode is (below API 31: the render's). */
+    fun applyPair(views: RemoteViews, viewId: Int, method: String, @ColorInt light: Int, @ColorInt dark: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) views.setColorInt(viewId, method, light, dark)
+        else views.setInt(viewId, method, if (isDark()) dark else light)
+    }
+
     /** [apply] `setColorFilter` of an image, the tint of a shape drawn as a view's image. */
     fun tint(views: RemoteViews, viewId: Int, @ColorRes res: Int) = apply(views, viewId, "setColorFilter", res)
 
@@ -95,4 +101,7 @@ class WidgetColors(private val context: Context, private val palette: WidgetPale
     }
 
     private fun opaque(rgb: Int): Int = Color.BLACK or rgb
+
+    private fun isDark() =
+        context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 }

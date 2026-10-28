@@ -50,6 +50,7 @@ class WidgetPreviewImagesTest {
             "widget_single_lesson_preview" to WidgetsScreenshotTest.Case.NextMedium,
             "widget_day_preview" to WidgetsScreenshotTest.Case.Day,
             "widget_lesson_list_preview" to WidgetsScreenshotTest.Case.List,
+            "widget_cards_preview" to WidgetsScreenshotTest.Case.Cards,
             "widget_sport_preview" to WidgetsScreenshotTest.Case.SportQueue,
         )
     }

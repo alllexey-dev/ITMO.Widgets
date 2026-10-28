@@ -122,6 +122,19 @@
     </plurals>
     <string name="widget_day_window">окно %1$s</string>
     <string name="widget_day_empty">Пар нет</string>
+    <string name="widget_cards_name">Карточки (бета)</string>
+    <string name="widget_cards_description">Пары карточками, день за днём</string>
+    <string name="widget_cards_dot">%1$s · %2$s</string>
+    <string name="widget_cards_remaining">ещё %1$s</string>
+    <string name="widget_cards_none">пар нет</string>
+    <plurals name="widget_cards_more">
+        <item quantity="one">ещё %1$d пара</item>
+        <item quantity="few">ещё %1$d пары</item>
+        <item quantity="many">ещё %1$d пар</item>
+        <item quantity="other">ещё %1$d пары</item>
+    </plurals>
+    <string name="widget_cards_prev">Предыдущий день</string>
+    <string name="widget_cards_next">Следующий день</string>
     <plurals name="widget_sport_remaining">
         <item quantity="one">Ещё %1$d балл до зачёта</item>
         <item quantity="few">Ещё %1$d балла до зачёта</item>

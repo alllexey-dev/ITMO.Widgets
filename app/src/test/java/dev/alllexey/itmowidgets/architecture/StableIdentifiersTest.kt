@@ -265,6 +265,7 @@ class StableIdentifiersTest {
             "dev.alllexey.itmowidgets.feature.schedule.ui.widget.SingleLessonWidgetProvider" to "receiver",
             "dev.alllexey.itmowidgets.feature.schedule.ui.widget.DayScheduleWidgetProvider" to "receiver",
             "dev.alllexey.itmowidgets.feature.schedule.ui.widget.DayTimelineWidgetProvider" to "receiver",
+            "dev.alllexey.itmowidgets.feature.schedule.ui.widget.CardsWidgetProvider" to "receiver",
             "dev.alllexey.itmowidgets.feature.schedule.ui.widget.ScheduleWidgetRemoteViewsService" to "service",
             "dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetRefreshReceiver" to "receiver",
             "dev.alllexey.itmowidgets.app.WidgetBootReceiver" to "receiver",
