@@ -105,6 +105,9 @@ final class SnapshotReaderTests: XCTestCase {
 
         let timeline = try XCTUnwrap(ScheduleTimeline.read(fromContainer: container))
         XCTAssertEqual(timeline.entries.count, 13)
+        let week = try XCTUnwrap(timeline.entries.first?.snapshot.week)
+        XCTAssertEqual(week.map(\.date), (8...13).map { "2026-09-\(String(format: "%02d", $0))" })
+        XCTAssertEqual(week.first?.lessons.count, 3)
     }
 
     func testTheSportTimelineReadsFromTheContainer() throws {

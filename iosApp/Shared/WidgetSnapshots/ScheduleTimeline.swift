@@ -97,6 +97,9 @@ struct ScheduleWidgetSnapshot: Equatable, Decodable {
     let next: NextLessonContent
     /// The day widget (W2).
     let day: DayContent
+    /// The six days after today, tomorrow first, as planned days: the cards widget's pages. Nil in a file written
+    /// before the field.
+    var week: [DayContent]?
     /// The next-lesson widget's text size option.
     let compactTextSize: LessonTextSize
     /// The day widget's text size option.
@@ -104,7 +107,9 @@ struct ScheduleWidgetSnapshot: Equatable, Decodable {
 
     /// The snapshot with the now line at `minute`.
     func withNow(_ minute: Int) -> ScheduleWidgetSnapshot {
-        ScheduleWidgetSnapshot(next: next, day: day.withNow(minute), compactTextSize: compactTextSize, fullTextSize: fullTextSize)
+        ScheduleWidgetSnapshot(
+            next: next, day: day.withNow(minute), week: week, compactTextSize: compactTextSize, fullTextSize: fullTextSize
+        )
     }
 }
 

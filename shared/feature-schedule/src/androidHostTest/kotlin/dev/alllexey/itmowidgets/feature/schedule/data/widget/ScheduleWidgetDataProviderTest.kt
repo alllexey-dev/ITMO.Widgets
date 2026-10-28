@@ -45,10 +45,10 @@ class ScheduleWidgetDataProviderTest {
     )
 
     @Test
-    fun `a scheduled update refreshes today and tomorrow and selects from the cached days`() = runTest {
+    fun `a scheduled update refreshes today and the week ahead and selects from the cached days`() = runTest {
         val selection = available()
 
-        assertEquals(listOf(Time.today() to Time.today().plus(1, DateTimeUnit.DAY)), days.refreshed)
+        assertEquals(listOf(Time.today() to Time.today().plus(6, DateTimeUnit.DAY)), days.refreshed)
         assertEquals(WidgetContentKind.CONTENT, selection.snapshot.next.kind)
         assertEquals("Программирование", selection.snapshot.next.lesson?.subject)
     }
@@ -108,11 +108,11 @@ class ScheduleWidgetDataProviderTest {
     }
 
     @Test
-    fun `the timeline reads through the day after its end and starts with the worker snapshot`() = runTest {
+    fun `the timeline reads through the week after its end and starts with the worker snapshot`() = runTest {
         val until = endOfTomorrow()
         val timeline = (provider.loadTimeline(until) as ScheduleWidgetTimelineLoadResult.Available).timeline
 
-        assertEquals(listOf(Time.today() to Time.today().plus(2, DateTimeUnit.DAY)), days.refreshed)
+        assertEquals(listOf(Time.today() to Time.today().plus(7, DateTimeUnit.DAY)), days.refreshed)
         assertEquals(Time.now(), timeline.generatedAt)
         assertEquals(until, timeline.validUntil)
         assertEquals(available().snapshot.copy(pendingValidUntil = null), timeline.entryAt(Time.now())!!.snapshot.copy(pendingValidUntil = null))

@@ -143,10 +143,16 @@ data class DayWidgetContent(
     @SerialName("now") val now: Int? = null,
 )
 
+/**
+ * [week]: the [ScheduleWidgetSelector.WEEK_AHEAD] days after today in date order (tomorrow first), each a planned
+ * day ([DaySummaryKind.PLANNED], every lesson upcoming, no `now`) the cards widget pages to. Added to format 3 and
+ * timeline 2 as an additive field: a file without it reads with no days ahead.
+ */
 @Serializable
 data class ScheduleWidgetSnapshot(
     @SerialName("next") val next: NextLessonWidgetContent,
     @SerialName("day") val day: DayWidgetContent,
+    @SerialName("week") val week: List<DayWidgetContent> = emptyList(),
     // Exact official-only selection, not a filtered list with a wrong next lesson.
     @SerialName("officialFallback") val officialFallback: ScheduleWidgetSnapshot? = null,
     @SerialName("pendingValidUntil") val pendingValidUntil: String? = null,

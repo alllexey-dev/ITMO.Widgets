@@ -11,7 +11,7 @@ timelines ([iOS widgets](../ios.md#widgets)).
 
 ## Schedule widgets
 
-- `ScheduleWidgetDataProvider` reads the own `ScheduleDays` of today and tomorrow (the days Сегодня and the
+- `ScheduleWidgetDataProvider` reads the own `ScheduleDays` of today and the six days after it (the days Сегодня and the
   schedule draw: the found changes, cancelled lessons, sport bookings and, while `Автозапись на спорт` and the
   services are on, the sport queues). `load(refresh = true)` fetches first; `load(refresh = false)` reads the cache
   only.
@@ -22,6 +22,9 @@ timelines ([iOS widgets](../ios.md#widgets)).
   - `day`: the lessons of today or, once today is over and `Завтрашние пары вечером` is on, tomorrow, with their
     state and marks, the gaps of an hour or more, the time axis and the `сейчас` minute `now` (from an hour before
     the first lesson to the end of the last, null on tomorrow's day).
+  - `week`: the six days after today (`WEEK_AHEAD`), tomorrow first, each a planned `DayWidgetContent` (summary
+    `PLANNED`, every lesson upcoming, no `now`), the pages of the cards widget. An additive field: a file or timeline
+    without it reads with no days ahead.
   - Each `WidgetLesson` carries the `LessonDetailsArgs` or `PendingSportDetailsArgs` its tap opens.
   - A snapshot with a queue has an exact official-only `officialFallback` and `pendingValidUntil`; the store shows
     the fallback once the queue rows are off or the deadline passed.
