@@ -28,6 +28,7 @@ fun interface WidgetReloader {
             "dev.alllexey.itmowidgets.widget.single-lesson",
             "dev.alllexey.itmowidgets.widget.day-schedule",
             "dev.alllexey.itmowidgets.widget.day-timeline",
+            "dev.alllexey.itmowidgets.widget.cards",
             "dev.alllexey.itmowidgets.widget.sport",
         )
     }

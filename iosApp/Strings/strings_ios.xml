@@ -5,6 +5,8 @@
     <!-- QR widget states the Android widget shows without text. -->
     <string name="ios_widget_qr_reveal">Нажмите, чтобы показать</string>
     <string name="ios_widget_qr_expired">Нажмите, чтобы обновить</string>
+    <!-- The cards widget's arrows: the intent Shortcuts never lists. -->
+    <string name="ios_widget_cards_turn">Листать дни</string>
     <!-- QR Control in Control Center and on the Lock Screen. -->
     <string name="ios_control_qr_description">Открывает пропуск</string>
     <!-- Background App Refresh row in settings. -->

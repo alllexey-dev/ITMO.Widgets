@@ -2401,6 +2401,42 @@
         }
       }
     },
+    "settings_widget_cards_description" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пары карточками, стрелки листают неделю"
+          }
+        }
+      }
+    },
+    "settings_widget_cards_note" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эти настройки общие с «Расписанием на день». Прошедшие пары сегодня карточки не показывают."
+          }
+        }
+      }
+    },
+    "settings_widget_cards_title" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки"
+          }
+        }
+      }
+    },
     "settings_widget_day_description" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",

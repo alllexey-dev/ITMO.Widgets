@@ -85,7 +85,7 @@ class ScheduleTimelineWriterTest {
         val value = Json.parseToJsonElement(ScheduleWidgetTimelineJson.encode(fixture.withShortLocations(KeyTextResolver)))
         assertEquals(JsonObject(mapOf("version" to JsonPrimitive(2), "value" to value)), written)
         assertEquals(CoreStrings.schedule_building_kronva, read().entries.first().snapshot.next.lesson?.building)
-        assertEquals(listOf(SINGLE_LESSON_KIND, DAY_SCHEDULE_KIND, DAY_TIMELINE_KIND), reloads)
+        assertEquals(listOf(SINGLE_LESSON_KIND, DAY_SCHEDULE_KIND, DAY_TIMELINE_KIND, CARDS_KIND), reloads)
     }
 
     @Test
@@ -232,6 +232,7 @@ class ScheduleTimelineWriterTest {
         const val SINGLE_LESSON_KIND = "dev.alllexey.itmowidgets.widget.single-lesson"
         const val DAY_SCHEDULE_KIND = "dev.alllexey.itmowidgets.widget.day-schedule"
         const val DAY_TIMELINE_KIND = "dev.alllexey.itmowidgets.widget.day-timeline"
+        const val CARDS_KIND = "dev.alllexey.itmowidgets.widget.cards"
 
         val NOW: Instant = Instant.parse("2026-10-07T09:00:00Z")
 

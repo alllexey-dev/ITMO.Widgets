@@ -96,7 +96,7 @@ enum ScheduleWidgetText {
     }
 
     /// The lessons and the sport the subtitle counts.
-    private static func count(_ summary: DaySummary) -> String? {
+    static func count(_ summary: DaySummary) -> String? {
         let lessons = summary.lessons > 0 ? String(localized: .widgetDayLessons(summary.lessons)) : nil
         switch (lessons, summary.sport) {
         case let (lessons?, true): return String(localized: .widgetDayWithSport(lessons))

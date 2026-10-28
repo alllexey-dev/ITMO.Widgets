@@ -1,7 +1,10 @@
 package dev.alllexey.itmowidgets.core.settings
 
-/** The schedule widgets' looks: the next lesson (W1), the day to scale (W2) and the classic list, which reads W2's settings. */
-enum class ScheduleWidgetFormat { COMPACT, FULL, LIST }
+/**
+ * The schedule widgets' looks: the next lesson (W1), the day to scale (W2), the classic list and the cards, which read
+ * W2's settings.
+ */
+enum class ScheduleWidgetFormat { COMPACT, FULL, LIST, CARDS }
 
 /**
  * A widget of the widgets gallery: the next lesson (W1, the compact schedule widget), the day (W2, the full one), the

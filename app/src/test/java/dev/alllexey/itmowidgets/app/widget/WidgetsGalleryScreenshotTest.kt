@@ -62,6 +62,7 @@ class WidgetsGalleryScreenshotTest(private val case: Case, private val appearanc
         GalleryEnd("WidgetsGalleryLiveEnd", null, scrollTo = WidgetFormat.PASS),
         NextSheet("WidgetsGalleryLiveNext", WidgetFormat.NEXT),
         DaySheet("WidgetsGalleryLiveDay", WidgetFormat.DAY),
+        CardsSheet("WidgetsGalleryLiveCards", WidgetFormat.CARDS),
         ListSheet("WidgetsGalleryLiveList", WidgetFormat.LIST),
     }
 

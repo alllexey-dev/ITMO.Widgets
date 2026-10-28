@@ -60,6 +60,7 @@ class WidgetsPageProviderTest {
             ids(WidgetFormat.DAY)
         )
         assertEquals(ids(WidgetFormat.DAY), ids(WidgetFormat.LIST))
+        assertEquals(ids(WidgetFormat.DAY), ids(WidgetFormat.CARDS))
         assertEquals(emptyList(), ids(WidgetFormat.SPORT))
         assertEquals(listOf(SettingRowId.WIDGETS_FOLLOW_THEME), fixture.viewModel.uiState.value.sections.flatMap { it.items }.map { it.id })
         assertTrue(fixture.viewModel.toggle(SettingRowId.FULL_WIDGET_SHOW_TEACHER).checked)
@@ -90,6 +91,7 @@ class WidgetsPageProviderTest {
                 listOf(
                     WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.COMPACT),
                     WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.FULL),
+                    WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.CARDS),
                     WidgetPreviewSettings.Schedule(local.scheduleWidget, ScheduleWidgetFormat.LIST),
                     WidgetPreviewSettings.Sport(),
                     WidgetPreviewSettings.Qr(local.qrWidget),
@@ -124,7 +126,7 @@ class WidgetsPageProviderTest {
             val gallery = checkNotNull(fixture.viewModel.uiState.value.gallery)
             assertEquals(UiText.Res(SettingsStrings.settings_widgets_placed, listOf(2)), gallery.subtitle)
             assertEquals(
-                listOf(WidgetCardAction.ADD, WidgetCardAction.ON_SCREEN, WidgetCardAction.ADD, WidgetCardAction.ADD, WidgetCardAction.ON_SCREEN),
+                listOf(WidgetCardAction.ADD, WidgetCardAction.ON_SCREEN, WidgetCardAction.ADD, WidgetCardAction.ADD, WidgetCardAction.ADD, WidgetCardAction.ON_SCREEN),
                 gallery.cards.map { it.action }
             )
         }
@@ -135,7 +137,7 @@ class WidgetsPageProviderTest {
             val fixture = createFixture(page = SettingsPage.WIDGETS)
             advanceUntilIdle()
             val cards = checkNotNull(fixture.viewModel.uiState.value.gallery).cards
-            assertEquals(listOf(WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.SPORT), cards.filter { it.beta }.map { it.format })
+            assertEquals(listOf(WidgetFormat.NEXT, WidgetFormat.DAY, WidgetFormat.CARDS, WidgetFormat.SPORT), cards.filter { it.beta }.map { it.format })
             assertEquals(listOf(WidgetFormat.LIST, WidgetFormat.PASS), cards.filterNot { it.beta }.map { it.format })
         }
 

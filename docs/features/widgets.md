@@ -4,7 +4,7 @@ Product behaviour: [Как это работает: виджеты](../how-it-wo
 gallery](../settings.md#widgets-gallery).
 
 Six home-screen widgets: the next lesson (`Пара`, small and medium), the day (`Расписание на день`, large), the
-cards (`Карточки`, Android 4 x 2 to 4 x 4) and sport (`Спорт`, small and medium), labelled beta (`(бета)` in the
+cards (`Карточки`, Android 4 x 2 to 4 x 4, iOS medium and large) and sport (`Спорт`, small and medium), labelled beta (`(бета)` in the
 picker names, a `Бета` pill in the gallery); the classic list `Список пар` of 2.2; and the QR pass. Android draws them as RemoteViews (ADR 0027) from
 WorkManager workers and alarms; the app never registers a widget host. iOS draws them in WidgetKit from App Group
 timelines ([iOS widgets](../ios.md#widgets)).

@@ -42,4 +42,5 @@ WidgetsGalleryLive
 WidgetsGalleryLiveEnd
 WidgetsGalleryLiveNext
 WidgetsGalleryLiveDay
+WidgetsGalleryLiveCards
 WidgetsGalleryLiveList

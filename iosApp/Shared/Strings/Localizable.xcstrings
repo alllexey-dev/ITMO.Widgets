@@ -373,6 +373,18 @@
         }
       }
     },
+    "ios_widget_cards_turn" : {
+      "comment" : "Generated from strings_ios.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Листать дни"
+          }
+        }
+      }
+    },
     "ios_widget_inline_at" : {
       "comment" : "Generated from strings_ios_widgets.xml",
       "extractionState" : "manual",

@@ -147,8 +147,9 @@ struct WidgetPreview: View {
                 previews.day.map { DayEntryView(entry: $0) }
             }
         case .cards:
-            // The iPhone widget comes with its gallery card; until then the gallery lists no cards card.
-            EmptyView()
+            WidgetStage(size: WidgetFamilySizes.large) {
+                previews.cards.map { CardsEntryView(entry: $0) }
+            }
         case .list:
             WidgetStage(size: WidgetFamilySizes.medium) {
                 previews.list.map { ClassicListEntryView(entry: $0, family: .systemMedium) }
