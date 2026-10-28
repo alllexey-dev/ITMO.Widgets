@@ -20,10 +20,16 @@ import dev.alllexey.itmowidgets.feature.messages.presentation.IsuMessagesViewMod
 
 /**
  * The messages screen over its view model. Back closes an opened message first; links go to the system through the
- * host, a downloaded attachment to any app that views its type (`ACTION_VIEW` with a one-off read grant).
+ * host, a downloaded attachment to any app that views its type (`ACTION_VIEW` with a one-off read grant). [onSignIn]
+ * is `Войти через ITMO.ID`; the shell calls [IsuMessagesViewModel.signedIn] after a completed one.
  */
 @Composable
-fun IsuMessagesRoute(viewModel: IsuMessagesViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun IsuMessagesRoute(
+    viewModel: IsuMessagesViewModel,
+    onBack: () -> Unit,
+    onSignIn: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val platform = LocalPlatformActions.current
@@ -53,6 +59,7 @@ fun IsuMessagesRoute(viewModel: IsuMessagesViewModel, onBack: () -> Unit, modifi
             onFolder = viewModel::selectFolder,
             onRefresh = { viewModel.refresh() },
             onRetry = { viewModel.refresh(RefreshMode.Force) },
+            onSignIn = onSignIn,
             onMore = viewModel::loadMore,
             onOpen = viewModel::open,
             onClose = viewModel::close,

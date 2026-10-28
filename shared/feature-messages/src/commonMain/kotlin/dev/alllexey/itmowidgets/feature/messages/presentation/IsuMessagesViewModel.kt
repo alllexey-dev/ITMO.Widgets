@@ -56,6 +56,12 @@ class IsuMessagesViewModel(
     /** A pull or a retry reloads the shown folder from its first page. */
     fun refresh(mode: RefreshMode = RefreshMode.Pull) = load(model.value.folder, mode)
 
+    /** A completed ITMO.ID sign-in: the folders that failed load again, the shown one at once. */
+    fun signedIn() {
+        model.update { state -> state.copy(folders = state.folders.filterValues { it !is Folder.Failed }) }
+        load(model.value.folder, RefreshMode.Silent)
+    }
+
     fun selectFolder(folder: IsuFolder) {
         if (folder == model.value.folder) return
         model.update { it.copy(folder = folder, opened = null) }

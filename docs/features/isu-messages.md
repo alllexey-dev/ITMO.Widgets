@@ -26,9 +26,12 @@ attachment download were not run on a device yet.
 - Links in the body open outside the app (`PlatformActions.openLink` on Android, Safari on iOS). An attachment is
   downloaded and opened in the system viewer: Android `ACTION_VIEW` on a `content://` address of the app's
   `FileProvider` (`cache/isu-files`), iOS Quick Look on `tmp/isu-files`. Only the last opened file is kept.
-- States: loading; empty (`Сообщений нет`, `В архиве пусто`); `ИСУ не узнаёт вход` when ITMO.ID no longer signs in
-  (sign out and in again); `Сообщения не загрузились` with the error's text. A failed refresh keeps the list and
-  shows a snackbar.
+- States: loading; empty (`Сообщений нет`, `В архиве пусто`); `ИСУ не узнаёт вход` when ITMO.ID does not sign in
+  (no SSO cookies on the phone, or they expired); `Сообщения не загрузились` with the error's text. A failed refresh
+  keeps the list and shows a snackbar.
+- `ИСУ не узнаёт вход` offers `Войти через ITMO.ID`, the BARS sign-in titled for ITMO.ID (`ActivityRoutes.itmoIdLogin`
+  on Android, `BarsLoginSheet(title:)` on iOS), as the [Wi-Fi sheet](wifi.md#sheet) does: it leaves the ITMO.ID
+  cookies `IsuWebClient` reads, and a completed one calls `signedIn()`, which loads the failed folders again.
 
 Why Профиль: the screen needs one ISU login (several redirects) per session, which Сегодня should not pay on every
 open, and the row needs no new contract between features. An unread card on Сегодня is a later step once the poll

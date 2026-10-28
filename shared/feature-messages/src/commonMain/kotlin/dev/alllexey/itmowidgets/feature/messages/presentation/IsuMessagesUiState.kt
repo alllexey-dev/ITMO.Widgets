@@ -26,7 +26,7 @@ sealed interface IsuMessagesList {
     /** No message in the folder: [title] and [text] say which folder. */
     data class Empty(val title: UiText, val text: UiText) : IsuMessagesList
 
-    /** The first page failed; [signIn] when ITMO.ID no longer signs in to ISU. */
+    /** The first page failed; [signIn] when ITMO.ID does not sign in to ISU: the screen offers `Войти через ITMO.ID`. */
     data class Failed(val title: UiText, val text: UiText, val signIn: Boolean) : IsuMessagesList
 
     data class Messages(val rows: List<IsuMessageRow>, val more: MoreState) : IsuMessagesList

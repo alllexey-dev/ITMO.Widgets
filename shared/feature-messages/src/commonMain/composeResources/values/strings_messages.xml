@@ -21,7 +21,7 @@
     <string name="isu_messages_empty_archive_text">Сообщения прошлых лет ИСУ хранит в архиве</string>
     <string name="isu_messages_error">Сообщения не загрузились</string>
     <string name="isu_messages_sign_in">ИСУ не узнаёт вход</string>
-    <string name="isu_messages_sign_in_text">Сессия ITMO.ID закончилась. Выйдите из приложения и войдите снова — сообщения откроются.</string>
+    <string name="isu_messages_sign_in_text">Войдите в ITMO.ID на этом телефоне, и сообщения откроются.</string>
 
     <!-- One message -->
     <string name="isu_messages_files">Вложения</string>

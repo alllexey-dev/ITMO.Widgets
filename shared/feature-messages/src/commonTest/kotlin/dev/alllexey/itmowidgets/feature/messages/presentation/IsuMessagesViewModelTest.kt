@@ -106,6 +106,27 @@ class IsuMessagesViewModelTest {
     }
 
     @Test
+    fun aCompletedSignInLoadsBothFailedFoldersAgain() = runTest(main.dispatcher) {
+        repository.failure = AppError.Unauthorized
+        val viewModel = viewModel()
+        viewModel.loaded()
+        viewModel.selectFolder(IsuFolder.ARCHIVE)
+        assertIs<IsuMessagesList.Failed>(current(viewModel).list)
+        viewModel.selectFolder(IsuFolder.INBOX)
+
+        repository.failure = null
+        repository.pages[IsuFolder.INBOX to 1] = page(listOf(message(1)))
+        repository.pages[IsuFolder.ARCHIVE to 1] = page(listOf(message(2)))
+        viewModel.signedIn()
+        val inbox = assertIs<IsuMessagesList.Messages>(current(viewModel).list)
+        viewModel.selectFolder(IsuFolder.ARCHIVE)
+        val archive = assertIs<IsuMessagesList.Messages>(current(viewModel).list)
+
+        assertEquals(listOf(1L), inbox.rows.map { it.id })
+        assertEquals(listOf(2L), archive.rows.map { it.id })
+    }
+
+    @Test
     fun aFailedRefreshKeepsTheListAndSaysSo() = runTest(main.dispatcher) {
         repository.pages[IsuFolder.INBOX to 1] = page(listOf(message(1)))
         val viewModel = viewModel()

@@ -4,13 +4,15 @@ import SwiftUI
 
 /// `isu_messages_title` (`AppRoutes.IsuMessages`, docs/features/isu-messages.md) over the shared `IsuMessagesViewModel`:
 /// the inbox and the archive, `isu_messages_more`, one message pushed over the list with its attachments in Quick Look. The body
-/// is the shared view model's plain blocks, never HTML; links open in Safari.
+/// is the shared view model's plain blocks, never HTML; links open in Safari. Without an ITMO.ID session for ISU
+/// `auth_login_itmo_id` opens `BarsLoginSheet` and loads the messages again after it.
 struct IsuMessagesScreen: View {
     @State private var model = ObservableViewModel(IsuMessagesViewModel.self, state: \.uiState)
     @State private var file: URL?
     @State private var message: SettingsMessage?
     /// The last opened message, so the pushed screen keeps its content while it slides away.
     @State private var shown: IsuMessageDetail?
+    @State private var showsSignIn = false
 
     var body: some View {
         IsuMessagesContent(state: model.state, actions: actions)
@@ -27,6 +29,12 @@ struct IsuMessagesScreen: View {
             }
             .onChange(of: model.state.opened) { _, opened in
                 if let opened { shown = opened }
+            }
+            .sheet(isPresented: $showsSignIn) {
+                BarsLoginSheet(title: AppStrings.string("auth_web_title")) {
+                    showsSignIn = false
+                    model.viewModel.signedIn()
+                }
             }
             .observing(model)
             .onEvents(of: model, \.events) { event in
@@ -47,6 +55,7 @@ struct IsuMessagesScreen: View {
         IsuMessagesActions(
             folder: { model.viewModel.selectFolder(folder: $0) },
             retry: { model.viewModel.refresh(mode: .force) },
+            signIn: { showsSignIn = true },
             more: { model.viewModel.loadMore() },
             open: { model.viewModel.open(id: $0) },
             attachment: { model.viewModel.openAttachment(id: $0) }
@@ -72,6 +81,7 @@ struct IsuMessagesScreen: View {
 struct IsuMessagesActions {
     var folder: (IsuFolder) -> Void = { _ in }
     var retry: () -> Void = {}
+    var signIn: () -> Void = {}
     var more: () -> Void = {}
     var open: (Int64) -> Void = { _ in }
     var attachment: (String) -> Void = { _ in }
@@ -102,8 +112,18 @@ struct IsuMessagesContent: View {
         case let .empty(empty):
             ItmoEmptyView(symbol: .mail, title: empty.title.resolved, description: empty.text.resolved)
         case let .failed(failed):
-            ItmoErrorView(title: failed.title.resolved, description: failed.text.resolved, retry: actions.retry)
-                .accessibilityIdentifier("isu_messages.error")
+            if failed.signIn {
+                ItmoErrorView(
+                    title: failed.title.resolved,
+                    description: failed.text.resolved,
+                    retryTitle: AppStrings.string("auth_login_itmo_id"),
+                    retry: actions.signIn
+                )
+                .accessibilityIdentifier("isu_messages.sign_in")
+            } else {
+                ItmoErrorView(title: failed.title.resolved, description: failed.text.resolved, retry: actions.retry)
+                    .accessibilityIdentifier("isu_messages.error")
+            }
         case let .messages(messages):
             ItmoListGroup {
                 ForEach(messages.rows, id: \.id) { row in

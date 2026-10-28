@@ -49,6 +49,7 @@ import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupIte
 import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
+import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateActionStyle
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
@@ -79,6 +80,8 @@ data class IsuMessagesActions(
     val onFolder: (IsuFolder) -> Unit = {},
     val onRefresh: () -> Unit = {},
     val onRetry: () -> Unit = {},
+    /** `Войти через ITMO.ID` when ISU wants the user: the sign-in that leaves the phone an ITMO.ID session. */
+    val onSignIn: () -> Unit = {},
     val onMore: () -> Unit = {},
     val onOpen: (Long) -> Unit = {},
     val onClose: () -> Unit = {},
@@ -153,7 +156,11 @@ private fun MessageList(state: IsuMessagesUiState, actions: IsuMessagesActions) 
                 ContentState(
                     list.title.asString(),
                     description = list.text.asString(),
-                    action = ContentStateAction(text(CoreStrings.common_retry), actions.onRetry),
+                    action = if (list.signIn) {
+                        ContentStateAction(text(CoreStrings.auth_login_itmo_id), actions.onSignIn, ContentStateActionStyle.Filled)
+                    } else {
+                        ContentStateAction(text(CoreStrings.common_retry), actions.onRetry)
+                    },
                 )
             }
             is IsuMessagesList.Messages -> messages(list, actions)

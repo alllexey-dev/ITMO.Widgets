@@ -189,7 +189,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - A prototype `Сообщения ИСУ` in Профиль on both platforms: the own ISU inbox and archive, read on the device through
   the shared ISU client (ADR 0037). Unread counter, ten messages a page, a message's text without HTML,
   links in the browser, attachments in the system viewer. Opening a message leaves it unread in ISU; nothing goes to
-  Backend. The demo shows fictional messages.
+  Backend. The demo shows fictional messages. Without an ITMO.ID sign-in on the phone the screen offers
+  `Войти через ITMO.ID` and loads again after it.
 
 ### Widgets
 
