@@ -81,6 +81,12 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** A teacher's MyITMO timetable, from their person card: the feed of [UserSchedule] over other data. */
+    @Serializable
+    data class TeacherSchedule(val isu: Int, val name: String = "") : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
     /** [givenName] is ITMO.ID's, for the title; null without it. */
     @Serializable
     data class UserSport(val isu: Int, val name: String = "", val givenName: String? = null) : AppRoute {
@@ -265,6 +271,7 @@ object AppRoutes {
         subclass(UserFriends::class)
         subclass(UserProfile::class)
         subclass(UserSchedule::class)
+        subclass(TeacherSchedule::class)
         subclass(UserSport::class)
         subclass(SportPoints::class)
         subclass(Bell::class)

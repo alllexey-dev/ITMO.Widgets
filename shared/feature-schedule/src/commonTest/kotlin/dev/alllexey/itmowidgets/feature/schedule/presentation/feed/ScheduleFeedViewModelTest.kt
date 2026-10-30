@@ -45,8 +45,12 @@ class ScheduleFeedViewModelTest {
 
     private val foreground = FakeAppForeground()
 
-    private fun viewModel(days: FakeScheduleDays, state: SavedStateHandle = SavedStateHandle()) =
-        ScheduleFeedViewModel(state, days, time, FakeCalendarSync(), foreground, AppDispatchers(main.dispatcher, main.dispatcher, main.dispatcher))
+    private fun viewModel(
+        days: FakeScheduleDays,
+        state: SavedStateHandle = SavedStateHandle(),
+        teacher: FakeScheduleDays = FakeScheduleDays(),
+    ) =
+        ScheduleFeedViewModel(state, days, teacher, time, FakeCalendarSync(), foreground, AppDispatchers(main.dispatcher, main.dispatcher, main.dispatcher))
 
     @Test
     fun theFirstShowLoadsTheWindowOnceAndJumpsToToday() = runTest(main.dispatcher) {
@@ -173,6 +177,23 @@ class ScheduleFeedViewModelTest {
 
         assertEquals(false, shown.canPickFriend)
         assertEquals(listOf(window.copy(userIsu = FRIEND.isu)), days.refreshes)
+    }
+
+    @Test
+    fun aTeachersScreenReadsTheTeacherTimetableOnly() = runTest(main.dispatcher) {
+        val days = FakeScheduleDays()
+        val teacher = FakeScheduleDays()
+        val state = SavedStateHandle(
+            mapOf(UserScreenArgs.ISU to FRIEND.isu, UserScreenArgs.NAME to FRIEND.name, ScheduleFeedViewModel.ARG_TEACHER to true),
+        )
+        val vm = viewModel(days, state, teacher)
+
+        vm.refresh(RefreshMode.Silent)
+        val shown = vm.uiState.first { !it.loading }
+
+        assertEquals(false, shown.canPickFriend)
+        assertEquals(listOf(window.copy(userIsu = FRIEND.isu)), teacher.refreshes)
+        assertEquals(emptyList(), days.refreshes)
     }
 
     @Test

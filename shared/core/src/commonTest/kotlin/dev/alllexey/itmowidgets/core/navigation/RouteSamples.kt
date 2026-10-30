@@ -29,6 +29,7 @@ object RouteSamples {
         AppRoutes.UserFriends(100001, "Тестовый Пользователь"),
         AppRoutes.UserProfile(100001),
         AppRoutes.UserSchedule(100001, "Тестовый Пользователь"),
+        AppRoutes.TeacherSchedule(100001, "Тестовый Преподаватель"),
         AppRoutes.UserSport(100001),
         AppRoutes.SportPoints,
         AppRoutes.Bell,

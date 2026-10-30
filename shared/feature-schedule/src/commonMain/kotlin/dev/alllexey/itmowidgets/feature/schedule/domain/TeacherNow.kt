@@ -9,10 +9,7 @@ import kotlinx.datetime.LocalTime
  * not teaching and are left out; lessons sharing time, subject and place merge into one with all their groups.
  */
 fun teacherNow(lessons: List<Lesson>, at: LocalTime): TeacherNowLesson? {
-    val taught = lessons.filter { it.flowTypeId != ROOM_BOOKING_FLOW }
-        .groupBy { listOf(it.start, it.end, it.subjectName, it.room, it.building) }
-        .values
-        .sortedBy { it.first().start }
+    val taught = taughtLessons(lessons)
     val current = taught.firstOrNull { it.first().start <= at && at < it.first().end }
     val chosen = current ?: taught.firstOrNull { it.first().start > at } ?: return null
     val lesson = chosen.first()
@@ -24,10 +21,22 @@ fun teacherNow(lessons: List<Lesson>, at: LocalTime): TeacherNowLesson? {
         room = lesson.room?.raw,
         building = lesson.building?.raw,
         online = lesson.formatId == REMOTE_FORMAT,
-        groups = chosen.map { it.groupName }.filter(String::isNotEmpty).distinct(),
+        groups = chosen.groupNames(),
         isNow = current != null,
     )
 }
+
+/**
+ * A teacher's day [lessons] as they teach it, by start: room bookings left out, lessons sharing time, subject and
+ * place for several groups together.
+ */
+fun taughtLessons(lessons: List<Lesson>): List<List<Lesson>> = lessons.filter { it.flowTypeId != ROOM_BOOKING_FLOW }
+    .groupBy { listOf(it.start, it.end, it.subjectName, it.room, it.building) }
+    .values
+    .sortedBy { it.first().start }
+
+/** The groups of lessons taught together, each once. */
+fun List<Lesson>.groupNames(): List<String> = map { it.groupName }.filter(String::isNotEmpty).distinct()
 
 private const val ROOM_BOOKING_FLOW = 5
 private const val REMOTE_FORMAT = 3

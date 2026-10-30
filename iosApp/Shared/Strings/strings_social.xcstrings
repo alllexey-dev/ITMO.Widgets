@@ -337,6 +337,18 @@
         }
       }
     },
+    "person_teacher_schedule" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание занятий"
+          }
+        }
+      }
+    },
     "person_teaches_you" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",

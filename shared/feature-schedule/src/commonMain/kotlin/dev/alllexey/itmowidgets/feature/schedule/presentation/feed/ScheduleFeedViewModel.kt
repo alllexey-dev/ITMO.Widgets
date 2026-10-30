@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.schedule.CalendarSync
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleDays
+import dev.alllexey.itmowidgets.feature.schedule.domain.TeacherScheduleDays
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +46,8 @@ import kotlin.time.Duration.Companion.minutes
  * the top ([onVisibleDate]) and its ends ([onNearStart], [onNearEnd]): the window grows by two weeks there. A jump to a day (the
  * strip, the month sheet, `Сегодня`) brings its weeks in and asks the view to scroll there once ([jump] in the state).
  *
- * With `ARG_USER_ISU` the feed is that user's on a pushed screen; otherwise it is the tab's own schedule, or a friend's
+ * With `ARG_USER_ISU` the feed is that user's on a pushed screen, with [ARG_TEACHER] that teacher's MyITMO timetable
+ * from [TeacherScheduleDays]; otherwise it is the tab's own schedule, or a friend's
  * picked with [selectUser], kept across process death. The first show loads the window once ([refresh] with
  * `Silent`); after that only a pull, a retry and each return of the app to the foreground ([AppForeground]) reload it,
  * never a tab switch, a pop or a sheet closing.
@@ -53,13 +55,15 @@ import kotlin.time.Duration.Companion.minutes
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleFeedViewModel(
     private val savedStateHandle: SavedStateHandle,
-    private val days: ScheduleDays,
+    scheduleDays: ScheduleDays,
+    teacherDays: TeacherScheduleDays,
     private val time: AcademicTimeProvider,
     private val calendarSync: CalendarSync,
     foreground: AppForeground,
     private val dispatchers: AppDispatchers,
 ) : ViewModel() {
 
+    private val days: ScheduleDays = if (savedStateHandle.get<Boolean>(ARG_TEACHER) == true) teacherDays else scheduleDays
     private val owner = MutableStateFlow(initialOwner())
     private val window = MutableStateFlow(around(time.today()))
     private val visible = MutableStateFlow(time.today())
@@ -325,6 +329,7 @@ class ScheduleFeedViewModel(
     companion object {
         const val ARG_USER_ISU = UserScreenArgs.ISU
         const val ARG_USER_NAME = UserScreenArgs.NAME
+        const val ARG_TEACHER = "teacher_schedule"
         private const val STATE_FRIEND_ISU = "friend_isu"
         private const val STATE_FRIEND_NAME = "friend_name"
         private const val STATE_FRIEND_AVATAR = "friend_avatar"

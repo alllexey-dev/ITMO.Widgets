@@ -64,6 +64,7 @@
     <string name="person_lesson_online">Онлайн</string>
     <string name="person_lesson_for">%1$s у %2$s</string>
     <string name="person_section_rooms">Где найти</string>
+    <string name="person_teacher_schedule">Расписание занятий</string>
     <string name="person_section_education">Учёба</string>
     <string name="person_isu_copy">Номер ИСУ %1$d, скопировать</string>
     <string name="person_isu_copied">Номер ИСУ скопирован</string>

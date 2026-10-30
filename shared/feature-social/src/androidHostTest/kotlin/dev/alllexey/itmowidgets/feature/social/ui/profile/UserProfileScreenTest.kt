@@ -121,6 +121,20 @@ class UserProfileScreenTest {
     }
 
     @Test
+    fun aTeacherCardOpensTheTeacherTimetable() = runComposeUiTest {
+        var opened = 0
+        setContent {
+            ItmoTheme {
+                UserProfileScreen(SocialSamples.card("teacher", teaches = "no"), UserProfileActions(onTeacherSchedule = { opened++ }))
+            }
+        }
+
+        scrollTo(UserProfileTestTags.TEACHER_SCHEDULE)
+        onNodeWithTag(UserProfileTestTags.TEACHER_SCHEDULE).performClick()
+        assertEquals(1, opened)
+    }
+
+    @Test
     fun theStatesOfferRetryOnlyForAFailureAndShareOnlyForACard() = runComposeUiTest {
         var state: UserProfileUiState by mutableStateOf(UserProfileUiState.Loading)
         var retries = 0

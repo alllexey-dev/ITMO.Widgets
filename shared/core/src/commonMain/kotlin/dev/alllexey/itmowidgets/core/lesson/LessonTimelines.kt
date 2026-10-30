@@ -91,11 +91,12 @@ object LessonTimelines {
         )
     }
 
-    /** `Лекция, Белов П. И.`; the type alone without a teacher. */
+    /** `Лекция, Белов П. И.`, in a teacher's timetable `Лекция, M3206, M3207`; the type alone without either. */
     fun byline(lesson: DayLesson): UiText = UiText.Joined(
         listOfNotNull(
             lessonTypeName(lesson.typeId),
             lesson.teacher?.trim()?.takeIf(String::isNotEmpty)?.let { UiText.Dynamic(shortPersonName(it)) },
+            lesson.groups.takeIf { it.isNotEmpty() }?.let { UiText.Dynamic(it.joinToString(BYLINE_SEPARATOR)) },
         ),
         BYLINE_SEPARATOR,
     )
