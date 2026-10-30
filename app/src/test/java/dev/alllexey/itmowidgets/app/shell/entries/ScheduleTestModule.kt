@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
 import androidx.lifecycle.SavedStateHandle
+import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.location.BuildingDirectory
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -30,6 +31,7 @@ import dev.alllexey.itmowidgets.feature.schedule.data.days.ScheduleDaysImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.local.CacheEntry
 import dev.alllexey.itmowidgets.feature.schedule.data.local.ScheduleLocalDataSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleDays
+import dev.alllexey.itmowidgets.feature.schedule.domain.TeacherScheduleDays
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.friends.FriendPickerViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonSheetViewModel
@@ -56,7 +58,8 @@ internal fun scheduleTestModule(schedules: FakeScheduleRepository = ScheduleSamp
     single<ScheduleDays> {
         ScheduleDaysImpl(schedules, NoCache, FakeScheduleChangesRepository(), NoPendingSport, NoAutoSign, ScheduleSamples.time)
     }
-    viewModel { ScheduleFeedViewModel(get<SavedStateHandle>(), get(), get(), NoCalendarSync, FakeAppForeground(), AppDispatchers(Dispatchers.Main, Dispatchers.Main, Dispatchers.Main)) }
+    single<TeacherScheduleDays> { NoTeacherLessons }
+    viewModel { ScheduleFeedViewModel(get<SavedStateHandle>(), get(), get(), get(), NoCalendarSync, FakeAppForeground(), AppDispatchers(Dispatchers.Main, Dispatchers.Main, Dispatchers.Main)) }
     viewModel { ScheduleMonthViewModel(get<SavedStateHandle>(), get(), get()) }
     viewModel { FriendPickerViewModel(get<SavedStateHandle>(), get(), get(), get()) }
     viewModel {
@@ -106,6 +109,11 @@ private object NoCache : ScheduleLocalDataSource {
 
 private object NoAutoSign : SchedulePreferencesRepository {
     override fun observeSportAutoSignEnabled(): Flow<Boolean> = flowOf(false)
+}
+
+private object NoTeacherLessons : TeacherScheduleDays {
+    override fun observe(userIsu: Int?, from: LocalDate, to: LocalDate): Flow<List<LessonDay>> = flowOf(emptyList())
+    override suspend fun refresh(userIsu: Int?, from: LocalDate, to: LocalDate): AppResult<Unit> = AppResult.Success(Unit)
 }
 
 private object NoPendingSport : PendingSportBookingsRepository {

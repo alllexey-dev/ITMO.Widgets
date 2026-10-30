@@ -107,6 +107,7 @@ private fun userProfileExits(
     onInvite = { context.shareSocialInvitation() },
     onFriends = { page -> navigator.open(AppRoutes.UserFriends(page.isu, page.displayName.resolve(context))) },
     onSchedule = { page -> navigator.open(AppRoutes.UserSchedule(page.isu, page.displayName.resolve(context))) },
+    onTeacherSchedule = { page -> navigator.open(AppRoutes.TeacherSchedule(page.isu, page.displayName.resolve(context))) },
     onSport = { page ->
         navigator.open(AppRoutes.UserSport(page.isu, page.displayName.resolve(context), page.givenName))
     },

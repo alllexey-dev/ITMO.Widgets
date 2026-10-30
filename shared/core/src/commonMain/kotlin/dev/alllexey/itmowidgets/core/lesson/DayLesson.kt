@@ -13,6 +13,7 @@ import kotlin.time.Instant
  * building in full. [online] is MyITMO's remote format; [isOnline] also counts a placeholder room such as `дистант`,
  * and such lessons have no place line. [videoUrl] is the meeting link. [withYou] marks a lesson of someone else's
  * schedule that the viewer attends too (`Вы`). [queue] is the place of a [SportMark.QUEUED] lesson when Backend knows it.
+ * [groups] are the study groups a teacher's timetable gives the lesson to, empty in a student's schedule.
  */
 data class DayLesson(
     val start: LocalTime,
@@ -30,6 +31,7 @@ data class DayLesson(
     val sport: SportMark? = null,
     val queue: QueuePlace? = null,
     val withYou: Boolean = false,
+    val groups: List<String> = emptyList(),
 ) {
     /** Remote by format, or with a placeholder instead of a room or a building (`дистант`, `онлайн`). */
     val isOnline: Boolean get() = online || isOnlinePlaceholder(room) || isOnlinePlaceholder(building)

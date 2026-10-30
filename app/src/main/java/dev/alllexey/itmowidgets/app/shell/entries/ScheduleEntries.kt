@@ -51,13 +51,20 @@ internal data class FriendPick(val user: SelectedUser?)
 internal data class DatePick(val date: LocalDate)
 
 /**
- * The schedule's keys: another user's schedule, the lesson sheet (a timetable lesson or an own sport queue), the
+ * The schedule's keys: another user's or a teacher's schedule, the lesson sheet (a timetable lesson or an own sport queue), the
  * friend picker and the month sheet. The picker and the month sheet answer the schedule tab on the result bus and
  * close; every sheet closes before a screen opens in its place.
  */
 internal fun EntryRegistry.Builder.scheduleEntries() {
     entry<AppRoutes.UserSchedule>(
         args = { bundleOf(UserScreenArgs.ISU to it.isu, UserScreenArgs.NAME to it.name) },
+    ) { key, navigator ->
+        UserScheduleEntry(onBack = { navigator.close(key) }, navigator)
+    }
+    entry<AppRoutes.TeacherSchedule>(
+        args = {
+            bundleOf(UserScreenArgs.ISU to it.isu, UserScreenArgs.NAME to it.name, ScheduleFeedViewModel.ARG_TEACHER to true)
+        },
     ) { key, navigator ->
         UserScheduleEntry(onBack = { navigator.close(key) }, navigator)
     }
@@ -114,7 +121,7 @@ internal fun ScheduleTabRoot(navigator: Nav3AppNavigator) {
     ScheduleFeedRoute(host, viewModel = entryViewModel(), requests = requestFlow)
 }
 
-/** Another user's schedule from their profile: the same feed on a pushed screen, without the picker. */
+/** Another user's or a teacher's schedule from their profile: the same feed on a pushed screen, without the picker. */
 @Composable
 private fun UserScheduleEntry(onBack: () -> Unit, navigator: Nav3AppNavigator) {
     val sport = rememberSportDetailsRedirect()
