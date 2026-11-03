@@ -36,7 +36,7 @@ androidxWebkit = "1.14.0"
 
 # Tests and screenshots (ADR 0022).
 robolectric = "4.17"
-roborazzi = "1.76.0"
+roborazzi = "1.77.0"
 composablePreviewScanner = "0.9.3"
 turbine = "1.2.1"
 # Advisory buildHealth in android-nightly.yml only.
