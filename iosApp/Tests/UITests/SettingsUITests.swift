@@ -147,10 +147,11 @@ final class SettingsUITests: XCTestCase {
         openSettings(app)
         attachScreenshot(named: "root-ax1")
 
-        // The form is lazy: the last row exists once it scrolls near the screen.
+        // The form is lazy: the last row exists once it scrolls near the screen. The page's identifier is on the
+        // static header too, so the swipe goes to its scroll view.
         let about = element(app, "settings.row.page_about")
         for _ in 0..<6 where !about.exists || !about.isHittable {
-            element(app, "settings.page.root").swipeUp()
+            app.scrollViews["settings.page.root"].swipeUp()
         }
         XCTAssertTrue(about.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(about.isShown, "the last row is reachable and drawn at AX1")
@@ -178,7 +179,7 @@ final class SettingsUITests: XCTestCase {
     private func openPage(_ app: XCUIApplication, _ page: String) {
         openSettings(app)
         let row = element(app, "settings.row.page_\(page)")
-        if !row.isHittable { element(app, "settings.page.root").swipeUp() }
+        if !row.isHittable { app.scrollViews["settings.page.root"].swipeUp() }
         row.tap()
         XCTAssertTrue(element(app, "settings.page.\(page)").waitForExistence(timeout: stepTimeout))
     }
