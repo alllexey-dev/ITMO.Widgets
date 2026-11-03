@@ -60,6 +60,12 @@ internal class ScheduleFeedUserPreview {
     fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.FriendFeed.copy(friend = null, canPickFriend = false), actions(pushed = true)) }
 }
 
+internal class ScheduleFeedTeacherPreview {
+    @Preview(name = "teacher", heightDp = SCREEN_HEIGHT)
+    @Composable
+    fun ScheduleFeed() = ItmoPreview { ScheduleFeedScreen(ScheduleSamples.TeacherFeed, actions(pushed = true)) }
+}
+
 internal class ScheduleFeedOverlapPreview {
     @Preview(name = "overlap", heightDp = SCREEN_HEIGHT)
     @Composable
