@@ -13,9 +13,15 @@ import kotlinx.datetime.LocalDate
 // The Koin parameters of the schedule's SwiftUI screens: a SavedStateHandle with what Android's shell seeds from the
 // route, since a SwiftUI store has no saved-state registry.
 
-/** The feed: the tab's own schedule for [userIsu] 0, else that user's on a pushed screen. */
-fun scheduleFeedParameters(userIsu: Int, name: String): List<Any> = listOf(
-    SavedStateHandle(if (userIsu > 0) mapOf(UserScreenArgs.ISU to userIsu, UserScreenArgs.NAME to name) else emptyMap()),
+/** The feed: the tab's own schedule for [userIsu] 0, else that user's on a pushed screen, or that [teacher]'s timetable. */
+fun scheduleFeedParameters(userIsu: Int, name: String, teacher: Boolean): List<Any> = listOf(
+    SavedStateHandle(
+        if (userIsu > 0) {
+            mapOf(UserScreenArgs.ISU to userIsu, UserScreenArgs.NAME to name, ScheduleFeedViewModel.ARG_TEACHER to teacher)
+        } else {
+            emptyMap()
+        },
+    ),
 )
 
 /** The lesson sheet of [route], `AppRoutes.LessonDetails` or `AppRoutes.PendingSportDetails`. */

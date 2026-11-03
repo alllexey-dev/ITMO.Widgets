@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 
 extension Routes {
-    /// The schedule root (`ScheduleScreen`), another user's schedule pushed on the selected tab's stack, and the
+    /// The schedule root (`ScheduleScreen`), another user's or a teacher's schedule pushed on the selected tab's stack, and the
     /// lesson sheet, the month sheet and the friend picker above the shell, all SwiftUI.
     static func schedule(_ route: any AppRoute) -> RouteTarget {
         switch route {
@@ -10,6 +10,10 @@ extension Routes {
             let isu = user.isu
             let name = user.name
             return .swiftUI { AnyView(UserScheduleScreen(isu: isu, name: name)) }
+        case let teacher as AppRoutes.TeacherSchedule:
+            let isu = teacher.isu
+            let name = teacher.name
+            return .swiftUI { AnyView(UserScheduleScreen(isu: isu, name: name, teacher: true)) }
         case is AppRoutes.LessonDetails, is AppRoutes.PendingSportDetails:
             return .swiftUISheet { AnyView(LessonSheet(route: route)) }
         case let month as AppRoutes.ScheduleMonth:

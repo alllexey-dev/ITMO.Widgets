@@ -3,7 +3,7 @@
 Product behaviour: [Как это работает: расписание](../how-it-works/schedule.md).
 
 `feature/schedule` is the Расписание tab: an infinite feed of days with a week strip, the month sheet, the
-friend picker and a friend's schedule in the same feed, and the lesson sheet (`Лист пары`) that every lesson list
+friend picker and a friend's or a teacher's schedule in the same feed, and the lesson sheet (`Лист пары`) that every lesson list
 opens. The background change check is in [schedule changes](schedule-changes.md), the phone calendar and `.ics`
 export in [calendar](calendar.md).
 
@@ -75,6 +75,18 @@ the caller decides how often. The lesson running at academic now, else the next 
 (`flowTypeId` 5) are left out and lessons with the same time, subject and place for several groups merge into one.
 A student's or unknown ISU answers with days without lessons, so null. Demo answers from the demo week. Read only:
 never uploaded, nothing cached.
+
+## A teacher's timetable
+
+`AppRoutes.TeacherSchedule(isu, name)` (from `Расписание занятий` on the [person card](social.md#person-profile)) is
+the pushed feed of `AppRoutes.UserSchedule` with `ScheduleFeedViewModel.ARG_TEACHER`: the view model reads
+`TeacherScheduleDays` instead of `ScheduleDays`. `TeacherScheduleDaysImpl` asks My ITMO's teacher timetable
+(`ScheduleApi.getTeacherSchedule`) for each range the feed loads and keeps the answers in memory, one instance per
+feed: nothing on disk, nothing uploaded, no Backend opt-in needed. Room bookings (`flowTypeId` 5) are left out;
+lessons with the same time, subject and place for several groups are one `DayLesson` with every group in `groups`
+(the row's byline `Лекция, M3206, M3207`, the sheet's flow), the same grouping as
+[what a teacher gives now](#what-a-teacher-gives-now). A student's or unknown ISU answers with days without lessons.
+Demo answers from the demo week.
 
 ## The feed
 

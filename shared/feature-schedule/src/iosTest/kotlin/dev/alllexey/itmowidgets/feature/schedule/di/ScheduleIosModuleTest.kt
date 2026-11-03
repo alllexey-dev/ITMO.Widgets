@@ -120,8 +120,9 @@ class ScheduleIosModuleTest {
         definitions.filter { it.primaryType !in viewModels }
             .forEach { definition -> koin.get<Any>(definition.primaryType, definition.qualifier) }
 
-        koin.get<ScheduleFeedViewModel> { parametersOf(*scheduleFeedParameters(0, "").toTypedArray()) }
-        koin.get<ScheduleFeedViewModel> { parametersOf(*scheduleFeedParameters(USER, "Тестовый Пользователь").toTypedArray()) }
+        koin.get<ScheduleFeedViewModel> { parametersOf(*scheduleFeedParameters(0, "", false).toTypedArray()) }
+        koin.get<ScheduleFeedViewModel> { parametersOf(*scheduleFeedParameters(USER, "Тестовый Пользователь", false).toTypedArray()) }
+        koin.get<ScheduleFeedViewModel> { parametersOf(*scheduleFeedParameters(USER, "Тестовый Пользователь", true).toTypedArray()) }
         koin.get<ScheduleMonthViewModel> { parametersOf(*scheduleMonthParameters(AppRoutes.ScheduleMonth(DATE)).toTypedArray()) }
         koin.get<FriendPickerViewModel> { parametersOf(*friendPickerParameters(AppRoutes.FriendSelector()).toTypedArray()) }
         koin.get<LessonSheetViewModel> { parametersOf(*lessonSheetParameters(AppRoutes.LessonDetails(LESSON)).toTypedArray()) }

@@ -94,6 +94,7 @@ class ScheduleEntriesTest {
 
         assertRendersAndCloses(AppRoutes.UserSchedule(FRIEND_ISU, FRIEND_NAME), ScheduleFeedTestTags.LIST)
         assertTrue(schedules.observed.any { it.userIsu == FRIEND_ISU })
+        assertRendersAndCloses(AppRoutes.TeacherSchedule(FRIEND_ISU, FRIEND_NAME), ScheduleFeedTestTags.LIST)
 
         assertSheetRenders(AppRoutes.LessonDetails(LESSON_ARGS), LessonSheetTestTags.ROOM)
         assertSheetRenders(

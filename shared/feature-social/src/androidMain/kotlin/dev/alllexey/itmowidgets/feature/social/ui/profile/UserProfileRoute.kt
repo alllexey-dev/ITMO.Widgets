@@ -50,6 +50,8 @@ class UserProfileExits(
     val onCopyIsu: (isu: Int) -> Unit = {},
     val onFriends: (UserProfileUiState.Content) -> Unit = {},
     val onSchedule: (UserProfileUiState.Content) -> Unit = {},
+    /** `Расписание занятий` in `Преподавание`: the teacher's MyITMO timetable. */
+    val onTeacherSchedule: (UserProfileUiState.Content) -> Unit = {},
     val onSport: (UserProfileUiState.Content) -> Unit = {},
     /** `Пригласить в ITMO.Widgets`: shares the invitation. */
     val onInvite: () -> Unit = {},
@@ -121,6 +123,7 @@ fun UserProfileRoute(exits: UserProfileExits, viewModel: UserProfileViewModel = 
         onRemoveFriend = viewModel::requestRemoveFriend,
         onFriends = { withPage(exits.onFriends) },
         onSchedule = { withPage(exits.onSchedule) },
+        onTeacherSchedule = { withPage(exits.onTeacherSchedule) },
         onSport = { withPage(exits.onSport) },
         onToggleSummary = viewModel::toggleSummaryScales,
         review = TeacherReviewActions(

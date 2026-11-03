@@ -30,10 +30,12 @@ import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataS
 import dev.alllexey.itmowidgets.feature.schedule.data.remote.ScheduleRemoteDataSourceImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.repository.ScheduleRepositoryImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.days.ScheduleDaysImpl
+import dev.alllexey.itmowidgets.feature.schedule.data.days.TeacherScheduleDaysImpl
 import dev.alllexey.itmowidgets.feature.schedule.data.widget.ScheduleWidgetDataProvider
 import dev.alllexey.itmowidgets.feature.schedule.domain.LessonFriendsRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleDays
 import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleRepository
+import dev.alllexey.itmowidgets.feature.schedule.domain.TeacherScheduleDays
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.CalendarSyncRepository
 import dev.alllexey.itmowidgets.feature.schedule.domain.calendar.OwnScheduleSource
 import dev.alllexey.itmowidgets.feature.schedule.domain.changes.ScheduleChangesRepository
@@ -91,6 +93,8 @@ val scheduleDataModule = module {
         bind<ScheduleDays>()
         bind<DayLessonsGateway>()
     }
+    // One per feed: it holds that feed's fetched days in memory, gone with the feed.
+    factoryOf(::TeacherScheduleDaysImpl) { bind<TeacherScheduleDays>() }
     single<BellSource>(qualifier = scheduleChangesBellQualifier) { ScheduleChangesBellSource(get()) }
 
     // The phone calendar sync: the platform supplies `PhoneCalendars` and `CalendarSyncScheduler`.

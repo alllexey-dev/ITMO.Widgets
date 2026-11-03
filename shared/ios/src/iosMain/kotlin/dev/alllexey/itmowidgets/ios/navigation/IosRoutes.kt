@@ -105,6 +105,7 @@ object IosRoutes {
         AppRoutes.UserFriends::class to RouteFeature.SOCIAL,
         AppRoutes.UserProfile::class to RouteFeature.SOCIAL,
         AppRoutes.UserSchedule::class to RouteFeature.SCHEDULE,
+        AppRoutes.TeacherSchedule::class to RouteFeature.SCHEDULE,
         AppRoutes.Bell::class to RouteFeature.HOME,
         AppRoutes.FriendSelector::class to RouteFeature.SCHEDULE,
         AppRoutes.ScheduleMonth::class to RouteFeature.SCHEDULE,

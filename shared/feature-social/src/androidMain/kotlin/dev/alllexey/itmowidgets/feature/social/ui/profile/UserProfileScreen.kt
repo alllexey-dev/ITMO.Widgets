@@ -107,6 +107,7 @@ class UserProfileActions(
     val onRemoveFriend: () -> Unit = {},
     val onFriends: () -> Unit = {},
     val onSchedule: () -> Unit = {},
+    val onTeacherSchedule: () -> Unit = {},
     val onSport: () -> Unit = {},
     val onToggleSummary: () -> Unit = {},
     val review: TeacherReviewActions = TeacherReviewActions(),
@@ -130,6 +131,7 @@ object UserProfileTestTags {
     const val REMOVE = "user_profile_remove"
     const val FRIENDS = "user_profile_friends"
     const val SCHEDULE = "user_profile_schedule"
+    const val TEACHER_SCHEDULE = "user_profile_teacher_schedule"
     const val SPORT = "user_profile_sport"
     const val REVIEWS = "user_profile_reviews"
 }
@@ -352,7 +354,10 @@ private fun CardAction.icon(): DrawableResource = when (this) {
     CardAction.INVITE -> Res.drawable.ic_share
 }
 
-/** `Преподавание`: the subjects they teach the viewer and where to find them, then the reviews with their summary. */
+/**
+ * `Преподавание`: the subjects they teach the viewer, where to find them and their timetable, then the reviews with
+ * their summary.
+ */
 private fun LazyListScope.teaching(state: UserProfileUiState.Content, actions: UserProfileActions) {
     val block: TeachingBlock = state.teaching ?: return
     item(key = "teaching:title", contentType = "title") {
@@ -369,29 +374,35 @@ private fun LazyListScope.teaching(state: UserProfileUiState.Content, actions: U
             }
         }
     }
-    if (block.subjects.isNotEmpty() || block.rooms.isNotEmpty()) {
-        item(key = "teaching", contentType = "rows") {
-            ListGroup {
-                block.subjects.forEach { subject ->
-                    item {
-                        ListRow(
-                            subject.name,
-                            subtitle = subject.note.asString(),
-                            icon = painterResource(Res.drawable.ic_school),
-                            iconTone = Tone.Primary,
-                        )
-                    }
+    item(key = "teaching", contentType = "rows") {
+        ListGroup {
+            block.subjects.forEach { subject ->
+                item {
+                    ListRow(
+                        subject.name,
+                        subtitle = subject.note.asString(),
+                        icon = painterResource(Res.drawable.ic_school),
+                        iconTone = Tone.Primary,
+                    )
                 }
-                block.rooms.forEach { room ->
-                    item {
-                        ListRow(
-                            text(SocialStrings.person_section_rooms),
-                            subtitle = listOfNotNull(room.title.asString(), room.detail).joinToString(", "),
-                            icon = painterResource(Res.drawable.ic_location_on),
-                            iconTone = Tone.Neutral,
-                        )
-                    }
+            }
+            block.rooms.forEach { room ->
+                item {
+                    ListRow(
+                        text(SocialStrings.person_section_rooms),
+                        subtitle = listOfNotNull(room.title.asString(), room.detail).joinToString(", "),
+                        icon = painterResource(Res.drawable.ic_location_on),
+                        iconTone = Tone.Neutral,
+                    )
                 }
+            }
+            item {
+                OpenRow(
+                    SocialStrings.person_teacher_schedule,
+                    Res.drawable.ic_calendar_month,
+                    UserProfileTestTags.TEACHER_SCHEDULE,
+                    actions.onTeacherSchedule,
+                )
             }
         }
     }

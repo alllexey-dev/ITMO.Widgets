@@ -85,6 +85,7 @@ struct UserProfileScreen: View {
             },
             removeFriend: { viewModel.requestRemoveFriend() },
             schedule: { open(AppRoutes.UserSchedule(isu: $0.isu, name: $0.displayName.resolved)) },
+            teacherSchedule: { open(AppRoutes.TeacherSchedule(isu: $0.isu, name: $0.displayName.resolved)) },
             sport: { open(AppRoutes.UserSport(isu: $0.isu, name: $0.displayName.resolved, givenName: $0.givenName)) },
             friends: { open(AppRoutes.UserFriends(isu: $0.isu, name: $0.displayName.resolved)) },
             toggleSummary: { viewModel.toggleSummaryScales() },
@@ -134,6 +135,7 @@ struct UserProfileContentActions {
     var act: (UserProfileUiStateContent, CardAction) -> Void = { _, _ in }
     var removeFriend: () -> Void = {}
     var schedule: (UserProfileUiStateContent) -> Void = { _ in }
+    var teacherSchedule: (UserProfileUiStateContent) -> Void = { _ in }
     var sport: (UserProfileUiStateContent) -> Void = { _ in }
     var friends: (UserProfileUiStateContent) -> Void = { _ in }
     var toggleSummary: () -> Void = {}
@@ -197,7 +199,8 @@ struct UserProfileContent: View {
         }
     }
 
-    /// Teaching: the lesson they give now, the subjects they teach the viewer and where to find them, then the reviews with their summary.
+    /// Teaching: the lesson they give now, the subjects they teach the viewer, where to find them and their timetable,
+    /// then the reviews with their summary.
     @ViewBuilder
     private func teaching(_ page: UserProfileUiStateContent) -> some View {
         if let block = page.teaching {
@@ -215,19 +218,20 @@ struct UserProfileContent: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("user_profile_now")
             }
-            if !block.subjects.isEmpty || !block.rooms.isEmpty {
-                ItmoListGroup {
-                    ForEach(block.subjects, id: \.name) { subject in
-                        ItmoRow(title: subject.name, subtitle: subject.note.resolved, symbol: .school, tone: .primary)
-                    }
-                    ForEach(Array(block.rooms.enumerated()), id: \.offset) { _, room in
-                        ItmoRow(
-                            title: AppStrings.string("person_section_rooms"),
-                            subtitle: [room.title.resolved, room.detail].compactMap { $0 }.joined(separator: ", "),
-                            symbol: .locationOn,
-                            tone: .neutral
-                        )
-                    }
+            ItmoListGroup {
+                ForEach(block.subjects, id: \.name) { subject in
+                    ItmoRow(title: subject.name, subtitle: subject.note.resolved, symbol: .school, tone: .primary)
+                }
+                ForEach(Array(block.rooms.enumerated()), id: \.offset) { _, room in
+                    ItmoRow(
+                        title: AppStrings.string("person_section_rooms"),
+                        subtitle: [room.title.resolved, room.detail].compactMap { $0 }.joined(separator: ", "),
+                        symbol: .locationOn,
+                        tone: .neutral
+                    )
+                }
+                opening("person_teacher_schedule", .calendarMonth, id: "user_profile_teacher_schedule") {
+                    actions.teacherSchedule(page)
                 }
             }
             if let reviews = page.reviews {

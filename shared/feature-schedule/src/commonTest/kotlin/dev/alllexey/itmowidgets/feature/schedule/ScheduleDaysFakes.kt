@@ -5,7 +5,7 @@ import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.lesson.LessonTarget
 import dev.alllexey.itmowidgets.core.navigation.LessonDetailsArgs
 import dev.alllexey.itmowidgets.core.result.AppResult
-import dev.alllexey.itmowidgets.feature.schedule.domain.ScheduleDays
+import dev.alllexey.itmowidgets.feature.schedule.domain.TeacherScheduleDays
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -19,7 +19,7 @@ internal data class DaysRefresh(val userIsu: Int?, val from: LocalDate, val to: 
  * Days per user (null: the own) that observers read in their range; refreshes are recorded in [refreshes] and answer
  * [result] for the own schedule, [results] for another user's.
  */
-internal class FakeScheduleDays(vararg own: LessonDay) : ScheduleDays {
+internal class FakeScheduleDays(vararg own: LessonDay) : TeacherScheduleDays {
     private val byUser = mutableMapOf<Int?, MutableStateFlow<List<LessonDay>>>()
     val refreshes = mutableListOf<DaysRefresh>()
     var onRefresh: suspend (DaysRefresh) -> Unit = {}

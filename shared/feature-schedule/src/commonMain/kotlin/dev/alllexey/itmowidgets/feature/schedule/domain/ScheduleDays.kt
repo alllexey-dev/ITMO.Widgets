@@ -16,3 +16,6 @@ interface ScheduleDays {
     /** Fetches [userIsu]'s schedule of [from]..[to]; for the own one the sport queues too. */
     suspend fun refresh(userIsu: Int?, from: LocalDate, to: LocalDate): AppResult<Unit>
 }
+
+/** The days of a teacher's MyITMO timetable, [userIsu] being the teacher's: the feed of `AppRoutes.TeacherSchedule`. */
+interface TeacherScheduleDays : ScheduleDays

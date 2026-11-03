@@ -207,6 +207,30 @@ object ScheduleSamples {
     val FriendFeed: ScheduleFeedUiState
         get() = feed(FeedOwner.Friend(Polina), friendDays, known = known.filter { it <= Monday.plus(1, DateTimeUnit.DAY) }.toSet())
 
+    /** Lebedev's timetable on a pushed screen: the groups in place of the teacher, a lecture to two groups at once. */
+    val TeacherFeed: ScheduleFeedUiState
+        get() = feed(
+            FeedOwner.Other(SelectedUser(300003, Lebedev, null)),
+            listOf(
+                LessonDay(
+                    Monday,
+                    listOf(
+                        lesson("08:20", "09:50", Matan, 1, null, "1506", Kronva).copy(groups = listOf("M3204", "M3205")),
+                        lesson("11:40", "13:10", Matan, 3, null, "2337", Kronva).copy(groups = listOf("M3204")),
+                    ),
+                    null,
+                    2,
+                ),
+                LessonDay(
+                    Monday.plus(2, DateTimeUnit.DAY),
+                    listOf(lesson("10:00", "11:30", Matan, 3, null, "1410", Kronva).copy(groups = listOf("M3205"))),
+                    null,
+                    2,
+                ),
+            ),
+            known = known.filter { it <= Monday.plus(6, DateTimeUnit.DAY) }.toSet(),
+        )
+
     /**
      * Two lessons at once on Monday at 16:30: a lab 15:30-17:00 and a room booking 16:00-20:30. One now marker on the
      * lab, the rail fills once, the booking says `одновременно с «Веб-программирование»`.

@@ -9,7 +9,7 @@ import UIKit
 struct ScheduleScreen: View {
     let router: AppRouter
     @State private var model = ObservableViewModel(state: \.uiState) { store in
-        ScheduleFeedModels.make(store, isu: 0, name: "")
+        ScheduleFeedModels.make(store, isu: 0, name: "", teacher: false)
     }
     @State private var messages = ScheduleMessages()
 
@@ -38,8 +38,8 @@ struct ScheduleScreen: View {
     }
 }
 
-/// Another user's schedule (`AppRoutes.UserSchedule`, from a profile): the same feed pushed on the tab's stack,
-/// without the picker; every lesson opens the lesson sheet.
+/// Another user's schedule (`AppRoutes.UserSchedule`, from a profile) or a teacher's (`AppRoutes.TeacherSchedule`):
+/// the same feed pushed on the tab's stack, without the picker; every lesson opens the lesson sheet.
 struct UserScheduleScreen: View {
     let isu: Int32
     let name: String
@@ -47,11 +47,11 @@ struct UserScheduleScreen: View {
     @State private var model: ObservableViewModel<ScheduleFeedViewModel, ScheduleFeedUiState>
     @State private var messages = ScheduleMessages()
 
-    init(isu: Int32, name: String) {
+    init(isu: Int32, name: String, teacher: Bool = false) {
         self.isu = isu
         self.name = name
         _model = State(initialValue: ObservableViewModel(state: \.uiState) { store in
-            ScheduleFeedModels.make(store, isu: isu, name: name)
+            ScheduleFeedModels.make(store, isu: isu, name: name, teacher: teacher)
         })
     }
 
@@ -81,10 +81,10 @@ struct FeedViewHost {
 }
 
 enum ScheduleFeedModels {
-    /// The feed's ViewModel: the tab's own schedule for `isu` 0, else that user's (`scheduleFeedParameters`).
+    /// The feed's ViewModel: the tab's own schedule for `isu` 0, else that user's or teacher's (`scheduleFeedParameters`).
     @MainActor
-    static func make(_ store: ScreenViewModelStore, isu: Int32, name: String) -> ScheduleFeedViewModel {
-        let parameters: [Any?] = ScheduleIosParametersKt.scheduleFeedParameters(userIsu: isu, name: name)
+    static func make(_ store: ScreenViewModelStore, isu: Int32, name: String, teacher: Bool) -> ScheduleFeedViewModel {
+        let parameters: [Any?] = ScheduleIosParametersKt.scheduleFeedParameters(userIsu: isu, name: name, teacher: teacher)
         guard let model = store.resolve(type: ScheduleFeedViewModel.self, parameters: parameters) as? ScheduleFeedViewModel
         else {
             preconditionFailure("Koin resolved no ScheduleFeedViewModel")
