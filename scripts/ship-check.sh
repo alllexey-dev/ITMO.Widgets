@@ -51,7 +51,7 @@ ship_dir=${SHIP_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/itmo-widgets-ship}
 verify_sh="$root/scripts/verify.sh"
 adb="$ANDROID_HOME/platform-tools/adb"
 assets="$root/app/src/androidTest/assets/upgrade-2.2"
-sign_in_strings="$root/shared/feature-account/src/commonMain/composeResources/values/strings_auth.xml"
+sign_in_strings="$root/shared/core/src/commonMain/composeResources/values/strings_common.xml"
 
 usage() {
   sed -n '2,2p' "$0" | sed 's/^# //' >&2
