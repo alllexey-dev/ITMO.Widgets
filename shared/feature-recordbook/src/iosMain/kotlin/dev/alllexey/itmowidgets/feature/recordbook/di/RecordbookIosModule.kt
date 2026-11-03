@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.di
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.network.IsuWebClient
 import dev.alllexey.itmowidgets.core.network.darwinHttpEngine
 import dev.alllexey.itmowidgets.core.work.AppRefreshScheduler
 import dev.alllexey.itmowidgets.core.work.RefreshStep
@@ -50,6 +51,9 @@ fun recordbookIosModule(host: BarsWebHost): Module = module {
     single<HttpClientEngine>(barsEngineQualifier) { darwinHttpEngine() }
     single { BarsLogin(get(barsEngineQualifier)) }
     singleOf(::KeychainItmoIdCookies) { bind<ItmoIdCookies>() }
+    // The on-device ISU client (Wi-Fi, ISU messages) sits with the cookies it sends, so the core module needs no
+    // recordbook binding.
+    single { IsuWebClient(get(), get()) }
     single { ItmoIdCookieExport(host, get(), get(), get()) }
     single<BarsSilentLogin> { WebViewBarsSilentLogin(host, get(), get(), get()) }
     single(createdAtStart = true) {

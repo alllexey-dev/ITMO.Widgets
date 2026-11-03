@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.demo.DemoPeople
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.diagnostics.AppLog
+import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.notification.FcmTokenSync
 import dev.alllexey.itmowidgets.core.notification.PushDeviceRegistration
 import dev.alllexey.itmowidgets.core.platform.BundleIdentifiers
@@ -17,6 +18,7 @@ import dev.alllexey.itmowidgets.core.session.BackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.DefaultBackendIdentitySync
 import dev.alllexey.itmowidgets.core.session.BackendDeviceSession
 import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.core.session.SessionRepository
 import dev.alllexey.itmowidgets.core.session.SessionSnapshot
 import dev.alllexey.itmowidgets.core.session.SessionSnapshotWriter
@@ -30,6 +32,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.KeyTextResolver
+import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.core.testing.RecordingAppLog
 import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.feature.auth.data.SessionDataCleaners
@@ -43,6 +46,7 @@ import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
 import dev.alllexey.itmowidgets.feature.connections.data.PairingHost
+import dev.alllexey.itmowidgets.feature.connections.di.ConnectionsIosParameters
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsIosModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
@@ -112,17 +116,18 @@ class AccountIosModuleTest {
         val koin = accountGraph()
         val definitions = koin.instanceRegistry.instances.values.map { it.beanDefinition }.distinct()
 
-        // The update screen's arguments satisfy both ViewModels that take a SavedStateHandle; the rest ignore them.
-        val parameters = AppUpdateIosParameters.viewModel(SAMPLE_UPDATE).toTypedArray()
+        // The update screen's arguments satisfy both ViewModels that take a SavedStateHandle and a client id the
+        // client screen's; the rest ignore them.
+        val parameters = (AppUpdateIosParameters.viewModel(SAMPLE_UPDATE) + ConnectionsIosParameters.connection(CLIENT_ID)).toTypedArray()
         definitions.forEach { definition ->
             koin.get<Any>(definition.primaryType, definition.qualifier) { parametersOf(*parameters) }
         }
 
         assertIs<SessionRepositoryImpl>(koin.get<SessionRepository>())
         assertIs<DefaultBackendIdentitySync>(koin.get<BackendIdentitySync>())
-        // The Keychain, the App Group container, WebKit's data and the X-Client install id; features loaded later add
-        // theirs.
-        assertEquals(4, koin.get<SessionDataCleaners>().current().size)
+        // The Keychain, the App Group container, WebKit's data, the X-Client install id and the upload hashes; features
+        // loaded later add theirs.
+        assertEquals(5, koin.get<SessionDataCleaners>().current().size)
         assertTrue(koin.get<SessionDataCleaners>().current().any { it === koin.get<InstallIdPreferences>() })
         // One push registration answers the session's token sync and device session.
         val registration = koin.get<PushDeviceRegistration>()
@@ -297,8 +302,17 @@ class AccountIosModuleTest {
         single<AppGroupDirectory> { appGroup }
         single<AppDispatchers> { AppDispatchers(Dispatchers.Default, Dispatchers.Default, Dispatchers.Default) }
         single<AppLog> { log }
-        // The app binds it in iosBackgroundModule, which needs the system notification centre.
+        // The app binds them in iosBackgroundModule, which needs the system notification centre.
         single<UiTextResolver> { KeyTextResolver }
+        single<AppNotifier> { RecordingAppNotifier() }
+        // The app binds the Keychain copy in recordbookIosModule; the devices screen reads it for the phone sign-in.
+        single<ItmoIdCookies> { NoCookies }
+    }
+
+    private object NoCookies : ItmoIdCookies {
+        override suspend fun cookieHeader(url: String): String? = null
+
+        override suspend fun store(url: String, setCookies: List<String>) = Unit
     }
 
     private fun graph(vararg modules: Module): Koin = koinApplication {
@@ -318,6 +332,7 @@ class AccountIosModuleTest {
         const val ORIGIN = "https://dev.widgets.alllexey.dev"
         const val ISU = 123456
         const val INSTALL_ID = "0b6c3c2e-5f1a-4d8e-9a7b-2c4d6e8f0a1b"
+        const val CLIENT_ID = "client-1"
         val SAMPLE_UPDATE = AppUpdate(AppVersionName("2.3.0"), AppVersionName("2.4.0"), note = "", unsupported = false)
     }
 }
