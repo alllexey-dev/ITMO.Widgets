@@ -122,10 +122,10 @@ class QrPassSnapshotWriterTest {
         val (repository, writer) = graph()
         writer.launchIn(backgroundScope)
         repository.refreshQrHex(force = true)
-        assertNull(assertNotNull(snapshotWriter().read(QrPassSnapshotWriter.FILE)).palette)
+        // The widget theme (`widgets_follow_app_theme`) is on by default.
+        assertEquals(ThemeSpec().widgetPalette(), assertNotNull(snapshotWriter().read(QrPassSnapshotWriter.FILE)).palette)
 
         appearance.updateTheme { it.copy(accent = AccentColor.TEAL) }
-        appearance.setWidgetsFollowTheme(true)
         assertEquals(ThemeSpec(accent = AccentColor.TEAL).widgetPalette(), snapshotWriter().read(QrPassSnapshotWriter.FILE)?.palette)
 
         appearance.updateTheme { it.copy(accent = AccentColor.PURPLE) }
@@ -133,7 +133,7 @@ class QrPassSnapshotWriterTest {
 
         appearance.setWidgetsFollowTheme(false)
         assertNull(snapshotWriter().read(QrPassSnapshotWriter.FILE)?.palette)
-        // The first pass, then the theme on, the new accent and the theme off; the accent alone while off writes nothing.
+        // The first pass, the two accents and the theme off.
         assertEquals(4, reloads.size)
     }
 
