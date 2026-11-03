@@ -28,6 +28,7 @@ import dev.alllexey.itmowidgets.core.navigation.TabRequest
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.di.KoinStarter
+import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.ScheduleFeedViewModel
 import dev.alllexey.itmowidgets.feature.schedule.presentation.feed.SelectedUser
 import dev.alllexey.itmowidgets.feature.schedule.presentation.lesson.LessonSheetArgs
 import dev.alllexey.itmowidgets.feature.schedule.presentation.month.ScheduleMonthViewModel
