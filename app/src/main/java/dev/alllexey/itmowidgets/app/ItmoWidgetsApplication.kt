@@ -21,8 +21,15 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
 
 class ItmoWidgetsApplication : Application() {
+
+    init {
+        // kotlinx-datetime's TimeZone and FixedOffsetTimeZone initialise each other, so two threads touching them first
+        // at once deadlock and the start ANRs. Here they initialise before any provider, worker or coroutine runs.
+        TimeZone.UTC
+    }
 
     /** The start-up sync of the background checks. Instrumented tests join it before they enqueue the same work. */
     lateinit var backgroundChecksSync: Job
