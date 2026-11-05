@@ -84,7 +84,6 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.ButtonRow
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
-import dev.alllexey.itmowidgets.designsystem.kit.SegmentedChoice
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetAiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetColumnOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetSavedTotal
@@ -99,7 +98,6 @@ import dev.alllexey.itmowidgets.shared.compose.strings.sheet_formula_sum
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_empty_columns
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_official
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_save
-import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_single_mode
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_sum_hint
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_sum_mode
 import dev.alllexey.itmowidgets.shared.designsystem.ic_auto_awesome
@@ -133,7 +131,6 @@ object SheetScoresSheetTestTags {
     const val RESET = "sheet_scores_reset"
     const val OTHER_CELL = "sheet_scores_other_cell"
     const val SAVE = "sheet_scores_save"
-    const val SINGLE_MODE = "sheet_scores_single_mode"
     const val SUM_MODE = "sheet_scores_sum_mode"
     const val EMPTY_COLUMNS = "sheet_scores_empty_columns"
     const val AI = "sheet_scores_ai"
@@ -358,7 +355,7 @@ private fun ChoiceRow(option: SheetOption) {
  * The total's review: the total with its tab and why it is the total (a reason to check in the warning colour) or a
  * saved sum in words, the own row around it, `Разобрать с ИИ` and its result for a shared sheet, the candidate columns
  * (the automatic one marked) and «Другая ячейка» as chips, «Вернуть авто» for a hand-picked total. «Другая ячейка», or
- * a review without a single-cell total, opens the column list: one column or «Сложить столбцы», the tab switcher, every
+ * a review without a single-cell total, opens the column list: the «Сложить столбцы» switch, the tab switcher, every
  * column with the own value and how full it is, the empty ones folded. A tap selects; «Сохранить» saves.
  */
 @Composable
@@ -410,12 +407,10 @@ private fun ColumnScope.TotalReview(state: SheetScoresUiState.PickTotal, actions
         if (picker || (shown == null && state.saved == null) || state.summing) {
             if (state.cells.none { it.value.isNotEmpty() }) item(key = "empty") { Empty(Res.string.sheet_scores_no_values) }
             item(key = "mode") {
-                SegmentedChoice(
-                    options = listOf(stringResource(Res.string.sheet_scores_single_mode), stringResource(Res.string.sheet_scores_sum_mode)),
-                    selectedIndex = if (state.summing) 1 else 0,
-                    onSelect = { actions.onSumming(it == 1) },
-                    modifier = Modifier.padding(horizontal = ItmoTheme.spacing.screenMargin),
-                    testTags = listOf(SheetScoresSheetTestTags.SINGLE_MODE, SheetScoresSheetTestTags.SUM_MODE),
+                FilterChips(
+                    chips = listOf(ChipSpec(stringResource(Res.string.sheet_scores_sum_mode), state.summing)),
+                    onClick = { actions.onSumming(!state.summing) },
+                    modifier = Modifier.padding(horizontal = ItmoTheme.spacing.screenMargin).testTag(SheetScoresSheetTestTags.SUM_MODE),
                 )
             }
             if (state.summing) item(key = "sum") { SumLine(state) }

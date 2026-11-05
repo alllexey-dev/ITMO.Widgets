@@ -15,6 +15,11 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.isOn
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -60,11 +65,17 @@ class SheetScoresSheetTest {
     private val rows = mutableListOf<SheetRowMatch>()
     private val tabs = mutableListOf<SheetTab>()
     private val totals = mutableListOf<SheetCell>()
+    private val calls = mutableListOf<String>()
     private val actions = SheetScoresActions(
         onRetry = { retries++ },
         onPickRow = { rows += it },
         onPickTab = { tabs += it },
         onPickTotal = { totals += it },
+        onSumming = { calls += "summing $it" },
+        onSave = { calls += "save" },
+        onAnalyze = { calls += "analyze" },
+        onUseAi = { calls += "use" },
+        onDismissAi = { calls += "dismiss" },
     )
 
     @Test
@@ -161,56 +172,93 @@ class SheetScoresSheetTest {
     }
 
     @Test
-    fun withoutATotalHeaderEveryCellIsAGridByTabAndTheLastOneIsPicked() = runComposeUiTest {
+    fun withoutATotalHeaderTheColumnListOpensByTabAndAColumnIsSelectedNotSaved() = runComposeUiTest {
         setContent { Sheet(SheetScoresPreviewSamples.pickManyTotals) }
 
         onNodeWithText("Выберите итог").assertExists()
-        onAllNodes(isSelected()).assertCountEquals(0)
-        // Values as the sheet has them; a column without a header is named by its letter.
-        listOf("P3110", "66,3", "100%", "5A", "Столбец E", SheetScoresPreviewSamples.englishTab.name).forEach { text ->
+        // The first tab; no column yet.
+        onAllNodes(isSelected()).assertCountEquals(1)
+        // Values as the sheet has them; a column without a header is named by its letter; how full each column is.
+        listOf("66,3", "100%", "5A", "есть у 23 из 30 · макс. 66,3", "Пустые столбцы · 1").forEach { text ->
             onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText(text))
             assertShown(text)
             assertNoTextOverflow()
         }
         assertTouchTargets()
+        onNodeWithTag(SheetScoresSheetTestTags.SAVE).assertIsNotEnabled()
 
-        val last = SheetScoresPreviewSamples.manyCells.last()
-        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToKey("cells:${last.tab.gid}")
-        onAllNodesWithText(last.headerPath).onLast().performScrollTo().performClick()
-        assertEquals(listOf(last), totals)
-    }
-
-    @Test
-    fun theReviewShowsTheTotalWhyAndTheChipsAndAChipIsPicked() = runComposeUiTest {
-        setContent { Sheet(SheetScoresPreviewSamples.pickTotal) }
-
-        assertShown("66,3")
-        assertShown("Столбец «${SheetScoresPreviewSamples.TOTAL_HEADER}», сумма баллов сходится")
-        // The total is selected in the row preview and among the chips.
-        onAllNodes(isSelected()).assertCountEquals(2)
-        onAllNodesWithText("Вернуть авто").assertCountEquals(0)
-        assertTouchTargets()
-        assertNoTextOverflow()
-
-        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText("Итог · 37"))
-        onNodeWithText("Итог · 37").performClick()
-        assertEquals(listOf(SheetScoresPreviewSamples.ownRow.single { it.headerPath == "ЛР · Итог" }), totals)
-    }
-
-    @Test
-    fun anotherCellOpensTheGridOfTheRow() = runComposeUiTest {
-        setContent { Sheet(SheetScoresPreviewSamples.pickTotal) }
-        onAllNodesWithText(SheetScoresPreviewSamples.group.name).assertCountEquals(0)
-
-        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText("Другая ячейка"))
-        onNodeWithText("Другая ячейка").performClick()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText(SheetScoresPreviewSamples.englishTab.name))
+        onNodeWithText(SheetScoresPreviewSamples.englishTab.name).performClick()
         waitForIdle()
-        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText(SheetScoresPreviewSamples.group.name))
-        assertShown(SheetScoresPreviewSamples.group.name)
+        val last = SheetScoresPreviewSamples.manyCells.last()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToKey("column:${last.tab.gid}:${last.column}")
+        onAllNodesWithText(last.headerPath).onLast().performClick()
+        assertEquals(listOf(last), totals)
+        assertTrue(calls.isEmpty())
+    }
 
-        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText("5A"))
-        onAllNodesWithText("Оценка").onLast().performClick()
-        assertEquals(listOf(SheetScoresPreviewSamples.ownRow.last()), totals)
+    @Test
+    fun theEmptyColumnsFoldAndOpen() = runComposeUiTest {
+        setContent { Sheet(SheetScoresPreviewSamples.pickManyTotals) }
+        onAllNodesWithText("Столбец E").assertCountEquals(0)
+
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.EMPTY_COLUMNS))
+        onNodeWithTag(SheetScoresSheetTestTags.EMPTY_COLUMNS).performClick()
+        waitForIdle()
+
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText("Столбец E"))
+        assertShown("Столбец E")
+    }
+
+    @Test
+    fun theSumModeChecksColumnsShowsTheSumAndSaves() = runComposeUiTest {
+        var state: SheetScoresUiState by mutableStateOf(SheetScoresPreviewSamples.pickManyTotals)
+        setContent { Sheet(state) }
+
+        onNodeWithText("Сложить столбцы").performClick()
+        assertEquals(listOf("summing true"), calls)
+
+        state = SheetScoresPreviewSamples.pickSum
+        waitForIdle()
+        assertShown("Сумма: 15")
+        val first = SheetScoresPreviewSamples.pickSum.summed.first()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToKey("column:${first.tab.gid}:${first.column}")
+        assertTrue(onAllNodes(isToggleable() and isOn()).fetchSemanticsNodes().size >= 2)
+        assertTouchTargets()
+        onNodeWithTag(SheetScoresSheetTestTags.SAVE).assertIsEnabled().performClick()
+        assertEquals(listOf("summing true", "save"), calls)
+    }
+
+    @Test
+    fun aSharedSheetOffersAiAndItsProposalIsUsedOrDropped() = runComposeUiTest {
+        var state: SheetScoresUiState by mutableStateOf(SheetScoresPreviewSamples.pickTotalAiOffer)
+        setContent { Sheet(state) }
+
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI))
+        onNodeWithText("Разобрать с ИИ").performClick()
+        state = SheetScoresPreviewSamples.pickTotalAiRunning
+        waitForIdle()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI))
+        assertShown("ИИ разбирает таблицу… Обычно это занимает до минуты")
+
+        state = SheetScoresPreviewSamples.pickTotalAi
+        waitForIdle()
+        listOf("45", "Итог преподавателя: 0", "Итог может быть 0 до допуска", "Проверьте формулу: ИИ может ошибаться").forEach { text ->
+            onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText(text))
+            assertShown(text)
+        }
+        assertNoTextOverflow()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI_USE))
+        onNodeWithTag(SheetScoresSheetTestTags.AI_USE).performClick()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI_DISMISS))
+        onNodeWithTag(SheetScoresSheetTestTags.AI_DISMISS).performClick()
+        assertTouchTargets()
+        assertEquals(listOf("analyze", "use", "dismiss"), calls)
+
+        state = SheetScoresPreviewSamples.pickTotalAiFailed
+        waitForIdle()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI))
+        assertShown("ИИ не понял, как считаются баллы")
     }
 
     @Test
@@ -225,6 +273,7 @@ class SheetScoresSheetTest {
         }
 
         assertShown("Выбрано вручную")
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.RESET))
         onNodeWithTag(SheetScoresSheetTestTags.RESET).performClick()
         assertEquals(1, resets)
     }
