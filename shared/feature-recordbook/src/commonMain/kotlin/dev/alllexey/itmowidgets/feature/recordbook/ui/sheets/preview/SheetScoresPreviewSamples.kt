@@ -129,7 +129,7 @@ object SheetScoresPreviewSamples {
     val pickSum = pickManyTotals.copy(
         summing = true,
         summed = manyCells.filter { it.tab == group }.drop(5).take(3),
-        sum = "15",
+        sum = "21",
     )
 
     /** Every column filled by 23 of 30 students up to its own value, but [empty] (an index) filled by nobody. */
