@@ -13,7 +13,7 @@ import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 
 /**
  * A [SheetFormula] in words from the header paths it keeps: a column by its short title (the whole path when two
- * cells share one), a sum as `Сумма: ДЗ 1 + ДЗ 2 + … + Экзамен` (a long one keeps its ends), the other operations
+ * cells share one), a sum as `Сумма: ДЗ 1 + ДЗ 2 + ... + Экзамен` (a long one keeps its ends), the other operations
  * with their signs.
  */
 object SheetFormulaText {
