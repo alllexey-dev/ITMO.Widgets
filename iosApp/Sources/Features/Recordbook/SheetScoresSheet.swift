@@ -45,7 +45,12 @@ struct SheetScoresSheetView: View {
             pickRow: { viewModel.pickRow(match: $0) },
             pickTab: { viewModel.pickTab(tab: $0) },
             pickTotal: { viewModel.pickTotal(cell: $0) },
-            resetTotal: { viewModel.resetTotal() }
+            resetTotal: { viewModel.resetTotal() },
+            summing: { viewModel.setSumming(on: $0) },
+            save: { viewModel.save() },
+            analyze: { viewModel.analyze() },
+            useAi: { viewModel.useAi() },
+            dismissAi: { viewModel.dismissAi() }
         )
     }
 }
@@ -57,10 +62,15 @@ struct SheetScoresContentActions {
     var pickTab: (SheetTab) -> Void = { _ in }
     var pickTotal: (SheetCell) -> Void = { _ in }
     var resetTotal: () -> Void = {}
+    var summing: (Bool) -> Void = { _ in }
+    var save: () -> Void = {}
+    var analyze: () -> Void = {}
+    var useAi: () -> Void = {}
+    var dismissAi: () -> Void = {}
 }
 
 /// The sheet without the ViewModel: the subject, then loading, a failure (a retry only without a connection), the
-/// rows or tabs to choose from, or the total's review. Stateless but for the name search and the open grid.
+/// rows or tabs to choose from, or the total's review. Stateless but for the name search and the open column list.
 struct SheetScoresContent: View {
     let subject: String
     let state: SheetScoresUiState
@@ -131,37 +141,60 @@ private struct SheetRowChoice: View {
 }
 
 /// The total's review: the total, its column and tab and why it is the total (a reason to check in the warning
-/// colour), the own row around it, the candidates and `sheet_scores_other_cell` as chips, `sheet_scores_reset_auto` for a
-/// hand-picked total. The other-cell chip, or a row without a total header, opens every cell of the row by tab. Any
-/// tap saves.
+/// colour) or a saved sum in words, the own row around it, `sheet_ai_analyze` and its result for a shared sheet, the
+/// candidates (the automatic one marked) and `sheet_scores_other_cell` as chips, `sheet_scores_reset_auto` for a
+/// hand-picked total. The other-cell chip, or a review without a single-cell total, opens the column list: the
+/// `sheet_scores_sum_mode` chip, the tab switcher, every column with the own value and how full it is, the empty ones
+/// folded. A tap selects; `sheet_scores_save` in the bar saves.
 private struct SheetTotalReview: View {
     let state: SheetScoresUiStatePickTotal
     let actions: SheetScoresContentActions
-    @State private var grid = false
+    @State private var picker = false
+    @State private var tabIndex = 0
+    @State private var emptyOpen = false
 
     var body: some View {
-        ItmoSectionHeader(title: AppStrings.string("sheet_scores_pick_total"))
-        if let shown = state.shown {
-            ItmoCard(tone: state.unsure ? .warn : .primary) {
-                Text(verbatim: shown.value.isEmpty ? AppStrings.string("sheet_scores_empty_cell") : shown.value)
-                    .font(.itmo(.headlineMedium, emphasized: true))
-                    .monospacedDigit()
-                Text(verbatim: caption(shown)).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
-                if let note = state.note {
-                    Text(verbatim: note.resolved)
-                        .font(.itmo(.bodySmall))
-                        .foregroundStyle(state.unsure ? ItmoColor.warning : .secondary)
+        VStack(alignment: .leading, spacing: ItmoSpacing.content) {
+            ItmoSectionHeader(title: AppStrings.string("sheet_scores_pick_total"))
+            if let shown = state.shown {
+                ItmoCard(tone: state.unsure ? .warn : .primary) {
+                    Text(verbatim: shown.value.isEmpty ? AppStrings.string("sheet_scores_empty_cell") : shown.value)
+                        .font(.itmo(.headlineMedium, emphasized: true))
+                        .monospacedDigit()
+                    Text(verbatim: caption(shown)).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+                    if let note = state.note {
+                        Text(verbatim: note.resolved)
+                            .font(.itmo(.bodySmall))
+                            .foregroundStyle(state.unsure ? ItmoColor.warning : .secondary)
+                    }
                 }
+                .accessibilityElement(children: .combine)
+                SheetRowPreview(cells: state.preview, shown: shown, pick: actions.pickTotal)
+            } else if let saved = state.saved {
+                ItmoCard(tone: .primary) {
+                    Text(verbatim: saved.value ?? AppStrings.string("sheet_scores_empty_cell"))
+                        .font(.itmo(.headlineMedium, emphasized: true))
+                        .monospacedDigit()
+                    Text(verbatim: saved.formula.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+                    if let official = saved.official {
+                        Text(verbatim: AppStrings.string("sheet_scores_official", [official]))
+                            .font(.itmo(.bodySmall))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .accessibilityElement(children: .combine)
             }
-            .accessibilityElement(children: .combine)
-            SheetRowPreview(cells: state.preview, shown: shown, pick: actions.pickTotal)
-            let candidates = state.candidates
-            ItmoChips(
-                chips: candidates.map { ItmoChip(label: state.chip(cell: $0).resolved, selected: $0 == shown) } +
-                    [ItmoChip(label: AppStrings.string("sheet_scores_other_cell"), selected: grid)],
-                wrap: true
-            ) { index in
-                if index < candidates.count { actions.pickTotal(candidates[index]) } else { grid.toggle() }
+            SheetAiBlock(ai: state.ai, actions: actions)
+            if state.shown != nil || state.saved != nil {
+                let candidates = state.candidates
+                ItmoChips(
+                    chips: candidates.map {
+                        ItmoChip(label: state.chip(cell: $0).resolved, selected: !state.summing && $0 == state.shown)
+                    } + [ItmoChip(label: AppStrings.string("sheet_scores_other_cell"), selected: picker)],
+                    wrap: true
+                ) { index in
+                    if index < candidates.count { actions.pickTotal(candidates[index]) } else { picker.toggle() }
+                }
             }
             if state.canReset {
                 Button(AppStrings.string("sheet_scores_reset_auto"), action: actions.resetTotal)
@@ -169,29 +202,165 @@ private struct SheetTotalReview: View {
                     .itmoTint()
                     .accessibilityIdentifier("sheetScores.reset")
             }
-        }
-        if grid || state.shown == nil {
-            if state.cells.allSatisfy({ $0.value.isEmpty }) {
-                ItmoGroupNote(text: AppStrings.string("sheet_scores_no_values"))
+            if picker || (state.shown == nil && state.saved == nil) || state.summing {
+                columnPicker
             }
-            ForEach(tabs, id: \.gid) { tab in
-                if !tab.name.isEmpty { ItmoSectionHeader(title: tab.name) }
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: ItmoSpacing.compact)], spacing: ItmoSpacing.compact) {
-                    ForEach(state.cells.filter { $0.tab == tab }, id: \.key) { cell in
-                        SheetCellTile(cell: cell, selected: cell == state.shown, pick: actions.pickTotal)
+        }
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(AppStrings.string("sheet_scores_save"), action: actions.save)
+                    .disabled(!state.canSave)
+                    .accessibilityIdentifier("sheetScores.save")
+            }
+        }
+    }
+
+    @ViewBuilder private var columnPicker: some View {
+        if state.cells.allSatisfy({ $0.value.isEmpty }) {
+            ItmoGroupNote(text: AppStrings.string("sheet_scores_no_values"))
+        }
+        ItmoChips(chips: [ItmoChip(label: AppStrings.string("sheet_scores_sum_mode"), selected: state.summing)]) { _ in
+            actions.summing(!state.summing)
+        }
+        .accessibilityIdentifier("sheetScores.sumMode")
+        if state.summing {
+            if let sum = state.sum {
+                Text(verbatim: AppStrings.string("sheet_formula_sum", [sum]))
+                    .font(.itmo(.titleMedium, emphasized: true))
+                    .monospacedDigit()
+            } else {
+                Text(verbatim: AppStrings.string("sheet_scores_sum_hint")).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+            }
+        }
+        let tabs = state.tabs
+        if tabs.count > 1 {
+            ItmoChips(chips: tabs.indices.map { index in
+                ItmoChip(
+                    label: tabs[index].name.isEmpty ? AppStrings.string("sheet_scores_pick_tab") : tabs[index].name,
+                    selected: index == selectedTab
+                )
+            }) { tabIndex = $0 }
+        }
+        if let tab = tabs.indices.contains(selectedTab) ? tabs[selectedTab] : nil {
+            let filled = state.filledColumns(tab: tab)
+            let empty = state.emptyColumns(tab: tab)
+            if !filled.isEmpty {
+                ItmoListGroup(inset: 16) {
+                    ForEach(filled, id: \.cell.key) { option in columnRow(option) }
+                }
+            }
+            if !empty.isEmpty {
+                ItmoListGroup(inset: 16) {
+                    ItmoRow(
+                        title: AppStrings.string("sheet_scores_empty_columns", [Int64(empty.count)]),
+                        action: { emptyOpen.toggle() }
+                    )
+                    .accessory {
+                        AppSymbol.expandMore.image
+                            .rotationEffect(.degrees(emptyOpen ? 180 : 0))
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                    }
+                    .accessibilityIdentifier("sheetScores.emptyColumns")
+                    if emptyOpen {
+                        ForEach(empty, id: \.cell.key) { option in columnRow(option) }
                     }
                 }
             }
         }
     }
 
-    private var tabs: [SheetTab] {
-        state.cells.reduce(into: [SheetTab]()) { tabs, cell in if !tabs.contains(cell.tab) { tabs.append(cell.tab) } }
+    private var selectedTab: Int { state.tabs.indices.contains(tabIndex) ? tabIndex : 0 }
+
+    /// One column: its header path over how full it is, the own value, a check when it is selected or summed.
+    private func columnRow(_ option: SheetColumnOption) -> some View {
+        let cell = option.cell
+        let selected = state.summing ? state.summed.contains(cell) : cell == state.shown
+        return ItmoRow(
+            title: SheetScoresUiStateKt.title(cell: cell).resolved,
+            subtitle: option.summary.resolved,
+            trailing: cell.value.isEmpty ? AppStrings.string("sheet_scores_empty_cell") : cell.value,
+            action: { actions.pickTotal(cell) }
+        )
+        .accessory {
+            AppSymbol.check.image
+                .font(.itmo(.bodyLarge, emphasized: true))
+                .foregroundStyle(ItmoColor.primary)
+                .opacity(selected ? 1 : 0)
+                .accessibilityHidden(true)
+        }
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func caption(_ cell: SheetCell) -> String {
         let path = SheetScoresUiStateKt.title(cell: cell).resolved.replacingOccurrences(of: " · ", with: " › ")
         return cell.tab.name.isEmpty ? path : AppStrings.string("sheet_scores_caption", [path, cell.tab.name])
+    }
+}
+
+/// `sheet_ai_analyze`: the button, its progress while Backend analyses the sheet, the proposal (the formula in words,
+/// the own value, the teacher's total, the model's summary and warnings, `sheet_ai_use` / `sheet_ai_dismiss`) or why
+/// there is none.
+private struct SheetAiBlock: View {
+    let ai: SheetAiState
+    let actions: SheetScoresContentActions
+
+    var body: some View {
+        switch onEnum(of: ai) {
+        case .hidden:
+            EmptyView()
+        case .offer, .running, .failed:
+            VStack(alignment: .leading, spacing: ItmoSpacing.related) {
+                ItmoProgressButton(
+                    title: AppStrings.string("sheet_ai_analyze"),
+                    symbol: .autoAwesome,
+                    isInProgress: ai is SheetAiStateRunning,
+                    action: actions.analyze
+                )
+                .accessibilityIdentifier("sheetScores.ai")
+                if ai is SheetAiStateRunning {
+                    Text(verbatim: AppStrings.string("sheet_ai_running") + " " + AppStrings.string("sheet_ai_running_note"))
+                        .font(.itmo(.bodySmall))
+                        .foregroundStyle(.secondary)
+                } else if let failed = ai as? SheetAiStateFailed {
+                    Text(verbatim: failed.text.resolved).font(.itmo(.bodySmall)).foregroundStyle(.secondary)
+                }
+            }
+        case let .proposal(proposal):
+            ItmoCard(tone: .primary) {
+                Text(verbatim: AppStrings.string("sheet_ai_title"))
+                    .font(.itmo(.titleSmall, emphasized: true))
+                    .foregroundStyle(ItmoColor.primary)
+                    .accessibilityAddTraits(.isHeader)
+                Text(verbatim: proposal.value ?? AppStrings.string("sheet_scores_empty_cell"))
+                    .font(.itmo(.headlineMedium, emphasized: true))
+                    .monospacedDigit()
+                Text(verbatim: proposal.formula.resolved).font(.itmo(.bodyMedium))
+                if proposal.hasOfficial {
+                    Text(verbatim: AppStrings.string(
+                        "sheet_scores_official", [proposal.official ?? AppStrings.string("sheet_scores_empty_cell")]
+                    ))
+                    .font(.itmo(.bodyMedium))
+                    .foregroundStyle(.secondary)
+                }
+                if !proposal.summary.isEmpty {
+                    Text(verbatim: proposal.summary).font(.itmo(.bodySmall)).foregroundStyle(.secondary)
+                }
+                ForEach(proposal.warnings + [AppStrings.string("sheet_ai_check")], id: \.self) { warning in
+                    Text(verbatim: warning).font(.itmo(.bodySmall)).foregroundStyle(ItmoColor.warning)
+                }
+                HStack(spacing: ItmoSpacing.compact) {
+                    ItmoProgressButton(title: AppStrings.string("sheet_ai_use"), action: actions.useAi)
+                        .accessibilityIdentifier("sheetScores.ai.use")
+                    Button(AppStrings.string("sheet_ai_dismiss"), action: actions.dismissAi)
+                        .buttonStyle(.bordered)
+                        .itmoTint()
+                        .frame(minHeight: ItmoMetrics.touchTarget)
+                        .accessibilityIdentifier("sheetScores.ai.dismiss")
+                }
+                .padding(.top, ItmoSpacing.related)
+            }
+        }
     }
 }
 

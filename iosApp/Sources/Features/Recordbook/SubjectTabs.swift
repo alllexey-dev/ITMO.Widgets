@@ -100,6 +100,9 @@ private struct SubjectHeroCard: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(verbatim: sheet.title.resolved).font(.itmo(.bodyMedium, emphasized: true))
                         Text(verbatim: sheet.caption.resolved).font(.itmo(.bodySmall)).foregroundStyle(.secondary)
+                        if let official = sheet.official {
+                            Text(verbatim: official.resolved).font(.itmo(.bodyMedium))
+                        }
                         if let problem = sheet.problem {
                             Text(verbatim: problem.resolved).font(.itmo(.bodySmall)).foregroundStyle(ItmoColor.warning)
                         }
