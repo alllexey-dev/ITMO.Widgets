@@ -531,7 +531,7 @@ private fun AiBlock(ai: SheetAiState, actions: SheetScoresActions) {
                     Text(it, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodySmall)
                 }
             }
-            is SheetAiState.Proposal -> ItmoCard(tone = Tone.Primary) {
+            is SheetAiState.Proposal -> ItmoCard {
                 Column(
                     Modifier.padding(ItmoTheme.spacing.content),
                     verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related),
