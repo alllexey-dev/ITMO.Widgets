@@ -72,6 +72,9 @@ import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryLevel
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryScale
 import dev.alllexey.itmowidgets.client.schedule.LessonDto
 import dev.alllexey.itmowidgets.client.schedule.LessonSyncRequest
+import dev.alllexey.itmowidgets.client.sheets.SheetRuleResponse
+import dev.alllexey.itmowidgets.client.sheets.SheetRuleStatus
+import dev.alllexey.itmowidgets.client.sheets.SheetRuleStatusSerializer
 import dev.alllexey.itmowidgets.client.sport.model.FriendSportBooking
 import dev.alllexey.itmowidgets.client.sport.model.FriendsSportBookingsResponse
 import dev.alllexey.itmowidgets.client.sport.model.MySportSection
@@ -152,6 +155,7 @@ object WireModels {
         model<SaveSubjectLinkRequest>(),
         model<PinSubjectLinkRequest>(),
         model<UserRestriction>(),
+        model<SheetRuleResponse>(),
         model<TeacherReviewsResponse>(),
         model<TeacherReview>(),
         model<OwnTeacherReview>(),
@@ -194,6 +198,7 @@ object WireModels {
         wireEnum(SportSectionOccurrenceStateSerializer, SportSectionOccurrenceState.entries),
         wireEnum(LinkCategorySerializer, LinkCategory.entries),
         wireEnum(SubjectLinkStatusSerializer, SubjectLinkStatus.entries),
+        wireEnum(SheetRuleStatusSerializer, SheetRuleStatus.entries),
         wireEnum(TeacherReviewKindSerializer, TeacherReviewKind.entries),
         wireEnum(TeacherReviewStatusSerializer, TeacherReviewStatus.entries),
         wireEnum(SummaryLevelSerializer, SummaryLevel.entries),
