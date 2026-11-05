@@ -49,7 +49,13 @@ data class SubjectLink(
     val author: UserSummary?,
     val updatedAt: Instant,
     val local: Boolean = false,
-)
+) {
+    /**
+     * The id Backend's sheet rules take: a Backend link shared with a flow or everybody (Backend still decides by the
+     * approved revision); null for a private or local link.
+     */
+    val sharedLinkId: String? get() = id.takeIf { !local && visibility != LinkVisibility.PRIVATE }
+}
 
 /**
  * A schedule flow of the subject the viewer can publish to: [label] is its schedule name, [typeId] the

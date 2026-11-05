@@ -12,7 +12,16 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCellRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetOp
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRule
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRuleNode
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRulePurpose
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRuleRoute
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRuleTab
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.BlankPolicy
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
@@ -84,7 +93,7 @@ object DemoRecordbook {
                 rowKey = DemoPeople.ME_NAME,
                 keyColumn = 1,
                 keyKind = KeyKind.NAME,
-                column = SheetColumnRef("Итого", 14),
+                formula = SheetFormula.Direct(SheetCellRef(0, SheetColumnRef("Итого", 14))),
                 value = "64",
                 baseline = "64",
                 tracked = true,
@@ -93,6 +102,32 @@ object DemoRecordbook {
                 connectedAt = now - 12.days
             )
         )
+    }
+
+    /**
+     * The AI rule of the demo's sheet of points: the works and the exam of its first tab added up, the teacher's
+     * total beside it. Never from Backend.
+     */
+    fun sheetRule(): SheetRule {
+        val tab = SheetRuleTab(DemoPeople.ME_GROUP, 0)
+        val works = (2..13).map { SheetRuleNode.Cell(tab, it) }
+        val current = SheetRuleRoute(
+            purpose = SheetRulePurpose.CURRENT,
+            tab = tab,
+            direct = false,
+            node = SheetRuleNode.Apply(SheetOp.SUM, works),
+            blanks = BlankPolicy.IGNORE_BLANK_INPUTS,
+            explanation = "Сумма работ и экзамена",
+            warnings = emptyList(),
+        )
+        val official = current.copy(
+            purpose = SheetRulePurpose.OFFICIAL,
+            direct = true,
+            node = SheetRuleNode.Cell(tab, 14),
+            blanks = BlankPolicy.PRESERVE,
+            explanation = "Итог преподавателя",
+        )
+        return SheetRule("Баллы за работы и экзамен складываются", listOf(current, official))
     }
 
     /** Subjects with new marks: the database checkpoint and the discrete math colloquium. */

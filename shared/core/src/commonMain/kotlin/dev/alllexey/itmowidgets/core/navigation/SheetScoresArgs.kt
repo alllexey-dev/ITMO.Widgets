@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 /**
  * Arguments of the «Мои баллы» sheet: [url] is a link of the subject, the subject period is the link's
  * `ResourceScope`. [Step.CONNECT] connects the sheet behind [url]; [Step.TOTAL] picks another total of the
- * connected one.
+ * connected one. [linkId] is the subject link behind [url] when it shares the sheet with a flow or everybody (the only
+ * links Backend analyses with AI); null for a private or local link.
  */
 @Serializable
 data class SheetScoresArgs(
@@ -14,6 +15,7 @@ data class SheetScoresArgs(
     val periodKey: String,
     val url: String,
     val step: Step,
+    val linkId: String? = null,
 ) {
     enum class Step { CONNECT, TOTAL }
 
@@ -23,5 +25,6 @@ data class SheetScoresArgs(
         const val PERIOD_KEY = "sheet_period_key"
         const val URL = "sheet_url"
         const val STEP = "sheet_step"
+        const val LINK_ID = "sheet_link_id"
     }
 }

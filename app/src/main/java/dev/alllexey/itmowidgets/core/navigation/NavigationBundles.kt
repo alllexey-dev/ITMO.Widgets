@@ -49,6 +49,7 @@ fun SheetScoresArgs.toBundle(): Bundle = bundleOf(
     SheetScoresArgs.PERIOD_KEY to periodKey,
     SheetScoresArgs.URL to url,
     SheetScoresArgs.STEP to step.name,
+    SheetScoresArgs.LINK_ID to linkId,
 )
 
 /** [args] as the one kotlinx JSON string a sheet keeps under its argument key. */

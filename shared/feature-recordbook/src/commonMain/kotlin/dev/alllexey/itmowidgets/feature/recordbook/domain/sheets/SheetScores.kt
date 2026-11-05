@@ -9,17 +9,20 @@ import kotlin.time.Instant
 data class SheetColumnRef(val headerPath: String, val index: Int)
 
 /**
- * How the total column was chosen: found by [SheetTotals.decide] ([AUTO]), found but worth a look ([AUTO_CHECK], the
- * page says «Проверьте итог»), or picked by the viewer ([MANUAL]).
+ * How the total was chosen: found by [SheetTotals.decide] ([AUTO]), found but worth a look ([AUTO_CHECK], the
+ * page says «Проверьте итог»), picked or summed by the viewer ([MANUAL]), or Backend's rule the viewer accepted ([AI]).
  */
-enum class TotalChoice { AUTO, AUTO_CHECK, MANUAL }
+enum class TotalChoice { AUTO, AUTO_CHECK, MANUAL, AI }
 
 /** The last reading of a connection; every status but [OK] keeps the last value. */
 enum class SheetStatus { OK, NETWORK, CLOSED, ROW_NOT_FOUND, COLUMN_NOT_FOUND, TOO_LARGE }
 
 /**
- * The own total of [scope] from one tab of a public Google Sheet. [value] is the last value read (shown), [baseline]
- * the last non-empty one (compared); [tracked] is false until a read after the marks switch was turned back on.
+ * The own total of [scope] from a public Google Sheet: the own row is found by [rowKey] in [tabGid] (and in every other
+ * tab [formula] reads), [formula] makes the total. [value] is the last value read (shown), [baseline] the last
+ * non-empty one (compared); [tracked] is false until a read after the marks switch was turned back on. An accepted AI
+ * rule adds the teacher's [official] total (read as [officialValue], shown beside, never compared) and the rule's
+ * [summary]. [linkId] is the subject link the sheet came from when it shares the sheet with a flow or everybody.
  */
 data class SheetScore(
     val scope: ResourceScope,
@@ -29,7 +32,7 @@ data class SheetScore(
     val rowKey: String,
     val keyColumn: Int,
     val keyKind: KeyKind,
-    val column: SheetColumnRef,
+    val formula: SheetFormula,
     val value: String?,
     val baseline: String?,
     val tracked: Boolean,
@@ -37,7 +40,14 @@ data class SheetScore(
     val updatedAt: Instant?,
     val connectedAt: Instant,
     val choice: TotalChoice = TotalChoice.AUTO,
+    val official: SheetFormula? = null,
+    val officialValue: String? = null,
+    val summary: String? = null,
+    val linkId: String? = null,
 ) {
+    /** Every tab a reading downloads: the row's tab first. */
+    val tabs: List<Long> get() = (listOf(tabGid) + formula.cells.map { it.gid } + official?.cells.orEmpty().map { it.gid }).distinct()
+
     /** The connected tab in the browser. */
     val tabUrl: String get() = GoogleSheetUrl.parse(url)!!.tabUrl(tabGid)
 
@@ -45,8 +55,11 @@ data class SheetScore(
         "SheetScore(scope=${scope.key}, tab=$tabGid, kind=$keyKind, choice=$choice, status=$status, tracked=$tracked)"
 }
 
-/** What one download of the connected tab shows; [value] is null for an empty cell or a failed read. */
-data class SheetReading(val value: String?, val status: SheetStatus) {
+/**
+ * What one download of the connected tabs shows; [value] is null for an empty cell, no computed value or a failed
+ * read. [official] is the teacher's total of an AI rule, null when there is none or it cannot be read.
+ */
+data class SheetReading(val value: String?, val status: SheetStatus, val official: String? = null) {
     override fun toString(): String = "SheetReading(hasValue=${value != null}, status=$status)"
 }
 
@@ -57,16 +70,45 @@ data class SheetUpdate(val score: SheetScore, val change: MarkEventKind?)
 object SheetScoreRules {
     private val SPACES = Regex("""\s+""")
 
-    /** The own row by its key, the column by its header path, the value as the sheet shows it. */
-    fun read(grid: SheetGrid, score: SheetScore): SheetReading {
-        val tab = SheetTabGrid(SheetTab(score.tabGid, score.tabName), grid)
-        val match = SheetRows.locate(tab, score.rowKey, score.keyKind, score.keyColumn)
-            ?: return SheetReading(null, SheetStatus.ROW_NOT_FOUND)
-        val first = SheetHeaders.firstDataRow(grid, match.row, match.keyColumn, match.kind)
-        val paths = SheetHeaders.paths(grid, first, match.keyColumn)
-        val column = SheetTotals.find(paths, score.column, grid.width)
-            ?: return SheetReading(null, SheetStatus.COLUMN_NOT_FOUND)
-        return SheetReading(grid.cell(match.row, column).trim().ifEmpty { null }, SheetStatus.OK)
+    /**
+     * The connection's [SheetScore.formula] (and [SheetScore.official]) over the downloaded [tabs]: the own row by its
+     * key in each tab, each column by its header path. A tab [tabs] lacks reads as [missing].
+     */
+    fun read(tabs: Map<Long, SheetGrid>, score: SheetScore, missing: SheetStatus = SheetStatus.COLUMN_NOT_FOUND): SheetReading {
+        val cells = OwnCells(tabs, score.rowKey, score.keyKind, score.keyColumn, missing)
+        if (cells.row(score.tabGid) == null) return SheetReading(null, cells.status(score.tabGid))
+        val main = SheetFormulas.evaluate(score.formula, cells::read)
+        val official = score.official?.let { SheetFormulas.evaluate(it, cells::read).value }
+        return main.copy(official = official)
+    }
+
+    /** The own row's cells in [tabs], found again by [key]; rows and header paths are worked out once per tab. */
+    class OwnCells(
+        private val tabs: Map<Long, SheetGrid>,
+        private val key: String,
+        private val kind: KeyKind,
+        private val keyColumn: Int,
+        private val missing: SheetStatus = SheetStatus.COLUMN_NOT_FOUND,
+    ) {
+        private val located = mutableMapOf<Long, Pair<SheetRowMatch, List<String>>?>()
+
+        fun row(gid: Long): SheetRowMatch? = located(gid)?.first
+
+        fun status(gid: Long): SheetStatus = if (gid in tabs) SheetStatus.ROW_NOT_FOUND else missing
+
+        fun read(ref: SheetCellRef): SheetCellRead {
+            val grid = tabs[ref.gid] ?: return SheetCellRead.Missing(missing)
+            val (match, paths) = located(ref.gid) ?: return SheetCellRead.Missing(SheetStatus.ROW_NOT_FOUND)
+            val column = SheetTotals.find(paths, ref.column, grid.width)
+                ?: return SheetCellRead.Missing(SheetStatus.COLUMN_NOT_FOUND)
+            return SheetCellRead.Text(grid.cell(match.row, column))
+        }
+
+        private fun located(gid: Long): Pair<SheetRowMatch, List<String>>? = located.getOrPut(gid) {
+            val grid = tabs[gid] ?: return@getOrPut null
+            val match = SheetRows.locate(SheetTabGrid(SheetTab(gid, ""), grid), key, kind, keyColumn) ?: return@getOrPut null
+            match to SheetHeaders.paths(grid, SheetHeaders.firstDataRow(grid, match.row, match.keyColumn, match.kind), match.keyColumn)
+        }
     }
 
     /**
@@ -84,6 +126,7 @@ object SheetScoreRules {
         }
         val updated = score.copy(
             value = value,
+            officialValue = reading.official?.trim()?.ifEmpty { null },
             baseline = value ?: score.baseline,
             tracked = true,
             status = SheetStatus.OK,

@@ -32,6 +32,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksCheck
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksFileStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.PublicSheetClient
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresFileStore
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetRulesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
@@ -41,6 +42,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolve
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRulesRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.BarsLoginViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
@@ -79,7 +81,8 @@ val marksQualifier: Qualifier = named("marks")
  * (`BarsSilentLogin`), the ITMO.ID cookies (`ItmoIdCookies`), the marks worker's scheduler (`MarksScheduler`) and its
  * notifications (`MarksNotifier`). From the platform's other Koin modules: the core contracts (`MyItmoClient`, the
  * `app_preferences` DataStore, `AppDirectories`, `MarkSourcePreferences`, `SecureStore`, `SessionTokenStore`,
- * `CurrentUserProvider`, `AppNotifier`, time, `DemoMode`, `AppDispatchers`), subject links and teacher levels.
+ * `CurrentUserProvider`, `AppNotifier`, time, `DemoMode`, `AppDispatchers`, `BackendGate`, Core 2.0's
+ * `SheetRulesApi`), subject links and teacher levels.
  */
 val recordbookModule = module {
     // Stateless helpers: every ViewModel gets its own.
@@ -127,6 +130,8 @@ val recordbookModule = module {
     singleOf<SheetScoresFileStore, AppDirectories>(::SheetScoresFileStore)
     singleOf(::SheetScoresRepositoryImpl) { bind<SheetScoresRepository>() }
     single<SessionDataCleaner>(named("recordbook-sheets")) { get<SheetScoresRepositoryImpl>() }
+    // Backend's AI rules for shared sheets; nothing is cached, so no cleaner.
+    singleOf(::SheetRulesRepositoryImpl) { bind<SheetRulesRepository>() }
 
     // Mark tracking: one state lock per process for the screens, the worker and sign-out; `filesDir/marks`.
     singleOf<MarksFileStore, AppDirectories>(::MarksFileStore)

@@ -19,7 +19,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCellRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
@@ -211,7 +213,7 @@ object RecordbookSamples {
 
     private val connectedSheet = SheetScore(
         scope, SHEET_URL, 0, "ПИИКТ 2.1", "Иванова", 0, KeyKind.NAME,
-        SheetColumnRef("Итог", 9), "66,3", "66,3", tracked = true, SheetStatus.OK, at("2026-09-07", "16:30"), at("2026-09-01"),
+        SheetFormula.Direct(SheetCellRef(0, SheetColumnRef("Итог", 9))), "66,3", "66,3", tracked = true, SheetStatus.OK, at("2026-09-07", "16:30"), at("2026-09-01"),
         // An unsure automatic total, so the hero asks «Проверьте итог».
         TotalChoice.AUTO_CHECK,
     )

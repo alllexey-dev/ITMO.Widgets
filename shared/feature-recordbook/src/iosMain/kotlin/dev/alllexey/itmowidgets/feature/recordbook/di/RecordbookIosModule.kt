@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.di
 
+import dev.alllexey.itmowidgets.client.BackendClient
+import dev.alllexey.itmowidgets.client.sheets.SheetRulesApi
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
@@ -45,10 +47,12 @@ import org.koin.dsl.module
  * refresh task as its scheduler, and the runner's step under [RefreshStepKeys.MARKS] with Android's three hours.
  * BARS renews there through the ITMO.ID cookies only (`BarsCookieSilentLogin`), never the hidden WebView.
  *
- * The subject page's links come from `resourcesModule` and the teacher tones from `reviewsModule`.
+ * The subject page's links come from `resourcesModule` and the teacher tones from `reviewsModule`; the sheet rules are
+ * Core 2.0's area of the one `BackendClient`.
  */
 fun recordbookIosModule(host: BarsWebHost): Module = module {
     single<HttpClientEngine>(barsEngineQualifier) { darwinHttpEngine() }
+    single<SheetRulesApi> { get<BackendClient>().sheets }
     single { BarsLogin(get(barsEngineQualifier)) }
     singleOf(::KeychainItmoIdCookies) { bind<ItmoIdCookies>() }
     // The on-device ISU client (Wi-Fi, ISU messages) sits with the cookies it sends, so the core module needs no
