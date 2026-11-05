@@ -3,6 +3,8 @@ package dev.alllexey.itmowidgets.upgrade.stores
 import dev.alllexey.itmowidgets.core.storage.AndroidAppDirectories
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresFileStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.StoredSheetConnection
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.StoredSheetFormula
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.StoredSheetNode
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.StoredSheetScores
 import dev.alllexey.itmowidgets.upgrade.Captured22.AT_MS
 import dev.alllexey.itmowidgets.upgrade.Captured22.DAY_MS
@@ -17,7 +19,7 @@ import org.junit.Assert.assertTrue
 
 /**
  * `files/sheet_scores/state.json` (format 1): the connected sheet and its last reading. Gson wrote it; kotlinx reads it
- * and writes format 1 back.
+ * as a direct formula of its tab and writes format 2 back (ADR 0038).
  */
 object SheetScoresFileStoreUpgrade {
 
@@ -35,8 +37,10 @@ object SheetScoresFileStoreUpgrade {
                     rowKey = ISU.toString(),
                     keyColumn = 0,
                     keyKind = "ISU",
-                    headerPath = "Итого",
-                    columnIndex = 5,
+                    formula = StoredSheetFormula(
+                        kind = "direct",
+                        node = StoredSheetNode("cell", gid = 0, headerPath = "Итого", column = 5),
+                    ),
                     value = "71",
                     baseline = "65",
                     tracked = true,
@@ -51,7 +55,7 @@ object SheetScoresFileStoreUpgrade {
         assertEquals(expected, store.read())
         store.write(expected)
         val written = File(fixture.filesDir, "sheet_scores/state.json").readText()
-        assertTrue(written, written.startsWith("{\"format\":1,"))
+        assertTrue(written, written.startsWith("{\"format\":2,"))
         assertEquals(expected, SheetScoresFileStore(AndroidAppDirectories(fixture.context)).read())
     }
 }
