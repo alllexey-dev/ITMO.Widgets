@@ -9,26 +9,31 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetNode
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetOp
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotals
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.columnName
+import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookPlurals
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 
 /**
  * A [SheetFormula] in words from the header paths it keeps: a column by its short title (the whole path when two
- * cells share one), a sum as `Сумма: ДЗ 1 + ДЗ 2 + ... + Экзамен` (a long one keeps its ends), the other operations
- * with their signs.
+ * cells share one), a short sum as `Сумма: ДЗ 1 + ДЗ 2 + Экзамен`, a longer one as `Сумма 12 столбцов`, the other
+ * operations with their signs.
  */
 object SheetFormulaText {
-    private const val LONG_SUM = 6
-    private const val HEAD = 3
-    private const val TAIL = 2
+    private const val LONG_SUM = 4
+    private const val HEAD = 2
+    private const val TAIL = 1
 
     fun describe(formula: SheetFormula): UiText = when (formula) {
         is SheetFormula.Direct -> column(formula.cell, unique = true)
         is SheetFormula.Computed -> {
             val shorts = formula.cells.groupingBy { short(it) }.eachCount()
             val node = formula.node
-            val body = Writer { shorts[short(it)] == 1 }.write(node, top = true)
-            if (node is SheetNode.Apply && node.op == SheetOp.SUM) UiText.Res(RecordbookStrings.sheet_formula_sum, listOf(body))
-            else body
+            when {
+                node is SheetNode.Apply && node.op == SheetOp.SUM && node.args.size > LONG_SUM ->
+                    UiText.Plural(RecordbookPlurals.sheet_formula_sum_columns, node.args.size, listOf(node.args.size))
+                node is SheetNode.Apply && node.op == SheetOp.SUM ->
+                    UiText.Res(RecordbookStrings.sheet_formula_sum, listOf(Writer { shorts[short(it)] == 1 }.write(node, top = true)))
+                else -> Writer { shorts[short(it)] == 1 }.write(node, top = true)
+            }
         }
     }
 

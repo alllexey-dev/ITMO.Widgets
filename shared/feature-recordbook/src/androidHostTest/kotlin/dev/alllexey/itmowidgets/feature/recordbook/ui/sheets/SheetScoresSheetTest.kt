@@ -243,10 +243,15 @@ class SheetScoresSheetTest {
 
         state = SheetScoresPreviewSamples.pickTotalAi
         waitForIdle()
-        listOf("45", "Итог преподавателя: 0", "Итог может быть 0 до допуска", "Проверьте формулу: ИИ может ошибаться").forEach { text ->
+        listOf("45", "Итог преподавателя: 0", "Проверьте формулу: ИИ может ошибаться").forEach { text ->
             onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText(text))
             assertShown(text)
         }
+        assertTrue(onAllNodesWithText("Итог может быть 0 до допуска").fetchSemanticsNodes().isEmpty())
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI_DETAILS))
+        onNodeWithTag(SheetScoresSheetTestTags.AI_DETAILS).performClick()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasText("Итог может быть 0 до допуска"))
+        assertShown("Итог может быть 0 до допуска")
         assertNoTextOverflow()
         onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI_USE))
         onNodeWithTag(SheetScoresSheetTestTags.AI_USE).performClick()

@@ -306,6 +306,7 @@ private struct SheetTotalReview: View {
 private struct SheetAiBlock: View {
     let ai: SheetAiState
     let actions: SheetScoresContentActions
+    @State private var showsDetails = false
 
     var body: some View {
         switch onEnum(of: ai) {
@@ -345,11 +346,21 @@ private struct SheetAiBlock: View {
                     .font(.itmo(.bodyMedium))
                     .foregroundStyle(.secondary)
                 }
-                if !proposal.summary.isEmpty {
-                    Text(verbatim: proposal.summary).font(.itmo(.bodySmall)).foregroundStyle(.secondary)
-                }
-                ForEach(proposal.warnings + [AppStrings.string("sheet_ai_check")], id: \.self) { warning in
-                    Text(verbatim: warning).font(.itmo(.bodySmall)).foregroundStyle(ItmoColor.warning)
+                Text(verbatim: AppStrings.string("sheet_ai_check")).font(.itmo(.bodySmall)).foregroundStyle(ItmoColor.warning)
+                if !proposal.summary.isEmpty || !proposal.warnings.isEmpty {
+                    if showsDetails {
+                        if !proposal.summary.isEmpty {
+                            Text(verbatim: proposal.summary).font(.itmo(.bodySmall)).foregroundStyle(.secondary)
+                        }
+                        ForEach(proposal.warnings, id: \.self) { warning in
+                            Text(verbatim: warning).font(.itmo(.bodySmall)).foregroundStyle(.secondary)
+                        }
+                    }
+                    Button(AppStrings.string(showsDetails ? "sheet_ai_less" : "sheet_ai_more")) { showsDetails.toggle() }
+                        .buttonStyle(.borderless)
+                        .itmoTint()
+                        .frame(minHeight: ItmoMetrics.touchTarget)
+                        .accessibilityIdentifier("sheetScores.ai.details")
                 }
                 HStack(spacing: ItmoSpacing.compact) {
                     ItmoProgressButton(title: AppStrings.string("sheet_ai_use"), action: actions.useAi)

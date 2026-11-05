@@ -1261,6 +1261,30 @@
         }
       }
     },
+    "sheet_ai_less" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть"
+          }
+        }
+      }
+    },
+    "sheet_ai_more" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подробнее"
+          }
+        }
+      }
+    },
     "sheet_ai_not_applicable" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1389,6 +1413,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сумма: %1$@"
+          }
+        }
+      }
+    },
+    "sheet_formula_sum_columns" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Сумма %1$lld столбцов"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Сумма %1$lld столбцов"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Сумма %1$lld столбца"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Сумма %1$lld столбцов"
+                }
+              }
+            }
           }
         }
       }

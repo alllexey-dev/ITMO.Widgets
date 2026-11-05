@@ -74,6 +74,8 @@ import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_analyze
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_check
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_less
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_more
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_dismiss
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_running
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_running_note
@@ -136,6 +138,7 @@ object SheetScoresSheetTestTags {
     const val AI = "sheet_scores_ai"
     const val AI_USE = "sheet_scores_ai_use"
     const val AI_DISMISS = "sheet_scores_ai_dismiss"
+    const val AI_DETAILS = "sheet_scores_ai_details"
 }
 
 /**
@@ -555,11 +558,23 @@ private fun AiBlock(ai: SheetAiState, actions: SheetScoresActions) {
                             style = ItmoTheme.typography.bodyMedium,
                         )
                     }
-                    if (ai.summary.isNotBlank()) {
-                        Text(ai.summary, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodySmall)
-                    }
-                    (ai.warnings + stringResource(Res.string.sheet_ai_check)).forEach { warning ->
-                        Text(warning, color = Tone.Warning.ink(), style = ItmoTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.sheet_ai_check), color = Tone.Warning.ink(), style = ItmoTheme.typography.bodySmall)
+                    if (ai.summary.isNotBlank() || ai.warnings.isNotEmpty()) {
+                        var details by rememberSaveable { mutableStateOf(false) }
+                        if (details) {
+                            if (ai.summary.isNotBlank()) {
+                                Text(ai.summary, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodySmall)
+                            }
+                            ai.warnings.forEach { warning ->
+                                Text(warning, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodySmall)
+                            }
+                        }
+                        ProgressButton(
+                            label = stringResource(if (details) Res.string.sheet_ai_less else Res.string.sheet_ai_more),
+                            onClick = { details = !details },
+                            style = ProgressButtonStyle.Text,
+                            modifier = Modifier.testTag(SheetScoresSheetTestTags.AI_DETAILS),
+                        )
                     }
                     ButtonRow(Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.related)) {
                         ProgressButton(

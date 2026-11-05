@@ -109,6 +109,8 @@
     <string name="sheet_ai_running">ИИ разбирает таблицу…</string>
     <string name="sheet_ai_running_note">Обычно это занимает до минуты</string>
     <string name="sheet_ai_check">Проверьте формулу: ИИ может ошибаться</string>
+    <string name="sheet_ai_more">Подробнее</string>
+    <string name="sheet_ai_less">Скрыть</string>
     <string name="sheet_ai_use">Использовать</string>
     <string name="sheet_ai_dismiss">Нет</string>
     <string name="sheet_ai_timeout">Разбор затянулся, попробуйте позже</string>
@@ -120,6 +122,12 @@
     <string name="links_all_count">Все ссылки, %1$d</string>
     <string name="recordbook_reason_failed">Пересдача</string>
     <string name="recordbook_reason_below_minimum">%1$s ниже минимума</string>
+    <plurals name="sheet_formula_sum_columns">
+        <item quantity="one">Сумма %1$d столбца</item>
+        <item quantity="few">Сумма %1$d столбцов</item>
+        <item quantity="many">Сумма %1$d столбцов</item>
+        <item quantity="other">Сумма %1$d столбцов</item>
+    </plurals>
     <plurals name="recordbook_reason_sport">
         <item quantity="one">Спорт: ещё %1$d балл</item>
         <item quantity="few">Спорт: ещё %1$d балла</item>

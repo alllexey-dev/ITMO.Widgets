@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetNode
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetOp
+import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookPlurals
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -16,13 +17,19 @@ class SheetFormulaTextTest {
     private fun cell(path: String, column: Int = 0) = SheetNode.Cell(ref(path, column))
     private fun text(vararg parts: String) = parts.map(UiText::Dynamic)
 
-    @Test fun `a sum names its columns by short title and keeps the ends of a long one`() {
-        val sum = SheetFormula.sum((1..8).map { ref("ДЗ · ДЗ $it · 10", it) })
+    @Test fun `a short sum names its columns by short title`() {
+        val sum = SheetFormula.sum((1..4).map { ref("ДЗ · ДЗ $it · 10", it) })
 
         val words = SheetFormulaText.describe(sum)
 
-        val expected = UiText.Joined(text("ДЗ 1", "ДЗ 2", "ДЗ 3", "…", "ДЗ 7", "ДЗ 8"), " + ")
+        val expected = UiText.Joined(text("ДЗ 1", "ДЗ 2", "ДЗ 3", "ДЗ 4"), " + ")
         assertEquals(UiText.Res(RecordbookStrings.sheet_formula_sum, listOf(expected)), words)
+    }
+
+    @Test fun `a longer sum is just its number of columns`() {
+        val sum = SheetFormula.sum((1..12).map { ref("ДЗ · ДЗ $it · 10", it) })
+
+        assertEquals(UiText.Plural(RecordbookPlurals.sheet_formula_sum_columns, 12, listOf(12)), SheetFormulaText.describe(sum))
     }
 
     @Test fun `twin short titles keep their whole path and a column without one its letter`() {

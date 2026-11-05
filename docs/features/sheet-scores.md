@@ -130,10 +130,10 @@ failure adds `Проверьте итог`, which opens the review. Without a co
   otherwise every call passes `BackendGate.mayCallBackend()`. A route with an unknown purpose, kind, policy or node is
   dropped; no route left is a failure.
 - READY: the rule's `current_accumulated` route (else its only route) is resolved against the downloaded tabs (gid,
-  else tab name; each cell takes its header path there) and read over the own row: the proposal shows the formula in
-  words, the own value, `Итог преподавателя` from the `official_total` route, the summary, the routes' warnings and
-  `Проверьте формулу: ИИ может ошибаться`, with `Использовать` (saves, choice `AI`) and `Нет`. Nothing is saved
-  before `Использовать`.
+  else tab name; each cell takes its header path there) and read over the own row: the proposal shows the own value,
+  the formula in words (a sum of more than 4 columns only as `Сумма 12 столбцов`), `Итог преподавателя` from the
+  `official_total` route and `Проверьте формулу: ИИ может ошибаться`; the rule's summary and the routes' warnings stay
+  under `Подробнее`. `Использовать` saves (choice `AI`), `Нет` drops it. Nothing is saved before `Использовать`.
 - INSUFFICIENT, FAILED, 404 or 409 (not shared, not a sheet, the feature off), 429, no connection, a rule naming what
   the device does not see, or still pending after 3 minutes: a short Russian message under the button, which can be
   tapped again.
