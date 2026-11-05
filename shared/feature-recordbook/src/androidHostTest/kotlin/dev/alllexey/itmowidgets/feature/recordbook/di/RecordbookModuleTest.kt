@@ -110,6 +110,7 @@ class RecordbookModuleTest {
                 SavedStateHandle::class,
                 RecordbookSubjectArgs::class,
                 BackendGate::class,
+                SheetRulesApi::class,
                 MyItmoClient::class,
                 DataStore::class,
                 MarkSourcePreferences::class,

@@ -94,6 +94,7 @@
     <string name="sheet_scores_official">Итог преподавателя: %1$s</string>
     <string name="sheet_scores_ai_chosen">Выбрано по разбору ИИ</string>
     <string name="sheet_scores_save">Сохранить</string>
+    <string name="sheet_scores_single_mode">Один столбец</string>
     <string name="sheet_scores_sum_mode">Сложить столбцы</string>
     <string name="sheet_scores_sum_hint">Отметьте столбцы, которые нужно сложить</string>
     <string name="sheet_scores_empty_columns">Пустые столбцы · %1$d</string>

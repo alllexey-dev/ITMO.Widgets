@@ -173,6 +173,7 @@ private fun SheetLine(sheet: SubjectSheetLine, actions: RecordbookSubjectActions
         Column(Modifier.weight(1f)) {
             Text(sheet.title.asString(), style = ItmoTheme.typography.titleSmall)
             Text(sheet.caption.asString(), style = ItmoTheme.typography.bodySmall)
+            sheet.official?.let { Text(it.asString(), style = ItmoTheme.typography.bodyMedium) }
             sheet.problem?.let { Text(it.asString(), color = Tone.Warning.ink(), style = ItmoTheme.typography.bodySmall) }
             sheet.check?.let { check ->
                 TextButton(
