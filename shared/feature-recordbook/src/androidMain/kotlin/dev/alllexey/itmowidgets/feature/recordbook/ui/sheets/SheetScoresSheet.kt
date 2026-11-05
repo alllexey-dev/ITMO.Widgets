@@ -353,7 +353,7 @@ private fun ChoiceRow(option: SheetOption) {
 
 /**
  * The total's review: the total with its tab and why it is the total (a reason to check in the warning colour) or a
- * saved sum in words, the own row around it, `Разобрать с ИИ` and its result for a shared sheet, the candidate columns
+ * saved sum in words, `Разобрать с ИИ` and its result for a shared sheet, the own row around the total, the candidate columns
  * (the automatic one marked) and «Другая ячейка» as chips, «Вернуть авто» for a hand-picked total. «Другая ячейка», or
  * a review without a single-cell total, opens the column list: the «Сложить столбцы» switch, the tab switcher, every
  * column with the own value and how full it is, the empty ones folded. A tap selects; «Сохранить» saves.
@@ -377,13 +377,11 @@ private fun ColumnScope.TotalReview(state: SheetScoresUiState.PickTotal, actions
     ) {
         item(key = "prompt") { Prompt(Res.string.sheet_scores_pick_total) }
         when {
-            shown != null -> {
-                item(key = "total") { TotalSummary(state, shown) }
-                item(key = "preview") { RowPreview(state.preview, shown, actions.onPickTotal) }
-            }
+            shown != null -> item(key = "total") { TotalSummary(state, shown) }
             state.saved != null -> item(key = "saved") { SavedSummary(state.saved) }
         }
         if (state.ai != SheetAiState.Hidden) item(key = "ai") { AiBlock(state.ai, actions) }
+        if (shown != null) item(key = "preview") { RowPreview(state.preview, shown, actions.onPickTotal) }
         if (shown != null || state.saved != null) {
             item(key = "chips") {
                 val candidates = state.candidates

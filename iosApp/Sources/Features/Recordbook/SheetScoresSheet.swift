@@ -141,7 +141,7 @@ private struct SheetRowChoice: View {
 }
 
 /// The total's review: the total, its column and tab and why it is the total (a reason to check in the warning
-/// colour) or a saved sum in words, the own row around it, `sheet_ai_analyze` and its result for a shared sheet, the
+/// colour) or a saved sum in words, `sheet_ai_analyze` and its result for a shared sheet, the own row around it, the
 /// candidates (the automatic one marked) and `sheet_scores_other_cell` as chips, `sheet_scores_reset_auto` for a
 /// hand-picked total. The other-cell chip, or a review without a single-cell total, opens the column list: the
 /// `sheet_scores_sum_mode` chip, the tab switcher, every column with the own value and how full it is, the empty ones
@@ -169,7 +169,6 @@ private struct SheetTotalReview: View {
                     }
                 }
                 .accessibilityElement(children: .combine)
-                SheetRowPreview(cells: state.preview, shown: shown, pick: actions.pickTotal)
             } else if let saved = state.saved {
                 ItmoCard(tone: .primary) {
                     Text(verbatim: saved.value ?? AppStrings.string("sheet_scores_empty_cell"))
@@ -185,6 +184,9 @@ private struct SheetTotalReview: View {
                 .accessibilityElement(children: .combine)
             }
             SheetAiBlock(ai: state.ai, actions: actions)
+            if let shown = state.shown {
+                SheetRowPreview(cells: state.preview, shown: shown, pick: actions.pickTotal)
+            }
             if state.shown != nil || state.saved != nil {
                 let candidates = state.candidates
                 ItmoChips(
