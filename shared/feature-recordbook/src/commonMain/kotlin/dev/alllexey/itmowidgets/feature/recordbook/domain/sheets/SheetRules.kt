@@ -6,11 +6,19 @@ package dev.alllexey.itmowidgets.feature.recordbook.domain.sheets
  * to the tabs it downloads ([SheetRuleRoute.formula]).
  */
 data class SheetRule(val summary: String, val routes: List<SheetRuleRoute>) {
-    /** The accumulated points, else the only route there is. */
-    val main: SheetRuleRoute? get() = routes.firstOrNull { it.purpose == SheetRulePurpose.CURRENT } ?: routes.firstOrNull()
+    /**
+     * The route for the tab of the own [rows] in [book]: a workbook with a tab per group has one route per tab. The
+     * accumulated points first, else any route of that tab; null when no route reads a tab holding the own row.
+     */
+    fun mainFor(book: SheetWorkbook, rows: List<SheetRowMatch>): SheetRuleRoute? {
+        val own = rows.map { it.tab }.toSet()
+        val onOwnTab = routes.filter { it.tabIn(book) in own }
+        return onOwnTab.firstOrNull { it.purpose == SheetRulePurpose.CURRENT } ?: onOwnTab.firstOrNull()
+    }
 
-    /** The teacher's official total beside [main], if the rule has one. */
-    val official: SheetRuleRoute? get() = routes.firstOrNull { it.purpose == SheetRulePurpose.OFFICIAL && it != main }
+    /** The teacher's official total on the same tab as [main], if the rule has one. */
+    fun officialFor(main: SheetRuleRoute, book: SheetWorkbook): SheetRuleRoute? =
+        routes.firstOrNull { it.purpose == SheetRulePurpose.OFFICIAL && it != main && it.tabIn(book) == main.tabIn(book) }
 }
 
 /** [CURRENT] is `current_accumulated` (the points so far), [OFFICIAL] `official_total` (may be 0 before admission). */

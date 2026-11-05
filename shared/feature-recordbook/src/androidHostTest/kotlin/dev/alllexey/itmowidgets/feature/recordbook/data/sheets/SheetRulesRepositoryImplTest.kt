@@ -101,10 +101,10 @@ class SheetRulesRepositoryImplTest {
                 SheetOp.SUM,
                 listOf(SheetRuleNode.Cell(tab, 3), SheetRuleNode.Round(SheetRuleNode.Cell(tab, 27), 1), SheetRuleNode.Number(0.5)),
             ),
-            rule.main!!.node,
+            rule.routes[0].node,
         )
-        assertEquals(BlankPolicy.IGNORE_BLANK_INPUTS, rule.main!!.blanks)
-        val official = rule.official!!
+        assertEquals(BlankPolicy.IGNORE_BLANK_INPUTS, rule.routes[0].blanks)
+        val official = rule.routes[1]
         assertTrue(official.direct)
         assertEquals(SheetRuleNode.Cell(SheetRuleTab("Группа 1", null), 17), official.node)
         assertEquals(BlankPolicy.PRESERVE, official.blanks)

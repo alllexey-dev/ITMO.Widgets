@@ -297,10 +297,11 @@ class SheetScoresViewModel(
     /** The rule over this workbook and the own row; a rule naming a tab, row or column that is not here is no proposal. */
     private fun propose(rule: SheetRule): SheetAiState {
         val book = workbook ?: return failed(RecordbookStrings.sheet_ai_not_applicable)
-        val route = rule.main ?: return failed(RecordbookStrings.sheet_ai_not_applicable)
+        val route = rule.mainFor(book, matches) ?: return failed(RecordbookStrings.sheet_ai_not_applicable)
         val row = matches.firstOrNull { it.tab == route.tabIn(book) } ?: return failed(RecordbookStrings.sheet_ai_not_applicable)
         val main = route.formula(book, matches) ?: return failed(RecordbookStrings.sheet_ai_not_applicable)
-        val official = rule.official?.formula(book, matches)
+        val officialRoute = rule.officialFor(route, book)
+        val official = officialRoute?.formula(book, matches)
         val reading = reading(main, official)
         if (reading.status != SheetStatus.OK) return failed(RecordbookStrings.sheet_ai_not_applicable)
         val summary = rule.summary.ifBlank { route.explanation }
@@ -311,7 +312,7 @@ class SheetScoresViewModel(
             official = reading.official,
             hasOfficial = official != null,
             summary = summary,
-            warnings = (route.warnings + rule.official?.warnings.orEmpty()).distinct(),
+            warnings = (route.warnings + officialRoute?.warnings.orEmpty()).distinct(),
         )
     }
 

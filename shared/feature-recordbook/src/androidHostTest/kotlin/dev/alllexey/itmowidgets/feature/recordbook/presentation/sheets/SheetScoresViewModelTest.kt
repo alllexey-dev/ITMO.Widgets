@@ -440,6 +440,23 @@ class SheetScoresViewModelTest {
         assertEquals(45, rules.polls)
     }
 
+    @Test fun `a rule with a route per group tab proposes the route of the own tab`() = runTest(main.dispatcher) {
+        repository.scores.value = listOf(sheetScore(scope = scope))
+        repository.inspections += ready(testWorkbook())
+        val other = SheetRuleTab("Потеряшки", 999)
+        val otherRoute = rule.routes.first().copy(tab = other, node = SheetRuleNode.Cell(other, 3))
+        rules.requestResult = SheetRuleResult.Ready(rule.copy(routes = listOf(otherRoute) + rule.routes))
+        val vm = model(Step.TOTAL, link = linkId)
+        runCurrent()
+
+        vm.analyze()
+        runCurrent()
+
+        val proposal = vm.pickTotal().ai as SheetAiState.Proposal
+        assertEquals("18", proposal.value)
+        assertEquals("66,3", proposal.official)
+    }
+
     @Test fun `a rule naming a tab this sheet lacks is no proposal`() = runTest(main.dispatcher) {
         repository.scores.value = listOf(sheetScore(scope = scope))
         repository.inspections += ready(testWorkbook())

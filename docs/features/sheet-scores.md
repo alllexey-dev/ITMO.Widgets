@@ -129,8 +129,8 @@ failure adds `Проверьте итог`, which opens the review. Without a co
 - `SheetRulesRepositoryImpl` holds the client: the demo session answers `DemoRecordbook.sheetRule()` and calls nothing;
   otherwise every call passes `BackendGate.mayCallBackend()`. A route with an unknown purpose, kind, policy or node is
   dropped; no route left is a failure.
-- READY: the rule's `current_accumulated` route (else its only route) is resolved against the downloaded tabs (gid,
-  else tab name; each cell takes its header path there) and read over the own row: the proposal shows the own value,
+- READY: the route of the tab holding the own row (a workbook with a tab per group has a route per tab;
+  `current_accumulated` first) is resolved against the downloaded tabs (gid, else tab name; each cell takes its header path there) and read over the own row: the proposal shows the own value,
   the formula in words (a sum of more than 4 columns only as `Сумма 12 столбцов`), `Итог преподавателя` from the
   `official_total` route and `Проверьте формулу: ИИ может ошибаться`; the rule's summary and the routes' warnings stay
   under `Подробнее`. `Использовать` saves (choice `AI`), `Нет` drops it. Nothing is saved before `Использовать`.
