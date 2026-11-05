@@ -19,7 +19,7 @@ and keep their numbers.
 - [0011 AI summaries of teacher reviews through Gemini behind a proxy](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0011-ai-review-summaries.md) - Backend
 - [0012 BARS is renewed in the background by replaying ITMO.ID with cookies](0012-bars-background-renewal.md) - accepted
 - [0013 Schedule changes are detected on the device](0013-schedule-changes-on-device.md) - accepted
-- [0014 Own totals from public Google Sheets are read on the device](0014-sheet-scores-on-device.md) - amended by 0032
+- [0014 Own totals from public Google Sheets are read on the device](0014-sheet-scores-on-device.md) - amended by 0032 and 0038
 - [0015 A hidden demo session gated in the repositories](0015-demo-mode.md) - accepted
 - [0016 Stable identifiers keep their values](0016-parity-rewrite.md) - historical; the stable identifier rule holds
 - [0017 Compose Multiplatform screens in `commonMain` of shared modules](0017-cmp-ui-in-common-main.md) - superseded by 0031 and 0035
@@ -43,3 +43,4 @@ and keep their numbers.
 - [0035 The iOS framework links no Compose](0035-ios-without-compose.md) - accepted
 - [0036 Scope texts of connected clients come from Backend](0036-backend-scope-texts.md) - accepted
 - [0037 ISU is read on the device with the phone's ITMO.ID session](0037-on-device-isu-client.md) - accepted
+- [0038 Backend analyses a flow-shared sheet; the device computes the own total](0038-ai-sheet-formula.md) - accepted

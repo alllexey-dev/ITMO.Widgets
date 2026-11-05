@@ -4,9 +4,10 @@ Part of the [recordbook](recordbook.md).
 Product behaviour: [Как это работает: оценки](../how-it-works/grades.md).
 
 The own total of a subject from a teacher's public Google Sheet. The connection, the downloaded sheet
-and other people's names stay on the device: no Backend, no connection to ITMO.Widgets needed
-(decision [0014](../decisions/0014-sheet-scores-on-device.md)). `feature/resources` only offers the
-action.
+and other people's names stay on the device: no connection to ITMO.Widgets needed
+(decision [0014](../decisions/0014-sheet-scores-on-device.md)). Only `Разобрать с ИИ` for a sheet a link shares
+with a flow or everybody asks Backend for a rule, never with sheet data
+(decision [0038](../decisions/0038-ai-sheet-formula.md)). `feature/resources` only offers the action.
 
 ## Connecting
 
@@ -14,7 +15,10 @@ action.
   (`https://docs.google.com/spreadsheets/d/<id>` or `.../u/<n>/d/<id>`, `gid` from the fragment, then
   the parameter; published `/d/e/...` addresses are not sheets).
 - `Мои баллы` opens `AppRoutes.SheetScores(SheetScoresArgs)` with the link's `ResourceScope`
-  (`discipline_id` and period). One connection per scope; a new one replaces the old after a successful choice.
+  (`discipline_id` and period) and `linkId`, `SubjectLink.sharedLinkId`: the link's id when it is a Backend link
+  shared with a flow or everybody, else null. One connection per scope; a new one replaces the old after a successful
+  choice. The connection keeps the link id; `Изменить итог` passes it again (or the id of the subject's link with the
+  same address).
 - The workbook lives only in the view model, never in saved state; after process death it is
   downloaded again. A failed write keeps the choice.
 - Name search appears for more than 8 student rows. Student rows start at the topmost name or ISU
@@ -78,24 +82,61 @@ action.
   which beat `∑` of `Общий список`; the copy now loses to the current tab. The 13 sheets of the issue,
   anonymised, are fixtures in `shared/feature-recordbook/src/androidHostTest/resources/sheets/real`
   with the real total of each tab (`truth.tsv`); no test opens a sheet over the network.
-- The column is stored as `gid` + header path; a reading finds the same path (nearest to the old index
-  when repeated), falls back to the old index while the tab is that wide, else the column is not
-  found. Values are shown as the sheet shows them, never recomputed.
+- The total is a `SheetFormula` (`domain/sheets/SheetFormula.kt`): `Direct` (one cell) or `Computed` (a node tree
+  over cells of the own row: `sum`, `multiply`, `min`, `max`, `subtract`, `divide`, `round`, numbers, with the
+  rule's `blank_policy`). Every cell is stored as `gid` + header path; a reading finds the same path (nearest to the
+  old index when repeated), falls back to the old index while the tab is that wide, else the column is not found.
+  The own row is found again in every tab the formula reads (`SheetScoreRules.OwnCells`, `SheetRows.locate` by the
+  stored key); each tab is downloaded once, one at a time.
+- A direct value is shown as the sheet shows it, never recomputed. A computed one parses numbers (`7,5`, `-3`,
+  spaces) and is written as the app writes numbers (`66,3`); as in Backend's analyzer (`evidence.py`) an empty input
+  is skipped by a sum under `ignore_blank_inputs` (a sum of blanks only is 0, a rounded blank 0) and gives no value
+  under `preserve`; text, a percentage, an error cell, a blank operand of another operation or a division by zero give
+  no value (`—`), never a guessed 0. A missing tab, row or column fails the reading with its status.
 
 ## On the subject page
 
 The connected sheet sits in the hero of `Баллы` with its menu (open, `Изменить итог`, disconnect); its
 total is the hero's number (`таблица, в 16:30`) by the
-[recordbook's rule](recordbook.md#which-number-is-shown). The stored value shows
+[recordbook's rule](recordbook.md#which-number-is-shown). The caption is `Лист «…», столбец «…»`, or for a computed
+total `Лист «…» · Сумма: ДЗ 1 + ДЗ 2 + … + Экзамен`; an AI rule with the teacher's total adds `Итог преподавателя: 0`. The stored value shows
 at once and the tab is downloaded on entry and on every pull. An `AUTO_CHECK` total read without a
 failure adds `Проверьте итог`, which opens the review. Without a connection `Мои баллы из
 таблицы` offers the subject's sheet links.
 
 ## The total's review
 
-`Изменить итог`, `Проверьте итог` and a row without a total header open the review: the total with its
-column, tab and reason, the own row with the headers, up to 4 candidate columns as chips and
-`Другая ячейка` (every cell of the row by tab). Any tap saves.
+`Изменить итог`, `Проверьте итог` and a row without a total header open the review (`SheetScoresUiState.PickTotal`):
+
+- The total with its column, tab and reason, or a saved computed total in words with its value; the own row with the
+  headers; up to 4 candidate columns as chips, the automatic one marked `авто`; `Вернуть авто` selects the automatic
+  one instead of a hand-picked or AI total.
+- `Другая ячейка`, or a review without a single-cell total, opens the column list: a `Сложить столбцы` chip, a tab
+  switcher when the row is in several tabs, then every column of the tab with its header path, the own value and a
+  summary computed on the fly and never stored (`есть у 23 из 30 · макс. 10`, `SheetColumns.stats` over the
+  student rows); columns nobody has a value in fold under `Пустые столбцы · N`.
+- A tap selects (a column, or in the sum mode adds or removes it with the own sum live); `Сохранить` saves (the
+  bar's button on iOS, under the sheet on Android) once there is something new: another cell, the unsure automatic
+  one confirmed, or at least two columns to add. The sum is `SheetFormula.sum` with `ignore_blank_inputs`, choice
+  `MANUAL`.
+
+## AI rule
+
+- `Разобрать с ИИ` shows in the review only with a link id and `SheetRulesRepository.available()` (the services
+  opt-in, or the demo session). A tap posts `POST /api/links/{id}/sheet-rule`, then polls `GET` every 4 s while
+  Backend answers `PENDING`/`RUNNING` (a stale rule that is still sent is used at once), up to 3 minutes; leaving the
+  sheet stops it. The manual pick stays usable meanwhile.
+- `SheetRulesRepositoryImpl` holds the client: the demo session answers `DemoRecordbook.sheetRule()` and calls nothing;
+  otherwise every call passes `BackendGate.mayCallBackend()`. A route with an unknown purpose, kind, policy or node is
+  dropped; no route left is a failure.
+- READY: the rule's `current_accumulated` route (else its only route) is resolved against the downloaded tabs (gid,
+  else tab name; each cell takes its header path there) and read over the own row: the proposal shows the formula in
+  words, the own value, `Итог преподавателя` from the `official_total` route, the summary, the routes' warnings and
+  `Проверьте формулу: ИИ может ошибаться`, with `Использовать` (saves, choice `AI`) and `Нет`. Nothing is saved
+  before `Использовать`.
+- INSUFFICIENT, FAILED, 404 or 409 (not shared, not a sheet, the feature off), 429, no connection, a rule naming what
+  the device does not see, or still pending after 3 minutes: a short Russian message under the button, which can be
+  tapped again.
 
 ## In the recordbook list
 
@@ -111,7 +152,8 @@ ITMO and BARS.
 - `MarksCheck` runs `MarkTrackingRepository.checkSheets()` after My ITMO and BARS while
   `Оценки из таблиц` (`sheet_marks_enabled`, on by default, kept on sign-out) is on. It reads every
   connection of the current half-year (`StudyHalf.of(today).periodKey`), one at a time.
-- A connection keeps `value` (last read, shown) and `baseline` (last non-empty). Only a background
+- A connection keeps `value` (last read, shown; the formula's value) and `baseline` (last non-empty); the official
+  total of an AI rule is read along and never compared. Only a background
   read of a `tracked` connection with a new non-empty value different from the baseline is news:
   `MARK_ADDED` from an empty baseline, else `MARK_CHANGED` (`MarkSource.SHEETS`). An emptied cell is
   no news and keeps the baseline.
@@ -124,9 +166,14 @@ ITMO and BARS.
 
 ## Storage
 
-- `SheetScoresFileStore`: `filesDir/sheet_scores/state.json`, format 1, `owner` is the ISU, written
-  through `AtomicTextFile`, JSON shape readable by 2.2; excluded from backup and device transfer. A
-  corrupt file, another format, an invalid field or another account's file is deleted.
+- `SheetScoresFileStore`: `filesDir/sheet_scores/state.json`, format 2, `owner` is the ISU, written
+  through `AtomicTextFile`; excluded from backup and device transfer. A connection holds `formula` (`kind` `direct`
+  or `computed` with `blanks`, a `node` tree of `op` `cell` (`gid`, `headerPath`, `column`), `number`, `sum`,
+  `multiply`, `min`, `max`, `subtract`, `divide`, `round`), and for an AI rule `official`, `officialValue` and
+  `summary`; `linkId` when known. Format 1 (2.2: `headerPath`, `columnIndex`) is read as a direct formula of
+  `tabGid` and written back as format 2. 2.2 deletes a format 2 file, so a downgrade loses the connections
+  ([0038](../decisions/0038-ai-sheet-formula.md)). A corrupt file, another format, an invalid field or another
+  account's file is deleted.
 - `SheetScoresRepositoryImpl` is one Koin single and a `SessionDataCleaner`: sign-out deletes the
   file; a reading is written only when the session generation and the whole connection it was taken
   for are unchanged.
