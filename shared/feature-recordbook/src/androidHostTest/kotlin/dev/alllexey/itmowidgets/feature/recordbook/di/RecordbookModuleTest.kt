@@ -29,6 +29,8 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
+import dev.alllexey.itmowidgets.client.sheets.SheetRulesApi
+import kotlin.uuid.Uuid
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
@@ -198,6 +200,12 @@ class RecordbookModuleTest {
         single<DemoMode> { FakeDemoMode() }
         single<SubjectLinksRepository> { FakeSubjectLinksRepository() }
         single<BackendGate> { FakeBackendGate(optedIn = false) }
+        single<SheetRulesApi> {
+            object : SheetRulesApi {
+                override suspend fun sheetRule(linkId: Uuid) = error("Backend is not requested here")
+                override suspend fun requestSheetRule(linkId: Uuid) = error("Backend is not requested here")
+            }
+        }
         single { Dispatchers.Unconfined.let { AppDispatchers(io = it, default = it, main = it) } }
         single<AcademicTimeProvider> { FixedAcademicTime() }
         single<BarsSilentLogin> {

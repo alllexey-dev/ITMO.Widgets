@@ -15,12 +15,18 @@ import dev.alllexey.itmowidgets.feature.recordbook.blockingIoAppDispatchers
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkEventKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.RowSearch
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCellRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetChange
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFixtures
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetInspection
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetReading
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotalPick
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotals
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import io.ktor.http.Url
@@ -148,9 +154,15 @@ class SheetScoresRepositoryImplTest {
         val match = (ready.search as RowSearch.Found).matches.single { it.tab.gid == 22L }
         val tab = ready.workbook.tabs.single { it.tab.gid == 22L }
         val total = SheetTotals.decide(listOf(tab), listOf(match))!!.total
-        assertEquals(AppResult.Success(Unit), connect(target, url, match, total, TotalChoice.AUTO))
+        assertEquals(AppResult.Success(Unit), connect(target, url, match, pick(total, TotalChoice.AUTO), linkId = null))
         return observe().first().single { it.scope == target }
     }
+
+    private fun pick(cell: SheetCell, choice: TotalChoice) = SheetTotalPick(
+        SheetFormula.Direct(SheetCellRef(cell.tab.gid, SheetColumnRef(cell.headerPath, cell.column))),
+        choice,
+        SheetReading(cell.value.ifEmpty { null }, SheetStatus.OK),
+    )
 
     @Test fun `inspect downloads every tab, the link's tab first, and finds the own row`() = runTest {
         val ready = repository().inspect(url) as SheetInspection.Ready
@@ -192,7 +204,7 @@ class SheetScoresRepositoryImplTest {
         assertTrue(score.tracked)
         assertEquals(SheetStatus.OK, score.status)
         assertEquals(22L, score.tabGid)
-        assertEquals("ИТОГО баллов", score.column.headerPath)
+        assertEquals(SheetFormula.Direct(SheetCellRef(22, SheetColumnRef("ИТОГО баллов", 11))), score.formula)
         val stored = store.read()!!
         assertEquals(123456, stored.owner)
         assertEquals(listOf(score), stored.connections.map { it.toModel() })
@@ -233,6 +245,29 @@ class SheetScoresRepositoryImplTest {
         assertEquals(SheetStatus.NETWORK, failed.status)
         assertEquals("66,3", failed.value)
         assertEquals(connected.updatedAt, failed.updatedAt)
+    }
+
+    @Test fun `a computed total reads every tab it names and keeps the official total beside it`() = runTest {
+        val repository = repository()
+        val ready = repository.inspect(url) as SheetInspection.Ready
+        val match = (ready.search as RowSearch.Found).matches.single { it.tab.gid == 22L }
+        val sum = SheetFormula.sum(listOf(SheetCellRef(22, SheetColumnRef("КР Итог · Min = 4", 10)), SheetCellRef(11, SheetColumnRef("", 2))))
+        val official = SheetFormula.Direct(SheetCellRef(22, SheetColumnRef("ИТОГО баллов", 11)))
+        val total = SheetTotalPick(sum, TotalChoice.AI, SheetReading("12", SheetStatus.OK, official = "66,3"), official, "Сумма")
+        repository.connect(scope, url, match, total, linkId = "link-1")
+        tabs["22"] = { withOwnTotal("70") }
+        requests.clear()
+
+        repository.refresh(scope)
+
+        val score = repository.observe().first().single()
+        assertEquals(listOf("22", "11"), requests.map { Url("http://x$it").parameters["gid"] })
+        // The roster's group column is text, so the sum has no value and keeps no guessed number.
+        assertNull(score.value)
+        assertEquals("12", score.baseline)
+        assertEquals("70", score.officialValue)
+        assertEquals(TotalChoice.AI, score.choice)
+        assertEquals(listOf(score), store.read()!!.connections.map { it.toModel() })
     }
 
     @Test fun `a background check reports a changed total of the half-year only`() = runTest {
@@ -345,12 +380,12 @@ class SheetScoresRepositoryImplTest {
         val match = (ready.search as RowSearch.Found).matches.single { it.tab.gid == 22L }
         val grade = SheetTotals.cells(ready.workbook.tabs.single { it.tab.gid == 22L }, match).single { it.column == 12 }
 
-        assertEquals(AppResult.Success(Unit), repository.changeTotal(scope, match, grade, TotalChoice.MANUAL))
+        assertEquals(AppResult.Success(Unit), repository.changeTotal(scope, match, pick(grade, TotalChoice.MANUAL), "link-1"))
 
         val score = repository.observe().first().single()
-        assertEquals("Оценка · 60-100", score.column.headerPath)
+        assertEquals(SheetFormula.Direct(SheetCellRef(22, SheetColumnRef("Оценка · 60-100", 12))), score.formula)
         assertEquals(TotalChoice.MANUAL, score.choice)
-        assertEquals(12, score.column.index)
+        assertEquals("link-1", score.linkId)
         assertEquals("5A", score.value)
         assertEquals("5A", score.baseline)
         assertEquals(connected.connectedAt, score.connectedAt)
