@@ -1,0 +1,102 @@
+{
+  "success": true,
+  "data": {
+    "status": "READY",
+    "rule": {
+      "schema_version": 1,
+      "decision": "mixed",
+      "summary": "Сумма баллов за работы и экзамен",
+      "tabs": [
+        {
+          "sheet": "Группа 1",
+          "gid": "0",
+          "role": "active_roster"
+        },
+        {
+          "sheet": "Шаблон",
+          "gid": null,
+          "role": "template"
+        }
+      ],
+      "routes": [
+        {
+          "id": "r1",
+          "purpose": "current_accumulated",
+          "kind": "compute",
+          "sheet": "Группа 1",
+          "gid": "0",
+          "identity": [
+            {
+              "sheet": "Группа 1",
+              "gid": "0",
+              "isu_column": "B",
+              "name_column": "C",
+              "first_student_row": 4
+            }
+          ],
+          "source": null,
+          "calculation": {
+            "op": "sum",
+            "args": [
+              {
+                "op": "cell",
+                "sheet": "Группа 1",
+                "gid": "0",
+                "column": "D"
+              },
+              {
+                "op": "round",
+                "arg": {
+                  "op": "cell",
+                  "sheet": "Группа 1",
+                  "gid": "0",
+                  "column": "E"
+                },
+                "digits": 1
+              },
+              {
+                "op": "number",
+                "value": 0.5
+              }
+            ]
+          },
+          "blank_policy": "ignore_blank_inputs",
+          "explanation": "Сумма работ и бонуса",
+          "review_required": true,
+          "warnings": []
+        },
+        {
+          "id": "r2",
+          "purpose": "official_total",
+          "kind": "direct",
+          "sheet": "Группа 1",
+          "gid": "0",
+          "identity": [
+            {
+              "sheet": "Группа 1",
+              "gid": "0",
+              "isu_column": null,
+              "name_column": "C",
+              "first_student_row": 4
+            }
+          ],
+          "source": {
+            "sheet": "Группа 1",
+            "gid": "0",
+            "column": "R"
+          },
+          "calculation": null,
+          "blank_policy": "preserve",
+          "explanation": "Итог преподавателя",
+          "review_required": true,
+          "warnings": [
+            "Итог может быть 0 при недопуске"
+          ]
+        }
+      ]
+    },
+    "analyzedAt": "2026-10-04T12:00:00Z",
+    "reason": null
+  },
+  "error": null
+}

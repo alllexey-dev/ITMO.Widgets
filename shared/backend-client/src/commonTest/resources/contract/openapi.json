@@ -45,6 +45,10 @@
       "name": "schedule"
     },
     {
+      "description": "feature/sheets",
+      "name": "sheets"
+    },
+    {
       "description": "feature/social",
       "name": "social"
     },
@@ -1618,6 +1622,66 @@
         },
         "tags": [
           "links"
+        ]
+      }
+    },
+    "/api/links/{id}/sheet-rule": {
+      "get": {
+        "operationId": "sheetRule_rule",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseSheetRuleResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "sheets"
+        ]
+      },
+      "post": {
+        "operationId": "sheetRule_request",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseSheetRuleResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "sheets"
         ]
       }
     },
@@ -6636,6 +6700,39 @@
           "success"
         ]
       },
+      "ApiResponseSheetRuleResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SheetRuleResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
       "ApiResponseSportAutoSignEntry": {
         "type": "object",
         "properties": {
@@ -8705,6 +8802,49 @@
         },
         "required": [
           "value"
+        ]
+      },
+      "SheetRuleResponse": {
+        "type": "object",
+        "properties": {
+          "analyzedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rule": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {},
+            "description": "The analyzer's sanitised rule, schema_version 1"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "PENDING",
+              "RUNNING",
+              "READY",
+              "INSUFFICIENT",
+              "FAILED"
+            ]
+          }
+        },
+        "required": [
+          "analyzedAt",
+          "reason",
+          "rule",
+          "status"
         ]
       },
       "SportAutoSignEntry": {

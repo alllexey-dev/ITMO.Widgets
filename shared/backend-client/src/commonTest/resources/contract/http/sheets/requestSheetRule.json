@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "data": {
+    "status": "FAILED",
+    "rule": null,
+    "analyzedAt": null,
+    "reason": "closed"
+  },
+  "error": null
+}
