@@ -34,21 +34,21 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelect
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSheetTotal
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonList
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessons
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectPresenter
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectScoresInput
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTab
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacher
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlin.time.Instant
 
 /**
  * Мария's third semester (the design lab's data, synthetic) in the states of the design lab's axes, built by the real

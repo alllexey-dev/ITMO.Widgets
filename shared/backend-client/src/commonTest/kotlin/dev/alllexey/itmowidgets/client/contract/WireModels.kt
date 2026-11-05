@@ -2,6 +2,15 @@ package dev.alllexey.itmowidgets.client.contract
 
 import dev.alllexey.itmowidgets.client.app.AppVersionInfo
 import dev.alllexey.itmowidgets.client.common.GroupData
+import dev.alllexey.itmowidgets.client.common.ModerationReportRequest
+import dev.alllexey.itmowidgets.client.common.RelationshipState
+import dev.alllexey.itmowidgets.client.common.RelationshipStateSerializer
+import dev.alllexey.itmowidgets.client.common.ReportReason
+import dev.alllexey.itmowidgets.client.common.ReportReasonSerializer
+import dev.alllexey.itmowidgets.client.common.ResourceVoteRequest
+import dev.alllexey.itmowidgets.client.common.UserCapabilities
+import dev.alllexey.itmowidgets.client.common.UserData
+import dev.alllexey.itmowidgets.client.common.UserProfile
 import dev.alllexey.itmowidgets.client.connections.ApprovePairingRequest
 import dev.alllexey.itmowidgets.client.connections.ApprovedPairing
 import dev.alllexey.itmowidgets.client.connections.ConnectionClient
@@ -20,15 +29,6 @@ import dev.alllexey.itmowidgets.client.connections.ScopeGrant
 import dev.alllexey.itmowidgets.client.connections.ScopeInfo
 import dev.alllexey.itmowidgets.client.connections.UpdateScopesRequest
 import dev.alllexey.itmowidgets.client.connections.UserDevices
-import dev.alllexey.itmowidgets.client.common.ModerationReportRequest
-import dev.alllexey.itmowidgets.client.common.RelationshipState
-import dev.alllexey.itmowidgets.client.common.RelationshipStateSerializer
-import dev.alllexey.itmowidgets.client.common.ReportReason
-import dev.alllexey.itmowidgets.client.common.ReportReasonSerializer
-import dev.alllexey.itmowidgets.client.common.ResourceVoteRequest
-import dev.alllexey.itmowidgets.client.common.UserCapabilities
-import dev.alllexey.itmowidgets.client.common.UserData
-import dev.alllexey.itmowidgets.client.common.UserProfile
 import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.client.device.DevicePlatformSerializer
 import dev.alllexey.itmowidgets.client.device.RegisterDeviceRequest
@@ -61,13 +61,13 @@ import dev.alllexey.itmowidgets.client.reviews.SummaryScaleKindSerializer
 import dev.alllexey.itmowidgets.client.reviews.SummaryScaleValue
 import dev.alllexey.itmowidgets.client.reviews.SummaryScaleValueSerializer
 import dev.alllexey.itmowidgets.client.reviews.TeacherReview
+import dev.alllexey.itmowidgets.client.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewKind
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewKindSerializer
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewStatus
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewStatusSerializer
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsResponse
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummary
-import dev.alllexey.itmowidgets.client.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryLevel
 import dev.alllexey.itmowidgets.client.reviews.TeacherSummaryScale
 import dev.alllexey.itmowidgets.client.schedule.LessonDto
@@ -91,9 +91,9 @@ import dev.alllexey.itmowidgets.client.sport.model.SportLessonDto
 import dev.alllexey.itmowidgets.client.sport.model.SportQueue
 import dev.alllexey.itmowidgets.client.sport.model.SportQueueEntry
 import dev.alllexey.itmowidgets.client.sport.model.SportSectionDate
+import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceState
 import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceStateSerializer
-import dev.alllexey.itmowidgets.client.sport.model.SportSectionOccurrenceRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportSectionRequest
 import dev.alllexey.itmowidgets.client.sport.model.SportSectionSlot
 import dev.alllexey.itmowidgets.client.sport.model.UserSportBookingsResponse
@@ -104,9 +104,9 @@ import dev.alllexey.itmowidgets.client.users.SharingVisibilitySerializer
 import dev.alllexey.itmowidgets.client.users.UserLookupRequest
 import dev.alllexey.itmowidgets.client.users.UserLookupResponse
 import dev.alllexey.itmowidgets.client.users.UserPrivacySettings
+import kotlin.enums.EnumEntries
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
-import kotlin.enums.EnumEntries
 
 /** A client wire model and the Backend schema it mirrors; [name] is the Kotlin class name, equal to Backend's. */
 class WireModel(val name: String, val serializer: KSerializer<*>) {

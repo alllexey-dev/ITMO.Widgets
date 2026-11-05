@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookContro
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.BlankPolicy
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCellRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
@@ -21,7 +22,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRuleNode
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRulePurpose
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRuleRoute
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRuleTab
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.BlankPolicy
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey

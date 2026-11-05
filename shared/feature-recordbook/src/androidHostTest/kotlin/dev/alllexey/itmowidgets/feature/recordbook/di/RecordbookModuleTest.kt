@@ -8,19 +8,22 @@ import dev.alllexey.itmoapi.itmoid.TokenSet
 import dev.alllexey.itmoapi.itmoid.TokenStorage
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
+import dev.alllexey.itmowidgets.client.sheets.SheetRulesApi
+import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.lesson.LessonSubjectSource
-import dev.alllexey.itmowidgets.core.today.TodayTodoSource
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksRepository
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevelsRepository
 import dev.alllexey.itmowidgets.core.schedule.ScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.schedule.SubjectLessonsGateway
+import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.session.SessionTokenStore
 import dev.alllexey.itmowidgets.core.social.PersonPhotosRepository
@@ -29,8 +32,6 @@ import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
-import dev.alllexey.itmowidgets.client.sheets.SheetRulesApi
-import kotlin.uuid.Uuid
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLinksRepository
@@ -39,6 +40,7 @@ import dev.alllexey.itmowidgets.core.testing.InMemoryPreferencesDataStore
 import dev.alllexey.itmowidgets.core.testing.InMemorySecureStore
 import dev.alllexey.itmowidgets.core.testing.RecordingAppNotifier
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.today.TodayTodoSource
 import dev.alllexey.itmowidgets.feature.recordbook.FakeMarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.RecordingMarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
@@ -51,7 +53,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepos
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
-import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
@@ -66,8 +67,6 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepo
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
-import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
-import dev.alllexey.itmowidgets.core.services.BackendGate
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import kotlin.test.AfterTest
@@ -75,6 +74,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.time.Clock
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import okio.Path.Companion.toPath
 import org.koin.core.annotation.KoinExperimentalAPI

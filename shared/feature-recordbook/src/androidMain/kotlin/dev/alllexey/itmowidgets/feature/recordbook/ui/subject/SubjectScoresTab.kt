@@ -73,12 +73,12 @@ import dev.alllexey.itmowidgets.shared.compose.strings.subject_control_absent
 import dev.alllexey.itmowidgets.shared.compose.strings.subject_score_out_of
 import dev.alllexey.itmowidgets.shared.compose.strings.subject_sheet_offer_note
 import dev.alllexey.itmowidgets.shared.compose.strings.subject_sport_title
+import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 import dev.alllexey.itmowidgets.shared.designsystem.ic_more_vert
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
 import dev.alllexey.itmowidgets.shared.designsystem.ic_table
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** `Баллы`: the hero, the sport points of physical education, the checkpoints by group, or the offers without them. */
 internal fun LazyListScope.scoresTab(scores: SubjectScores, actions: RecordbookSubjectActions) {
