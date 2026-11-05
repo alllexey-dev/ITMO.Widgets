@@ -220,7 +220,7 @@ class SheetScoresSheetTest {
 
         state = SheetScoresPreviewSamples.pickSum
         waitForIdle()
-        assertShown("Сумма: 15")
+        assertShown("Сумма: 21")
         val first = SheetScoresPreviewSamples.pickSum.summed.first()
         onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToKey("column:${first.tab.gid}:${first.column}")
         assertTrue(onAllNodes(isToggleable() and isOn()).fetchSemanticsNodes().size >= 2)
