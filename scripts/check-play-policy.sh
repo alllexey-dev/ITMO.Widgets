@@ -18,6 +18,8 @@ FORBIDDEN_MANIFEST=(
   android.permission.USE_EXACT_ALARM
   android.permission.FOREGROUND_SERVICE
   com.google.android.gms.permission.AD_ID
+  android.permission.ACCESS_FINE_LOCATION
+  android.permission.ACCESS_COARSE_LOCATION
   androidx.work.impl.foreground.SystemForegroundService
 )
 GITHUB_RELEASES="github.com/alllexey-dev/ITMO.Widgets/releases"

@@ -192,6 +192,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   any two rooms across floors, `По городу` in the system Maps between buildings, search across buildings, place
   chips, dark in the dark theme. `Маршрут` in the lesson sheet and on the Сегодня hero opens it.
 - Plans come from the mirror on map.alllexey.dev and stay on the device (ADR 0033); `Лицензии` names their source.
+- The Android app no longer declares MapLibre's location and Wi-Fi state permissions: the map never shows where you
+  are, and `scripts/check-play-policy.sh` now rejects location permissions.
 - Opened from Профиль, the map starts at Кронверкский пр., 49.
 - A room opened from a place chip's list keeps the chip: closing the room, or Back on Android, shows the list again.
   Back on Android closes the map's layers one at a time (picking a route end, the route, the search, the room, the
