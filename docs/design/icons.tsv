@@ -1,4 +1,5 @@
 id	symbol	fill	kind	sf_symbol	note
+account_balance	account_balance	0	shared	building.columns	-
 add	add	0	shared	plus	-
 arrow_back	arrow_back	0	shared	chevron.backward	-
 arrow_drop_down	arrow_drop_down	0	shared	arrowtriangle.down.fill	-
@@ -45,6 +46,7 @@ event_note	event_note	0	shared	calendar.day.timeline.left	-
 event_repeat	event_repeat	0	shared	repeat	The sport queue that repeats every two weeks
 exercise	exercise	0	shared	dumbbell	-
 expand_more	expand_more	0	shared	chevron.down	Same glyph as summary_expand
+feedback	feedback	0	shared	exclamationmark.bubble	-
 fit_screen	fit_screen	0	shared	viewfinder	Campus map: show the whole building
 flag	flag	0	shared	flag	-
 folder	folder	0	shared	folder	-

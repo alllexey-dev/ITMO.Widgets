@@ -28,6 +28,13 @@ final class SocialSnapshotTests: XCTestCase {
         assertProfile(me.longName, named: "profile-long-name", appearances: [.light, .lightAX1])
     }
 
+    func testIsuHub() {
+        let screen = NavigationStack {
+            IsuHubContent().itmoDetailHeader(title: AppStrings.string("me_isu_hub"), subtitle: nil)
+        }
+        assertScreenAppearances(of: screen, named: "isu-hub", appearances: [.light, .dark], settle: 1)
+    }
+
     func testFriends() {
         assertFriends(social.friends(state: "list"), named: "friends")
     }

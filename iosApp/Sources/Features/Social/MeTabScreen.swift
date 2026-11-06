@@ -143,18 +143,9 @@ struct MeContent: View {
         }
     }
 
-    /// ISU messages, the campus map, the Wi-Fi, the university's site and the project's pages.
+    /// The campus map, ISU (messages and Wi-Fi), the university's site, the project's pages and the feedback site.
     private var links: some View {
         ItmoListGroup {
-            ItmoRow(
-                title: AppStrings.string("me_isu_messages"),
-                subtitle: AppStrings.string("me_isu_messages_subtitle"),
-                symbol: .mail,
-                tone: .neutral,
-                chevron: true,
-                action: { actions.open(AppRoutes.IsuMessages.shared) }
-            )
-            .accessibilityIdentifier("isu_messages_row")
             ItmoRow(
                 title: AppStrings.string("me_map"),
                 subtitle: AppStrings.string("me_map_subtitle"),
@@ -165,14 +156,14 @@ struct MeContent: View {
             )
             .accessibilityIdentifier("map_row")
             ItmoRow(
-                title: AppStrings.string("me_wifi"),
-                subtitle: AppStrings.string("me_wifi_subtitle"),
-                symbol: .wifi,
+                title: AppStrings.string("me_isu_hub"),
+                subtitle: AppStrings.string("me_isu_hub_subtitle"),
+                symbol: .accountBalance,
                 tone: .neutral,
                 chevron: true,
-                action: { actions.open(AppRoutes.Wifi.shared) }
+                action: { actions.open(AppRoutes.Isu.shared) }
             )
-            .accessibilityIdentifier("wifi_row")
+            .accessibilityIdentifier("isu_row")
             external("me_my_itmo", "me_my_itmo_subtitle", .language, id: "my_itmo_row") {
                 actions.open(AppRoutes.MyItmoWeb.shared)
             }
@@ -182,7 +173,20 @@ struct MeContent: View {
             external("me_github", "me_github_subtitle", .brandGithub, id: "github_row") {
                 actions.openProjectLink(ProjectLinks.shared.GITHUB_URL)
             }
+            external("me_feedback", "me_feedback_subtitle", .feedback, id: "feedback_row") {
+                actions.openProjectLink(Self.feedbackUrl)
+            }
         }
+    }
+
+    /// The feedback form prefilled with the marketing version and the model identifier (`iPhone17,1`), never the
+    /// device's own name.
+    static var feedbackUrl: String {
+        var system = utsname()
+        uname(&system)
+        let model = withUnsafeBytes(of: system.machine) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        return ProjectLinks.shared.feedbackUrl(platform: .ios, version: version, device: model)
     }
 
     /// A row that leaves the app: an arrow out instead of the chevron.

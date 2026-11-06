@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
+    "me_feedback" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обратная связь"
+          }
+        }
+      }
+    },
+    "me_feedback_subtitle" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Идеи и сообщения об ошибках"
+          }
+        }
+      }
+    },
     "me_friends_error" : {
       "comment" : "Generated from strings_me.xml",
       "extractionState" : "manual",
@@ -157,6 +181,30 @@
         }
       }
     },
+    "me_isu_hub" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИСУ"
+          }
+        }
+      }
+    },
+    "me_isu_hub_subtitle" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщения и Wi-Fi"
+          }
+        }
+      }
+    },
     "me_isu_messages" : {
       "comment" : "Generated from strings_me.xml",
       "extractionState" : "manual",
@@ -164,7 +212,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сообщения ИСУ"
+            "value" : "Сообщения"
           }
         }
       }

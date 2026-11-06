@@ -230,6 +230,12 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** `ИСУ` of Профиль (docs/features/me.md): the entries to [IsuMessages] and [Wifi]. */
+    @Serializable
+    data object Isu : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
     /** ISU messages (`Сообщения ИСУ`, docs/features/isu-messages.md): the inbox and the archive, read-only. */
     @Serializable
     data object IsuMessages : AppRoute {
@@ -291,6 +297,7 @@ object AppRoutes {
         subclass(LessonDetails::class)
         subclass(PendingSportDetails::class)
         subclass(CampusMap::class)
+        subclass(Isu::class)
         subclass(IsuMessages::class)
         subclass(ReportReview::class)
         subclass(ReportLink::class)

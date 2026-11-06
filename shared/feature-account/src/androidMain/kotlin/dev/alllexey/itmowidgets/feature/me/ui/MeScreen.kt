@@ -45,15 +45,15 @@ import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
+import dev.alllexey.itmowidgets.shared.designsystem.ic_account_balance
+import dev.alllexey.itmowidgets.shared.designsystem.ic_feedback
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_github
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_telegram
 import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_language
 import dev.alllexey.itmowidgets.shared.designsystem.ic_logout
-import dev.alllexey.itmowidgets.shared.designsystem.ic_mail
 import dev.alllexey.itmowidgets.shared.designsystem.ic_map
-import dev.alllexey.itmowidgets.shared.designsystem.ic_wifi
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
@@ -63,7 +63,7 @@ import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import org.jetbrains.compose.resources.painterResource
 
 /** The project pages under the app rows; the host knows their addresses. */
-enum class MeProjectLink { GITHUB, TELEGRAM }
+enum class MeProjectLink { GITHUB, TELEGRAM, FEEDBACK }
 
 /**
  * What the Профиль tab asks its host to do. Navigation, sharing and links are platform work; [onOpenProjectLink]
@@ -79,10 +79,8 @@ data class MeActions(
     val onOpenDevices: () -> Unit = {},
     /** The campus map, without a lesson to show. */
     val onOpenMap: () -> Unit = {},
-    /** The Wi-Fi sheet: the network, the login and the password from ISU. */
-    val onOpenWifi: () -> Unit = {},
-    /** Сообщения ИСУ. */
-    val onOpenIsuMessages: () -> Unit = {},
+    /** `ИСУ`: the screen with the ISU messages and the Wi-Fi. */
+    val onOpenIsu: () -> Unit = {},
     /** The official site in the app's web view. */
     val onOpenMyItmo: () -> Unit = {},
     val onOpenSettings: () -> Unit = {},
@@ -104,14 +102,14 @@ object MeTestTags {
     const val GATE = "people_gate"
     const val WIDGETS_ROW = "widgets_row"
     const val MAP_ROW = "map_row"
-    const val WIFI_ROW = "wifi_row"
-    const val ISU_MESSAGES_ROW = "isu_messages_row"
+    const val ISU_ROW = "isu_row"
     const val MY_ITMO_ROW = "my_itmo_row"
     const val SETTINGS_ROW = "settings_row"
     const val DEVICES_ROW = "devices_row"
     const val DEBUG_TOOLS_ROW = "debug_tools_row"
     const val TELEGRAM = "telegram_row"
     const val GITHUB = "github_row"
+    const val FEEDBACK = "feedback_row"
     const val SIGN_OUT = "sign_out_row"
 }
 
@@ -303,21 +301,10 @@ private fun App(devices: DevicesSummary, showDebugTools: Boolean, actions: MeAct
     }
 }
 
-/** ISU messages, the campus map, the Wi-Fi, the university's site and the project's pages. */
+/** The campus map, ISU (messages and Wi-Fi), the university's site, the project's pages and the feedback site. */
 @Composable
 private fun Links(actions: MeActions) {
     ListGroup {
-        item {
-            ListRow(
-                text(AccountStrings.me_isu_messages),
-                Modifier.testTag(MeTestTags.ISU_MESSAGES_ROW),
-                subtitle = text(AccountStrings.me_isu_messages_subtitle),
-                icon = painterResource(Res.drawable.ic_mail),
-                iconTone = Tone.Neutral,
-                chevron = true,
-                onClick = actions.onOpenIsuMessages,
-            )
-        }
         item {
             ListRow(
                 text(AccountStrings.me_map),
@@ -331,13 +318,13 @@ private fun Links(actions: MeActions) {
         }
         item {
             ListRow(
-                text(AccountStrings.me_wifi),
-                Modifier.testTag(MeTestTags.WIFI_ROW),
-                subtitle = text(AccountStrings.me_wifi_subtitle),
-                icon = painterResource(Res.drawable.ic_wifi),
+                text(AccountStrings.me_isu_hub),
+                Modifier.testTag(MeTestTags.ISU_ROW),
+                subtitle = text(AccountStrings.me_isu_hub_subtitle),
+                icon = painterResource(Res.drawable.ic_account_balance),
                 iconTone = Tone.Neutral,
                 chevron = true,
-                onClick = actions.onOpenWifi,
+                onClick = actions.onOpenIsu,
             )
         }
         item {
@@ -364,6 +351,14 @@ private fun Links(actions: MeActions) {
                 painterResource(Res.drawable.ic_brand_github),
                 MeTestTags.GITHUB,
             ) { actions.onOpenProjectLink(MeProjectLink.GITHUB) }
+        }
+        item {
+            ExternalRow(
+                text(AccountStrings.me_feedback),
+                text(AccountStrings.me_feedback_subtitle),
+                painterResource(Res.drawable.ic_feedback),
+                MeTestTags.FEEDBACK,
+            ) { actions.onOpenProjectLink(MeProjectLink.FEEDBACK) }
         }
     }
 }
