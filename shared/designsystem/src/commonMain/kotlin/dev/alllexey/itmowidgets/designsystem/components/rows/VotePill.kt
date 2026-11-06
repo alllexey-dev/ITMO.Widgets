@@ -191,8 +191,8 @@ private val PillRadius = 16.dp
 /** The thumbs' 4 dp padding towards the score, as in `view_link_vote_pill.xml`. */
 private val ThumbInnerPadding = 4.dp
 
-/** The 24 dp thumbs inside 48 dp targets. */
-private val ThumbIconSize = 24.dp
+/** 18 dp thumbs, M3's small icon size, so they sit inside the 32 dp pill; the targets stay 48 dp. */
+private val ThumbIconSize = 18.dp
 
 /** `selectableItemBackgroundBorderless` over a 48 dp target. */
 private val ThumbRippleRadius = 24.dp
