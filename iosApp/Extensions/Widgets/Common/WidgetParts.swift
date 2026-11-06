@@ -107,10 +107,30 @@ extension View {
         modifier(WidgetFont(size: size, weight: weight, design: design, monospacedDigits: monospacedDigits))
     }
 
-    /// The widget's own tile: WidgetKit's container background in a widget, the same colour painted under the view
-    /// where WidgetKit ignores it (the app's gallery, snapshot tests).
+    /// The widget's own tile: WidgetKit's container background, which the system draws edge to edge (and removes in
+    /// StandBy and the tinted and clear styles); painted under the view too only where a host asks for it
+    /// (`paintsWidgetTile`).
     func widgetTile(_ color: Color) -> some View {
-        background(color).containerBackground(for: .widget) { color }
+        modifier(WidgetTile(color: color))
+    }
+}
+
+extension EnvironmentValues {
+    /// Whether an entry view paints its tile under its content: only outside WidgetKit (the app's gallery, snapshot
+    /// tests), which ignores `containerBackground`. In a widget a second fill would sit inside the content margins
+    /// as a rectangle with its own corners on top of the system's background.
+    @Entry var paintsWidgetTile = false
+}
+
+private struct WidgetTile: ViewModifier {
+    let color: Color
+
+    @Environment(\.paintsWidgetTile) private var paintsTile
+
+    func body(content: Content) -> some View {
+        content
+            .background(paintsTile ? color : .clear)
+            .containerBackground(for: .widget) { color }
     }
 }
 

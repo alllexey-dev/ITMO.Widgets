@@ -1,5 +1,6 @@
 import Shared
 import UIKit
+import WidgetKit
 import XCTest
 @testable import ITMOWidgets
 
@@ -13,6 +14,22 @@ final class SettingsTests: XCTestCase {
         XCTAssertNil(ThemeMode.system.colorScheme)
         XCTAssertEqual(ThemeMode.light.colorScheme, .light)
         XCTAssertEqual(ThemeMode.dark.colorScheme, .dark)
+    }
+
+    /// The gallery counts home screen widgets per format from WidgetKit's list; a list WidgetKit could not give is no
+    /// widget at all, never the count read before.
+    func testThePlacedWidgetsAreTheHomeScreenOnesOfEachFormat() {
+        let counts = PlacedWidgets.counts([
+            (CardsWidget.kind, .systemMedium), (CardsWidget.kind, .systemLarge), (DayWidget.kind, .systemLarge),
+            (NextLessonWidget.kind, .accessoryCircular), ("another.app.widget", .systemSmall),
+        ])
+
+        XCTAssertEqual(counts[.cards], 2)
+        XCTAssertEqual(counts[.day], 1)
+        XCTAssertEqual(counts[.next], 0)
+        XCTAssertEqual(counts.count, 6)
+        XCTAssertEqual(PlacedWidgets.counts([]).values.reduce(0, +), 0)
+        XCTAssertEqual(PlacedWidgets.counts(nil), PlacedWidgets.counts([]))
     }
 
     func testSettingsAndDiagnosticsAreSwiftUIScreensAndTheDebugToolsStayOnAndroid() {
