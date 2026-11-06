@@ -27,12 +27,15 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.designsystem.kit.LocalOnSheet
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.shared.designsystem.Res
+import dev.alllexey.itmowidgets.shared.designsystem.ic_arrow_back
 import dev.alllexey.itmowidgets.shared.designsystem.ic_close
 import org.jetbrains.compose.resources.painterResource
 
-/** The close button of a [SheetScaffold]: [label] is what TalkBack reads. */
+/** The close button of a [SheetScaffold]: [label] is what TalkBack reads; [back] draws an arrow for a step back inside the sheet. */
 @Immutable
-data class SheetClose(val label: String, val onClick: () -> Unit)
+data class SheetClose(val label: String, val back: Boolean, val onClick: () -> Unit) {
+    constructor(label: String, onClick: () -> Unit) : this(label, back = false, onClick)
+}
 
 /** Where a [SheetScaffold]'s close button sits. */
 enum class SheetClosePlacement {
@@ -168,7 +171,11 @@ private fun HeaderTexts(title: String, subtitle: String?, modifier: Modifier) {
 @Composable
 private fun CloseButton(close: SheetClose, tint: Color) {
     IconButton(onClick = close.onClick) {
-        Icon(painterResource(Res.drawable.ic_close), contentDescription = close.label, tint = tint)
+        Icon(
+            painterResource(if (close.back) Res.drawable.ic_arrow_back else Res.drawable.ic_close),
+            contentDescription = close.label,
+            tint = tint,
+        )
     }
 }
 

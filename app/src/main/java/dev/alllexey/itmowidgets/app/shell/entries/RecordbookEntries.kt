@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.view.View
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,6 +47,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTab
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresEvent
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.canGoBack
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookActions
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookRoute
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresActions
@@ -139,7 +141,8 @@ private fun RecordbookSubjectEntry(key: AppRoutes.RecordbookSubject, navigator: 
 private const val SERVICES_PAGE = "SERVICES"
 
 /**
- * `Мои баллы`: the sheet closes itself once the ViewModel is done and shows a failed save in a snackbar.
+ * `Мои баллы`: the sheet closes itself once the ViewModel is done, steps back inside itself on Back and shows a failed
+ * save in a snackbar.
  */
 @Composable
 private fun SheetScoresEntry(onClose: () -> Unit) {
@@ -167,15 +170,19 @@ private fun SheetScoresEntry(onClose: () -> Unit) {
             onRetry = { viewModel.refresh(RefreshMode.Force) },
             onPickRow = viewModel::pickRow,
             onPickTab = viewModel::pickTab,
-            onPickTotal = viewModel::pickTotal,
-            onResetTotal = viewModel::resetTotal,
-            onSumming = viewModel::setSumming,
-            onSave = viewModel::save,
+            onSelect = viewModel::select,
+            onOpenColumns = viewModel::openColumns,
+            onOpenSum = viewModel::openSum,
+            onPickColumn = viewModel::pickColumn,
+            onToggleSum = viewModel::toggleSum,
+            onFinishSum = viewModel::finishSum,
             onAnalyze = viewModel::analyze,
-            onUseAi = viewModel::useAi,
-            onDismissAi = viewModel::dismissAi,
+            onSave = viewModel::save,
+            onBack = viewModel::back,
         )
     }
+    // Back steps inside the sheet first (a column page, a tab's rows); only then does it close the sheet.
+    BackHandler(enabled = state.canGoBack, onBack = viewModel::back)
     SheetScoresSheet(
         subjectName = viewModel.scope.subjectName,
         state = state,

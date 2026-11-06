@@ -112,14 +112,19 @@ class SheetScoresViewModelTest {
         runCurrent()
 
         val picker = vm.pickTotal()
-        assertNull(picker.selected)
+        assertNull(picker.selection)
+        assertNull(picker.hero)
+        assertNull(picker.action)
         assertEquals(listOf(2 to "8", 4 to "9"), picker.cells.filter { it.value.isNotEmpty() }.map { it.column to it.value })
         assertNull(picker.decision)
-        vm.pickTotal(picker.cells.last())
+        vm.openColumns()
+        assertEquals(TotalPage.COLUMNS, vm.pickTotal().page)
+        vm.pickColumn(picker.cells.last())
         runCurrent()
         assertTrue(repository.connected.isEmpty())
-        assertEquals(picker.cells.last(), vm.pickTotal().picked)
-        assertTrue(vm.pickTotal().canSave)
+        assertEquals(TotalOption.Column(picker.cells.last()), vm.pickTotal().selection)
+        assertEquals(TotalPage.OVERVIEW, vm.pickTotal().page)
+        assertEquals(TotalAction.SAVE, vm.pickTotal().action)
         vm.save()
         runCurrent()
         assertEquals(SheetScoresUiState.Done, vm.uiState.value)
@@ -184,7 +189,7 @@ class SheetScoresViewModelTest {
         assertTrue(vm.uiState.value is SheetScoresUiState.PickTotal)
     }
 
-    @Test fun `another total marks the current one and is saved as a change`() = runTest(main.dispatcher) {
+    @Test fun `the current total is on top, done closes and another one is saved as a change`() = runTest(main.dispatcher) {
         repository.scores.value = listOf(sheetScore(scope = scope))
         repository.inspections += ready(testWorkbook())
 
@@ -192,13 +197,20 @@ class SheetScoresViewModelTest {
         runCurrent()
 
         val picker = vm.pickTotal()
-        assertEquals(SheetCell(grades, 11, "ИТОГО баллов", "66,3"), picker.selected)
+        val total = TotalOption.Column(SheetCell(grades, 11, "ИТОГО баллов", "66,3"))
+        assertEquals(total, picker.current)
+        assertEquals(total, picker.selection)
+        assertEquals("66,3", picker.hero?.value)
+        assertNull(picker.hero?.note)
+        assertTrue(picker.variants.none { it.option == total })
+        assertEquals(TotalAction.DONE, picker.action)
         assertTrue(picker.cells.any { it.tab.gid == 11L })
         val grade = picker.cells.single { it.tab == grades && it.column == 12 }
-        assertEquals(picker.selected, picker.decision?.total)
-        assertFalse(picker.canReset)
-        assertFalse(picker.canSave)
-        vm.pickTotal(grade)
+        vm.select(TotalOption.Column(grade))
+        assertEquals(TotalAction.SAVE, vm.pickTotal().action)
+        vm.select(total)
+        assertEquals(TotalAction.DONE, vm.pickTotal().action)
+        vm.select(TotalOption.Column(grade))
         vm.save()
         runCurrent()
         assertEquals(SheetScoresUiState.Done, vm.uiState.value)
@@ -213,28 +225,28 @@ class SheetScoresViewModelTest {
         val vm = model(Step.TOTAL)
         runCurrent()
 
-        vm.pickTotal(vm.pickTotal().decision!!.total)
-        assertTrue(vm.pickTotal().canSave)
+        assertEquals(TotalOption.Column(vm.pickTotal().decision!!.total), vm.pickTotal().selection)
+        assertEquals(TotalAction.SAVE, vm.pickTotal().action)
         vm.save()
         runCurrent()
 
         assertEquals(TotalChoice.AUTO, repository.totals.single().choice)
     }
 
-    @Test fun `«Вернуть авто» selects the automatic total instead of a hand-picked one`() = runTest(main.dispatcher) {
+    @Test fun `the automatic total stays a variant beside a hand-picked one and is saved as automatic`() = runTest(main.dispatcher) {
         val grade = SheetColumnRef("Оценка · 60-100", 12)
         repository.scores.value = listOf(sheetScore(scope = scope, column = grade).copy(choice = TotalChoice.MANUAL))
         repository.inspections += ready(testWorkbook())
         val vm = model(Step.TOTAL)
         runCurrent()
         val picker = vm.pickTotal()
-        assertEquals(12, picker.selected?.column)
-        assertTrue(picker.canReset)
-        assertEquals("ИТОГО баллов", picker.candidates.first().headerPath)
+        assertEquals(12, (picker.selection as TotalOption.Column).cell.column)
+        val auto = picker.variants.first()
+        assertEquals(TotalOption.Column(picker.decision!!.total), auto.option)
+        assertEquals(UiText.Res(RecordbookStrings.sheet_total_auto), auto.subtitle)
 
-        vm.resetTotal()
-        assertEquals(picker.decision?.total, vm.pickTotal().picked)
-        assertFalse(vm.pickTotal().canReset)
+        vm.select(auto.option)
+        assertEquals(TotalAction.SAVE, vm.pickTotal().action)
         vm.save()
         runCurrent()
 
@@ -269,7 +281,7 @@ class SheetScoresViewModelTest {
         runCurrent()
         val picker = vm.pickTotal()
 
-        vm.pickTotal(picker.cells.first())
+        vm.pickColumn(picker.cells.first())
         val picked = vm.pickTotal()
         vm.save()
         runCurrent()
@@ -280,7 +292,7 @@ class SheetScoresViewModelTest {
         val gate = CompletableDeferred<Unit>()
         repository.connectGate = gate
         vm.save()
-        vm.pickTotal(picker.cells.last())
+        vm.pickColumn(picker.cells.last())
         vm.save()
         runCurrent()
         gate.complete(Unit)
@@ -299,15 +311,21 @@ class SheetScoresViewModelTest {
         val first = cells.single { it.column == 3 }
         val lab = cells.single { it.column == 10 }
 
-        vm.setSumming(true)
-        vm.pickTotal(first)
+        vm.openSum()
+        assertEquals(TotalAction.FINISH_SUM, vm.pickTotal().action)
+        vm.toggleSum(first)
         assertEquals("2", vm.pickTotal().sum)
-        assertFalse(vm.pickTotal().canSave)
-        vm.pickTotal(lab)
+        assertFalse(vm.pickTotal().canFinishSum)
+        vm.toggleSum(lab)
         assertEquals("14", vm.pickTotal().sum)
-        vm.pickTotal(first)
+        vm.toggleSum(first)
         assertEquals(listOf(lab), vm.pickTotal().summed)
-        vm.pickTotal(first)
+        vm.toggleSum(first)
+        vm.finishSum()
+        val made = vm.pickTotal()
+        assertEquals(TotalPage.OVERVIEW, made.page)
+        assertEquals("14", made.hero?.value)
+        assertTrue(made.selection is TotalOption.Sum)
         assertTrue(repository.totals.isEmpty())
         vm.save()
         runCurrent()
@@ -329,6 +347,8 @@ class SheetScoresViewModelTest {
         assertEquals(SheetColumnStats(filled = 4, students = 4, max = 66.3), total.stats)
         assertEquals(listOf(grades, SheetTab(11, "All")), picker.tabs)
         assertTrue(picker.emptyColumns(grades).isEmpty())
+        // Only points can be added: not the group, a percentage, a grade or a «Y».
+        assertEquals(listOf(3, 4, 5, 6, 10, 11), picker.sumColumns(grades).map { it.cell.column })
     }
 
     @Test fun `no AI offer without a shared link or with the services off`() = runTest(main.dispatcher) {
@@ -369,9 +389,13 @@ class SheetScoresViewModelTest {
         assertEquals("66,3", proposal.official)
         assertEquals("Сумма работ", proposal.summary)
         assertEquals(listOf("Итог может быть 0"), proposal.warnings)
+        assertEquals(TotalOption.Ai, vm.pickTotal().selection)
+        assertEquals("18", vm.pickTotal().hero?.value)
+        assertEquals(UiText.Res(RecordbookStrings.sheet_scores_official, listOf("66,3")), vm.pickTotal().hero?.official)
+        assertEquals(TotalAction.SAVE, vm.pickTotal().action)
         assertTrue(repository.totals.isEmpty())
 
-        vm.useAi()
+        vm.save()
         runCurrent()
         val saved = repository.totals.single()
         assertEquals(TotalChoice.AI, saved.choice)
@@ -382,7 +406,7 @@ class SheetScoresViewModelTest {
         assertEquals(SheetScoresUiState.Done, vm.uiState.value)
     }
 
-    @Test fun `«Нет» drops the proposal and saves nothing`() = runTest(main.dispatcher) {
+    @Test fun `another variant over the AI result saves nothing of it`() = runTest(main.dispatcher) {
         repository.scores.value = listOf(sheetScore(scope = scope))
         repository.inspections += ready(testWorkbook())
         rules.requestResult = SheetRuleResult.Ready(rule)
@@ -392,11 +416,13 @@ class SheetScoresViewModelTest {
         vm.analyze()
         runCurrent()
         assertTrue(vm.pickTotal().ai is SheetAiState.Proposal)
-        vm.dismissAi()
-        vm.useAi()
+        assertEquals(TotalOption.Ai, vm.pickTotal().selection)
+        vm.select(vm.pickTotal().current!!)
+        assertTrue(vm.pickTotal().variants.any { it.option == TotalOption.Ai })
+        vm.save()
         runCurrent()
 
-        assertEquals(SheetAiState.Hidden, vm.pickTotal().ai)
+        assertEquals(SheetScoresUiState.Done, vm.uiState.value)
         assertTrue(repository.totals.isEmpty())
     }
 
@@ -419,7 +445,7 @@ class SheetScoresViewModelTest {
             runCurrent()
 
             assertEquals(SheetAiState.Failed(UiText.Res(text)), vm.pickTotal().ai)
-            vm.pickTotal(vm.pickTotal().cells.first { it.column == 12 })
+            vm.select(TotalOption.Column(vm.pickTotal().cells.first { it.column == 12 }))
             vm.save()
             runCurrent()
             assertEquals(SheetScoresUiState.Done, vm.uiState.value)
@@ -481,10 +507,47 @@ class SheetScoresViewModelTest {
         runCurrent()
 
         val picker = vm.pickTotal()
-        assertNull(picker.selected)
-        assertNull(picker.shown)
-        assertEquals("14", picker.saved?.value)
+        assertEquals(TotalOption.Saved, picker.selection)
+        assertEquals(TotalOption.Saved, picker.current)
+        assertEquals("14", picker.hero?.value)
+        assertEquals(TotalAction.DONE, picker.action)
         assertEquals(SheetAiState.Offer, picker.ai)
+        // The hand-made sum opens again on the sum page.
+        assertEquals(listOf(3, 10), picker.summed.map { it.column })
+        assertEquals("14", picker.sum)
+    }
+
+    @Test fun `back leaves a column page and a tab's rows`() = runTest(main.dispatcher) {
+        repository.scores.value = listOf(sheetScore(scope = scope))
+        repository.inspections += ready(testWorkbook())
+        val vm = model(Step.TOTAL)
+        runCurrent()
+        assertFalse(vm.uiState.value.canGoBack)
+        vm.openColumns()
+        assertTrue(vm.uiState.value.canGoBack)
+        vm.back()
+        assertEquals(TotalPage.OVERVIEW, vm.pickTotal().page)
+
+        repository.inspections += ready(testWorkbook(grades to "grades_multiheader.csv"), RowSearch.NotFound)
+        val connecting = model()
+        runCurrent()
+        connecting.pickTab(grades)
+        assertTrue(connecting.uiState.value.canGoBack)
+        connecting.back()
+        assertEquals(SheetScoresUiState.PickTab(listOf(grades)), connecting.uiState.value)
+    }
+
+    @Test fun `an unsure automatic total says what to check`() = runTest(main.dispatcher) {
+        val grid = CsvGrid.parse("ИСУ,ФИО,ЛР1,Score\n123456,Тестов Тест Тестович,5,5")
+        repository.scores.value = listOf(sheetScore(scope = scope, column = SheetColumnRef("Score", 3)).copy(choice = TotalChoice.AUTO_CHECK))
+        repository.inspections += ready(SheetWorkbook(testWorkbook().url, listOf(SheetTabGrid(grades, grid))))
+        val vm = model(Step.TOTAL)
+        runCurrent()
+
+        val hero = vm.pickTotal().hero!!
+        assertEquals(UiText.Res(RecordbookStrings.sheet_total_check_weak), hero.note)
+        assertTrue(hero.warning)
+        assertEquals(TotalAction.SAVE, vm.pickTotal().action)
     }
 
     private val rule: SheetRule by lazy {

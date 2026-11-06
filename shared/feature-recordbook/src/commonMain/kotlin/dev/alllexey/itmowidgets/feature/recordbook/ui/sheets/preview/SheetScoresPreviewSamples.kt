@@ -18,12 +18,14 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetAiSt
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetColumnOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetFormulaText
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.TotalOption
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.TotalPage
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 
 /**
  * Synthetic sheets of the scores sheet's previews and host tests: no real sheet, person or ISU. The first states show
  * two rows of the own name and the connected tab's cells; the others add a long roster, several tabs and many cells, and
- * the total's review sure, unsure and hand-picked.
+ * the total's step sure, unsure, hand-picked, missing, with the AI, and its column and sum pages.
  */
 object SheetScoresPreviewSamples {
     const val SUBJECT = "Математический анализ (продвинутый уровень)"
@@ -74,10 +76,11 @@ object SheetScoresPreviewSamples {
     private val labs = ownRow.single { it.headerPath == "ЛР · Итог" }
     private val test = ownRow.single { it.headerPath == "Тест к видеолекциям" }
 
-    /** The automatic total, sure of itself: its sum checks out; the module total and the test are the other chips. */
+    /** The connected automatic total, sure of itself: on top, the module total as the other variant; nothing to save. */
     val pickTotal = SheetScoresUiState.PickTotal(
         cells = ownRow,
-        selected = total,
+        selection = TotalOption.Column(total),
+        current = TotalOption.Column(total),
         decision = SheetTotalDecision(total, TotalReason.SUM_MATCHES, listOf(total, labs, ownRow.last())),
         choice = TotalChoice.AUTO,
         columns = columns(ownRow),
@@ -89,8 +92,9 @@ object SheetScoresPreviewSamples {
     /** Backend's analysis running. */
     val pickTotalAiRunning = pickTotal.copy(ai = SheetAiState.Running)
 
-    /** The AI rule applied to the own row: the labs, the test and the module total added up, the teacher's total beside. */
+    /** The AI rule applied to the own row on top: the labs and the test added up, the teacher's total beside. */
     val pickTotalAi = pickTotal.copy(
+        selection = TotalOption.Ai,
         ai = SheetAiState.Proposal(
             formula = SheetFormulaText.describe(
                 SheetFormula.sum(ownRow.take(5).map { SheetCellRef(it.tab.gid, SheetColumnRef(it.headerPath, it.column)) }),
@@ -103,17 +107,17 @@ object SheetScoresPreviewSamples {
         ),
     )
 
-    /** The AI analysis found nothing; the manual pick stays. */
+    /** The AI analysis found nothing; the automatic total stays on top. */
     val pickTotalAiFailed = pickTotal.copy(ai = SheetAiState.Failed(UiText.Res(RecordbookStrings.sheet_ai_insufficient)))
 
-    /** An automatic total to check: the row is in another tab too. */
+    /** An automatic total to check: the row is in another tab too, with another total there. */
     val pickTotalCheck = pickTotal.copy(
         decision = SheetTotalDecision(total, TotalReason.SEVERAL_TABS, listOf(total, SheetCell(englishTab, 14, TOTAL_HEADER, "52"))),
         choice = TotalChoice.AUTO_CHECK,
     )
 
-    /** A total the viewer picked: «Выбрано вручную» and «Вернуть авто». */
-    val pickTotalManual = pickTotal.copy(selected = test, choice = TotalChoice.MANUAL)
+    /** A total the viewer picked earlier: on top, the automatic one among the variants. */
+    val pickTotalManual = pickTotal.copy(selection = TotalOption.Column(test), current = TotalOption.Column(test), choice = TotalChoice.MANUAL)
 
     /** Two tabs of fifteen cells: a long header path, a column without a header, values as the sheet has them. */
     val manyCells: List<SheetCell> = listOf(group, englishTab).flatMap { tab ->
@@ -122,15 +126,21 @@ object SheetScoresPreviewSamples {
         ordered.mapIndexed { index, value -> SheetCell(tab, index + 1, header(index), value) }
     }
 
-    /** No total header: the column list of the first tab at once, the second behind the tab switcher, one column empty. */
-    val pickManyTotals = SheetScoresUiState.PickTotal(manyCells, selected = null, columns = columns(manyCells, empty = 4))
+    /** No total header while connecting: nothing on top, the ways to find the total. */
+    val pickTotalNone = SheetScoresUiState.PickTotal(manyCells, selection = null, columns = columns(manyCells, empty = 4))
 
-    /** «Сложить столбцы»: three labs picked and their own sum. */
-    val pickSum = pickManyTotals.copy(
-        summing = true,
-        summed = manyCells.filter { it.tab == group }.drop(5).take(3),
-        sum = "21",
-    )
+    /** `Выбрать столбец`: the first of two tabs, a long header path, a column letter, an empty column folded. */
+    val pickColumns = pickTotalNone.copy(page = TotalPage.COLUMNS)
+
+    /** `Сложить столбцы`: three labs checked and their own sum; the grade and the percentage are not offered. */
+    val pickSum = manyCells.filter { it.tab == group }.drop(5).take(3).let { added ->
+        pickTotalNone.copy(
+            page = TotalPage.SUM,
+            summed = added,
+            sum = "21",
+            sumText = SheetFormulaText.describe(SheetFormula.sum(added.map { SheetCellRef(it.tab.gid, SheetColumnRef(it.headerPath, it.column)) })),
+        )
+    }
 
     /** Every column filled by 23 of 30 students up to its own value, but [empty] (an index) filled by nobody. */
     private fun columns(cells: List<SheetCell>, empty: Int? = null): List<SheetColumnOption> = cells.map { cell ->

@@ -5,7 +5,7 @@ Product behaviour: [Как это работает: оценки](../how-it-work
 
 The own total of a subject from a teacher's public Google Sheet. The connection, the downloaded sheet
 and other people's names stay on the device: no connection to ITMO.Widgets needed
-(decision [0014](../decisions/0014-sheet-scores-on-device.md)). Only `Разобрать с ИИ` for a sheet a link shares
+(decision [0014](../decisions/0014-sheet-scores-on-device.md)). Only `Посчитать с ИИ` for a sheet a link shares
 with a flow or everybody asks Backend for a rule, never with sheet data
 (decision [0038](../decisions/0038-ai-sheet-formula.md)). `feature/resources` only offers the action.
 
@@ -24,6 +24,12 @@ with a flow or everybody asks Backend for a rule, never with sheet data
 - Name search appears for more than 8 student rows. Student rows start at the topmost name or ISU
   above the row in its column; empty cells and up to two other texts are skipped, a people title
   such as `ФИО` ends them. A name is 2-8 words.
+- The sheet asks one question per step (`SheetScoresUiState`): several own rows `Какая строка ваша?` (`Ваше имя есть
+  в нескольких строках`, the tab under each name); no own row `На каком листе ваша группа?` (`Не нашли вас по имени и
+  ИСУ`), then that tab's rows with a back arrow to the tabs. A found total is saved at once and the sheet closes.
+- A failure shows its title and one line why: `Таблица закрыта` (`Баллы читаются только из таблиц, открытых по
+  ссылке`), `Таблица слишком большая` (`Каждый её лист больше 5 МБ`), `Строка не найдена` (`Возможно, её удалили или
+  переименовали`), `Столбец не найден` (`Возможно, столбец или лист удалили`); only `Нет связи` has `Повторить`.
 
 ## Downloading
 
@@ -76,8 +82,8 @@ with a flow or everybody asks Backend for a rule, never with sheet data
   totals differ, the column is empty for everyone while the row has points, only a weak header, or
   the column holds no points. Without any keyword header the viewer picks the cell.
 - The choice is stored with the connection (`TotalChoice`): `AUTO`, `AUTO_CHECK` (found, but the
-  subject page asks to check it) or `MANUAL`. Picking the automatic total again confirms it (`AUTO`);
-  `Вернуть авто` replaces a hand-picked one with the automatic one.
+  subject page asks to check it), `MANUAL` or `AI`. Saving the automatic total again confirms it (`AUTO`), also in
+  place of a hand-picked one.
 - Issue 419 (АК): some students were also in `Copy of Общий список` of an earlier run under `Итого`,
   which beat `∑` of `Общий список`; the copy now loses to the current tab. The 13 sheets of the issue,
   anonymised, are fixtures in `shared/feature-recordbook/src/androidHostTest/resources/sheets/real`
@@ -98,45 +104,59 @@ with a flow or everybody asks Backend for a rule, never with sheet data
 
 The connected sheet sits in the hero of `Баллы` with its menu (open, `Изменить итог`, disconnect); its
 total is the hero's number (`таблица, в 16:30`) by the
-[recordbook's rule](recordbook.md#which-number-is-shown). The caption is `Лист «…», столбец «…»`, or for a computed
-total `Лист «…» · Сумма: ДЗ 1 + ДЗ 2 + … + Экзамен`; an AI rule with the teacher's total adds `Итог преподавателя: 0`. The stored value shows
+[recordbook's rule](recordbook.md#which-number-is-shown). The caption is the same source line as the sheet's:
+`Столбец «ЛР › Итог», лист «…»`, or for a computed total `Сумма: ДЗ 1 + ДЗ 2 + … + Экзамен, лист «…»`; an AI rule
+with the teacher's total adds `Итог преподавателя: 0`. The stored value shows
 at once and the tab is downloaded on entry and on every pull. An `AUTO_CHECK` total read without a
 failure adds `Проверьте итог`, which opens the review. Without a connection `Мои баллы из
 таблицы` offers the subject's sheet links.
 
-## The total's review
+## The total
 
-`Изменить итог`, `Проверьте итог` and a row without a total header open the review (`SheetScoresUiState.PickTotal`):
+`Изменить итог`, `Проверьте итог` and a row without a total header open the total (`SheetScoresUiState.PickTotal`),
+one screen that saves and two pages (`TotalPage`):
 
-- The total with its column, tab and reason, or a saved computed total in words with its value; the own row with the
-  headers; up to 4 candidate columns as chips, the automatic one marked `авто`; `Вернуть авто` selects the automatic
-  one instead of a hand-picked or AI total.
-- `Другая ячейка`, or a review without a single-cell total, opens the column list: a `Сложить столбцы` chip, a tab
-  switcher when the row is in several tabs, then every column of the tab with its header path, the own value and a
-  summary computed on the fly and never stored (`есть у 23 из 30 · макс. 10`, `SheetColumns.stats` over the
-  student rows); columns nobody has a value in fold under `Пустые столбцы · N`.
-- A tap selects (a column, or in the sum mode adds or removes it with the own sum live); `Сохранить` saves (the
-  bar's button on iOS, under the sheet on Android) once there is something new: another cell, the unsure automatic
-  one confirmed, or at least two columns to add. The sum is `SheetFormula.sum` with `ignore_blank_inputs`, choice
-  `MANUAL`.
+- On top (`hero`): `Ваш итог`, the chosen value as the sheet shows it (a sum or a rule as the app writes numbers),
+  one source line (`Столбец «ИТОГО баллов», лист «P3110»`, `Сумма: ЛР3 + ЛР4 + ЛР5`, the rule in words) and at most
+  one note: the automatic total waiting for a check in the warning colour (`Проверьте: на другом листе у вас другой
+  итог`, `... этот столбец пока пуст у всех`, `... в таблице нет столбца «Итог»`, `... в этом столбце не баллы`), or for
+  an AI rule `Посчитано по формуле ИИ — сверьте с таблицей` with `Итог преподавателя: 0` and `Как считает ИИ` (the
+  rule's summary and warnings). The choice starts at the connected total, else the automatic one; nothing chosen
+  shows `Итог не найден` with `В таблице нет столбца «Итог»` or `В вашей строке пока нет баллов`.
+- `Другой итог` (`Как найти итог` while nothing is chosen): the other ready totals (`variants`), never the one on
+  top: the automatic total (`Найден автоматически`), up to 4 total columns whose own value is a number, the
+  connected and the last picked column, the saved sum or AI rule, the sum made here and the AI result, each with
+  its value; the tab joins the caption when they span tabs. A tap puts it on top.
+- Then `Выбрать столбец`, `Сложить столбцы` and, for a shared sheet, `Посчитать с ИИ`.
+- One button (`action`): `Сохранить` when the choice differs from the connected total or confirms one waiting for a
+  check (choice `AUTO` for the automatic column, else `MANUAL`, `AI` for the rule); `Готово` closes without a
+  write when nothing changes; none while nothing is chosen. On iOS it is the bar's confirmation button.
+- `Выбрать столбец` (back arrow, Back on Android): tab chips when the row is in several tabs, every column of the own
+  row (its last header segment over the group above it, the own value, a check on the chosen one); columns nobody
+  has a value in fold under `Пустые у всех`. A tap chooses it and returns.
+- `Сложить столбцы` (back arrow): the live sum on top with the columns in words (`Отметьте два столбца или больше`
+  below two), then only the columns that can be added: the own value is a number, or empty in a column of numbers
+  for others (no grades, percentages or text). `Готово` puts the sum on top and returns. A hand-made sum opens with
+  its columns checked. The sum is `SheetFormula.sum` with `ignore_blank_inputs`.
 
 ## AI rule
 
-- `Разобрать с ИИ` shows in the review only with a link id and `SheetRulesRepository.available()` (the services
-  opt-in, or the demo session). A tap posts `POST /api/links/{id}/sheet-rule`, then polls `GET` every 4 s while
-  Backend answers `PENDING`/`RUNNING` (a stale rule that is still sent is used at once), up to 3 minutes; leaving the
-  sheet stops it. The manual pick stays usable meanwhile.
+- `Посчитать с ИИ` shows only with a link id and `SheetRulesRepository.available()` (the services opt-in, or the demo
+  session). A tap posts `POST /api/links/{id}/sheet-rule`, then polls `GET` every 4 s while Backend answers
+  `PENDING`/`RUNNING` (a stale rule that is still sent is used at once), up to 3 minutes; leaving the sheet stops it.
+  The row says `Разбираем таблицу, обычно до минуты` meanwhile, and the rest of the screen stays usable.
 - `SheetRulesRepositoryImpl` holds the client: the demo session answers `DemoRecordbook.sheetRule()` and calls nothing;
   otherwise every call passes `BackendGate.mayCallBackend()`. A route with an unknown purpose, kind, policy or node is
   dropped; no route left is a failure.
 - READY: the route of the tab holding the own row (a workbook with a tab per group has a route per tab;
-  `current_accumulated` first) is resolved against the downloaded tabs (gid, else tab name; each cell takes its header path there) and read over the own row: the proposal shows the own value,
-  the formula in words (a sum of more than 4 columns only as `Сумма 12 столбцов`), `Итог преподавателя` from the
-  `official_total` route and `Проверьте формулу: ИИ может ошибаться`; the rule's summary and the routes' warnings stay
-  under `Подробнее`. `Использовать` saves (choice `AI`), `Нет` drops it. Nothing is saved before `Использовать`.
+  `current_accumulated` first) is resolved against the downloaded tabs (gid, else tab name; each cell takes its header
+  path there) and read over the own row. The result goes on top at once: the own value, the formula in words (a sum
+  of more than 4 columns only as `Сумма 12 столбцов`), `Итог преподавателя` from the `official_total` route; the
+  rule's summary and the routes' warnings stay under `Как считает ИИ`. `Сохранить` saves it (choice `AI`); another
+  variant on top drops nothing and saves nothing of it.
 - INSUFFICIENT, FAILED, 404 or 409 (not shared, not a sheet, the feature off), 429, no connection, a rule naming what
-  the device does not see, or still pending after 3 minutes: a short Russian message under the button, which can be
-  tapped again.
+  the device does not see, or still pending after 3 minutes: a short Russian line on the AI row, which can be tapped
+  again.
 
 ## In the recordbook list
 
@@ -182,7 +202,8 @@ ITMO and BARS.
 
 `Мои баллы` is the SwiftUI `SheetScoresSheetView` (`iosApp/Sources/Features/Recordbook/SheetScoresSheet.swift`)
 over the shared `SheetScoresViewModel`, resolved with `SheetScoresIosParameters` (the `SavedStateHandle` Android's
-entry seeds). A failed save shows a banner over the sheet. The client runs on
+entry seeds): the same steps, the button in the bar, a chevron back on the column pages. A failed save shows a
+banner over the sheet. The client runs on
 `darwinHttpEngine()` with the same policy; storage is the same `filesDir/sheet_scores`. Links and
 the offer come from the subject's links ([subject page](subject-page.md#ios),
 [subject links](resources.md#ios)).

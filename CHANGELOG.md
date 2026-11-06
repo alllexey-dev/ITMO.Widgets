@@ -104,12 +104,16 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   without points never hides one with points.
 - The subject page has tabs `Баллы`, `Пары` and `Материалы` that also turn by a swipe. The LMS link is gone.
 - Connected sheets find the right total far more often (1805 of 1816 students on 13 real sheets); a doubtful total
-  shows `Проверьте итог`, and `Вернуть авто` undoes a hand-picked one.
-- The total's review picks from a list of columns by tab (header, own value, `есть у 23 из 30 · макс. 10`, empty
-  columns folded) and saves with `Сохранить`; `Сложить столбцы` adds several columns into the total, computed on the
-  phone. A sheet a link shares with a flow or everybody offers `Разобрать с ИИ`: Backend returns a rule, the phone
-  computes the accumulated points by it and shows the teacher's total as a second line; nothing is saved before
-  `Использовать`. A non-number input gives a dash, never 0. The sheet store moves to format 2 (2.2 cannot read it).
+  shows `Проверьте итог`.
+- `Мои баллы` asks one question per step. The total's screen puts the number that will be shown on top (`Ваш итог`)
+  with one line of where it comes from (`Столбец «Итог», лист «P3110»`) and what to check, then `Другой итог`: the
+  other total columns with their values (the automatic one marked `Найден автоматически`) and `Выбрать столбец`,
+  `Сложить столбцы` and, for a sheet a link shares with a flow or everybody, `Посчитать с ИИ`. One button saves the
+  choice (`Сохранить`) or closes when nothing changes (`Готово`). The column list and the sum are pages with a back
+  arrow; the sum offers only columns with points, computed on the phone. The AI's rule comes from Backend, the phone
+  computes the accumulated points by it, puts them on top with the teacher's total and `Как считает ИИ`; nothing is
+  saved before `Сохранить`. A non-number input gives a dash, never 0. The sheet store moves to format 2 (2.2 cannot
+  read it).
 - Links and teacher reviews vote with like and dislike thumbs; deleting an own link asks first; a flow link shows
   `после проверки` while Backend premoderates it.
 

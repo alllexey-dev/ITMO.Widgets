@@ -45,6 +45,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetFormulaText
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.columnSource
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.pathText
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.text
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import kotlinx.datetime.LocalDate
@@ -162,8 +164,13 @@ internal object SubjectPresenter {
         return SubjectSheetLine(
             title = link?.title?.let(UiText::Dynamic) ?: UiText.Res(RecordbookStrings.sheet_scores_link_untitled),
             caption = when (val formula = score.formula) {
-                is SheetFormula.Direct -> UiText.Res(RecordbookStrings.subject_sheet_caption, listOf(score.tabName, formula.cell.column.headerPath))
-                is SheetFormula.Computed -> UiText.Res(RecordbookStrings.subject_sheet_caption_formula, listOf(score.tabName, SheetFormulaText.describe(formula)))
+                is SheetFormula.Direct -> columnSource(
+                    score.tabName,
+                    pathText(formula.cell.column.headerPath) ?: SheetFormulaText.column(formula.cell, unique = true),
+                )
+                is SheetFormula.Computed -> SheetFormulaText.describe(formula).let { text ->
+                    if (score.tabName.isBlank()) text else UiText.Res(RecordbookStrings.subject_sheet_caption_formula, listOf(text, score.tabName))
+                }
             },
             problem = score.status.text(),
             url = score.tabUrl,
