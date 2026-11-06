@@ -201,6 +201,25 @@ class IsuMessagesViewModelTest {
     }
 
     @Test
+    fun theListGroupsByMonthAndUndatedMessagesStayInTheMonthAbove() = runTest(main.dispatcher) {
+        repository.pages[IsuFolder.INBOX to 1] = page(
+            listOf(
+                message(1, date = null),
+                message(2),
+                message(3, date = LocalDate(2026, 10, 1)),
+                message(4, date = null),
+                message(5, date = LocalDate(2026, 9, 30)),
+                message(6, date = LocalDate(2025, 12, 31)),
+            )
+        )
+
+        val list = assertIs<IsuMessagesList.Messages>(viewModel().loaded().list)
+
+        assertEquals(listOf(null, "Октябрь", "Сентябрь", "Декабрь 2025"), list.sections.map { it.title })
+        assertEquals(listOf(listOf(1L), listOf(2L, 3L, 4L), listOf(5L), listOf(6L)), list.sections.map { s -> s.rows.map { it.id } })
+    }
+
+    @Test
     fun fileKindsComeFromTheTypeOrTheExtension() {
         assertEquals(UiText.Res(MessagesStrings.isu_messages_kind_word), IsuMessagesViewModel.kind(IsuAttachment(HASH, "a.doc", "application/msword")))
         assertEquals(UiText.Res(MessagesStrings.isu_messages_kind_excel), IsuMessagesViewModel.kind(IsuAttachment(HASH, "a.xlsx", null)))
@@ -241,11 +260,16 @@ class IsuMessagesViewModelTest {
 
         fun page(messages: List<IsuMessage>, unread: Int = 0, last: Boolean = true) = IsuMessagesPage(messages, unread, last)
 
-        fun message(id: Long, read: Boolean = true, attachments: List<IsuAttachment> = emptyList()) = IsuMessage(
+        fun message(
+            id: Long,
+            read: Boolean = true,
+            attachments: List<IsuAttachment> = emptyList(),
+            date: LocalDate? = LocalDate(2026, 10, 26),
+        ) = IsuMessage(
             id = id,
             sender = "Отправитель $id",
             subject = "Тема $id",
-            date = LocalDate(2026, 10, 26),
+            date = date,
             time = LocalTime(9, 30),
             read = read,
             body = MessageBody(listOf(MessageBlock(listOf(MessageSpan("Текст $id"))))),

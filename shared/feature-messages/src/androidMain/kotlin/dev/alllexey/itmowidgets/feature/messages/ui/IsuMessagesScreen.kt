@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +51,8 @@ import dev.alllexey.itmowidgets.designsystem.components.state.AppRefreshBox
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateActionStyle
-import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
+import dev.alllexey.itmowidgets.designsystem.components.state.Skeleton
+import dev.alllexey.itmowidgets.designsystem.components.state.SkeletonStyle
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoDetailScreen
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
@@ -70,6 +72,9 @@ import dev.alllexey.itmowidgets.feature.messages.presentation.MoreState
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_attach_file
+import dev.alllexey.itmowidgets.shared.designsystem.ic_download
+import dev.alllexey.itmowidgets.shared.designsystem.ic_error
+import dev.alllexey.itmowidgets.shared.designsystem.ic_login
 import dev.alllexey.itmowidgets.shared.designsystem.ic_mail
 import dev.alllexey.itmowidgets.shared.feature.messages.MessagesStrings
 import org.jetbrains.compose.resources.painterResource
@@ -99,7 +104,8 @@ object IsuMessagesTestTags {
 }
 
 /**
- * Сообщения ИСУ (docs/features/isu-messages.md): the folder choice, the list with pull-to-refresh and `Показать ещё`;
+ * Сообщения ИСУ (docs/features/isu-messages.md): the folder choice, the list by month with pull-to-refresh, the next
+ * page loading at the end;
  * with [IsuMessagesUiState.opened] the one message instead, its body as plain styled text (links open outside the
  * app) and its attachments. Stateless; [IsuMessagesRoute] feeds it.
  */
@@ -148,13 +154,14 @@ private fun MessageList(state: IsuMessagesUiState, actions: IsuMessagesActions) 
             )
         }
         when (val list = state.list) {
-            IsuMessagesList.Loading -> item(key = "loading") { ContentStateLoading() }
+            IsuMessagesList.Loading -> item(key = "loading") { Skeleton(SkeletonStyle.List, rows = SKELETON_ROWS) }
             is IsuMessagesList.Empty -> item(key = "empty") {
                 ContentState(list.title.asString(), icon = painterResource(Res.drawable.ic_mail), description = list.text.asString())
             }
             is IsuMessagesList.Failed -> item(key = "failed") {
                 ContentState(
                     list.title.asString(),
+                    icon = painterResource(if (list.signIn) Res.drawable.ic_login else Res.drawable.ic_error),
                     description = list.text.asString(),
                     action = if (list.signIn) {
                         ContentStateAction(text(CoreStrings.auth_login_itmo_id), actions.onSignIn, ContentStateActionStyle.Filled)
@@ -168,25 +175,39 @@ private fun MessageList(state: IsuMessagesUiState, actions: IsuMessagesActions) 
     }
 }
 
+/** A month heading over one connected group of its messages; the end of the list loads the next page by itself. */
 private fun LazyListScope.messages(list: IsuMessagesList.Messages, actions: IsuMessagesActions) {
-    itemsIndexed(list.rows, key = { _, row -> row.id }) { index, row ->
-        MessageRow(row, GroupPosition.of(index, list.rows.size), onClick = { actions.onOpen(row.id) })
+    list.sections.forEachIndexed { index, section ->
+        section.title?.let { title ->
+            item(key = "section:$index:$title") {
+                SectionHeader(title, Modifier.padding(top = if (index == 0) 0.dp else ItmoTheme.spacing.group, bottom = ItmoTheme.spacing.content))
+            }
+        }
+        itemsIndexed(section.rows, key = { _, row -> row.id }) { position, row ->
+            MessageRow(row, GroupPosition.of(position, section.rows.size), onClick = { actions.onOpen(row.id) })
+        }
     }
     if (list.more != MoreState.END) {
         item(key = "more") {
             Box(Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.group), contentAlignment = Alignment.Center) {
-                when (list.more) {
-                    MoreState.LOADING -> ItmoActivityIndicator()
-                    else -> TonalButton(onClick = actions.onMore, modifier = Modifier.testTag(IsuMessagesTestTags.MORE)) {
-                        Text(text(if (list.more == MoreState.FAILED) MessagesStrings.isu_messages_more_failed else MessagesStrings.isu_messages_more))
+                if (list.more == MoreState.FAILED) {
+                    TonalButton(onClick = actions.onMore, modifier = Modifier.testTag(IsuMessagesTestTags.MORE)) {
+                        Text(text(MessagesStrings.isu_messages_more_failed))
                     }
+                } else {
+                    // Shown means scrolled to the end: the next page loads without a tap.
+                    if (list.more == MoreState.AVAILABLE) LaunchedEffect(list.rows.size) { actions.onMore() }
+                    ItmoActivityIndicator(Modifier.testTag(IsuMessagesTestTags.MORE))
                 }
             }
         }
     }
 }
 
-/** Sender, date and paperclip on the first line, the subject, two lines of the text; a dot marks an unread one. */
+/**
+ * Sender, paperclip and date on the first line, the subject in up to two lines, two lines of the text. Unread: the
+ * sender and the subject bold, the date in `primary` with a dot; read ones are in regular weight.
+ */
 @Composable
 private fun MessageRow(row: IsuMessageRow, position: GroupPosition, onClick: () -> Unit) {
     val colors = ItmoTheme.colorScheme
@@ -213,7 +234,7 @@ private fun MessageRow(row: IsuMessageRow, position: GroupPosition, onClick: () 
                     row.sender,
                     Modifier.weight(1f),
                     style = type.titleSmall,
-                    fontWeight = if (row.unread) FontWeight.Bold else null,
+                    fontWeight = if (row.unread) FontWeight.Bold else FontWeight.Normal,
                     color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -229,7 +250,7 @@ private fun MessageRow(row: IsuMessageRow, position: GroupPosition, onClick: () 
                 style = type.bodyMedium,
                 fontWeight = if (row.unread) FontWeight.SemiBold else null,
                 color = colors.onSurface,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(row.preview, style = type.bodySmall, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -275,10 +296,12 @@ private fun MessageDetail(message: IsuMessageDetail, downloading: String?, actio
                                 subtitle = file.kind.asString(),
                                 icon = painterResource(Res.drawable.ic_attach_file),
                                 iconTone = Tone.Neutral,
-                                accessory = if (downloading == file.id) {
-                                    { ItmoActivityIndicator() }
-                                } else {
-                                    null
+                                accessory = {
+                                    if (downloading == file.id) {
+                                        ItmoActivityIndicator()
+                                    } else {
+                                        Icon(painterResource(Res.drawable.ic_download), null, tint = ItmoTheme.colorScheme.onSurfaceVariant)
+                                    }
                                 },
                                 onClick = { actions.onAttachment(file.id) },
                             )
@@ -330,6 +353,7 @@ private fun screenPadding() = PaddingValues(
 @Composable
 private fun text(key: String, vararg arguments: Any): String = UiText.Res(key, arguments.toList()).asString()
 
+private const val SKELETON_ROWS = 5
 private val AvatarSize = 40.dp
 private val SmallIcon = 16.dp
 private val UnreadDot = 8.dp

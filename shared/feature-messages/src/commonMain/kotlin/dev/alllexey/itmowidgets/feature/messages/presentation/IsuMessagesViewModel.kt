@@ -31,7 +31,7 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.char
 
 /**
- * ISU messages (docs/features/isu-messages.md): Входящие and Архив, ten messages a page with `Показать ещё`, one
+ * ISU messages (docs/features/isu-messages.md): Входящие and Архив by month, ten messages a page loaded as the list ends, one
  * message opened over the list with its attachments. Opening a message reads it from the list already loaded, so ISU
  * never learns it was opened and keeps it unread. Each folder loads on first view and keeps its pages until a refresh.
  */
@@ -159,7 +159,7 @@ class IsuMessagesViewModel(
                 is Folder.Loaded -> if (folder.messages.isEmpty()) {
                     empty(model.folder)
                 } else {
-                    IsuMessagesList.Messages(folder.messages.map { row(it, today) }, folder.more)
+                    IsuMessagesList.Messages(sections(folder.messages, today), folder.more)
                 }
             },
             unread = model.unread,
@@ -179,6 +179,22 @@ class IsuMessagesViewModel(
     private fun empty(folder: IsuFolder): IsuMessagesList.Empty = when (folder) {
         IsuFolder.INBOX -> IsuMessagesList.Empty(UiText.Res(MessagesStrings.isu_messages_empty_inbox), UiText.Res(MessagesStrings.isu_messages_empty_inbox_text))
         IsuFolder.ARCHIVE -> IsuMessagesList.Empty(UiText.Res(MessagesStrings.isu_messages_empty_archive), UiText.Res(MessagesStrings.isu_messages_empty_archive_text))
+    }
+
+    /** Consecutive messages of one month share a section; an undated one stays in the section above it. */
+    private fun sections(messages: List<IsuMessage>, today: LocalDate): List<IsuMessageSection> {
+        val sections = mutableListOf<IsuMessageSection>()
+        messages.forEach { message ->
+            val last = sections.lastOrNull()
+            val title = message.date?.let { monthTitle(it, today) } ?: last?.title
+            val row = row(message, today)
+            if (last != null && last.title == title) {
+                sections[sections.lastIndex] = last.copy(rows = last.rows + row)
+            } else {
+                sections += IsuMessageSection(title, listOf(row))
+            }
+        }
+        return sections
     }
 
     private fun row(message: IsuMessage, today: LocalDate) = IsuMessageRow(
@@ -235,6 +251,12 @@ class IsuMessagesViewModel(
             date == today && time != null -> time.format(DateTexts.TIME)
             date.year == today.year -> date.format(DAY_SHORT_MONTH)
             else -> date.format(DateTexts.DAY_MONTH_YEAR)
+        }
+
+        /** A section of the list: `Октябрь` this year, `Декабрь 2025` before. */
+        fun monthTitle(date: LocalDate, today: LocalDate): String {
+            val month = DateTexts.standaloneMonth(date.month).replaceFirstChar { it.uppercaseChar() }
+            return if (date.year == today.year) month else "$month ${date.year}"
         }
 
         /** The opened message's date: `пн, 26 октября, 09:12`, with the year before this one. */
