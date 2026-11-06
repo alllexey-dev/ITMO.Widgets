@@ -81,66 +81,73 @@ internal class SheetScoresSheetPickTabRowPreview {
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTabRow)
 }
 
-/** The total's review: the total, why, the row around it, the candidate chips. */
+/** The connected automatic total on top, the module total as the other one, the ways; `Готово`. */
 internal class SheetScoresSheetPickTotalPreview {
     @Preview(name = "pick-total")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotal)
 }
 
-/** An unsure automatic total: the reason to check in the warning colour. */
+/** An unsure automatic total: what to check in the warning colour, the other tab's total below; `Сохранить` confirms. */
 internal class SheetScoresSheetPickTotalCheckPreview {
     @Preview(name = "pick-total-check")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalCheck)
 }
 
-/** A hand-picked total: «Выбрано вручную» and «Вернуть авто». */
+/** A total picked earlier on top, the automatic one among the others. */
 internal class SheetScoresSheetPickTotalManualPreview {
     @Preview(name = "pick-total-manual")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalManual)
 }
 
+/** No total header: `Итог не найден` and the ways to find it; no button yet. */
+internal class SheetScoresSheetPickTotalNonePreview {
+    @Preview(name = "pick-total-none")
+    @Composable
+    fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalNone)
+}
+
 /**
- * No total header: the column list of the first of two tabs, a long header path, a column letter, an empty column
+ * `Выбрать столбец`: the first of two tabs, a long header path under its own header, a column letter, an empty column
  * folded; it scrolls in the sheet.
  */
 internal class SheetScoresSheetManyTotalsPreview {
     @Preview(name = "pick-total-many")
     @Composable
-    fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickManyTotals)
+    fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickColumns)
 }
 
-/** «Сложить столбцы»: three columns checked and their own sum. */
+/** `Сложить столбцы`: three columns checked and their own sum on top; only columns with points. */
 internal class SheetScoresSheetSumPreview {
     @Preview(name = "pick-sum")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickSum)
 }
 
-/** A shared sheet offers «Разобрать с ИИ». */
+/** A shared sheet offers `Посчитать с ИИ` among the ways. */
 internal class SheetScoresSheetAiOfferPreview {
     @Preview(name = "ai-offer")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalAiOffer)
 }
 
-/** Backend analyses the sheet. */
+/** Backend analyses the sheet: the AI row waits. */
 internal class SheetScoresSheetAiRunningPreview {
     @Preview(name = "ai-running")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalAiRunning)
 }
 
-/** The AI rule's proposal: the formula in words, the own value, the teacher's total, the notes. */
+/** The AI result on top: the own value, the formula in words, the caution and the teacher's total; `Сохранить`. */
 internal class SheetScoresSheetAiProposalPreview {
     @Preview(name = "ai-proposal")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalAi)
 }
 
-/** No rule: why, and the manual pick below. */
+/** No rule: why, on the AI row, which can be tapped again. */
 internal class SheetScoresSheetAiFailedPreview {
     @Preview(name = "ai-failed")
     @Composable
