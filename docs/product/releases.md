@@ -46,12 +46,13 @@ either updates the other:
   100, and every fix is ported to `master` by hand (the ledger is kept locally).
 - From 2.3 the version code is `major*10000 + minor*100 + patch`: 2.3.0 = 20300,
   `2.3.0-beta.N` = 20290 + N with N <= 9, development builds 20290, or the last
-  beta's code once a beta is tagged. Previews ship only as a GitHub
-  `--prerelease`, a Play internal upload or an APK in the Telegram channel, so
-  `releases/latest` stays the last stable release. A channel APK is built with
+  beta's code once a beta is tagged. 2.3 betas are published as regular GitHub
+  releases, so `releases/latest` and the update offer of every `github` install
+  move to the newest beta (the owner's choice); they also go to a Play test track
+  and the Telegram channel. A channel APK is built with
   `-Pitmo.abiSplit=true`: one APK per phone ABI (`arm64-v8a`, `armeabi-v7a`)
   instead of the universal one, which carries MapLibre for four ABIs; the
-  latest prerelease is `2.3.0-beta.3` (20293, 2026-10-23), with an unsigned
+  latest beta is `2.3.0-beta.4` (20294, 2026-11-06), with an unsigned
   `.ipa` beside the APKs.
 - Until the Play listing is public, GitHub is the only channel; the README and
   the site get the Google Play button only after publication.
