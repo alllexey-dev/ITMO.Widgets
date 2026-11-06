@@ -51,7 +51,7 @@ either updates the other:
   `releases/latest` stays the last stable release. A channel APK is built with
   `-Pitmo.abiSplit=true`: one APK per phone ABI (`arm64-v8a`, `armeabi-v7a`)
   instead of the universal one, which carries MapLibre for four ABIs; the
-  latest prerelease is `2.3.0-beta.3` (20293, 2026-10-23), with an unsigned
+  latest prerelease is `2.3.0-beta.4` (20294, 2026-11-06), with an unsigned
   `.ipa` beside the APKs.
 - Until the Play listing is public, GitHub is the only channel; the README and
   the site get the Google Play button only after publication.

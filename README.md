@@ -40,8 +40,8 @@
 
 | | Версия | Требования |
 |---|---|---|
-| **Android** | [2.3 beta 3](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.3): `arm64` для большинства телефонов, `armv7` для старых | Android 8.0+ |
-| **iPhone** | [2.3 beta 3](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.3): `.ipa` без подписи | iOS 26.1+, AltStore, SideStore или Sideloadly |
+| **Android** | [2.3 beta 4](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.4): `arm64` для большинства телефонов, `armv7` для старых | Android 8.0+ |
+| **iPhone** | [2.3 beta 4](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.4): `.ipa` без подписи | iOS 26.1+, AltStore, SideStore или Sideloadly |
 | **Android, стабильная** | [2.2](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.2) | Android 8.0+ |
 
 - Бета ставится поверх 2.2 с сохранением данных; вернуться на 2.2 можно только переустановкой.

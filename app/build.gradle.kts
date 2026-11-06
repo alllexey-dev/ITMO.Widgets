@@ -51,8 +51,8 @@ android {
 
     defaultConfig {
         applicationId = "dev.alllexey.itmowidgets"
-        versionCode = 20293
-        versionName = "2.3.0-beta.3"
+        versionCode = 20294
+        versionName = "2.3.0-beta.4"
         resValue("string", "app_version", versionName!!)
         buildConfigField("String", "BUILD_CHANNEL", "\"$buildChannel\"")
         buildConfigField("String", "BUILD_SOURCE", "\"$buildSource\"")

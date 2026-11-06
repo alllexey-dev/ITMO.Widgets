@@ -14,6 +14,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - `2.3.0-beta.1` (20291, 2026-10-10) and `2.3.0-beta.2` (20292, 2026-10-11): an APK in the Telegram channel.
 - `2.3.0-beta.3` (20293, 2026-10-23): APKs per ABI (`arm64-v8a`, `armeabi-v7a`, `-Pitmo.abiSplit=true`) instead of
   one universal APK, and an unsigned `.ipa` with the marketing version `2.3.0-beta.3`, in the Telegram channel.
+- `2.3.0-beta.4` (20294, 2026-11-06): per-ABI APKs and an unsigned `.ipa` as a GitHub prerelease, and the first
+  `play` bundle for the Google Play closed test.
 
 ### iOS app
 
