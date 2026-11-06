@@ -35,7 +35,7 @@ final class NotificationTapUITests: XCTestCase {
         tapFixture("bars-login", title: Self.barsTitle, opens: "bars.login")
     }
 
-    /// Launches the app on home, waits for the fixture's banner (posted once home shows) and taps where it shows. The
+    /// Launches the app on home, waits for the fixture's banner (posted once home shows) and taps where it settles. The
     /// banner leaves after a few seconds; one missed, or gone before the tap landed, costs a relaunch (the app posts on
     /// every launch) instead of failing on a vanished element.
     private func tapFixture(_ fixture: String, title: String, opens root: String) {
@@ -46,10 +46,10 @@ final class NotificationTapUITests: XCTestCase {
             XCTAssertFalse(element(app, root).exists)
             let banner = waitForBanner(titled: title)
             guard banner.exists else { continue }
-            let frame = banner.frame
             if attempt == 1 {
                 attachScreenshot(named: "\(fixture)-banner")
             }
+            guard let frame = settledFrame(of: banner) else { continue }
             NotificationDialog.springboard.coordinate(withNormalizedOffset: .zero)
                 .withOffset(CGVector(dx: frame.midX, dy: frame.midY))
                 .tap()
@@ -72,6 +72,22 @@ final class NotificationTapUITests: XCTestCase {
             }
         }
         return banner
+    }
+
+    /// The banner's frame once it stops moving, or nil when it left first. Found while it still slides in, the banner
+    /// has a frame the settled one does not cover: a tap there lands on the status bar.
+    private func settledFrame(of banner: XCUIElement) -> CGRect? {
+        var last = CGRect.null
+        let deadline = Date().addingTimeInterval(stepTimeout)
+        while Date() < deadline && banner.exists {
+            let frame = banner.frame
+            if frame == last {
+                return frame
+            }
+            last = frame
+            Thread.sleep(forTimeInterval: 0.25)
+        }
+        return nil
     }
 
     private func notifications(titled title: String) -> XCUIElement {
