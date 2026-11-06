@@ -263,6 +263,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   other one (Android and iOS).
 - Android text without its own colour is never black in the dark theme: the theme gives every screen `onSurface`,
   not only the ones inside a `Surface`.
+- Android `Новый отзыв` of a sport coach shows `Физическая культура` in `Предмет`, not only on the picked chip.
 
 ### For developers
 

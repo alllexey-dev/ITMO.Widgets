@@ -110,9 +110,12 @@ object ReviewEditorSheetTestTags {
 /**
  * The review editor the host shows with the view model's [form]. The two fields start from the form, so text
  * restored from the view model's `SavedStateHandle` after recreation or process death comes back with the cursor at
- * its end; from then on every edit goes to the view model, which never changes a field on its own, so the fields are
- * not saved a second time here. A suggestion chip fills the subject (or clears it when it is the picked one) and puts
- * the cursor at the end. While [discarding], the question `Не сохранять отзыв?` stands over the sheet.
+ * its end; from then on every edit goes to the view model, so the fields are not saved a second time here. The view
+ * model changes a field on its own only once, the coach's subject after Backend's hints load, and says so with
+ * [ReviewEditorUiState.subjectPrefilled]: the subject field starts again from the form then. Following the form on
+ * every change instead would undo typing, since the form may lag a frame behind the field. A suggestion chip fills the
+ * subject (or clears it when it is the picked one) and puts the cursor at the end. While [discarding], the question
+ * `Не сохранять отзыв?` stands over the sheet.
  */
 @Composable
 fun ReviewEditorSheet(
@@ -122,7 +125,7 @@ fun ReviewEditorSheet(
     actions: ReviewEditorActions,
     modifier: Modifier = Modifier,
 ) {
-    var subject by remember { mutableStateOf(endCursor(form.subject)) }
+    var subject by remember(form.subjectPrefilled) { mutableStateOf(endCursor(form.subject)) }
     var text by remember { mutableStateOf(endCursor(form.text)) }
     val fields = ReviewEditorActions(
         // A suggestion chip: the picked subject (or none) with the cursor at its end.

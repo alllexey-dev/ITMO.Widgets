@@ -23,6 +23,12 @@ data class ReviewEditorUiState(
     val textError: ReviewFieldError? = null,
     val saving: Boolean = false,
     val editing: Boolean = false,
+    /**
+     * The view model filled [subject] itself (a coach's `Физическая культура`), the one change that is not the viewer's
+     * edit; a view keeping its own copy of the field takes [subject] again when this turns on. Not restored after process
+     * death, where the field starts from [subject] anyway.
+     */
+    val subjectPrefilled: Boolean = false,
 ) {
     val canSave: Boolean get() = text.isNotBlank() && !saving
 
