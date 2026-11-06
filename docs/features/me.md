@@ -20,13 +20,24 @@ settings: [Settings](../settings.md).
   warning pill, [connected clients](connections.md)), `Настройки` (every setting, the connection, privacy and
   notifications included)
   and developer tools only in Android debug builds ([Debug tools](debug.md)).
-- Links: `Сообщения ИСУ` (`AppRoutes.IsuMessages`, [ISU messages](isu-messages.md)), `Карта`
-  (`AppRoutes.CampusMap()`, [campus map](map.md)), `Wi-Fi` (`AppRoutes.Wifi`, [Wi-Fi](wifi.md)), `My ITMO` ([My ITMO in the app](my-itmo-web.md); the
-  demo refuses it), the Telegram channel and GitHub; then `Выйти`.
+- Links: `Карта` (`AppRoutes.CampusMap()`, [campus map](map.md)), `ИСУ` (`AppRoutes.Isu`, [below](#isu)),
+  `My ITMO` ([My ITMO in the app](my-itmo-web.md); the demo refuses it), the Telegram channel, GitHub and
+  `Обратная связь`; then `Выйти`.
+- `Обратная связь` opens the feedback site (`ProjectLinks.feedbackUrl`) with the form prefilled: `platform`, the app
+  version and the device model (Android `Build.MANUFACTURER` and `MODEL`, iOS the model identifier such as
+  `iPhone17,1`), never the device's own name, the account or the ISU. `kind` is left to the site's default.
 - The rows name no route themselves: `MeActions` reaches the host, which maps them: the gate to
   `AppRoutes.Settings(SERVICES)`, widgets to `AppRoutes.Settings(WIDGETS)`, settings to the root.
 - The first frame shows the cached state; a recreated tab is never blank. `StoreScreenshotCapture` sets
   `MeHost.releaseLook`, so a debug build shows the release screen without the developer tools row.
+
+## ISU
+
+`AppRoutes.Isu`, a screen pushed from the `ИСУ` row: one group with `Сообщения` (`AppRoutes.IsuMessages`,
+[ISU messages](isu-messages.md)) and `Wi-Fi` (`AppRoutes.Wifi`, [Wi-Fi](wifi.md)). It holds no state and reads
+nothing from ISU itself: Android `IsuHubScreen` (`:shared:feature-account`) with `IsuHubActions` mapped by the account
+entries, iOS `IsuHubScreen` (`iosApp/Sources/Features/Social/`) opening the keys through the router. The demo opens
+it and both entries.
 
 ## Sign-out
 

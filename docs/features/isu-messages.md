@@ -9,26 +9,30 @@ attachment download were not run on a device yet.
 
 ## Screen
 
-`AppRoutes.IsuMessages`, a screen pushed from Профиль -> `Ссылки` -> `Сообщения ИСУ`, over
+`AppRoutes.IsuMessages`, a screen pushed from Профиль -> `ИСУ` -> `Сообщения` ([Profile](me.md#isu)), over
 `IsuMessagesViewModel` (Android `ui/IsuMessagesScreen.kt` in `androidMain`, iOS
 `iosApp/Sources/Features/Messages/IsuMessagesScreen.swift`).
 
 - The header says `N непрочитанных` from ISU's own counter of the inbox (`unrd_cntr`).
 - `Входящие` / `Архив`: the inbox holds the current calendar year, the archive the years before. Each folder loads
   on first view and keeps its pages until a refresh (pull to refresh, `Повторить`).
+- The list goes by month: a heading (`Октябрь` this year, `Декабрь 2025` before) over one connected group of that
+  month's messages. An undated message stays in the month above it.
 - A row: the sender's initials, the sender, a paperclip when there are files, the date (the time today, `21 окт.`
-  this year, `2 июля 2025` before), the subject and two lines of the text; an unread message is bold with a dot.
-- Ten messages a page; `Показать ещё` asks for the next one. A page with fewer than ten, or with nothing new, ends
-  the list.
+  this year, `2 июля 2025` before), the subject in up to two lines and two lines of the text. An unread message has
+  the sender and the subject in bold and the date in `primary` with a dot; a read one is in regular weight.
+- Ten messages a page; reaching the end of the list loads the next one (a spinner in place), a failed page offers
+  `Не загрузилось. Повторить`. A page with fewer than ten, or with nothing new, ends the list.
 - A tap opens the message over the list (Android: in the same route, Back closes it; iOS: pushed on the stack):
-  sender and date, the body as selectable text, `Вложения`. The body comes from the list already loaded, so opening
+  sender and date, the body as selectable text, `Вложения` with a download mark (a spinner while the file loads). The body comes from the list already loaded, so opening
   it sends nothing to ISU and ISU keeps it unread; an unread message says so under the body.
 - Links in the body open outside the app (`PlatformActions.openLink` on Android, Safari on iOS). An attachment is
   downloaded and opened in the system viewer: Android `ACTION_VIEW` on a `content://` address of the app's
   `FileProvider` (`cache/isu-files`), iOS Quick Look on `tmp/isu-files`. Only the last opened file is kept.
-- States: loading; empty (`Сообщений нет`, `В архиве пусто`); `ИСУ не узнаёт вход` when ITMO.ID does not sign in
-  (no SSO cookies on the phone, or they expired); `Сообщения не загрузились` with the error's text. A failed refresh
-  keeps the list and shows a snackbar.
+- States: loading (Android the list skeleton, iOS the kit's spinner); empty (`Сообщений нет`, `В архиве пусто`);
+  `ИСУ не узнаёт вход` with the sign-in icon when ITMO.ID does not sign in (no SSO cookies on the phone, or they
+  expired); `Сообщения не загрузились` with the error icon and the error's text. A failed refresh keeps the list and
+  shows a snackbar.
 - `ИСУ не узнаёт вход` offers `Войти через ITMO.ID`, the BARS sign-in titled for ITMO.ID (`ActivityRoutes.itmoIdLogin`
   on Android, `BarsLoginSheet(title:)` on iOS), as the [Wi-Fi sheet](wifi.md#sheet) does: it leaves the ITMO.ID
   cookies `IsuWebClient` reads, and a completed one calls `signedIn()`, which loads the failed folders again.
