@@ -14,8 +14,8 @@ import dev.alllexey.itmowidgets.core.resources.title
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.reviews.TeacherLevel
-import dev.alllexey.itmowidgets.core.testing.FakePersonPhotosRepository
 import dev.alllexey.itmowidgets.core.testing.FakeBackendGate
+import dev.alllexey.itmowidgets.core.testing.FakePersonPhotosRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleRefreshGateway
 import dev.alllexey.itmowidgets.core.testing.FakeSportScoreRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSubjectLessonsGateway
@@ -41,6 +41,10 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCellRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.recordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
@@ -337,6 +341,38 @@ class RecordbookSubjectViewModelTest {
         val option = vm.scores.sheetOffer.single()
         assertEquals(SheetScoresArgs.Step.CONNECT, option.args.step)
         assertEquals(sheetUrl("sheet"), option.args.url)
+        assertNull("a private link is never analysed", option.args.linkId)
+    }
+
+    @Test fun `a flow-shared sheet link carries its id to the sheet`() = runTest {
+        resources.state.value = SubjectLinksState.Content(linksSnapshot(
+            shared = listOf(
+                subjectLink("sheet", LinkCategory.SCORES, visibility = LinkVisibility.FLOW, isMine = false).copy(url = sheetUrl("sheet")),
+            ),
+        ))
+        val vm = model(); advanceUntilIdle()
+
+        assertEquals("sheet", vm.scores.sheetOffer.single().args.linkId)
+    }
+
+    @Test fun `an AI total shows its formula and the teacher's total in the hero`() = runTest {
+        val sheets = FakeSheetScoresRepository()
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = 35.0)))
+        val vm = model(sheets = sheets); advanceUntilIdle()
+        val sum = SheetFormula.sum(listOf(SheetCellRef(22, SheetColumnRef("ДЗ 1", 3)), SheetCellRef(22, SheetColumnRef("Экзамен", 4))))
+        val official = SheetFormula.Direct(SheetCellRef(22, SheetColumnRef("Итог", 9)))
+        sheets.scores.value = listOf(
+            sheetScore(scope = scopeOf(), value = "45").copy(
+                formula = sum, official = official, officialValue = "0", choice = TotalChoice.AI, linkId = "link-1",
+            ),
+        )
+        advanceUntilIdle()
+
+        assertEquals("45", vm.scores.hero.points)
+        val line = vm.scores.sheet!!
+        assertEquals(UiText.Res(RecordbookStrings.sheet_scores_official, listOf("0")), line.official)
+        assertEquals(RecordbookStrings.subject_sheet_caption_formula, (line.caption as UiText.Res).key)
+        assertEquals("link-1", line.changeTotal.linkId)
     }
 
     // --- Пары

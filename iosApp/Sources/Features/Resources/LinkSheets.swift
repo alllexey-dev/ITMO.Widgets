@@ -249,7 +249,7 @@ struct LinkActionsSheetView: View {
             guard idle else { return }
             let scores = SheetScoresArgs(
                 subjectId: args.subjectId, subjectName: args.subjectName, periodKey: args.periodKey, url: link.url,
-                step: .connect
+                step: .connect, linkId: link.sharedLinkId
             )
             lead(to: AppRoutes.SheetScores(args: scores))
         case .pin:

@@ -41,8 +41,10 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookContro
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubjectStatus
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetFormulaText
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.text
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import kotlinx.datetime.LocalDate
@@ -91,7 +93,7 @@ internal object SubjectPresenter {
                 val title = option.title?.let(UiText::Dynamic) ?: UiText.Res(RecordbookStrings.sheet_scores_link_untitled)
                 SubjectSheetOption(
                     title = if (option.mine) UiText.Res(RecordbookStrings.sheet_scores_link_mine, listOf(title)) else title,
-                    args = sheetArgs(input.scope, option.url, SheetScoresArgs.Step.CONNECT),
+                    args = sheetArgs(input.scope, option.url, SheetScoresArgs.Step.CONNECT, option.linkId),
                 )
             },
             noDetails = input.barsEnabled && groups.isEmpty() && input.controlsError == null &&
@@ -156,21 +158,29 @@ internal object SubjectPresenter {
     private fun sheetLine(sheet: SubjectSheetState.Connected, input: SubjectScoresInput): SubjectSheetLine {
         val score = sheet.score
         val snapshot = (input.links as? SubjectLinksState.Content)?.snapshot
-        val title = snapshot?.let { it.mine + it.shared + it.previous }
-            ?.firstOrNull { it.url.trim() == score.url.trim() }?.title
+        val link = snapshot?.let { it.mine + it.shared + it.previous }?.firstOrNull { it.url.trim() == score.url.trim() }
         return SubjectSheetLine(
-            title = title?.let(UiText::Dynamic) ?: UiText.Res(RecordbookStrings.sheet_scores_link_untitled),
-            caption = UiText.Res(RecordbookStrings.subject_sheet_caption, listOf(score.tabName, score.column.headerPath)),
+            title = link?.title?.let(UiText::Dynamic) ?: UiText.Res(RecordbookStrings.sheet_scores_link_untitled),
+            caption = when (val formula = score.formula) {
+                is SheetFormula.Direct -> UiText.Res(RecordbookStrings.subject_sheet_caption, listOf(score.tabName, formula.cell.column.headerPath))
+                is SheetFormula.Computed -> UiText.Res(RecordbookStrings.subject_sheet_caption_formula, listOf(score.tabName, SheetFormulaText.describe(formula)))
+            },
             problem = score.status.text(),
             url = score.tabUrl,
-            changeTotal = sheetArgs(input.scope, score.url, SheetScoresArgs.Step.TOTAL),
+            changeTotal = sheetArgs(input.scope, score.url, SheetScoresArgs.Step.TOTAL, score.linkId ?: link?.sharedLinkId),
+            official = score.official?.let {
+                UiText.Res(
+                    RecordbookStrings.sheet_scores_official,
+                    listOf(score.officialValue ?: UiText.Res(RecordbookStrings.sheet_scores_empty_cell)),
+                )
+            },
             check = UiText.Res(RecordbookStrings.sheet_scores_check)
                 .takeIf { score.choice == TotalChoice.AUTO_CHECK && score.status == SheetStatus.OK },
         )
     }
 
-    private fun sheetArgs(scope: ResourceScope, url: String, step: SheetScoresArgs.Step) =
-        SheetScoresArgs(scope.subjectId, scope.subjectName, scope.periodKey, url, step)
+    private fun sheetArgs(scope: ResourceScope, url: String, step: SheetScoresArgs.Step, linkId: String?) =
+        SheetScoresArgs(scope.subjectId, scope.subjectName, scope.periodKey, url, step, linkId)
 
     /** Groups in server order; lone checkpoints in a row share one untitled group. */
     private fun groups(controls: List<RecordbookControl>, zone: TimeZone): List<SubjectControlGroup> {

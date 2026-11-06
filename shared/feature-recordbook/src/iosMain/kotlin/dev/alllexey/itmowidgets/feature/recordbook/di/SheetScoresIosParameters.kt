@@ -8,11 +8,12 @@ object SheetScoresIosParameters {
     fun viewModel(args: SheetScoresArgs): List<Any> = listOf(SavedStateHandle(mapOf(*args.handleEntries())))
 }
 
-/** Android's `SheetScoresArgs.toBundle()`. */
-internal fun SheetScoresArgs.handleEntries(): Array<Pair<String, Any>> = arrayOf(
+/** Android's `SheetScoresArgs.toBundle()`; an absent link id is no entry. */
+internal fun SheetScoresArgs.handleEntries(): Array<Pair<String, Any>> = listOfNotNull(
     SheetScoresArgs.SUBJECT_ID to subjectId,
     SheetScoresArgs.SUBJECT_NAME to subjectName,
     SheetScoresArgs.PERIOD_KEY to periodKey,
     SheetScoresArgs.URL to url,
     SheetScoresArgs.STEP to step.name,
-)
+    linkId?.let { SheetScoresArgs.LINK_ID to it },
+).toTypedArray()

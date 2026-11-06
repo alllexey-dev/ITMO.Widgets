@@ -6,16 +6,17 @@ import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.client.BackendClient
-import dev.alllexey.itmowidgets.client.connections.ConnectionsApi
 import dev.alllexey.itmowidgets.client.BuildIdentity
 import dev.alllexey.itmowidgets.client.ClientHeader
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.app.AppApi
+import dev.alllexey.itmowidgets.client.connections.ConnectionsApi
 import dev.alllexey.itmowidgets.client.device.DeviceApi
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
+import dev.alllexey.itmowidgets.client.sheets.SheetRulesApi
 import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.network.IsuWebClient
@@ -64,6 +65,7 @@ val networkModule = module {
     single<FriendsApi> { get<BackendClient>().friends }
     single<SportApi> { get<BackendClient>().sport }
     single<SubjectLinksApi> { get<BackendClient>().links }
+    single<SheetRulesApi> { get<BackendClient>().sheets }
     single<TeacherReviewsApi> { get<BackendClient>().reviews }
     single<DeviceApi> { get<BackendClient>().device }
     single<AppApi> { get<BackendClient>().app }

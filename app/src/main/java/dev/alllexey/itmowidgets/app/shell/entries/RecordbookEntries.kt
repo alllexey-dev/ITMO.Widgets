@@ -169,6 +169,11 @@ private fun SheetScoresEntry(onClose: () -> Unit) {
             onPickTab = viewModel::pickTab,
             onPickTotal = viewModel::pickTotal,
             onResetTotal = viewModel::resetTotal,
+            onSumming = viewModel::setSumming,
+            onSave = viewModel::save,
+            onAnalyze = viewModel::analyze,
+            onUseAi = viewModel::useAi,
+            onDismissAi = viewModel::dismissAi,
         )
     }
     SheetScoresSheet(

@@ -10,8 +10,11 @@ import kotlinx.datetime.LocalDateTime
 
 // What the subject page's loaders bring, before RecordbookSubjectViewModel puts it into words.
 
-/** A link of the subject whose address is a Google Sheet; [mine] for the viewer's own links. */
-data class SheetLinkOption(val url: String, val title: String?, val mine: Boolean)
+/**
+ * A link of the subject whose address is a Google Sheet; [mine] for the viewer's own links, [linkId] when it shares the
+ * sheet with a flow or everybody (`SubjectLink.sharedLinkId`).
+ */
+data class SheetLinkOption(val url: String, val title: String?, val mine: Boolean, val linkId: String? = null)
 
 /** The own total from a sheet on the subject page: a connection, or the offer to make one. */
 sealed interface SubjectSheetState {

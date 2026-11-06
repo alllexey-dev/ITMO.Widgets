@@ -1,0 +1,3 @@
+# The sheet rules fixtures SheetRulesVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
+http/sheets/requestSheetRule.json
+http/sheets/sheetRule.json

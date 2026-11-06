@@ -89,9 +89,45 @@
     <string name="sheet_scores_chip">%1$s · %2$s</string>
     <string name="sheet_scores_empty_cell">—</string>
     <string name="sheet_scores_check">Проверьте итог</string>
+    <!-- The automatic candidate total: the column's title, its value and the mark -->
+    <string name="sheet_scores_chip_auto">%1$s · %2$s · авто</string>
+    <string name="sheet_scores_official">Итог преподавателя: %1$s</string>
+    <string name="sheet_scores_ai_chosen">Выбрано по разбору ИИ</string>
+    <string name="sheet_scores_save">Сохранить</string>
+    <string name="sheet_scores_sum_mode">Сложить столбцы</string>
+    <string name="sheet_scores_sum_hint">Отметьте столбцы, которые нужно сложить</string>
+    <string name="sheet_scores_empty_columns">Пустые столбцы · %1$d</string>
+    <!-- How full a column is: students with a value and all students of the tab -->
+    <string name="sheet_scores_column_filled">есть у %1$d из %2$d</string>
+    <string name="sheet_scores_column_max">макс. %1$s</string>
+    <string name="sheet_formula_sum">Сумма: %1$s</string>
+    <string name="sheet_formula_min">мин(%1$s)</string>
+    <string name="sheet_formula_max">макс(%1$s)</string>
+    <string name="subject_sheet_caption_formula">Лист «%1$s» · %2$s</string>
+    <string name="sheet_ai_analyze">Разобрать с ИИ</string>
+    <string name="sheet_ai_title">Разбор ИИ</string>
+    <string name="sheet_ai_running">ИИ разбирает таблицу…</string>
+    <string name="sheet_ai_running_note">Обычно это занимает до минуты</string>
+    <string name="sheet_ai_check">Проверьте формулу: ИИ может ошибаться</string>
+    <string name="sheet_ai_more">Подробнее</string>
+    <string name="sheet_ai_less">Скрыть</string>
+    <string name="sheet_ai_use">Использовать</string>
+    <string name="sheet_ai_dismiss">Нет</string>
+    <string name="sheet_ai_timeout">Разбор затянулся, попробуйте позже</string>
+    <string name="sheet_ai_insufficient">ИИ не понял, как считаются баллы</string>
+    <string name="sheet_ai_failed">Не удалось разобрать таблицу</string>
+    <string name="sheet_ai_unavailable">Для этой таблицы разбор недоступен</string>
+    <string name="sheet_ai_rate_limited">Слишком много разборов, попробуйте через час</string>
+    <string name="sheet_ai_not_applicable">Разбор не подходит к вашей строке</string>
     <string name="links_all_count">Все ссылки, %1$d</string>
     <string name="recordbook_reason_failed">Пересдача</string>
     <string name="recordbook_reason_below_minimum">%1$s ниже минимума</string>
+    <plurals name="sheet_formula_sum_columns">
+        <item quantity="one">Сумма %1$d столбца</item>
+        <item quantity="few">Сумма %1$d столбцов</item>
+        <item quantity="many">Сумма %1$d столбцов</item>
+        <item quantity="other">Сумма %1$d столбцов</item>
+    </plurals>
     <plurals name="recordbook_reason_sport">
         <item quantity="one">Спорт: ещё %1$d балл</item>
         <item quantity="few">Спорт: ещё %1$d балла</item>

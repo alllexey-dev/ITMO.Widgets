@@ -22,7 +22,7 @@ class SheetScoreRulesTest {
         rowKey = "123456",
         keyColumn = 0,
         keyKind = KeyKind.ISU,
-        column = SheetColumnRef("ИТОГО баллов", 11),
+        formula = SheetFormula.Direct(SheetCellRef(22, SheetColumnRef("ИТОГО баллов", 11))),
         value = "66,3",
         baseline = "66,3",
         tracked = true,
@@ -32,9 +32,12 @@ class SheetScoreRulesTest {
     )
 
     private fun ok(value: String?) = SheetReading(value, SheetStatus.OK)
+    private val tabs = mapOf(22L to grid)
+    private fun cell(column: Int, gid: Long = 22) = SheetNode.Cell(SheetCellRef(gid, SheetColumnRef("", column)))
+    private fun sum(vararg nodes: SheetNode) = SheetNode.Apply(SheetOp.SUM, nodes.toList())
 
     @Test fun `the total is read as the sheet shows it`() {
-        assertEquals(ok("66,3"), SheetScoreRules.read(grid, score))
+        assertEquals(ok("66,3"), SheetScoreRules.read(tabs, score))
         assertEquals(
             "https://docs.google.com/spreadsheets/d/1TestSheetIdForUnitTests_0123456789-abc/edit#gid=22",
             score.tabUrl,
@@ -44,15 +47,53 @@ class SheetScoreRulesTest {
     @Test fun `an empty cell is no value and still a successful read`() {
         val emptied = SheetGrid(grid.rows.mapIndexed { row, cells -> if (row == 5) cells.take(11) + "" + cells.drop(12) else cells })
 
-        assertEquals(ok(null), SheetScoreRules.read(emptied, score))
+        assertEquals(ok(null), SheetScoreRules.read(mapOf(22L to emptied), score))
     }
 
     @Test fun `a missing row or column is a status`() {
-        assertEquals(SheetReading(null, SheetStatus.ROW_NOT_FOUND), SheetScoreRules.read(grid, score.copy(rowKey = "999999")))
+        assertEquals(SheetReading(null, SheetStatus.ROW_NOT_FOUND), SheetScoreRules.read(tabs, score.copy(rowKey = "999999")))
         assertEquals(
             SheetReading(null, SheetStatus.COLUMN_NOT_FOUND),
-            SheetScoreRules.read(grid, score.copy(column = SheetColumnRef("Нет такого", 40))),
+            SheetScoreRules.read(tabs, score.copy(formula = SheetFormula.Direct(SheetCellRef(22, SheetColumnRef("Нет такого", 40))))),
         )
+    }
+
+    @Test fun `a tab that was not downloaded reads as its status`() {
+        assertEquals(SheetReading(null, SheetStatus.COLUMN_NOT_FOUND), SheetScoreRules.read(emptyMap(), score))
+        val elsewhere = score.copy(formula = SheetFormula.Computed(sum(cell(3), cell(3, gid = 99)), BlankPolicy.PRESERVE))
+        assertEquals(SheetReading(null, SheetStatus.NETWORK), SheetScoreRules.read(tabs, elsewhere, missing = SheetStatus.NETWORK))
+    }
+
+    @Test fun `a computed total adds the own row's cells and is written as the app writes numbers`() {
+        val attendance = score.copy(formula = SheetFormula.Computed(sum(cell(3), cell(4), cell(5), cell(10)), BlankPolicy.PRESERVE))
+
+        assertEquals(ok("18"), SheetScoreRules.read(tabs, attendance))
+    }
+
+    @Test fun `a percentage or a letter in a computed total gives no value, never a guessed number`() {
+        listOf(7, 8, 12).forEach { column ->
+            val formula = SheetFormula.Computed(sum(cell(3), cell(column)), BlankPolicy.IGNORE_BLANK_INPUTS)
+
+            assertEquals("column $column", ok(null), SheetScoreRules.read(tabs, score.copy(formula = formula)))
+        }
+    }
+
+    @Test fun `the official total of a rule is read beside the main one from another tab`() {
+        val roster = SheetGrid(listOf(listOf("ИСУ", "Итог"), listOf("123456", "0")))
+        val ruled = score.copy(
+            formula = SheetFormula.Computed(sum(cell(3), cell(10)), BlankPolicy.PRESERVE),
+            official = SheetFormula.Direct(SheetCellRef(11, SheetColumnRef("Итог", 1))),
+        )
+
+        assertEquals(listOf(22L, 11L), ruled.tabs)
+        assertEquals(SheetReading("14", SheetStatus.OK, official = "0"), SheetScoreRules.read(tabs + (11L to roster), ruled))
+        assertEquals(SheetReading("14", SheetStatus.OK), SheetScoreRules.read(tabs, ruled))
+    }
+
+    @Test fun `a reading keeps the official value it read`() {
+        val update = SheetScoreRules.apply(score, SheetReading("70", SheetStatus.OK, official = "0"), now, notify = false)
+
+        assertEquals("0", update.score.officialValue)
     }
 
     @Test fun `an untracked connection only takes the baseline`() {

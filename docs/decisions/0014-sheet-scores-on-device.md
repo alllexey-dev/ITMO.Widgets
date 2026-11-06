@@ -2,6 +2,8 @@
 
 **Amended by [0032](0032-score-source-priority.md):** a connected total is shown over BARS and My ITMO, not only
 while they have no points.
+**Amended by [0038](0038-ai-sheet-formula.md):** Backend may analyse a sheet a link shares with a flow or everybody;
+the device computes a total from several cells of the own row.
 
 **Decision (2026-10-01).** A student connects the own total of a subject from
 a teacher's public Google Sheet behind any link of the subject (`Мои баллы`).

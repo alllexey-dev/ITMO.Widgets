@@ -83,7 +83,8 @@ One rule, `RecordbookPointsRule` (`presentation/RecordbookPoints.kt`), for the l
 subject page's hero (decision [0032](../decisions/0032-score-source-priority.md)). The most current source with a
 value wins:
 
-1. a connected sheet ([sheet scores](sheet-scores.md)) whose last reading succeeded and whose cell is not empty;
+1. a connected sheet ([sheet scores](sheet-scores.md)) whose last reading succeeded and whose total (a cell, or a
+   formula computed over the own row) has a value;
 2. BARS, when the subject's journal has a score (an untouched journal has none);
 3. the last value of a sheet whose last reading failed (`Нет связи`, closed, row or column not found);
 4. My ITMO's score.

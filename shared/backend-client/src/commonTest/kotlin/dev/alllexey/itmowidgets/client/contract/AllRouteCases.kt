@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.client.friends.FriendsRouteCases
 import dev.alllexey.itmowidgets.client.links.SubjectLinksRouteCases
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsRouteCases
 import dev.alllexey.itmowidgets.client.schedule.ScheduleRouteCases
+import dev.alllexey.itmowidgets.client.sheets.SheetRulesRouteCases
 import dev.alllexey.itmowidgets.client.sport.SportRouteCases
 import dev.alllexey.itmowidgets.client.support.RouteCase
 import dev.alllexey.itmowidgets.client.users.UsersRouteCases
@@ -16,6 +17,7 @@ object AllRouteCases {
     val all: List<RouteCase> = UsersRouteCases.all +
         FriendsRouteCases.all +
         SubjectLinksRouteCases.all +
+        SheetRulesRouteCases.all +
         TeacherReviewsRouteCases.all +
         ScheduleRouteCases.all +
         SportRouteCases.all +

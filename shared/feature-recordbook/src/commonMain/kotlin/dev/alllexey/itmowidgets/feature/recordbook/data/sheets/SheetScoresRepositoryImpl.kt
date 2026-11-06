@@ -12,10 +12,9 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.data.demo.DemoRecordbook
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.OwnIdentity
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetChange
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetGrid
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetInspection
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetReading
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRowMatch
@@ -26,8 +25,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepo
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotalPick
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
@@ -114,26 +113,26 @@ class SheetScoresRepositoryImpl(
         scope: ResourceScope,
         url: String,
         row: SheetRowMatch,
-        total: SheetCell,
-        choice: TotalChoice,
+        total: SheetTotalPick,
+        linkId: String?,
     ): AppResult<Unit> {
-        require(row.tab == total.tab)
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         return lock.withLock {
             val now = clock.now()
-            val score = connection(scope, url, row, total, choice, connectedAt = now)
+            val score = connection(scope, url, row, total, linkId, connectedAt = now)
             write(loaded().filterNot { it.scope.key == scope.key } + score)
         }
     }
 
-    override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell, choice: TotalChoice): AppResult<Unit> {
-        require(row.tab == total.tab)
+    override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetTotalPick, linkId: String?): AppResult<Unit> {
         if (demo.isActive()) return AppResult.Failure(AppError.DemoUnavailable)
         return lock.withLock {
             val current = loaded()
             val previous = current.firstOrNull { it.scope.key == scope.key }
                 ?: return@withLock AppResult.Failure(AppError.NotFound)
-            val score = connection(previous.scope, previous.url, row, total, choice, connectedAt = previous.connectedAt)
+            val score = connection(
+                previous.scope, previous.url, row, total, linkId ?: previous.linkId, connectedAt = previous.connectedAt,
+            )
             write(current.map { if (it.scope.key == scope.key) score else it })
         }
     }
@@ -174,11 +173,11 @@ class SheetScoresRepositoryImpl(
         scope: ResourceScope,
         url: String,
         row: SheetRowMatch,
-        total: SheetCell,
-        choice: TotalChoice,
+        total: SheetTotalPick,
+        linkId: String?,
         connectedAt: Instant,
     ): SheetScore {
-        val value = total.value.trim().ifEmpty { null }
+        val value = total.reading.value?.trim()?.ifEmpty { null }
         return SheetScore(
             scope = scope,
             url = url,
@@ -187,8 +186,12 @@ class SheetScoresRepositoryImpl(
             rowKey = row.key,
             keyColumn = row.keyColumn,
             keyKind = row.kind,
-            column = SheetColumnRef(total.headerPath, total.column),
-            choice = choice,
+            formula = total.formula,
+            choice = total.choice,
+            official = total.official,
+            officialValue = total.reading.official,
+            summary = total.summary,
+            linkId = linkId,
             value = value,
             baseline = value,
             tracked = true,
@@ -198,16 +201,23 @@ class SheetScoresRepositoryImpl(
         )
     }
 
-    /** One download of the connected tab; the error is set only for a failed download. */
+    /**
+     * One download of every tab the connection reads, one at a time (usually one); the first failed download decides
+     * the reading and the error is set only for it. A tab Google no longer has reads as a missing column.
+     */
     private suspend fun read(score: SheetScore): Pair<SheetReading, AppError?> {
         val sheet = GoogleSheetUrl.parse(score.url) ?: return SheetReading(null, SheetStatus.CLOSED) to null
-        return when (val fetch = client.grid(sheet.spreadsheetId, score.tabGid)) {
-            is SheetFetch.Loaded -> SheetScoreRules.read(fetch.value, score) to null
-            SheetFetch.Closed -> SheetReading(null, SheetStatus.CLOSED) to null
-            SheetFetch.Missing -> SheetReading(null, SheetStatus.COLUMN_NOT_FOUND) to null
-            SheetFetch.TooLarge -> SheetReading(null, SheetStatus.TOO_LARGE) to null
-            is SheetFetch.Failed -> SheetReading(null, SheetStatus.NETWORK) to fetch.error
+        val grids = mutableMapOf<Long, SheetGrid>()
+        for (gid in score.tabs) {
+            when (val fetch = client.grid(sheet.spreadsheetId, gid)) {
+                is SheetFetch.Loaded -> grids[gid] = fetch.value
+                SheetFetch.Missing -> Unit
+                SheetFetch.Closed -> return SheetReading(null, SheetStatus.CLOSED) to null
+                SheetFetch.TooLarge -> return SheetReading(null, SheetStatus.TOO_LARGE) to null
+                is SheetFetch.Failed -> return SheetReading(null, SheetStatus.NETWORK) to fetch.error
+            }
         }
+        return SheetScoreRules.read(grids, score) to null
     }
 
     /**
@@ -227,7 +237,7 @@ class SheetScoresRepositoryImpl(
 
     private fun SheetScore.sameTarget(other: SheetScore): Boolean =
         connectedAt == other.connectedAt && url == other.url && tabGid == other.tabGid && rowKey == other.rowKey &&
-            keyKind == other.keyKind && column == other.column
+            keyKind == other.keyKind && formula == other.formula && official == other.official
 
     /** Writes [next] and publishes it; a failed write leaves the state as it was. Must hold [lock]. */
     private suspend fun write(next: List<SheetScore>): AppResult<Unit> = try {

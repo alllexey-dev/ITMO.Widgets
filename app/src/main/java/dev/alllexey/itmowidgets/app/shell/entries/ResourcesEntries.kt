@@ -161,7 +161,7 @@ private fun linkActions(
     onScores = { link ->
         close()
         val scores = SheetScoresArgs(
-            args.subjectId, args.subjectName, args.periodKey, link.url, SheetScoresArgs.Step.CONNECT,
+            args.subjectId, args.subjectName, args.periodKey, link.url, SheetScoresArgs.Step.CONNECT, link.sharedLinkId,
         )
         navigator.open(AppRoutes.SheetScores(scores))
     },

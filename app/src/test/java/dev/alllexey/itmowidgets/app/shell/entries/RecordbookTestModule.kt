@@ -36,14 +36,15 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookContro
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetInspection
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRowMatch
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRuleResult
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRulesRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotalPick
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonsLoader
@@ -110,7 +111,7 @@ internal class RecordbookTestGraph(var barsEnabled: Boolean = false) {
                 FakePersonPhotosRepository(),
             )
         }
-        viewModel { SheetScoresViewModel(get<SavedStateHandle>(), NoSheets) }
+        viewModel { SheetScoresViewModel(get<SavedStateHandle>(), NoSheets, NoRules) }
     }
 
     private object NoMarks : MarkTrackingRepository {
@@ -140,13 +141,19 @@ internal class RecordbookTestGraph(var barsEnabled: Boolean = false) {
         override fun observe(): Flow<List<SheetScore>> = flowOf(emptyList())
         override suspend fun refresh(scope: ResourceScope) = Unit
         override suspend fun inspect(url: String): SheetInspection = SheetInspection.Failed(SheetStatus.NETWORK)
-        override suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell, choice: TotalChoice) =
+        override suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetTotalPick, linkId: String?) =
             AppResult.Success(Unit)
-        override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell, choice: TotalChoice) =
+        override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetTotalPick, linkId: String?) =
             AppResult.Success(Unit)
         override suspend fun disconnect(scope: ResourceScope) = Unit
         override suspend fun check(half: StudyHalf) = SheetCheck(emptyList(), emptyList())
         override suspend fun untrack() = Unit
+    }
+
+    private object NoRules : SheetRulesRepository {
+        override suspend fun available() = false
+        override suspend fun request(linkId: String) = SheetRuleResult.Unavailable
+        override suspend fun state(linkId: String) = SheetRuleResult.Unavailable
     }
 
     private object NoBindings : SubjectBindingStore {

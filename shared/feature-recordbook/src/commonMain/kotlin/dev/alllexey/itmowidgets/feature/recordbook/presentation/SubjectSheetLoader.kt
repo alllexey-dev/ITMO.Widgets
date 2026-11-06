@@ -43,7 +43,7 @@ class SubjectSheetLoader(
                 }
             }.then(SubjectLinkRanking))
             .distinctBy { it.url.trim() }
-            .map { SheetLinkOption(it.url, it.title, it.isMine) }
+            .map { SheetLinkOption(it.url, it.title, it.isMine, it.sharedLinkId) }
         return options.takeIf { it.isNotEmpty() }?.let(SubjectSheetState::Hint)
     }
 

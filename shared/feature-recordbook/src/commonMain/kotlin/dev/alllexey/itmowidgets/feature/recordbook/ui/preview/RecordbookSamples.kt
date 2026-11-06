@@ -19,7 +19,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCellRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
@@ -32,21 +34,21 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSelect
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSheetTotal
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookUiState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessonList
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectLessons
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectPresenter
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectScoresInput
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectSheetState
-import dev.alllexey.itmowidgets.feature.recordbook.presentation.SheetLinkOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTab
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.SubjectTeacher
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlin.time.Instant
 
 /**
  * Мария's third semester (the design lab's data, synthetic) in the states of the design lab's axes, built by the real
@@ -211,7 +213,7 @@ object RecordbookSamples {
 
     private val connectedSheet = SheetScore(
         scope, SHEET_URL, 0, "ПИИКТ 2.1", "Иванова", 0, KeyKind.NAME,
-        SheetColumnRef("Итог", 9), "66,3", "66,3", tracked = true, SheetStatus.OK, at("2026-09-07", "16:30"), at("2026-09-01"),
+        SheetFormula.Direct(SheetCellRef(0, SheetColumnRef("Итог", 9))), "66,3", "66,3", tracked = true, SheetStatus.OK, at("2026-09-07", "16:30"), at("2026-09-01"),
         // An unsure automatic total, so the hero asks «Проверьте итог».
         TotalChoice.AUTO_CHECK,
     )

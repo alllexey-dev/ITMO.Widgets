@@ -1,14 +1,24 @@
 package dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.preview
 
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCellRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnStats
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetHeaders
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRowMatch
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotalDecision
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotals
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalReason
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetAiState
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetColumnOption
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetFormulaText
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
+import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 
 /**
  * Synthetic sheets of the scores sheet's previews and host tests: no real sheet, person or ISU. The first states show
@@ -70,7 +80,31 @@ object SheetScoresPreviewSamples {
         selected = total,
         decision = SheetTotalDecision(total, TotalReason.SUM_MATCHES, listOf(total, labs, ownRow.last())),
         choice = TotalChoice.AUTO,
+        columns = columns(ownRow),
     )
+
+    /** The AI offer of a shared sheet beside the automatic total. */
+    val pickTotalAiOffer = pickTotal.copy(ai = SheetAiState.Offer)
+
+    /** Backend's analysis running. */
+    val pickTotalAiRunning = pickTotal.copy(ai = SheetAiState.Running)
+
+    /** The AI rule applied to the own row: the labs, the test and the module total added up, the teacher's total beside. */
+    val pickTotalAi = pickTotal.copy(
+        ai = SheetAiState.Proposal(
+            formula = SheetFormulaText.describe(
+                SheetFormula.sum(ownRow.take(5).map { SheetCellRef(it.tab.gid, SheetColumnRef(it.headerPath, it.column)) }),
+            ),
+            value = "45",
+            official = "0",
+            hasOfficial = true,
+            summary = "Баллы — сумма лабораторных и теста; итог преподавателя ставится после допуска",
+            warnings = listOf("Итог может быть 0 до допуска"),
+        ),
+    )
+
+    /** The AI analysis found nothing; the manual pick stays. */
+    val pickTotalAiFailed = pickTotal.copy(ai = SheetAiState.Failed(UiText.Res(RecordbookStrings.sheet_ai_insufficient)))
 
     /** An automatic total to check: the row is in another tab too. */
     val pickTotalCheck = pickTotal.copy(
@@ -88,8 +122,21 @@ object SheetScoresPreviewSamples {
         ordered.mapIndexed { index, value -> SheetCell(tab, index + 1, header(index), value) }
     }
 
-    /** No total header: every cell of the row at once, the grid of both tabs. */
-    val pickManyTotals = SheetScoresUiState.PickTotal(manyCells, selected = null)
+    /** No total header: the column list of the first tab at once, the second behind the tab switcher, one column empty. */
+    val pickManyTotals = SheetScoresUiState.PickTotal(manyCells, selected = null, columns = columns(manyCells, empty = 4))
+
+    /** «Сложить столбцы»: three labs picked and their own sum. */
+    val pickSum = pickManyTotals.copy(
+        summing = true,
+        summed = manyCells.filter { it.tab == group }.drop(5).take(3),
+        sum = "21",
+    )
+
+    /** Every column filled by 23 of 30 students up to its own value, but [empty] (an index) filled by nobody. */
+    private fun columns(cells: List<SheetCell>, empty: Int? = null): List<SheetColumnOption> = cells.map { cell ->
+        val blank = cells.indexOf(cell) == empty
+        SheetColumnOption(cell, SheetColumnStats(filled = if (blank) 0 else 23, students = 30, max = if (blank) null else SheetTotals.number(cell.value)))
+    }
 
     private fun header(index: Int): String = when (index) {
         0 -> TOTAL_HEADER

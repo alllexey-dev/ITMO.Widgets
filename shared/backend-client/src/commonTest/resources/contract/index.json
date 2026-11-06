@@ -864,6 +864,14 @@
     "minCore": "1.7.0"
   },
   {
+    "id": "requestSheetRule",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/links/{id}/sheet-rule",
+    "file": "http/sheets/requestSheetRule.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "revokeClientSelf",
     "kind": "http",
     "method": "DELETE",
@@ -910,6 +918,14 @@
     "path": "/api/friends/{isu}/request",
     "file": "http/friends/sendFriendRequest.json",
     "minCore": "1.2.0"
+  },
+  {
+    "id": "sheetRule",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/links/{id}/sheet-rule",
+    "file": "http/sheets/sheetRule.json",
+    "minCore": "1.8.0"
   },
   {
     "id": "signOutInstall",

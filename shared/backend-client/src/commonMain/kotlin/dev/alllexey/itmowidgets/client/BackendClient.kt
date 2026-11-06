@@ -15,6 +15,8 @@ import dev.alllexey.itmowidgets.client.reviews.KtorTeacherReviewsApi
 import dev.alllexey.itmowidgets.client.reviews.TeacherReviewsApi
 import dev.alllexey.itmowidgets.client.schedule.KtorScheduleApi
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
+import dev.alllexey.itmowidgets.client.sheets.KtorSheetRulesApi
+import dev.alllexey.itmowidgets.client.sheets.SheetRulesApi
 import dev.alllexey.itmowidgets.client.sport.KtorSportApi
 import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.users.KtorUsersApi
@@ -48,6 +50,7 @@ class BackendClient(
     val friends: FriendsApi = KtorFriendsApi(http)
     val sport: SportApi = KtorSportApi(http)
     val links: SubjectLinksApi = KtorSubjectLinksApi(http)
+    val sheets: SheetRulesApi = KtorSheetRulesApi(http)
     val reviews: TeacherReviewsApi = KtorTeacherReviewsApi(http)
     val device: DeviceApi = KtorDeviceApi(http)
     val app: AppApi = KtorAppApi(http)

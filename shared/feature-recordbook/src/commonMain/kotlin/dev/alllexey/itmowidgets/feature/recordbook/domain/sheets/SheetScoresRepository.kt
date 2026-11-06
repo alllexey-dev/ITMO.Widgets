@@ -13,6 +13,18 @@ sealed interface SheetInspection {
     data class Failed(val status: SheetStatus) : SheetInspection
 }
 
+/**
+ * A chosen total: how it is made and chosen, what it reads now ([reading], the new baseline), and for an AI rule the
+ * teacher's [official] total and the rule's [summary].
+ */
+data class SheetTotalPick(
+    val formula: SheetFormula,
+    val choice: TotalChoice,
+    val reading: SheetReading,
+    val official: SheetFormula? = null,
+    val summary: String? = null,
+)
+
 data class SheetChange(val scope: ResourceScope, val kind: MarkEventKind)
 
 /** A background read of the connections of one half-year: what changed and what failed. */
@@ -26,10 +38,13 @@ interface SheetScoresRepository {
     suspend fun refresh(scope: ResourceScope)
     /** Downloads every tab of [url] and looks for the own row; the start of the connection flow. */
     suspend fun inspect(url: String): SheetInspection
-    /** Connects [scope], replacing its previous connection; [total]'s value is the baseline. */
-    suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetCell, choice: TotalChoice): AppResult<Unit>
-    /** Another total of the connected sheet; its value is the new baseline. */
-    suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell, choice: TotalChoice): AppResult<Unit>
+    /**
+     * Connects [scope], replacing its previous connection; [total]'s value is the baseline. [linkId] is the subject link
+     * the sheet came from when it shares the sheet with a flow or everybody.
+     */
+    suspend fun connect(scope: ResourceScope, url: String, row: SheetRowMatch, total: SheetTotalPick, linkId: String?): AppResult<Unit>
+    /** Another total of the connected sheet; its value is the new baseline; a null [linkId] keeps the stored one. */
+    suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetTotalPick, linkId: String?): AppResult<Unit>
     suspend fun disconnect(scope: ResourceScope)
     /** Reads every connection of [half]; changes count only for tracked connections. */
     suspend fun check(half: StudyHalf): SheetCheck

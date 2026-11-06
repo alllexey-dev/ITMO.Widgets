@@ -75,12 +75,10 @@ data class SubjectHero(
 data class SubjectScaleTick(val label: UiText, val score: Double)
 
 /**
- * The connected sheet in the hero: the link's [title], [caption] `Лист «ПИИКТ 2.1», столбец «Итог»` and the last
- * reading's [problem] (`Нет связи`); its menu opens [url], picks another total ([changeTotal]) or disconnects.
- */
-/**
- * The connected sheet in the hero: its [title], the column and tab, a failed reading's [problem], and [check]
- * («Проверьте итог», opens [changeTotal]) while an unsure automatic total waits for a look.
+ * The connected sheet in the hero: its [title], the column (or the formula in words) and tab, a failed reading's
+ * [problem], the teacher's [official] total of an AI rule (`Итог преподавателя: 0`), and [check] («Проверьте итог»,
+ * opens [changeTotal]) while an unsure automatic total waits for a look. Its menu opens [url], picks another total
+ * ([changeTotal]) or disconnects.
  */
 data class SubjectSheetLine(
     val title: UiText,
@@ -89,6 +87,7 @@ data class SubjectSheetLine(
     val url: String,
     val changeTotal: SheetScoresArgs,
     val check: UiText? = null,
+    val official: UiText? = null,
 )
 
 /** A sheet link `Мои баллы из таблицы` can connect. */

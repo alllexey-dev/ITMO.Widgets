@@ -1,13 +1,13 @@
 package dev.alllexey.itmowidgets.feature.recordbook.di
 
+import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.bell.BellSource
 import dev.alllexey.itmowidgets.core.lesson.LessonSubjectSource
-import dev.alllexey.itmowidgets.core.today.TodayTodoSource
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.today.TodayTodoSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsPreferenceRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.BarsSessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingStore
@@ -24,15 +24,16 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bell.MarksBellSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.lesson.RecordbookLessonSubjects
-import dev.alllexey.itmowidgets.feature.recordbook.data.today.BarsTodoSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksCheck
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarksFileStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.PublicSheetClient
+import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetRulesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresFileStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.data.today.BarsTodoSource
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSessionRepository
@@ -41,6 +42,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolve
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectContextResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRulesRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.BarsLoginViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
@@ -79,7 +81,8 @@ val marksQualifier: Qualifier = named("marks")
  * (`BarsSilentLogin`), the ITMO.ID cookies (`ItmoIdCookies`), the marks worker's scheduler (`MarksScheduler`) and its
  * notifications (`MarksNotifier`). From the platform's other Koin modules: the core contracts (`MyItmoClient`, the
  * `app_preferences` DataStore, `AppDirectories`, `MarkSourcePreferences`, `SecureStore`, `SessionTokenStore`,
- * `CurrentUserProvider`, `AppNotifier`, time, `DemoMode`, `AppDispatchers`), subject links and teacher levels.
+ * `CurrentUserProvider`, `AppNotifier`, time, `DemoMode`, `AppDispatchers`, `BackendGate`, Core 2.0's
+ * `SheetRulesApi`), subject links and teacher levels.
  */
 val recordbookModule = module {
     // Stateless helpers: every ViewModel gets its own.
@@ -127,6 +130,8 @@ val recordbookModule = module {
     singleOf<SheetScoresFileStore, AppDirectories>(::SheetScoresFileStore)
     singleOf(::SheetScoresRepositoryImpl) { bind<SheetScoresRepository>() }
     single<SessionDataCleaner>(named("recordbook-sheets")) { get<SheetScoresRepositoryImpl>() }
+    // Backend's AI rules for shared sheets; nothing is cached, so no cleaner.
+    singleOf(::SheetRulesRepositoryImpl) { bind<SheetRulesRepository>() }
 
     // Mark tracking: one state lock per process for the screens, the worker and sign-out; `filesDir/marks`.
     singleOf<MarksFileStore, AppDirectories>(::MarksFileStore)

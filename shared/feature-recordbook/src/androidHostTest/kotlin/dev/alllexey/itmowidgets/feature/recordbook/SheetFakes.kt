@@ -6,17 +6,21 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.KeyKind
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.OwnIdentity
-import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCell
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCellRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetCheck
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetColumnRef
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFixtures
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetFormula
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetInspection
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRowMatch
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRuleResult
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetRulesRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetStatus
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTab
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTabGrid
+import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotalPick
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetWorkbook
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import kotlin.time.Instant
@@ -27,6 +31,29 @@ import kotlinx.coroutines.flow.MutableStateFlow
 const val TEST_SHEET_ID = "1TestSheetIdForUnitTests_0123456789-abc"
 const val TEST_SHEET_URL = "https://docs.google.com/spreadsheets/d/$TEST_SHEET_ID/edit#gid=22"
 val TEST_IDENTITY = OwnIdentity(123456, "Тестов Тест Тестович")
+
+/**
+ * Backend's sheet rules: [available] for the offer, then [request] answers [requestResult] and every [state] the next of
+ * [states] (Pending once they run out); every call is recorded.
+ */
+class FakeSheetRulesRepository(var available: Boolean = true) : SheetRulesRepository {
+    var requestResult: SheetRuleResult = SheetRuleResult.Pending
+    val states = ArrayDeque<SheetRuleResult>()
+    val requests = mutableListOf<String>()
+    var polls = 0
+
+    override suspend fun available(): Boolean = available
+
+    override suspend fun request(linkId: String): SheetRuleResult {
+        requests += linkId
+        return requestResult
+    }
+
+    override suspend fun state(linkId: String): SheetRuleResult {
+        polls++
+        return states.removeFirstOrNull() ?: SheetRuleResult.Pending
+    }
+}
 
 /** Connections in [scores]; inspections come from [inspections] in order, every call is recorded. */
 class FakeSheetScoresRepository(vararg initial: SheetScore) : SheetScoresRepository {
@@ -52,9 +79,14 @@ class FakeSheetScoresRepository(vararg initial: SheetScore) : SheetScoresReposit
         val scope: ResourceScope,
         val url: String,
         val row: SheetRowMatch,
-        val total: SheetCell,
-        val choice: TotalChoice = TotalChoice.AUTO,
-    )
+        val pick: SheetTotalPick,
+        val linkId: String? = null,
+    ) {
+        val choice: TotalChoice get() = pick.choice
+        val value: String? get() = pick.reading.value
+        /** The column of a direct total, null for a computed one. */
+        val column: SheetCellRef? get() = (pick.formula as? SheetFormula.Direct)?.cell
+    }
 
     override fun observe(): Flow<List<SheetScore>> = scores
 
@@ -72,30 +104,26 @@ class FakeSheetScoresRepository(vararg initial: SheetScore) : SheetScoresReposit
         scope: ResourceScope,
         url: String,
         row: SheetRowMatch,
-        total: SheetCell,
-        choice: TotalChoice,
+        total: SheetTotalPick,
+        linkId: String?,
     ): AppResult<Unit> {
-        connected += Connected(scope, url, row, total, choice)
+        connected += Connected(scope, url, row, total, linkId)
         connectGate?.await()
         if (connectResult is AppResult.Success) {
             scores.value = scores.value.filterNot { it.scope.key == scope.key } + sheetScore(
                 scope = scope, url = url, tabGid = row.tab.gid, tabName = row.tab.name, rowKey = row.key,
-                column = SheetColumnRef(total.headerPath, total.column), value = total.value.ifEmpty { null },
-            ).copy(choice = choice)
+                value = total.reading.value,
+            ).copy(formula = total.formula, choice = total.choice, official = total.official, linkId = linkId)
         }
         return connectResult
     }
 
-    override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetCell, choice: TotalChoice): AppResult<Unit> {
-        totals += Connected(scope, "", row, total, choice)
+    override suspend fun changeTotal(scope: ResourceScope, row: SheetRowMatch, total: SheetTotalPick, linkId: String?): AppResult<Unit> {
+        totals += Connected(scope, "", row, total, linkId)
         connectGate?.await()
         if (connectResult is AppResult.Success) {
             scores.value = scores.value.map {
-                if (it.scope.key == scope.key) {
-                    it.copy(column = SheetColumnRef(total.headerPath, total.column), choice = choice, value = total.value.ifEmpty { null })
-                } else {
-                    it
-                }
+                if (it.scope.key == scope.key) it.copy(formula = total.formula, choice = total.choice, value = total.reading.value) else it
             }
         }
         return connectResult
@@ -133,7 +161,7 @@ fun sheetScore(
     connectedAt: Instant = Instant.parse("2026-09-01T09:00:00Z"),
 ) = SheetScore(
     scope = scope, url = url, tabGid = tabGid, tabName = tabName, rowKey = rowKey, keyColumn = 0,
-    keyKind = KeyKind.ISU, column = column, value = value, baseline = baseline, tracked = tracked, status = status,
+    keyKind = KeyKind.ISU, formula = SheetFormula.Direct(SheetCellRef(tabGid, column)), value = value, baseline = baseline, tracked = tracked, status = status,
     updatedAt = updatedAt, connectedAt = connectedAt,
 )
 
