@@ -16,18 +16,6 @@ struct SportTabScreen: View {
 
     var body: some View {
         SportContent(tab: $tab, my: my.state, sign: sign.state, actions: actions)
-            .refreshable {
-                switch tab {
-                case .my:
-                    await my.pullRefresh({ $0.refresh(mode: .pull) }, while: {
-                        ($0.uiState.value.body as? SportMyBodyContent)?.refreshing == true
-                    })
-                case .sign:
-                    await sign.pullRefresh({ $0.refresh(mode: .pull) }, while: {
-                        ($0.uiState.value.body as? SportSignBodyDay)?.refreshing == true
-                    })
-                }
-            }
             .itmoRootHeader(title: ShellTab.sport.title, subtitle: nil)
             .sheet(item: $lesson) { item in
                 SportLessonSheet(item: item, present: sheet(of: item)) { action in
@@ -105,7 +93,19 @@ struct SportTabScreen: View {
             resetFilters: { sign.viewModel.resetFilters() },
             openLesson: { openLesson($0, from: .sign) },
             rowAction: { sign.viewModel.act(lessonId: $0) },
-            retrySign: { sign.viewModel.refresh(mode: .force) }
+            retrySign: { sign.viewModel.refresh(mode: .force) },
+            refresh: { part in
+                switch part {
+                case .my:
+                    await my.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                        ($0.uiState.value.body as? SportMyBodyContent)?.refreshing == true
+                    })
+                case .sign:
+                    await sign.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                        ($0.uiState.value.body as? SportSignBodyDay)?.refreshing == true
+                    })
+                }
+            }
         )
     }
 
@@ -180,6 +180,8 @@ struct SportContentActions {
     var openLesson: (Int64) -> Void = { _ in }
     var rowAction: (Int64) -> Void = { _ in }
     var retrySign: () -> Void = {}
+    /// The pull to refresh of a part.
+    var refresh: (SportTab) async -> Void = { _ in }
 }
 
 /// The tab without the ViewModels: the segmented choice over a pager of Mine and Sign-up, so a horizontal swipe
@@ -211,6 +213,9 @@ struct SportContent: View {
                             default: SportSignPart(state: sign, actions: actions)
                             }
                         }
+                        // On each page, not above the pager: under `.refreshable` the pager itself would take the
+                        // refresh control, bounce vertically and drag freely on both axes.
+                        .refreshable { await actions.refresh(part) }
                         .accessibilityElement(children: .contain)
                         .accessibilityIdentifier(part == tab ? "sport.list" : "sport.list.hidden")
                         .containerRelativeFrame(.horizontal)

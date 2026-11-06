@@ -131,7 +131,11 @@ Swift reaches Kotlin through `Shared` and SKIE (`shared/ios/build.gradle.kts`): 
   ViewModel's `refreshing` flag, so the system spinner stays until the refresh ends (at least 0.5 s, at most 60 s). The
   wait runs in its own task: SwiftUI cancels the refresh action once the state it shows changes. The root header sets
   the inline title mode on its hidden bar, since with the default large title SwiftUI moves the scroll view's refresh
-  control into the hidden bar and nothing is drawn (`RefreshUITests`).
+  control into the hidden bar and nothing is drawn (`RefreshUITests`). SwiftUI gives a refresh control to every
+  scroll view under `.refreshable` that is not inside another one, horizontal ones too, and a horizontal pager with
+  it bounces vertically and drags on both axes; so a screen with a pager takes the action in its content's actions
+  and applies `.refreshable` below the pager (the schedule's feed, each page of `Спорт`), and `PagerAxesTests`
+  checks that no pager holds one.
 - `UiText` resolves in Swift with `text.resolved` (`Sources/Support/UiText+Resolve.swift`), icons with
   `AppIcon.symbol` and `AppSymbol.image`. Kotlin cannot resolve it: Kotlin/Native turns the table's `NSString` into a
   Kotlin `String` and drops the `.stringsdict` plural rules ([ADR 0035](decisions/0035-ios-without-compose.md)).
