@@ -15,6 +15,7 @@ struct CardsWidget: Widget {
         .configurationDisplayName(Text(.widgetCardsName))
         .description(Text(.widgetCardsDescription))
         .supportedFamilies([.systemMedium, .systemLarge])
+        .contentMarginsDisabled()
     }
 }
 

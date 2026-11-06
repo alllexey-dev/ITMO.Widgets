@@ -15,6 +15,7 @@ struct SportWidget: Widget {
         .configurationDisplayName(Text(.widgetSportName))
         .description(Text(.widgetSportDescription))
         .supportedFamilies([.systemSmall, .systemMedium])
+        .contentMarginsDisabled()
     }
 }
 

@@ -266,6 +266,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   provisioning profile.
 - iOS widgets draw one background edge to edge: the content no longer paints its own darker rectangle inside the
   system's tile (Home Screen, StandBy, tinted and clear styles, with `Виджеты в цвет темы` on or off).
+- iOS widgets turn off WidgetKit's content margins like the pass widget: their content keeps its own inset instead of
+  sitting inside the system margins as well, which left a wide empty border once the inner rectangle was gone.
 - iOS `Виджеты` no longer counts widgets removed from the Home Screen: the gallery reads WidgetKit's list again every
   few seconds while it shows, and a list WidgetKit cannot give counts as none instead of keeping the last count.
 - iOS widgets placed before sign-in leave the signed-out state as soon as the app signs in, not at their next

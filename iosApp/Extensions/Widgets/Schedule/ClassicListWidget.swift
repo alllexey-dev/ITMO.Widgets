@@ -16,6 +16,7 @@ struct ClassicListWidget: Widget {
         .configurationDisplayName(Text(.widgetLessonListName))
         .description(Text(.widgetLessonListDescription))
         .supportedFamilies([.systemMedium, .systemLarge])
+        .contentMarginsDisabled()
     }
 }
 
