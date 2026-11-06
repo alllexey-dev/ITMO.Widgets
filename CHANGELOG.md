@@ -254,6 +254,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   targets stay 48 dp.
 - Android `Виджеты`: `Добавить` takes the kit's tonal colours instead of Material's grey, which read as disabled.
 - iOS shows pull-to-refresh on every tab root until the refresh ends.
+- iOS `Подключить устройство` for an agent or an MCP server: the ITMO.ID page after Face ID no longer stays frozen
+  (no taps, no typing). The page now opens once the app is active again; it used to come up while the Face ID UI
+  still held the app inactive, and WebKit never woke it.
 - iOS widgets of an `.ipa` re-signed by SideStore (or another tool that renames the App Group without
   `ALTAppGroups`) show data instead of the signed-out state: the app and the widgets find the group in their
   provisioning profile.

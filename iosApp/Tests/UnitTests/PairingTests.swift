@@ -1,6 +1,7 @@
 import CryptoKit
 @testable import ITMOWidgets
 import Shared
+import UIKit
 import XCTest
 
 /// Pairing's CryptoKit HPKE against RFC 9180 and Tink: the device key is RFC 9180 A.2's recipient, the plaintext the
@@ -56,6 +57,30 @@ final class PairingTests: XCTestCase {
     func testAKeyCryptoKitRefusesIsNil() {
         let platform = AppPlatform()
         XCTAssertNil(platform.hpkeSeal(recipientPublicKey: Data(count: 31), info: info, plaintext: Data(bundle.utf8)))
+    }
+
+    /// The screen lock answers while its Face ID or passcode UI still holds the app inactive; the ITMO.ID page it
+    /// opens comes up only once the app is active, else its WKWebView never loads or takes a touch.
+    @MainActor
+    func testTheScreenLockAnswerWaitsUntilTheAppIsActive() {
+        let center = NotificationCenter()
+        var answers = 0
+
+        AppActivation.whenActive(isActive: false, center: center) { answers += 1 }
+        XCTAssertEqual(answers, 0)
+        center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+        XCTAssertEqual(answers, 1)
+        center.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+        XCTAssertEqual(answers, 1)
+    }
+
+    @MainActor
+    func testAnActiveAppGetsTheScreenLockAnswerAtOnce() {
+        var answers = 0
+
+        AppActivation.whenActive(isActive: true, center: NotificationCenter()) { answers += 1 }
+
+        XCTAssertEqual(answers, 1)
     }
 
     private func open(sealed: Data, info: Data, aad: Data = Data()) throws -> Data {
