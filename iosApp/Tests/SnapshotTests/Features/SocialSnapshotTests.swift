@@ -28,6 +28,15 @@ final class SocialSnapshotTests: XCTestCase {
         assertProfile(me.longName, named: "profile-long-name", appearances: [.light, .lightAX1])
     }
 
+    /// The whole tab without the tab bar, so the links group (`ИСУ`, `Обратная связь`) is in the picture.
+    func testProfileLinks() {
+        let screen = NavigationStack {
+            MeContent(state: me.state(connection: "on", requests: "no"))
+                .itmoRootHeader(title: ShellTab.profile.title, subtitle: nil) { MeShareButton {} }
+        }
+        assertScreenAppearances(of: screen, named: "profile-links", appearances: [.light], height: 1500, settle: 1)
+    }
+
     func testIsuHub() {
         let screen = NavigationStack {
             IsuHubContent().itmoDetailHeader(title: AppStrings.string("me_isu_hub"), subtitle: nil)
