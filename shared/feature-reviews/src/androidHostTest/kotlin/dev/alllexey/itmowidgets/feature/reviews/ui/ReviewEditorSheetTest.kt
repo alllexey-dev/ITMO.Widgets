@@ -35,6 +35,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
@@ -50,6 +51,7 @@ import dev.alllexey.itmowidgets.core.reviews.OwnReviewStatus
 import dev.alllexey.itmowidgets.core.reviews.OwnTeacherReview
 import dev.alllexey.itmowidgets.core.reviews.ReviewDate
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviewDraft
+import dev.alllexey.itmowidgets.core.reviews.TeacherReviewHints
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.testing.FakeTeacherLessonsGateway
@@ -121,6 +123,35 @@ class ReviewEditorSheetTest {
         onNodeWithText("Не короче 30 символов").assertDoesNotExist()
         assertTouchTargets()
         assertNoTextOverflow()
+    }
+
+    @Test
+    fun aCoachPrefillArrivingAfterTheFirstFrameFillsTheFieldAndAClearedFieldStaysClear() = runComposeUiTest {
+        val gate = CompletableDeferred<Unit>()
+        reviews.hintsGate = { gate.await() }
+        reviews.hintsResult = AppResult.Success(TeacherReviewHints(TEACHER_ISU, coach = true, subjects = listOf(SPORT)))
+        val model = model()
+        var generation by mutableIntStateOf(0)
+        setContent { key(generation) { Editor(model) } }
+        onNodeWithTag(ReviewEditorSheetTestTags.SUBJECT).assert(editableText(""))
+
+        gate.complete(Unit)
+        waitForIdle()
+        chip(SPORT).assertIsSelected()
+        onNodeWithTag(ReviewEditorSheetTestTags.SUBJECT).assert(editableText(SPORT))
+        onNodeWithTag(ReviewEditorSheetTestTags.SUBJECT).assert(selection(TextRange(SPORT.length)))
+
+        onNodeWithTag(ReviewEditorSheetTestTags.SUBJECT).performTextClearance()
+        waitForIdle()
+        assertEquals("", model.uiState.value.subject)
+        chip(SPORT).assertIsNotSelected()
+        onNodeWithTag(ReviewEditorSheetTestTags.SUBJECT).assert(editableText(""))
+
+        // A configuration change: the same view model, a new composition.
+        generation++
+        waitForIdle()
+        onNodeWithTag(ReviewEditorSheetTestTags.SUBJECT).assert(editableText(""))
+        chip(SPORT).assertIsNotSelected()
     }
 
     @Test
@@ -306,6 +337,7 @@ class ReviewEditorSheetTest {
         val ABOVE_KEYBOARD = 360.dp
         const val TEACHER_ISU = 100001
         const val TEACHER_NAME = "Константинопольская Александра Константиновна"
+        const val SPORT = "Физическая культура"
         val FLOWS = setOf(7101L, 7102L)
         val SUBJECTS = listOf("Математический анализ", "Линейная алгебра", "Дискретная математика")
         const val REVIEW_TEXT = "Лекции понятные, на практике разбираем задачи из контрольных."

@@ -76,7 +76,7 @@ class ReviewEditorViewModel(
         if (!hints.coach || subject == null || state.value.editing || state.value.subject.isNotEmpty()) return
         handle[KEY_SUBJECT] = subject
         handle[KEY_INITIAL_SUBJECT] = subject
-        state.update { it.copy(subject = subject) }
+        state.update { it.copy(subject = subject, subjectPrefilled = true) }
     }
 
     fun onSubjectChanged(subject: String) {

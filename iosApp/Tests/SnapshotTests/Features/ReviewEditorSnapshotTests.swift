@@ -45,7 +45,7 @@ final class ReviewEditorSnapshotTests: XCTestCase {
     ) -> ReviewEditorUiState {
         ReviewEditorUiState(
             subject: subject, text: text, anonymous: anonymous, suggestions: suggestions, subjectError: nil,
-            textError: textError, saving: false, editing: editing
+            textError: textError, saving: false, editing: editing, subjectPrefilled: false
         )
     }
 

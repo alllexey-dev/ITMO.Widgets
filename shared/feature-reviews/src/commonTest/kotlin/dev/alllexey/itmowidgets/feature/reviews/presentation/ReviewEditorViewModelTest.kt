@@ -124,6 +124,7 @@ class ReviewEditorViewModelTest {
         val vm = model()
 
         assertEquals(SPORT, vm.uiState.value.subject)
+        assertTrue(vm.uiState.value.subjectPrefilled, "The view keeping its own field takes the prefill")
         assertEquals(listOf(SPORT, "Механика", "Физика"), vm.uiState.value.suggestions)
         assertFalse(vm.hasChanges(), "The prefill is the opening value")
         vm.onSubjectChanged("Волейбол")
@@ -141,6 +142,7 @@ class ReviewEditorViewModelTest {
         val typed = model().apply { onSubjectChanged("Плавание") }
         gate.complete(Unit); runCurrent()
         assertEquals("Плавание", typed.uiState.value.subject)
+        assertFalse(typed.uiState.value.subjectPrefilled)
 
         repository.hintsGate = {}
         val handle = handle()
