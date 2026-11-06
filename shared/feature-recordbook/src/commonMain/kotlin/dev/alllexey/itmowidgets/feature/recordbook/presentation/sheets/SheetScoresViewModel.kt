@@ -111,38 +111,69 @@ class SheetScoresViewModel(
         _state.value = SheetScoresUiState.PickTabRow(tab, SheetRows.options(grid))
     }
 
-    /** Selects [cell] as the total, or in the sum mode adds or removes it; nothing is saved before [save]. */
-    fun pickTotal(cell: SheetCell) = review { review ->
-        if (!review.summing) return@review review.copy(picked = cell)
-        val summed = if (cell in review.summed) review.summed - cell else review.summed + cell
-        review.copy(summed = summed, sum = sumOf(summed))
+    /** A variant of the overview becomes the total on top; nothing is saved before [save]. */
+    fun select(option: TotalOption) = review { it.copy(selection = option) }
+
+    /** `Выбрать столбец`: every column of the own row. */
+    fun openColumns() = review { it.copy(page = TotalPage.COLUMNS) }
+
+    /** `Сложить столбцы`: the columns with points to add up. */
+    fun openSum() = review { it.copy(page = TotalPage.SUM) }
+
+    /** A column of the list becomes the total on top and the overview returns. */
+    fun pickColumn(cell: SheetCell) = review {
+        it.copy(selection = TotalOption.Column(cell), picked = cell, page = TotalPage.OVERVIEW)
     }
 
-    /** «Вернуть авто»: selects the automatic total instead of a hand-picked one. */
-    fun resetTotal() = review { review ->
-        review.decision?.let { review.copy(picked = it.total, summing = false) } ?: review
+    /** Adds [cell] to the sum being made or takes it out; the own sum follows live. */
+    fun toggleSum(cell: SheetCell) = review { review ->
+        review.withSum(if (cell in review.summed) review.summed - cell else review.summed + cell)
     }
 
-    /** «Сложить столбцы» on or off; the columns picked so far stay until the sheet closes. */
-    fun setSumming(on: Boolean) = review { it.copy(summing = on) }
+    /** `Готово` of the sum page: the sum becomes the total on top and the overview returns. */
+    fun finishSum() = review { review ->
+        val text = review.sumText
+        if (!review.canFinishSum || text == null) return@review review
+        val made = TotalOption.Sum(review.summed, review.sum, text)
+        review.copy(selection = made, made = made, page = TotalPage.OVERVIEW)
+    }
 
-    /** «Сохранить»: the selected cell, or the sum of the selected columns. */
-    fun save() = act {
-        val review = _state.value as? SheetScoresUiState.PickTotal ?: return@act
-        if (!review.canSave) return@act
-        if (review.summing) {
-            val row = matches.firstOrNull { it.tab == review.summed.first().tab } ?: return@act
-            val formula = SheetFormula.sum(review.summed.map(::refOf))
-            save(row, SheetTotalPick(formula, TotalChoice.MANUAL, reading(formula)), fallback = review)
-        } else {
-            val cell = review.picked ?: return@act
-            val row = matches.firstOrNull { it.tab == cell.tab } ?: return@act
-            val choice = if (cell == review.decision?.total) TotalChoice.AUTO else TotalChoice.MANUAL
-            save(row, directPick(cell, choice), fallback = review)
+    /** Back inside the sheet ([canGoBack]): a column page to the overview, a tab's rows to the tabs. */
+    fun back() {
+        if (job?.isActive == true) return
+        _state.update { state ->
+            when {
+                state is SheetScoresUiState.PickTotal && state.page != TotalPage.OVERVIEW -> state.copy(page = TotalPage.OVERVIEW)
+                state is SheetScoresUiState.PickTabRow -> workbook?.let { SheetScoresUiState.PickTab(tabsWithStudents(it)) } ?: state
+                else -> state
+            }
         }
     }
 
-    /** «Разобрать с ИИ»: asks Backend, then polls until the rule is ready, it fails or [AI_TIMEOUT] passes. */
+    /** The footer's button: saves the total on top, or closes when it is what is saved already. */
+    fun save() = act {
+        val review = _state.value as? SheetScoresUiState.PickTotal ?: return@act
+        when (review.action) {
+            TotalAction.DONE -> _state.value = SheetScoresUiState.Done
+            TotalAction.SAVE -> when (val option = review.selection) {
+                is TotalOption.Column -> {
+                    val row = matches.firstOrNull { it.tab == option.cell.tab } ?: return@act
+                    val choice = if (option.cell == review.decision?.total) TotalChoice.AUTO else TotalChoice.MANUAL
+                    save(row, directPick(option.cell, choice), fallback = review)
+                }
+                is TotalOption.Sum -> {
+                    val row = matches.firstOrNull { it.tab == option.cells.first().tab } ?: return@act
+                    val formula = SheetFormula.sum(option.cells.map(::refOf))
+                    save(row, SheetTotalPick(formula, TotalChoice.MANUAL, reading(formula)), fallback = review)
+                }
+                TotalOption.Ai -> proposal?.let { (row, pick) -> save(row, pick, fallback = review) }
+                TotalOption.Saved, null -> Unit
+            }
+            TotalAction.FINISH_SUM, null -> Unit
+        }
+    }
+
+    /** `Посчитать с ИИ`: asks Backend, then polls until the rule is ready, it fails or [AI_TIMEOUT] passes. */
     fun analyze() {
         val link = linkId ?: return
         val review = _state.value as? SheetScoresUiState.PickTotal ?: return
@@ -158,19 +189,6 @@ class SheetScoresViewModel(
             }
             setAi(outcome(result))
         }
-    }
-
-    /** `Использовать`: saves the AI rule's totals. */
-    fun useAi() = act {
-        val review = _state.value as? SheetScoresUiState.PickTotal ?: return@act
-        val (row, pick) = proposal ?: return@act
-        save(row, pick, fallback = review)
-    }
-
-    /** `Нет`: the proposal goes and nothing is saved. */
-    fun dismissAi() {
-        proposal = null
-        setAi(SheetAiState.Hidden)
     }
 
     private fun start() = act {
@@ -192,7 +210,20 @@ class SheetScoresViewModel(
         _state.update { if (it is SheetScoresUiState.PickTotal) change(it) else it }
     }
 
-    private fun setAi(ai: SheetAiState) = _state.update { if (it is SheetScoresUiState.PickTotal) it.copy(ai = ai) else it }
+    /** A ready AI result goes on top at once: the viewer asked for it. */
+    private fun setAi(ai: SheetAiState) = _state.update {
+        if (it !is SheetScoresUiState.PickTotal) return@update it
+        it.copy(ai = ai, selection = if (ai is SheetAiState.Proposal) TotalOption.Ai else it.selection)
+    }
+
+    private fun SheetScoresUiState.PickTotal.withSum(summed: List<SheetCell>) = copy(
+        summed = summed,
+        sum = sumOf(summed),
+        sumText = summed.takeIf { it.isNotEmpty() }?.let { SheetFormulaText.describe(SheetFormula.sum(it.map(::refOf))) },
+    )
+
+    private fun tabsWithStudents(book: SheetWorkbook): List<SheetTab> =
+        book.tabs.filter { SheetRows.options(it).isNotEmpty() }.map { it.tab }
 
     private suspend fun connect() {
         val ready = when (val inspection = repository.inspect(url)) {
@@ -203,9 +234,7 @@ class SheetScoresViewModel(
         when (val search = ready.search) {
             is RowSearch.Found -> choose(book, search.matches)
             is RowSearch.Ambiguous -> _state.value = SheetScoresUiState.PickRow(search.candidates)
-            RowSearch.NotFound -> _state.value = SheetScoresUiState.PickTab(
-                book.tabs.filter { SheetRows.options(it).isNotEmpty() }.map { it.tab }
-            )
+            RowSearch.NotFound -> _state.value = SheetScoresUiState.PickTab(tabsWithStudents(book))
         }
     }
 
@@ -220,11 +249,19 @@ class SheetScoresViewModel(
         matches = book.tabs.mapNotNull { SheetRows.locate(it, score.rowKey, score.keyKind, score.keyColumn) }
         if (matches.isEmpty()) return fail(SheetStatus.ROW_NOT_FOUND)
         val cells = cellsOf(book, matches)
-        val saved = (score.formula as? SheetFormula.Computed)?.let {
+        val computed = score.formula as? SheetFormula.Computed
+        val saved = computed?.let {
             val reading = reading(it, score.official)
             SheetSavedTotal(SheetFormulaText.describe(it), reading.value, reading.official)
         }
-        _state.value = review(book, cells, current(book, score, cells), decide(book, matches), score.choice, saved)
+        val current = current(book, score, cells)?.let(TotalOption::Column) ?: saved?.let { TotalOption.Saved }
+        // A hand-made sum opens its columns again on the sum page.
+        val summed = computed?.takeIf { score.choice == TotalChoice.MANUAL }?.cells.orEmpty()
+            .mapNotNull { ref ->
+                val tab = cells.filter { it.tab.gid == ref.gid }
+                tab.firstOrNull { it.headerPath == ref.column.headerPath } ?: tab.firstOrNull { it.column == ref.column.index }
+            }
+        _state.value = review(book, cells, current, decide(book, matches), score.choice, saved).withSum(summed)
     }
 
     /** The cells of [rows]; an automatic total is saved at once, otherwise the viewer picks it. */
@@ -237,19 +274,20 @@ class SheetScoresViewModel(
             return
         }
         val row = rows.first { it.tab == decision.total.tab }
-        save(row, directPick(decision.total, autoChoice(decision)), fallback = review(book, cells, decision.total, decision, null, null))
+        save(row, directPick(decision.total, autoChoice(decision)), fallback = review(book, cells, null, decision, null, null))
     }
 
     private suspend fun review(
         book: SheetWorkbook,
         cells: List<SheetCell>,
-        selected: SheetCell?,
+        current: TotalOption?,
         decision: SheetTotalDecision?,
         choice: TotalChoice?,
         saved: SheetSavedTotal?,
     ) = SheetScoresUiState.PickTotal(
         cells = cells,
-        selected = selected,
+        selection = current ?: decision?.total?.let(TotalOption::Column),
+        current = current,
         decision = decision,
         choice = choice,
         saved = saved,
