@@ -28,7 +28,7 @@
     <string name="me_github">GitHub</string>
     <string name="me_github_subtitle">Исходный код приложения</string>
     <string name="me_feedback">Обратная связь</string>
-    <string name="me_feedback_subtitle">Идеи и сообщения об ошибках</string>
+    <string name="me_feedback_subtitle">Идеи и ошибки</string>
     <string name="me_group_format">%1$s, %2$d курс, %3$s</string>
 
     <!-- ИСУ, opened from Профиль -->
