@@ -198,6 +198,7 @@ struct WidgetStage<Content: View>: View {
                     let scale = geometry.size.width / size.width
                     content
                         .environment(\.colorScheme, systemColorScheme ?? colorScheme)
+                        .environment(\.paintsWidgetTile, true)
                         .frame(width: size.width, height: size.height)
                         .clipShape(.rect(cornerRadius: 22, style: .continuous))
                         .scaleEffect(scale, anchor: .topLeading)

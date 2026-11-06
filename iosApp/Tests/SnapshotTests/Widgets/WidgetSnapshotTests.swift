@@ -10,8 +10,8 @@ import XCTest
 /// with its Lock Screen families, the day widget large, the cards medium and large, the classic list medium and
 /// large, the sport widget's states, the pass widget's options, the placeholders, and each in the app's theme (the
 /// teal preset). Time is frozen at the moment, so nothing moves.
-/// WidgetKit's container background is ignored outside a widget, so each entry view paints its own tile; the home
-/// screen clips the corners.
+/// WidgetKit's container background is ignored outside a widget, so the tests ask each entry view to paint its own tile
+/// (`paintsWidgetTile`), as the widgets gallery does; the home screen clips the corners.
 @MainActor
 final class WidgetSnapshotTests: XCTestCase {
     /// The fixture's generation time: 2026-09-01T08:00:30Z.
@@ -273,7 +273,7 @@ final class WidgetSnapshotTests: XCTestCase {
     ) {
         let size = size ?? Self.size(of: family)
         assertAppearances(
-            of: NextLessonEntryView(entry: entry, family: family),
+            of: NextLessonEntryView(entry: entry, family: family).environment(\.paintsWidgetTile, true),
             named: name, appearances: appearances, width: size.width, height: size.height,
             file: file, testName: testName, line: line
         )
@@ -289,7 +289,7 @@ final class WidgetSnapshotTests: XCTestCase {
         line: UInt = #line
     ) {
         assertAppearances(
-            of: DayEntryView(entry: entry),
+            of: DayEntryView(entry: entry).environment(\.paintsWidgetTile, true),
             named: name, appearances: appearances, width: size.width, height: size.height,
             file: file, testName: testName, line: line
         )
@@ -306,7 +306,7 @@ final class WidgetSnapshotTests: XCTestCase {
     ) {
         let size = Self.size(of: family)
         assertAppearances(
-            of: CardsEntryView(entry: entry),
+            of: CardsEntryView(entry: entry).environment(\.paintsWidgetTile, true),
             named: name, appearances: appearances, width: size.width, height: size.height,
             file: file, testName: testName, line: line
         )
@@ -323,7 +323,7 @@ final class WidgetSnapshotTests: XCTestCase {
     ) {
         let size = Self.size(of: family)
         assertAppearances(
-            of: ClassicListEntryView(entry: entry, family: family),
+            of: ClassicListEntryView(entry: entry, family: family).environment(\.paintsWidgetTile, true),
             named: name, appearances: appearances, width: size.width, height: size.height,
             file: file, testName: testName, line: line
         )
@@ -340,7 +340,7 @@ final class WidgetSnapshotTests: XCTestCase {
     ) {
         let size = Self.size(of: family)
         assertAppearances(
-            of: SportEntryView(entry: entry, family: family),
+            of: SportEntryView(entry: entry, family: family).environment(\.paintsWidgetTile, true),
             named: name, appearances: appearances, width: size.width, height: size.height,
             file: file, testName: testName, line: line
         )
@@ -369,7 +369,8 @@ final class WidgetSnapshotTests: XCTestCase {
     ) {
         assertAppearances(
             of: QrWidgetEntryView(entry: QrWidgetEntry(date: date, content: content, appearance: appearance))
-                .environment(\.widgetRenderingMode, renderingMode),
+                .environment(\.widgetRenderingMode, renderingMode)
+                .environment(\.paintsWidgetTile, true),
             named: name,
             appearances: appearances,
             width: WidgetSizes.small.width,

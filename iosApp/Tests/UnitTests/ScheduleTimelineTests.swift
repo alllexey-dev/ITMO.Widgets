@@ -215,6 +215,19 @@ final class ScheduleTimelineTests: XCTestCase {
         }
     }
 
+    /// A file the app wrote while the phone's clock was ahead (set forward, then back) holds nothing for the real
+    /// time: the widget is unavailable, in the file's palette, until its first entry or the app's next write.
+    func testAClockBehindTheFileShowsUnavailableUntilTheFilesFirstEntry() throws {
+        let timeline = try fixture()
+        let behind = timeline.generatedAt.addingTimeInterval(-24 * 3600)
+
+        let entries = ScheduleWidgetTimeline.entries(now: behind, session: session, timeline: timeline)
+
+        XCTAssertEqual(entries.first?.content, .placeholder(.unavailable))
+        XCTAssertEqual(entries.dropFirst().first?.date, timeline.generatedAt)
+        XCTAssertEqual(entries.dropFirst().first?.content, .snapshot(timeline.entries[0].snapshot))
+    }
+
     // MARK: Fixture
 
     /// The reference fixture (a test resource by path, project.yml) inside the App Group envelope, as the writer stores it.

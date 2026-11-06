@@ -322,7 +322,12 @@ The widget extension reads App Group files on each timeline request and makes no
   (`Sources/Features/Settings/WidgetGalleryForm.swift`) draws the real entry views on the shared sample, which
   `IosWidgetPreviews` (`shared/ios`) writes as the App Group files the writers would leave for the gallery's settings
   and theme, frozen at 12:22 on the sample Monday. The gallery counts placed widgets per kind through
-  `WidgetCenter.currentConfigurations()` and offers how to add one, the Lock Screen widgets and the Control.
+  `WidgetCenter.currentConfigurations()` (`PlacedWidgets`) when it appears, when the app becomes active and every
+  3 seconds while it shows, because WidgetKit's list lags a widget added or removed; a list WidgetKit cannot give
+  counts as none. It offers how to add one, the Lock Screen widgets and the Control.
+- A widget's tile is its `containerBackground` alone (`widgetTile`), which the system draws edge to edge and removes
+  in StandBy and the tinted and clear styles. Outside WidgetKit, which ignores it, the gallery's `WidgetStage` and
+  the snapshot tests set `paintsWidgetTile` so the entry view paints the same colour under its content.
 
 ## System entries
 

@@ -13,11 +13,12 @@ struct QrWidgetEntryView: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.widgetRenderingMode) private var renderingMode
+    @Environment(\.paintsWidgetTile) private var paintsTile
 
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(style.fullColor ? tile.background : .clear)
+            .background(paintsTile && style.fullColor ? tile.background : .clear)
             .containerBackground(for: .widget) { tile.background }
             .widgetURL(QrWidget.passURL)
     }

@@ -62,6 +62,13 @@ struct SettingsScreen: View {
             guard phase == .active else { return }
             Task { await readSystemState() }
         }
+        // WidgetKit's list lags a widget added or removed on the home screen, so it is read again while the page shows.
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: PlacedWidgets.rereadInterval)
+                await countPlacedWidgets()
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.backgroundRefreshStatusDidChangeNotification)) { _ in
             Task { await readSystemState() }
         }
@@ -186,22 +193,32 @@ struct SettingsScreen: View {
         await countPlacedWidgets()
     }
 
-    /// The home screen widgets of each format WidgetKit has placed; Lock Screen accessories are not counted.
+    /// The home screen widgets of each format WidgetKit has placed (`PlacedWidgets`).
     private func countPlacedWidgets() async {
-        guard let configurations = try? await WidgetCenter.shared.currentConfigurations() else { return }
-        let home: Set<WidgetFamily> = [.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge]
-        let kinds: [WidgetFormat: String] = [
-            .next: NextLessonWidget.kind, .day: DayWidget.kind, .cards: CardsWidget.kind, .list: ClassicListWidget.kind,
-            .sport: SportWidget.kind, .pass: QrWidget.kind,
-        ]
-        for (format, kind) in kinds {
-            let count = configurations.filter { $0.kind == kind && home.contains($0.family) }.count
+        let configurations = try? await WidgetCenter.shared.currentConfigurations()
+        for (format, count) in PlacedWidgets.counts(configurations?.map { ($0.kind, $0.family) }) {
             model.viewModel.onPlacedWidgets(format: format, count: Int32(count))
         }
     }
 
     private func open(_ address: String) {
         if let url = URL(string: address) { openURL(url) }
+    }
+}
+
+/// The home screen widgets of each format in WidgetKit's configurations (kind and family): Lock Screen accessories
+/// are not counted, and a list WidgetKit could not give counts as none, so the gallery never keeps an earlier count.
+enum PlacedWidgets {
+    static let rereadInterval: Duration = .seconds(3)
+
+    static func counts(_ configurations: [(kind: String, family: WidgetFamily)]?) -> [WidgetFormat: Int] {
+        let home: Set<WidgetFamily> = [.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge]
+        let kinds: [WidgetFormat: String] = [
+            .next: NextLessonWidget.kind, .day: DayWidget.kind, .cards: CardsWidget.kind, .list: ClassicListWidget.kind,
+            .sport: SportWidget.kind, .pass: QrWidget.kind,
+        ]
+        let placed = (configurations ?? []).filter { home.contains($0.family) }
+        return kinds.mapValues { kind in placed.filter { $0.kind == kind }.count }
     }
 }
 
