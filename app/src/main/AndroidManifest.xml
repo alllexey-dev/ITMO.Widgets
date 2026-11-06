@@ -12,6 +12,16 @@
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE"
         tools:node="remove" />
+    <!-- MapLibre declares these for its location layer; the campus map never shows the user's position. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_COARSE_LOCATION"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_WIFI_STATE"
+        tools:node="remove" />
     <!-- «Открыть в календаре» for an exported .ics shows only when an app can open it. -->
     <queries>
         <intent>

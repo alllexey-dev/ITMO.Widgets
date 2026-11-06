@@ -35,7 +35,7 @@
 	<key>AppStoreID</key>
 	<string>$(APP_STORE_ID)</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Камера нужна, чтобы сканировать QR для входа на сайт</string>
+	<string>Камера нужна, чтобы сканировать QR-коды для подключения устройств</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Face ID подтверждает, что устройство подключаете вы</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
