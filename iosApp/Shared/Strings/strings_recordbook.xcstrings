@@ -1208,31 +1208,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Разобрать с ИИ"
-          }
-        }
-      }
-    },
-    "sheet_ai_check" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Проверьте формулу: ИИ может ошибаться"
-          }
-        }
-      }
-    },
-    "sheet_ai_dismiss" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нет"
+            "value" : "Посчитать с ИИ"
           }
         }
       }
@@ -1280,7 +1256,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Подробнее"
+            "value" : "Как считает ИИ"
           }
         }
       }
@@ -1293,6 +1269,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Разбор не подходит к вашей строке"
+          }
+        }
+      }
+    },
+    "sheet_ai_offer_note" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИИ разберёт формулы таблицы"
           }
         }
       }
@@ -1316,19 +1304,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ИИ разбирает таблицу…"
-          }
-        }
-      }
-    },
-    "sheet_ai_running_note" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Обычно это занимает до минуты"
+            "value" : "Разбираем таблицу, обычно до минуты"
           }
         }
       }
@@ -1345,18 +1321,6 @@
         }
       }
     },
-    "sheet_ai_title" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Разбор ИИ"
-          }
-        }
-      }
-    },
     "sheet_ai_unavailable" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1365,18 +1329,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Для этой таблицы разбор недоступен"
-          }
-        }
-      }
-    },
-    "sheet_ai_use" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Использовать"
           }
         }
       }
@@ -1465,30 +1417,6 @@
         }
       }
     },
-    "sheet_scores_ai_chosen" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выбрано по разбору ИИ"
-          }
-        }
-      }
-    },
-    "sheet_scores_caption" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@, лист «%2$@»"
-          }
-        }
-      }
-    },
     "sheet_scores_change_total" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1509,30 +1437,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Проверьте итог"
-          }
-        }
-      }
-    },
-    "sheet_scores_chip" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ · %2$@"
-          }
-        }
-      }
-    },
-    "sheet_scores_chip_auto" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ · %2$@ · авто"
           }
         }
       }
@@ -1561,6 +1465,18 @@
         }
       }
     },
+    "sheet_scores_closed_reason" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Баллы читаются только из таблиц, открытых по ссылке"
+          }
+        }
+      }
+    },
     "sheet_scores_column" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1573,30 +1489,6 @@
         }
       }
     },
-    "sheet_scores_column_filled" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "есть у %1$lld из %2$lld"
-          }
-        }
-      }
-    },
-    "sheet_scores_column_max" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "макс. %1$@"
-          }
-        }
-      }
-    },
     "sheet_scores_column_not_found" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1605,6 +1497,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Столбец не найден"
+          }
+        }
+      }
+    },
+    "sheet_scores_column_not_found_reason" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Возможно, столбец или лист удалили"
           }
         }
       }
@@ -1640,7 +1544,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Пустые столбцы · %1$lld"
+            "value" : "Пустые у всех"
           }
         }
       }
@@ -1693,30 +1597,6 @@
         }
       }
     },
-    "sheet_scores_manual" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выбрано вручную"
-          }
-        }
-      }
-    },
-    "sheet_scores_no_values" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "В строке нет значений"
-          }
-        }
-      }
-    },
     "sheet_scores_official" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1753,18 +1633,6 @@
         }
       }
     },
-    "sheet_scores_other_cell" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Другая ячейка"
-          }
-        }
-      }
-    },
     "sheet_scores_pick_row" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -1772,7 +1640,19 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выберите свою строку"
+            "value" : "Какая строка ваша?"
+          }
+        }
+      }
+    },
+    "sheet_scores_pick_row_note" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваше имя есть в нескольких строках"
           }
         }
       }
@@ -1784,103 +1664,19 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выберите лист"
+            "value" : "На каком листе ваша группа?"
           }
         }
       }
     },
-    "sheet_scores_pick_total" : {
+    "sheet_scores_pick_tab_note" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выберите итог"
-          }
-        }
-      }
-    },
-    "sheet_scores_reason_empty" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Столбец «%1$@» пока пуст у всех"
-          }
-        }
-      }
-    },
-    "sheet_scores_reason_header" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Столбец «%1$@», найден по заголовку"
-          }
-        }
-      }
-    },
-    "sheet_scores_reason_not_points" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "В столбце «%1$@» не баллы"
-          }
-        }
-      }
-    },
-    "sheet_scores_reason_sum" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Столбец «%1$@», сумма баллов сходится"
-          }
-        }
-      }
-    },
-    "sheet_scores_reason_tabs" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Столбец «%1$@», но строка есть и на других листах"
-          }
-        }
-      }
-    },
-    "sheet_scores_reason_weak" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Столбца «Итог» нет, взят «%1$@»"
-          }
-        }
-      }
-    },
-    "sheet_scores_reset_auto" : {
-      "comment" : "Generated from strings_recordbook.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вернуть авто"
+            "value" : "Не нашли вас по имени и ИСУ"
           }
         }
       }
@@ -1893,6 +1689,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Строка не найдена"
+          }
+        }
+      }
+    },
+    "sheet_scores_row_not_found_reason" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Возможно, её удалили или переименовали"
           }
         }
       }
@@ -1952,7 +1760,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отметьте столбцы, которые нужно сложить"
+            "value" : "Отметьте два столбца или больше"
           }
         }
       }
@@ -1965,6 +1773,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сложить столбцы"
+          }
+        }
+      }
+    },
+    "sheet_scores_tab_untitled" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лист без названия"
           }
         }
       }
@@ -1993,6 +1813,18 @@
         }
       }
     },
+    "sheet_scores_too_large_reason" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Каждый её лист больше 5 МБ"
+          }
+        }
+      }
+    },
     "sheet_scores_updated_date" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",
@@ -2013,6 +1845,210 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обновлено в %1$@"
+          }
+        }
+      }
+    },
+    "sheet_total_ai" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формула ИИ"
+          }
+        }
+      }
+    },
+    "sheet_total_ai_note" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Посчитано по формуле ИИ — сверьте с таблицей"
+          }
+        }
+      }
+    },
+    "sheet_total_auto" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найден автоматически"
+          }
+        }
+      }
+    },
+    "sheet_total_check_empty" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверьте: этот столбец пока пуст у всех"
+          }
+        }
+      }
+    },
+    "sheet_total_check_not_points" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверьте: в этом столбце не баллы"
+          }
+        }
+      }
+    },
+    "sheet_total_check_tabs" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверьте: на другом листе у вас другой итог"
+          }
+        }
+      }
+    },
+    "sheet_total_check_weak" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверьте: в таблице нет столбца «Итог»"
+          }
+        }
+      }
+    },
+    "sheet_total_column" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Столбец «%1$@»"
+          }
+        }
+      }
+    },
+    "sheet_total_done" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
+          }
+        }
+      }
+    },
+    "sheet_total_find" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как найти итог"
+          }
+        }
+      }
+    },
+    "sheet_total_label" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш итог"
+          }
+        }
+      }
+    },
+    "sheet_total_none" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Итог не найден"
+          }
+        }
+      }
+    },
+    "sheet_total_none_empty" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В вашей строке пока нет баллов"
+          }
+        }
+      }
+    },
+    "sheet_total_none_reason" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В таблице нет столбца «Итог»"
+          }
+        }
+      }
+    },
+    "sheet_total_other" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другой итог"
+          }
+        }
+      }
+    },
+    "sheet_total_pick_column" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать столбец"
+          }
+        }
+      }
+    },
+    "sheet_total_tab" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лист «%1$@»"
           }
         }
       }
@@ -2516,7 +2552,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Лист «%1$@», столбец «%2$@»"
+            "value" : "Столбец «%1$@», лист «%2$@»"
           }
         }
       }
@@ -2528,7 +2564,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Лист «%1$@» · %2$@"
+            "value" : "%1$@, лист «%2$@»"
           }
         }
       }

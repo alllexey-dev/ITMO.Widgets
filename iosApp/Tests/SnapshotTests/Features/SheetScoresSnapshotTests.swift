@@ -5,8 +5,8 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The scores sheet at its tall height on the shared states of `SheetScoresPreviewSamples` (the Compose previews'
-/// samples): the total's review sure, to check and hand-picked, the column list without a total header, the sum mode,
-/// the AI offer, proposal and failure, the own rows, loading and a failure.
+/// samples): the total sure, to check, hand-picked and missing, the column list, the sum, the AI offer, result and
+/// failure, the own rows, loading and a failure.
 @MainActor
 final class SheetScoresSnapshotTests: XCTestCase {
     private let samples = SheetScoresPreviewSamples.shared
@@ -23,8 +23,12 @@ final class SheetScoresSnapshotTests: XCTestCase {
         assertSheet(samples.pickTotalManual, named: "total-manual", appearances: [.light, .dark])
     }
 
+    func testNoTotal() {
+        assertSheet(samples.pickTotalNone, named: "total-none", appearances: [.light, .dark])
+    }
+
     func testEveryCell() {
-        assertSheet(samples.pickManyTotals, named: "cells", appearances: [.light, .dark])
+        assertSheet(samples.pickColumns, named: "cells", appearances: [.light, .dark])
     }
 
     func testSum() {
