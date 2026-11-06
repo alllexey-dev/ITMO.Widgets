@@ -16,6 +16,7 @@ struct DayWidget: Widget {
         .configurationDisplayName(Text(.widgetDayName))
         .description(Text(.widgetDayDescription))
         .supportedFamilies([.systemLarge])
+        .contentMarginsDisabled()
     }
 }
 

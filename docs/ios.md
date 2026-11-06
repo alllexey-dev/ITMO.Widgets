@@ -328,6 +328,8 @@ The widget extension reads App Group files on each timeline request and makes no
 - A widget's tile is its `containerBackground` alone (`widgetTile`), which the system draws edge to edge and removes
   in StandBy and the tinted and clear styles. Outside WidgetKit, which ignores it, the gallery's `WidgetStage` and
   the snapshot tests set `paintsWidgetTile` so the entry view paints the same colour under its content.
+- Every Home Screen widget sets `.contentMarginsDisabled()`: the entry views keep their own inset, the same in the
+  gallery, the snapshot tests and on the Home Screen.
 
 ## System entries
 

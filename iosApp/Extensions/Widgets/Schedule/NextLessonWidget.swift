@@ -15,6 +15,7 @@ struct NextLessonWidget: Widget {
         .configurationDisplayName(Text(.widgetSingleLessonName))
         .description(Text(.widgetSingleLessonDescription))
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryInline, .accessoryRectangular, .accessoryCircular])
+        .contentMarginsDisabled()
     }
 }
 
