@@ -66,7 +66,8 @@ Two sources, joined by `sid`:
 2. The card shows the client, the six-digit code `SHA-256("iw-pair-sas-v1" || challengeId || pk || s)` (first 20 bits
    mod 10^6) and the requested scopes as switches (narrowing only). A `RENEW` of an agent or MCP has no card: the
    code stays over the sign-in page.
-3. Screen lock (`DeviceUnlock`: `BiometricPrompt`, LocalAuthentication).
+3. Screen lock (`DeviceUnlock`: `BiometricPrompt`, LocalAuthentication). iOS answers once the app is active again: a
+   WKWebView that comes up while the Face ID UI still holds the app inactive never loads or takes a touch.
 4. Agents and MCP: the official page (`ItmoIdClient.loginUrl`, PKCE) in an isolated browser: Android an
    `androidx.webkit` profile `itmo-client-sign-in` deleted afterwards (`MULTI_PROFILE` required, else «Обновите
    Android System WebView»), iOS `WKWebsiteDataStore.nonPersistent()`. Every main-frame navigation goes through
