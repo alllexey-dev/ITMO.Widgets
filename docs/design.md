@@ -388,7 +388,7 @@ drawing its own variant.
 | `GroupActionRow` | The last row of a group that leads further |
 | `LinkRow`, `VotePill` | A link with its own badge; the one vote pill of links and reviews: like and dislike thumbs around the score, the own vote filled and in `primary`, only the score when voting is not allowed |
 | `DetailsHeader` | The head of every details sheet |
-| `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer |
+| `SheetScaffold`, `SheetHandle` | A bottom sheet body: handle, header, one bounded content area (288 dp minimum where states switch), footer; `SheetClose(back = true)` draws a back arrow for a step inside the sheet |
 | `ConfirmDialog`, `ChoiceDialog`, `ReportDialog` | A confirmation, a single choice, reporting a review or a link |
 | `InfoDialog` | A message with one button |
 | `ItmoMenu`, `ItmoMenuGroup`, `ItmoMenuItem` | The one Android menu anchored to its parent, for actions and pickers: groups with separators and an optional label, two-line items with supporting text and Material's 12 dp around them, the current choice checked, destructive items in the error colour; no screen draws `DropdownMenu` itself |
@@ -579,7 +579,7 @@ The screens that show a rule of this guide best; read them before building a sim
 - Pushed screens on `ItmoDetailScreen`: `RecordbookSubjectScreen` (tabs, the hero with `GradeScale`, `GateCard`),
   `UserProfileScreen` (`:shared:feature-social`, an empty title under a centred contact header), `SportPointsScreen`.
 - Sheets on `SheetScaffold`: `BellSheetContent`, `SheetScoresSheet` (one bounded area of at least 288 dp for loading,
-  failures and the choices), `IcsExportSheetContent`, `SubjectLinksSheetContent`, the lesson sheet (`ui/lesson/LessonSheet.kt`,
+  failures and the steps; the chosen value on top, one button, pages with a back arrow), `IcsExportSheetContent`, `SubjectLinksSheetContent`, the lesson sheet (`ui/lesson/LessonSheet.kt`,
   the `Изменения` group with `было -> стало` rows).
 - Settings: `SettingsScreen` (every page of `SettingsViewModel`, its rows through `SettingSectionView`: `ListGroup`,
   `ListRow` / `SwitchListRow` with the row's icon in a neutral tile, `SegmentedChoice`, `ListGroupNote`),
