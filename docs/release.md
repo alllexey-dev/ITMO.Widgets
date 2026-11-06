@@ -163,8 +163,8 @@ gh release create v<version> /tmp/itmo-widgets-v<version>.apk --repo alllexey-de
 curl -sIL https://github.com/alllexey-dev/ITMO.Widgets/releases/latest | grep -i '^location' | tail -1
 ```
 
-A beta gets `--prerelease`, so `releases/latest` and the update offer of
-every `github` install stay on the last release. Publishing starts `dist.yml`,
+A 2.3 beta is a regular release, not `--prerelease`: `releases/latest` and the
+update offer of every `github` install move to it. Publishing starts `dist.yml`,
 which attaches the unsigned `ITMOWidgets-<version>-<build>-unsigned.ipa` to the
 release within about 30 minutes; check that it is there.
 
@@ -209,6 +209,6 @@ consumes it, as a Play upload does: a second upload needs the next
 |---|---|
 | Backend production release | at least a week before the release candidate |
 | `app.minimum` | unchanged; never above the oldest version the release line promises |
-| GitHub release or prerelease | prerelease for betas |
+| GitHub release or prerelease | regular release, also for 2.3 betas |
 | Play track | closed test until the production condition holds |
 | Production switches (AI summaries, Reviews sync, first admin, ISU cookie) | unchanged by a release |
