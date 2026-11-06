@@ -53,6 +53,8 @@ import dev.alllexey.itmowidgets.feature.debug.ui.DebugToolsScreen
 import dev.alllexey.itmowidgets.feature.debug.ui.debugToolsActions
 import dev.alllexey.itmowidgets.feature.debug.ui.handleDebugToolsEvent
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
+import dev.alllexey.itmowidgets.feature.me.ui.IsuHubActions
+import dev.alllexey.itmowidgets.feature.me.ui.IsuHubScreen
 import dev.alllexey.itmowidgets.feature.me.ui.MeActions
 import dev.alllexey.itmowidgets.feature.me.ui.MeHost
 import dev.alllexey.itmowidgets.feature.me.ui.MeRoute
@@ -90,7 +92,7 @@ import org.koin.core.parameter.parametersOf
 
 /**
  * The account keys: sign-in and the first-run flow (the gate
- * surfaces), «Устройства», a client's screen and the «Подключить устройство» sheet, My ITMO in the browser, the Wi-Fi sheet, the update offer keyed by the feature's
+ * surfaces), «Устройства», a client's screen and the «Подключить устройство» sheet, My ITMO in the browser, `ИСУ` and its Wi-Fi sheet, the update offer keyed by the feature's
  * [UpdateRoutes.AppUpdate], and the debug tools when [debugTools] (debug builds only, as the Me row that opens them).
  * The shell's guard refuses pairing, «Устройства» and My ITMO in the demo session before they open.
  */
@@ -110,6 +112,15 @@ internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
     }
     entry<AppRoutes.Connection> { key, navigator -> ConnectionEntry(key.id, navigator, onBack = { navigator.close(key) }) }
     entry<AppRoutes.MyItmoWeb> { key, navigator -> MyItmoWebEntry(onClose = { navigator.close(key) }) }
+    entry<AppRoutes.Isu> { key, navigator ->
+        IsuHubScreen(
+            IsuHubActions(
+                onBack = { navigator.close(key) },
+                onOpenMessages = { navigator.open(AppRoutes.IsuMessages) },
+                onOpenWifi = { navigator.open(AppRoutes.Wifi) },
+            )
+        )
+    }
     entry<AppRoutes.Wifi> { key, navigator -> WifiEntry(onClose = { navigator.close(key) }) }
     entry<UpdateRoutes.AppUpdate>(args = { it.args.toBundle() }) { key, navigator ->
         AppUpdateEntry(onClose = { navigator.close(key) })
@@ -138,8 +149,7 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenDevices = { navigator.open(AppRoutes.Devices) },
     onOpenWidgets = { navigator.open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) },
     onOpenMap = { navigator.open(AppRoutes.CampusMap()) },
-    onOpenWifi = { navigator.open(AppRoutes.Wifi) },
-    onOpenIsuMessages = { navigator.open(AppRoutes.IsuMessages) },
+    onOpenIsu = { navigator.open(AppRoutes.Isu) },
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },
     onOpenDebugTools = { navigator.open(AppRoutes.DebugTools) },

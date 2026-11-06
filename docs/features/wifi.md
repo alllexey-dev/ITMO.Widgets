@@ -3,7 +3,7 @@
 Product behaviour: [Как это работает: Wi-Fi](../how-it-works/wifi.md).
 
 `feature/wifi` (`:shared:feature-account`) shows the university's Wi-Fi account: the network `ITMO-Corp`, the login
-and the password from ISU, and a quick connect. The `Wi-Fi` row of Профиль (under `Карта`) opens it as a
+and the password from ISU, and a quick connect. The `Wi-Fi` row of Профиль -> `ИСУ` ([Profile](me.md#isu)) opens it as a
 content-height sheet, `AppRoutes.Wifi`; the demo session opens it too.
 
 ## Network

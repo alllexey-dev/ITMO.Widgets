@@ -29,10 +29,19 @@ sealed interface IsuMessagesList {
     /** The first page failed; [signIn] when ITMO.ID does not sign in to ISU: the screen offers `Войти через ITMO.ID`. */
     data class Failed(val title: UiText, val text: UiText, val signIn: Boolean) : IsuMessagesList
 
-    data class Messages(val rows: List<IsuMessageRow>, val more: MoreState) : IsuMessagesList
+    /** The loaded pages by month, newest first; the end of the list asks for the next page by itself. */
+    data class Messages(val sections: List<IsuMessageSection>, val more: MoreState) : IsuMessagesList {
+        val rows: List<IsuMessageRow> get() = sections.flatMap { it.rows }
+    }
 }
 
-/** The end of the list: nothing more, `Показать ещё`, the next page on its way, or it failed. */
+/**
+ * The messages of one month: [title] is `Октябрь` this year, `Декабрь 2025` before. Undated messages join the month
+ * above them; at the very top they have a section of their own with no title.
+ */
+data class IsuMessageSection(val title: String?, val rows: List<IsuMessageRow>)
+
+/** The end of the list: nothing more, a next page to load, the next page on its way, or it failed (`Повторить`). */
 enum class MoreState { END, AVAILABLE, LOADING, FAILED }
 
 /** One message in the list: [date] is the time today, the day this year, the full date before. */

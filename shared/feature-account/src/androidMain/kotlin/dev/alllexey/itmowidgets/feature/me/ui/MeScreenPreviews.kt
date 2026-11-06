@@ -40,3 +40,9 @@ internal class MeScreenLongNamePreview {
     @Composable
     fun MeScreen() = MePreview(MeSamples.longName)
 }
+
+internal class IsuHubScreenPreview {
+    @Preview(name = "default")
+    @Composable
+    fun IsuHubScreen() = ItmoPreview { IsuHubScreen(IsuHubActions()) }
+}

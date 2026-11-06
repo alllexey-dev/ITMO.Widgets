@@ -205,18 +205,6 @@
         }
       }
     },
-    "isu_messages_more" : {
-      "comment" : "Generated from strings_messages.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показать ещё"
-          }
-        }
-      }
-    },
     "isu_messages_more_failed" : {
       "comment" : "Generated from strings_messages.xml",
       "extractionState" : "manual",
@@ -332,7 +320,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "В ИСУ сообщение останется непрочитанным: приложение только читает список."
+            "value" : "В ИСУ сообщение останется непрочитанным"
           }
         }
       }

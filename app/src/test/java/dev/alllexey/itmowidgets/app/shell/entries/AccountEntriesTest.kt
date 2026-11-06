@@ -41,6 +41,7 @@ import dev.alllexey.itmowidgets.core.navigation.ShellGate
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
 import dev.alllexey.itmowidgets.core.navigation.appRouteSerializersModule
 import dev.alllexey.itmowidgets.core.platform.AndroidPlatformCapabilities
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.session.SessionState
@@ -69,7 +70,14 @@ import dev.alllexey.itmowidgets.feature.debug.presentation.DebugToolsViewModel
 import dev.alllexey.itmowidgets.feature.debug.ui.DebugToolsTestTags
 import dev.alllexey.itmowidgets.feature.debug.ui.PreviewHostApplication
 import dev.alllexey.itmowidgets.feature.me.presentation.MeViewModel
+import dev.alllexey.itmowidgets.feature.me.ui.IsuHubTestTags
 import dev.alllexey.itmowidgets.feature.me.ui.MeTestTags
+import dev.alllexey.itmowidgets.feature.messages.domain.AttachmentFile
+import dev.alllexey.itmowidgets.feature.messages.domain.IsuAttachment
+import dev.alllexey.itmowidgets.feature.messages.domain.IsuFolder
+import dev.alllexey.itmowidgets.feature.messages.domain.IsuMessagesPage
+import dev.alllexey.itmowidgets.feature.messages.domain.IsuMessagesRepository
+import dev.alllexey.itmowidgets.feature.messages.presentation.IsuMessagesViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel
 import dev.alllexey.itmowidgets.feature.onboarding.ui.ONBOARDING_ROOT_TEST_TAG
 import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity
@@ -172,6 +180,7 @@ class AccountEntriesTest {
                         )
                     }
                     viewModel { WifiViewModel(wifi) }
+                    viewModel { IsuMessagesViewModel(NoIsuMessages, FixedAcademicTime()) }
                     single<WidgetPreviewFactory> { NoPreviews }
                     single { ShareLinkFactory("https://widgets.alllexey.dev") }
                     single<UpdateAction> { NoUpdateAction }
@@ -219,6 +228,24 @@ class AccountEntriesTest {
         assertOpens(MeTestTags.WIDGETS_ROW, overlays = listOf(AppRoutes.Settings("WIDGETS")))
         assertOpens(MeTestTags.SETTINGS_ROW, overlays = listOf(AppRoutes.Settings()))
         assertOpens(MeTestTags.DEBUG_TOOLS_ROW, overlays = listOf(AppRoutes.DebugTools))
+        assertOpens(MeTestTags.ISU_ROW, overlays = listOf(AppRoutes.Isu))
+    }
+
+    @Test
+    fun theIsuScreenOpensTheMessagesAndTheWifiSheet() {
+        show()
+        act { open(AppRoutes.Isu) }
+        compose.onNodeWithTag(IsuHubTestTags.ROOT).assertIsDisplayed()
+
+        compose.onNodeWithTag(IsuHubTestTags.WIFI_ROW).performClick()
+        compose.waitForIdle()
+        assertEquals(listOf(AppRoutes.Isu), navigator.state.overlays)
+        assertEquals(listOf(AppRoutes.Wifi), navigator.state.floating)
+
+        act { close(AppRoutes.Wifi) }
+        compose.onNodeWithTag(IsuHubTestTags.MESSAGES_ROW).performClick()
+        compose.waitForIdle()
+        assertEquals(listOf(AppRoutes.Isu, AppRoutes.IsuMessages), navigator.state.overlays)
     }
 
     @Test
@@ -431,6 +458,12 @@ class AccountEntriesTest {
             reads++
             return AppResult.Success(WifiAccess.SignInRequired)
         }
+    }
+
+    /** ISU wants the user: the messages screen shows its sign-in state. */
+    private object NoIsuMessages : IsuMessagesRepository {
+        override suspend fun page(folder: IsuFolder, number: Int): AppResult<IsuMessagesPage> = AppResult.Failure(AppError.Unauthorized)
+        override suspend fun download(attachment: IsuAttachment): AppResult<AttachmentFile> = AppResult.Failure(AppError.Unauthorized)
     }
 
     private object NoUpdateAction : UpdateAction {

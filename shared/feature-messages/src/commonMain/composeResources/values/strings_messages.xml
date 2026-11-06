@@ -3,7 +3,6 @@
     <string name="isu_messages_title">Сообщения ИСУ</string>
     <string name="isu_messages_inbox">Входящие</string>
     <string name="isu_messages_archive">Архив</string>
-    <string name="isu_messages_more">Показать ещё</string>
     <string name="isu_messages_more_failed">Не загрузилось. Повторить</string>
     <string name="isu_messages_unread">Не прочитано</string>
     <string name="isu_messages_attachments_accessibility">Вложений: %1$d</string>
@@ -25,7 +24,7 @@
 
     <!-- One message -->
     <string name="isu_messages_files">Вложения</string>
-    <string name="isu_messages_unread_note">В ИСУ сообщение останется непрочитанным: приложение только читает список.</string>
+    <string name="isu_messages_unread_note">В ИСУ сообщение останется непрочитанным</string>
     <string name="isu_messages_kind_pdf">PDF</string>
     <string name="isu_messages_kind_word">Документ Word</string>
     <string name="isu_messages_kind_excel">Таблица Excel</string>

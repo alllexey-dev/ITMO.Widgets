@@ -3,7 +3,8 @@ import Shared
 import SwiftUI
 
 /// `isu_messages_title` (`AppRoutes.IsuMessages`, docs/features/isu-messages.md) over the shared `IsuMessagesViewModel`:
-/// the inbox and the archive, `isu_messages_more`, one message pushed over the list with its attachments in Quick Look. The body
+/// the inbox and the archive by month, the next page loaded at the end of the list, one message pushed over the list with
+/// its attachments in Quick Look. The body
 /// is the shared view model's plain blocks, never HTML; links open in Safari. Without an ITMO.ID session for ISU
 /// `auth_login_itmo_id` opens `BarsLoginSheet` and loads the messages again after it.
 struct IsuMessagesScreen: View {
@@ -113,11 +114,11 @@ struct IsuMessagesContent: View {
             ItmoEmptyView(symbol: .mail, title: empty.title.resolved, description: empty.text.resolved)
         case let .failed(failed):
             if failed.signIn {
-                ItmoErrorView(
+                ItmoEmptyView(
+                    symbol: .login,
                     title: failed.title.resolved,
                     description: failed.text.resolved,
-                    retryTitle: AppStrings.string("auth_login_itmo_id"),
-                    retry: actions.signIn
+                    action: (AppStrings.string("auth_login_itmo_id"), actions.signIn)
                 )
                 .accessibilityIdentifier("isu_messages.sign_in")
             } else {
@@ -125,23 +126,33 @@ struct IsuMessagesContent: View {
                     .accessibilityIdentifier("isu_messages.error")
             }
         case let .messages(messages):
-            ItmoListGroup {
-                ForEach(messages.rows, id: \.id) { row in
-                    IsuMessageRowView(row: row) { actions.open(row.id) }
+            ForEach(Array(messages.sections.enumerated()), id: \.offset) { _, section in
+                if let title = section.title {
+                    ItmoSectionHeader(title: title)
+                }
+                ItmoListGroup {
+                    ForEach(section.rows, id: \.id) { row in
+                        IsuMessageRowView(row: row) { actions.open(row.id) }
+                    }
                 }
             }
-            more(messages.more)
+            more(messages.more, count: messages.rows.count)
         }
     }
 
-    @ViewBuilder private func more(_ more: MoreState) -> some View {
+    /// The end of the list: a shown spinner asks for the next page by itself; a failed page offers a retry.
+    @ViewBuilder private func more(_ more: MoreState, count: Int) -> some View {
         switch more {
         case .end:
             EmptyView()
-        case .loading:
-            ProgressView().frame(maxWidth: .infinity).padding(.vertical, ItmoSpacing.content)
-        case .available, .failed:
-            Button(AppStrings.string(more == .failed ? "isu_messages_more_failed" : "isu_messages_more"), action: actions.more)
+        case .loading, .available:
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, ItmoSpacing.content)
+                .task(id: count) { if more == .available { actions.more() } }
+                .accessibilityIdentifier("isu_messages.more")
+        case .failed:
+            Button(AppStrings.string("isu_messages_more_failed"), action: actions.more)
                 .buttonStyle(.bordered)
                 .itmoTint()
                 .frame(maxWidth: .infinity)
@@ -150,7 +161,8 @@ struct IsuMessagesContent: View {
     }
 }
 
-/// Sender, paperclip and date on the first line, the subject, two lines of the text; a dot marks an unread one.
+/// Sender, paperclip and date on the first line, the subject in up to two lines, two lines of the text. Unread: the
+/// sender and the subject bold, the date in the primary colour with a dot; read ones in regular weight.
 struct IsuMessageRowView: View {
     let row: IsuMessageRow
     let action: () -> Void
@@ -162,7 +174,7 @@ struct IsuMessageRowView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: ItmoSpacing.related) {
                         Text(verbatim: row.sender)
-                            .font(.itmo(.titleSmall, emphasized: row.unread))
+                            .font(.itmo(.titleSmall).weight(row.unread ? .bold : .regular))
                             .lineLimit(1)
                         Spacer(minLength: 0)
                         if row.attachments > 0 {
@@ -177,7 +189,7 @@ struct IsuMessageRowView: View {
                     }
                     Text(verbatim: row.subject)
                         .font(.itmo(.bodyMedium, emphasized: row.unread))
-                        .lineLimit(1)
+                        .lineLimit(2)
                     Text(verbatim: row.preview)
                         .font(.itmo(.bodySmall))
                         .foregroundStyle(.secondary)
@@ -246,7 +258,11 @@ struct IsuMessageDetailView: View {
                             action: { actions.attachment(file.id) }
                         )
                         .accessory {
-                            if downloading == file.id { ProgressView() }
+                            if downloading == file.id {
+                                ProgressView()
+                            } else {
+                                AppSymbol.download.image.foregroundStyle(.secondary).accessibilityHidden(true)
+                            }
                         }
                         .accessibilityIdentifier("isu_messages.attachment")
                     }

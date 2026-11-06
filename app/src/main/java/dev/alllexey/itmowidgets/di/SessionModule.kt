@@ -90,8 +90,8 @@ val sessionModule = module {
     }
 }
 
-/** «Google Pixel 8»: what Backend's device registry and «Устройства» call this phone. */
-private fun androidDeviceName(): String = listOf(Build.MANUFACTURER, Build.MODEL)
+/** «Google Pixel 8»: what Backend's device registry, «Устройства» and the feedback form call this phone. */
+internal fun androidDeviceName(): String = listOf(Build.MANUFACTURER, Build.MODEL)
     .map(String::trim)
     .filter(String::isNotEmpty)
     .distinct()

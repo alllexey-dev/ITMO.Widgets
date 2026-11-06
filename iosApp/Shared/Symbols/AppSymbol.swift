@@ -2,6 +2,7 @@
 
 /// The icon registry on SwiftUI and system surfaces.
 enum AppSymbol: String, CaseIterable {
+    case accountBalance = "account_balance"
     case add = "add"
     case arrowBack = "arrow_back"
     case arrowDropDown = "arrow_drop_down"
@@ -48,6 +49,7 @@ enum AppSymbol: String, CaseIterable {
     case eventRepeat = "event_repeat"
     case exercise = "exercise"
     case expandMore = "expand_more"
+    case feedback = "feedback"
     case fitScreen = "fit_screen"
     case flag = "flag"
     case folder = "folder"
@@ -124,6 +126,7 @@ enum AppSymbol: String, CaseIterable {
     /// The SF Symbol name, or the asset name of a custom symbol image when `isCustom`.
     var systemName: String {
         switch self {
+        case .accountBalance: "building.columns"
         case .add: "plus"
         case .arrowBack: "chevron.backward"
         case .arrowDropDown: "arrowtriangle.down.fill"
@@ -170,6 +173,7 @@ enum AppSymbol: String, CaseIterable {
         case .eventRepeat: "repeat"
         case .exercise: "dumbbell"
         case .expandMore: "chevron.down"
+        case .feedback: "exclamationmark.bubble"
         case .fitScreen: "viewfinder"
         case .flag: "flag"
         case .folder: "folder"

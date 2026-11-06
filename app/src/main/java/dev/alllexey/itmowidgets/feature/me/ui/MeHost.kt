@@ -5,8 +5,11 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
+import dev.alllexey.itmowidgets.BuildConfig
 import dev.alllexey.itmowidgets.R
+import dev.alllexey.itmowidgets.core.navigation.FeedbackPlatform
 import dev.alllexey.itmowidgets.core.navigation.ProjectLinks
+import dev.alllexey.itmowidgets.di.androidDeviceName
 import dev.alllexey.itmowidgets.core.navigation.ShareLinkFactory
 import dev.alllexey.itmowidgets.core.ui.shareTextIntent
 
@@ -31,9 +34,15 @@ fun Context.shareOwnProfile(shareLinks: ShareLinkFactory, name: String, isu: Int
     )
 }
 
-/** Opens a project page; false when no app could, which `MeRoute` reports. The Me tab root calls it. */
+/**
+ * Opens a project page, the feedback form prefilled with the version and the model; false when no app could, which
+ * `MeRoute` reports. The Me tab root calls it.
+ */
 fun Context.openProjectLink(link: MeProjectLink): Boolean = when (link) {
     MeProjectLink.GITHUB -> openFirstLink(ProjectLinks.GITHUB_URL)
+    MeProjectLink.FEEDBACK -> openFirstLink(
+        ProjectLinks.feedbackUrl(FeedbackPlatform.ANDROID, BuildConfig.VERSION_NAME, androidDeviceName())
+    )
     // The native client handles tg:// itself; the web page is only a fallback.
     MeProjectLink.TELEGRAM -> openFirstLink(ProjectLinks.TELEGRAM_DEEPLINK, ProjectLinks.TELEGRAM_URL)
 }

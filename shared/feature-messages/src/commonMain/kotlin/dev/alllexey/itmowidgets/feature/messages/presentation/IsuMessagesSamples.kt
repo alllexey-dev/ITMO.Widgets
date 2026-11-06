@@ -31,12 +31,15 @@ object IsuMessagesSamples {
         IsuMessageRow(
             id = 3, sender = "Центр дополнительного образования", subject = "Осенний набор на курсы",
             preview = "Открыт набор на курсы английского и немецкого языков. Подробности и запись: https://example.org/courses",
-            date = "14 окт.", unread = false, attachments = 2,
+            date = "29 сент.", unread = false, attachments = 2,
         ),
     )
 
     val Inbox = IsuMessagesUiState(
-        list = IsuMessagesList.Messages(rows, MoreState.AVAILABLE),
+        list = IsuMessagesList.Messages(
+            listOf(IsuMessageSection("Октябрь", rows.take(3)), IsuMessageSection("Сентябрь", rows.drop(3))),
+            MoreState.AVAILABLE,
+        ),
         unread = 2,
         unreadText = UiText.Plural(MessagesPlurals.isu_messages_unread_count, 2, listOf(2)),
     )
