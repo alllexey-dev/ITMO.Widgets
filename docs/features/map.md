@@ -1,7 +1,7 @@
 # Campus map
 
 The campus map shows ITMO's indoor floor plans and plans «Маршрут» to a lesson's room. Its code is the
-`:shared:feature-map` module; the data decision is [ADR 0033](../decisions/0033-campus-map-mirror.md).
+`:shared:feature-map` module; the data decision is [ADR 0033](../adr/0033-campus-map-mirror.md).
 
 ## Screen
 

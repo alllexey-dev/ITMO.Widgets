@@ -93,7 +93,7 @@ image stays image-only.
 
 Ideas that need a decision before they become work:
 
-- Glance widgets on Android ([0027](../decisions/0027-remoteviews-widgets.md)).
+- Glance widgets on Android ([0027](../adr/0027-remoteviews-widgets.md)).
 - iOS: a custom QR spoiler image (Android has it).
 - English localisation.
 - Blocking users (Backend has no block model yet) and their management.

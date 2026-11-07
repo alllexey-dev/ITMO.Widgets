@@ -10,9 +10,9 @@
 #          never-open names below (docs name them to forbid them). Bare class names and refs are not paths.
 # - link   [<doc>:link:<target>] relative Markdown links resolve to a listed file or directory and their
 #          anchors to a heading (GitHub slugs, -1 for a repeated heading) or an HTML id of the target.
-#          History (CHANGELOG.md, docs/decisions/**) is exempt from path and link.
+#          History (CHANGELOG.md, docs/adr/**) is exempt from path and link.
 # - unindexed [<doc>:unindexed] every docs/**/*.md is linked from docs/README.md or from a directory README.md
-#          that docs/README.md links; fails for docs/decisions/*.md, warns for other docs (fails with --strict).
+#          that docs/README.md links; fails for docs/adr/*.md, warns for other docs (fails with --strict).
 #
 # Accepted findings: scripts/check-docs.known lists false positives, one `<entry>  # <reason>` per line, where
 # <entry> is a finding key or a whole doc path. Other findings fail; an entry that matches nothing any more warns
@@ -182,7 +182,7 @@ pass == 0 { add_listed($0); next }
 FNR == 1 {
   fence = ""
   cur_dir = dir_of(FILENAME)
-  history = (FILENAME ~ /(^|\/)CHANGELOG\.md$/ || FILENAME ~ /^docs\/decisions\//)
+  history = (FILENAME ~ /(^|\/)CHANGELOG\.md$/ || FILENAME ~ /^docs\/adr\//)
   if (pass == 1) docs[FILENAME] = 1
 }
 {
@@ -237,7 +237,7 @@ END {
   }
   for (f in docs) {
     if (f !~ /^docs\// || f == "docs/README.md" || (f in indexed)) continue
-    if (f ~ /^docs\/decisions\//) printf "E\t%s:unindexed\t%s:1\tis not linked from docs/README.md\t\n", f, f
+    if (f ~ /^docs\/adr\//) printf "E\t%s:unindexed\t%s:1\tis not linked from docs/README.md\t\n", f, f
     else printf "W\t%s:unindexed\t%s:1\tis not linked from docs/README.md or a directory README it links\t\n", f, f
   }
 }
@@ -318,7 +318,7 @@ st_repo=""
 st_fixture() {
   rm -rf "$st_repo"
   local qr_dir="$st_repo/shared/feature/qr/src/commonMain/kotlin/dev/itmo/feature/qr/ui"
-  mkdir -p "$st_repo/scripts" "$st_repo/docs/decisions" "$st_repo/docs/features" "$qr_dir"
+  mkdir -p "$st_repo/scripts" "$st_repo/docs/adr" "$st_repo/docs/features" "$qr_dir"
   git init -q "$st_repo" || die "git init failed"
   cp "$self" "$st_repo/scripts/check-docs.sh"
   printf 'local.properties\n' > "$st_repo/.gitignore"
@@ -330,7 +330,7 @@ st_fixture() {
 
 - [QR](features/qr.md), its [tile](features/qr.md#tile-and-shortcuts)
 - [The second tile](features/qr.md#tile-and-shortcuts-1)
-- [0001 Example](decisions/0001-example.md)
+- [0001 Example](adr/0001-example.md)
 - [Top](#docs) and [agents](../AGENTS.md)
 - [Плитка](features/qr.md#плитка-qr-пропуск--android-13)
 MD
@@ -350,7 +350,7 @@ The tile is `shared/feature/qr/src/commonMain/kotlin/dev/itmo/feature/qr/ui/QrTi
 ```
 MD
   printf '# 0001 Example\n\nOnce in `app/src/main/Gone.kt`, see [old](../old.md).\n' \
-    > "$st_repo/docs/decisions/0001-example.md"
+    > "$st_repo/docs/adr/0001-example.md"
   printf '# Changelog\n\n- Removed `app/src/main/Gone.kt`, see [old](old.md).\n' > "$st_repo/CHANGELOG.md"
 }
 st_append() { printf '%s\n' "$2" >> "$st_repo/$1"; }
@@ -379,7 +379,7 @@ self_test() {
   st_expect 1 "dangling link fails"
   st_fixture; st_append docs/features/qr.md 'See [tile](#no-such-heading).'
   st_expect 1 "dangling anchor fails"
-  st_fixture; printf '# 0002 Unindexed\n' > "$st_repo/docs/decisions/0002-unindexed.md"
+  st_fixture; printf '# 0002 Unindexed\n' > "$st_repo/docs/adr/0002-unindexed.md"
   st_expect 1 "an unindexed ADR fails"
   st_fixture; printf '# Orphan\n' > "$st_repo/docs/features/orphan.md"
   st_expect 0 "an unindexed feature doc only warns"

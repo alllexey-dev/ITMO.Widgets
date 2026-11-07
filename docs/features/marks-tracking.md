@@ -12,8 +12,8 @@ subjects in one notification.
 - Everything stays on the device: marks, the BARS token and the ITMO.ID cookies never reach Backend;
   the feature works without the connection to ITMO.Widgets.
 - BARS is read in the background through the cookie renewal (decision
-  [0012](../decisions/0012-bars-background-renewal.md)); storage and delivery follow the schedule
-  changes (decision [0013](../decisions/0013-schedule-changes-on-device.md)).
+  [0012](../adr/0012-bars-background-renewal.md)); storage and delivery follow the schedule
+  changes (decision [0013](../adr/0013-schedule-changes-on-device.md)).
 
 ## Background check
 

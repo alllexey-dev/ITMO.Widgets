@@ -20,7 +20,7 @@ portal) and `eduroam` (guests of other institutions) are not offered.
   `span#P6_PASS_CURRENT > span.wifi-pass` (the active password, hidden only by CSS), and `input#USER_ID` (whose
   cabinet). `IsuWifiPage` parses it; a page of another ISU is refused, a field without a password is `NoPassword`.
   The page's `Получить или изменить пароль Wi-Fi` is never touched.
-- ISU is read on the device by `IsuWebClient` (`core/network`, [ADR 0037](../decisions/0037-on-device-isu-client.md)):
+- ISU is read on the device by `IsuWebClient` (`core/network`, [ADR 0037](../adr/0037-on-device-isu-client.md)):
   `f?p=2143:1` with the phone's ITMO.ID SSO cookies (`ItmoIdCookies`) through ISU's OIDC redirects, then the page in
   the same APEX session. No SSO cookies (a refresh-token sign-in) or ITMO.ID's form is `SignInRequired`.
 - `WifiRepositoryImpl` keeps `"<isu>\n<login>\n<password>"` in `SecureStore` under `wifi_credentials.enc` (a

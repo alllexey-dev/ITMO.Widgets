@@ -3,15 +3,15 @@
 The included build with the Gradle convention plugins every module applies.
 See [modules](../docs/architecture.md#modules) and
 [strings](../docs/architecture.md#strings), and ADRs
-[0018](../docs/decisions/0018-module-graph-and-toolchain.md) (toolchain) and
-[0028](../docs/decisions/0028-strings-and-icons.md) (strings and icons).
+[0018](../docs/adr/0018-module-graph-and-toolchain.md) (toolchain) and
+[0028](../docs/adr/0028-strings-and-icons.md) (strings and icons).
 
 - `convention/`: `itmowidgets.kmp.library` (KMP targets and source sets, SDK
   levels, JVM 17), `itmowidgets.kmp.android` (the same, Android target only),
   `itmowidgets.cmp.kit` (plus Compose Multiplatform and its resources: the
   design system and the Compose strings), `itmowidgets.cmp.android` (Compose on
   the Android target only, no CMP `Res` of its own,
-  [ADR 0035](../docs/decisions/0035-ios-without-compose.md)),
+  [ADR 0035](../docs/adr/0035-ios-without-compose.md)),
   `itmowidgets.testing` (Robolectric and Roborazzi defaults) and
   `itmowidgets.android.app`. Each module's `itmoIosKlib` feeds the root
   `verifyIosKlibs`.

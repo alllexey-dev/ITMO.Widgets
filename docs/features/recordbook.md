@@ -80,7 +80,7 @@ programme, newest first), and the body.
 ## Which number is shown
 
 One rule, `RecordbookPointsRule` (`presentation/RecordbookPoints.kt`), for the list, `Откуда баллы` and the
-subject page's hero (decision [0032](../decisions/0032-score-source-priority.md)). The most current source with a
+subject page's hero (decision [0032](../adr/0032-score-source-priority.md)). The most current source with a
 value wins:
 
 1. a connected sheet ([sheet scores](sheet-scores.md)) whose last reading succeeded and whose total (a cell, or a
@@ -130,7 +130,7 @@ Session:
 - The interactive sign-in (`BarsLoginActivity`, iOS `BarsLoginSheet`) opens the same OIDC URL in the web store
   the ITMO.ID sign-in used (`CookieManager`, `WKWebsiteDataStore.default()`), so the SSO session that sign-in left
   there redirects straight to the callback, with no second password (decision
-  [0012](../decisions/0012-bars-background-renewal.md#the-sign-in-keeps-the-itmoid-session)).
+  [0012](../adr/0012-bars-background-renewal.md#the-sign-in-keeps-the-itmoid-session)).
 - Screens renew via `BarsWebSilentLogin`: the official OIDC URL in a hidden WebView, intercepting
   only the exact callback with a checked `state`; the library retries once on 401 through
   `BarsRenewal`. No JavaScript bridge, no localStorage reads.
@@ -143,7 +143,7 @@ Session:
   changes in a block.
 
 Background renewal (`BarsClient.backgroundAccount`, decision
-[0012](../decisions/0012-bars-background-renewal.md)):
+[0012](../adr/0012-bars-background-renewal.md)):
 
 - `BarsCookieSilentLogin` takes the `Cookie` header the WebView would send (`ItmoIdCookies`,
   `CookieManager` on the main thread) and calls `BarsLogin.requestCodeWithCookies` (`CODE`,

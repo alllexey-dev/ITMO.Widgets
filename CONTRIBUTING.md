@@ -25,7 +25,7 @@ everything. Run the relevant commands from [docs/testing.md](docs/testing.md) lo
 - Docs in `docs/` describe the current state, not history. Update the
   feature doc and the architecture doc in the same pull request as the code.
 - A decision that was argued and should not be argued again gets an ADR in
-  `docs/decisions/`; add a new file instead of rewriting an old one.
+  `docs/adr/`; add a new file instead of rewriting an old one.
 
 ## Commits
 

@@ -3,7 +3,7 @@
 Product behaviour: [Как это работает: расписание](../how-it-works/schedule.md).
 
 The app detects changes of the own personal schedule on the device only and never talks to Backend about them
-(decision [0013](../decisions/0013-schedule-changes-on-device.md)). The code is part of the schedule feature
+(decision [0013](../adr/0013-schedule-changes-on-device.md)). The code is part of the schedule feature
 ([modules](schedule.md#modules)); its switch is on «Уведомления» ([settings](../settings.md#notifications)).
 
 ## Background check
