@@ -258,6 +258,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   targets stay 48 dp.
 - Android `Виджеты`: `Добавить` takes the kit's tonal colours instead of Material's grey, which read as disabled.
 - iOS shows pull-to-refresh on every tab root until the refresh ends.
+- iOS `Расписание` week strip and the `Моё`/`Запись` pager of `Спорт` move only sideways: they no longer follow a
+  vertical or diagonal drag. Pull to refresh belongs to the feed and to each part of `Спорт` instead of the pagers.
 - iOS `Подключить устройство` for an agent or an MCP server: the ITMO.ID page after Face ID no longer stays frozen
   (no taps, no typing). The page now opens once the app is active again; it used to come up while the Face ID UI
   still held the app inactive, and WebKit never woke it.

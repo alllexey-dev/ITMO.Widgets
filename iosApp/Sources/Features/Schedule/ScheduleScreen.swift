@@ -122,11 +122,6 @@ private struct ScheduleFeedView: View {
                     .accessibilityIdentifier("schedule.backToMine")
                 }
             }
-            .refreshable {
-                await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
-                    $0.uiState.value.refreshing
-                })
-            }
             .observing(model)
             .onEvents(of: model, \.events) { event in
                 switch onEnum(of: event) {
@@ -187,7 +182,12 @@ private struct ScheduleFeedView: View {
             week: { viewModel.showWeek(monday: $0) },
             pagingStarted: { viewModel.beginWeekPaging() },
             jumped: { viewModel.onJumped(id: $0) },
-            retry: { viewModel.refresh(mode: .force) }
+            retry: { viewModel.refresh(mode: .force) },
+            refresh: {
+                await model.pullRefresh({ $0.refresh(mode: .pull) }, while: {
+                    $0.uiState.value.refreshing
+                })
+            }
         )
     }
 }
@@ -203,6 +203,8 @@ struct FeedViewActions {
     var pagingStarted: () -> Void = {}
     var jumped: (Int32) -> Void = { _ in }
     var retry: () -> Void = {}
+    /// The pull to refresh of the feed.
+    var refresh: () async -> Void = {}
 }
 
 /// The week strip and the feed without the ViewModel: sticky day headers over the kit's timeline, short "no lessons"
@@ -215,25 +217,30 @@ struct ScheduleFeedContent: View {
         VStack(spacing: 0) {
             weekPager
             Divider()
-            switch onEnum(of: state.body) {
-            case .loading:
-                ItmoLoadingView()
+            // Not above the week pager: SwiftUI gives a refresh control to every scroll view under `.refreshable` that
+            // is not inside another one, and with it the horizontal pager bounces vertically too.
+            Group {
+                switch onEnum(of: state.body) {
+                case .loading:
+                    ItmoLoadingView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .accessibilityIdentifier("schedule.loading")
+                case let .failed(failed):
+                    ScrollView {
+                        ItmoErrorView(
+                            title: AppStrings.string("common_load_error_title"),
+                            description: AppErrorTextsKt.toUiText(failed.error).resolved,
+                            retry: actions.retry
+                        )
+                        .padding(.top, ItmoSpacing.section)
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityIdentifier("schedule.loading")
-            case let .failed(failed):
-                ScrollView {
-                    ItmoErrorView(
-                        title: AppStrings.string("common_load_error_title"),
-                        description: AppErrorTextsKt.toUiText(failed.error).resolved,
-                        retry: actions.retry
-                    )
-                    .padding(.top, ItmoSpacing.section)
+                    .accessibilityIdentifier("schedule.error")
+                case let .days(days):
+                    ScheduleFeedList(state: state, days: days, actions: actions)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .accessibilityIdentifier("schedule.error")
-            case let .days(days):
-                ScheduleFeedList(state: state, days: days, actions: actions)
             }
+            .refreshable { await actions.refresh() }
         }
         .background(Color(.systemGroupedBackground))
         .accessibilityElement(children: .contain)
