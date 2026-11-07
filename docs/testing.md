@@ -186,7 +186,8 @@ All workflows are in `.github/workflows/` and need no secrets. None is a
 required check. A PR runs only what is fast and catches most breakage, so it
 finishes in about 10 minutes; the emulator and release suites run nightly on
 `master` instead. `scripts/ci-plan.sh` decides from the changed paths what a PR
-runs (`scripts/ci-plan.sh --self-test` lists the cases).
+runs (`scripts/ci-plan.sh --self-test` lists the cases); Markdown outside a
+`src/` folder, such as a module README, runs nothing.
 
 | Workflow | When | What |
 |---|---|---|
