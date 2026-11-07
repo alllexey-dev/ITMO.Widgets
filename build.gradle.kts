@@ -1,6 +1,6 @@
 // Advisory only: the dependency-analysis plugin reaches the classpath, and `buildHealth` exists, only with
-// -Pitmo.buildHealth=true, which android-nightly.yml passes. Its AGP 9.3 and Android-KMP support is unproven, so
-// no other build loads it and a failure there never reaches android-ci.yml. The buildscript block
+// -Pitmo.buildHealth=true, which nightly.yml passes. Its AGP 9.3 and Android-KMP support is unproven, so
+// no other build loads it and a failure there never reaches ci.yml. The buildscript block
 // is compiled apart from the script and cannot see the `buildHealth` value below.
 buildscript {
     if (providers.gradleProperty("itmo.buildHealth").orNull == "true") {
@@ -29,7 +29,7 @@ val modulePaths = subprojects.map { it.path }
 val conventionPaths = modulePaths.filter { it == ":app" || (it.startsWith(":shared:") && it != ":shared:ios") }
 val buildLogic = gradle.includedBuild("build-logic")
 
-// verifyQuick is exactly the union of its parts; android-ci.yml runs each part as a job of its own, in parallel.
+// verifyQuick is exactly the union of its parts; ci.yml runs each part as a job of its own, in parallel.
 val verifyQuickParts = mapOf(
     "verifyQuickUnitApp" to listOf(
         ":app:itmoVerifyQuick",
@@ -39,18 +39,23 @@ val verifyQuickParts = mapOf(
     ),
     "verifyQuickUnitShared" to conventionPaths.filter { it != ":app" }.map { "$it:itmoVerifyQuick" },
     "verifyQuickLint" to listOf(":app:lintGithubDebug"),
-    "verifyQuickAssemble" to listOf(":app:assembleGithubDebug", ":app:assemblePlayDebug"),
+    "verifyQuickAssemble" to listOf(
+        ":app:assembleGithubDebug",
+        ":app:assemblePlayDebug",
+        ":app:compileGithubDebugAndroidTestKotlin",
+    ),
 ).map { (name, parts) ->
     tasks.register(name) {
         group = "verification"
-        description = "One part of verifyQuick; android-ci.yml runs it as a job of its own."
+        description = "One part of verifyQuick; ci.yml runs it as a job of its own."
         dependsOn(parts)
     }
 }
 
 val verifyQuick = tasks.register("verifyQuick") {
     group = "verification"
-    description = "Unit and host tests of every module, Konsist, build-logic tests, lintGithubDebug, both debug APKs."
+    description =
+        "Unit and host tests of every module, Konsist, build-logic tests, lintGithubDebug, debug APKs, androidTest."
     dependsOn(verifyQuickParts)
 }
 
@@ -61,7 +66,7 @@ tasks.register("verifyFull") {
 }
 
 // Compile-only: linking a framework or running iosSimulatorArm64Test needs Xcode. Each module's itmoIosKlib includes
-// its test klib, which keeps iosTest from rotting on PRs; only ios-nightly runs those tests.
+// its test klib, which keeps iosTest from rotting on PRs; only nightly.yml (ios-kn) runs those tests.
 tasks.register("verifyIosKlibs") {
     group = "verification"
     description = "iosSimulatorArm64 main and test klibs of every shared module (no Xcode; runs on Linux x86_64 too)."

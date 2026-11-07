@@ -5,7 +5,7 @@ import XCTest
 
 /// The screen kit in all four appearances: the lesson timeline and card, pills, the segmented choice, cards and
 /// sections, row groups and the gated, action, lock and stale states. Texts are synthetic, in the words of the
-/// design lab (vibe/design-lab/ux-native). Drawn in a window: glass buttons and the system's unavailable view need it.
+/// design lab. Drawn in a window: glass buttons and the system's unavailable view need it.
 @MainActor
 final class KitSnapshotTests: XCTestCase {
     func testTimelineNow() {

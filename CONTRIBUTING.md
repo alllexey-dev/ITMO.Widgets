@@ -14,8 +14,9 @@ read [docs/architecture.md](docs/architecture.md) first.
 
 ## CI expectations
 
-A pull request runs the fast checks for what it touches in about 10 minutes; label a risky PR `full-ci` to run
-everything. Run the relevant commands from [docs/testing.md](docs/testing.md) locally first; CI details are in
+A pull request runs the fast checks for what it touches; on iOS it only builds, the tests run on `master`. For a
+risky PR run everything with `gh workflow run ci.yml --ref <branch>`, and the slow suites with `nightly.yml`. Run the
+relevant commands from [docs/testing.md](docs/testing.md) locally first; CI details are in
 [docs/testing.md](docs/testing.md#ci).
 
 ## Changelog and docs
@@ -37,8 +38,8 @@ everything. Run the relevant commands from [docs/testing.md](docs/testing.md) lo
 
 ## Code style
 
-- Kotlin follows `.editorconfig` and the Android Studio scheme in
-  `.idea/codeStyles/`. UTF-8, LF, no trailing whitespace, final newline.
+- The code style comes from `.editorconfig`: UTF-8, LF, no trailing
+  whitespace, final newline.
 - Follow the layering and rules in [docs/architecture.md](docs/architecture.md);
   the Konsist suite enforces most of them.
 - User-visible text is Russian and lives in string resources; the design

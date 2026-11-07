@@ -4,7 +4,7 @@
 #                                             the animation scales; prints ANDROID_SERIAL=...
 # ci-emulator.sh logcat <file>                capture `logcat -v threadtime` into <file> in the background
 #
-# The emulator of android-ui.yml and android-ship.yml. Locally use any emulator (Android Studio's device manager).
+# The emulator of nightly.yml (`ui`, `ship`). Locally use any emulator (Android Studio's device manager).
 #
 # - Runs only with CI=true and GITHUB_ACTIONS=true: it writes a udev rule with sudo and installs SDK packages.
 # - The AVD has Pixel 7 geometry (1080x2400 at 420 dpi, 2 GB RAM, 4 cores, hardware keyboard, no skin and so no

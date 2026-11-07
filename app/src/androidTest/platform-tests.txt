@@ -1,5 +1,5 @@
 # Platform instrumentation tests: no UI coupling. `scripts/verify.sh ui @platform` runs this list under Android Test
-# Orchestrator with clearPackageData; android-nightly.yml runs it on a Gradle Managed Device. One FQCN per line, `#`
+# Orchestrator with clearPackageData; nightly.yml runs it on a Gradle Managed Device. One FQCN per line, `#`
 # starts a comment. A new platform test adds its line in the same PR; UI and visual tests never go here.
 
 # Storage, workers, notifications, the QR tile and platform actions.

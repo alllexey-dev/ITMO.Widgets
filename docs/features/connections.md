@@ -1,9 +1,8 @@
 # Connected clients and «Устройства»
 
-Design: `vibe/plans/connected-clients-plan.md` and `vibe/plans/connected-clients-ux.md` (local). Backend contract:
-`../itmo-widgets-backend/docs/contracts/connections.md`. Code: `feature/connections` of `:shared:feature-account`
-(domain, data, ViewModels, Compose screens), `iosApp/Sources/Features/Connections/` (SwiftUI over the same
-ViewModels).
+Backend contract: `../itmo-widgets-backend/docs/contracts/connections.md`. Code: `feature/connections` of
+`:shared:feature-account` (domain, data, ViewModels, Compose screens), `iosApp/Sources/Features/Connections/`
+(SwiftUI over the same ViewModels).
 
 A connection is a client the phone approved: an agent (`itmo-widgets-agent`), an MCP server (`itmo-mcp`) or the web
 version. Agents and MCP servers get their own ITMO.ID session, signed in on the phone; the web gets none. The phone

@@ -1,0 +1,126 @@
+# The toolchain of every macOS job (ci.yml `ios`, nightly.yml `ios-kn` and `ios-ui`, dist.yml `ipa`), after
+# actions/checkout: the Xcode and XcodeGen pinned in scripts/ios/env.sh (a mismatch fails, no fallback), JetBrains 21,
+# Gradle with the basic cache and one worker (the runner has 7 GB) and ~/.konan restored. Only ci.yml on `master`
+# writes the caches (the `cache-write` input plus the ~/.konan save step of that job).
+name: ios-setup
+description: Xcode, XcodeGen, JDK, Gradle and Kotlin/Native for the iOS CI jobs.
+
+inputs:
+  cache-write:
+    description: "`true` lets setup-gradle write the Gradle home; the caller saves ~/.konan."
+    required: false
+    default: "false"
+  strict-pins:
+    description: >-
+      `true` fails on any scripts/ios/env.sh warning (another Xcode build or XcodeGen than pinned); `false` only warns,
+      for the release .ipa of dist.yml. The pinned Xcode version and XcodeGen version are enforced either way.
+    required: false
+    default: "true"
+
+outputs:
+  konan-key:
+    description: The ~/.konan cache key for the caller's save step.
+    value: ${{ steps.konan.outputs.key }}
+  konan-hit:
+    description: "`true` when ~/.konan was restored with exactly that key."
+    value: ${{ steps.konan-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Select the pinned Xcode
+      shell: bash
+      run: |
+        version=$(sed -n 's/^: "\${ITMO_XCODE_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
+        app="/Applications/Xcode_$version.app"
+        if [ -z "$version" ] || [ ! -d "$app" ]; then
+          echo "::error::Xcode ${version:-?} pinned in scripts/ios/env.sh is not on this runner image; move the pin in scripts/ios/env.sh."
+          ls -d /Applications/Xcode*.app
+          exit 1
+        fi
+        echo "ITMO_DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
+        echo "DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
+
+    # From the release, not Homebrew (which serves only the latest). The version must equal ITMO_XCODEGEN_VERSION in
+    # scripts/ios/env.sh; the digest is the release asset's sha256.
+    - name: Install XcodeGen
+      shell: bash
+      env:
+        XCODEGEN_VERSION: 2.46.0
+        XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
+      run: |
+        pinned=$(sed -n 's/^: "\${ITMO_XCODEGEN_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
+        if [ "$pinned" != "$XCODEGEN_VERSION" ]; then
+          echo "::error::scripts/ios/env.sh pins XcodeGen $pinned, .github/actions/ios-setup installs $XCODEGEN_VERSION; update both."
+          exit 1
+        fi
+        zip="$RUNNER_TEMP/xcodegen.zip"
+        curl --retry 3 -fsSL -o "$zip" "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+        echo "$XCODEGEN_SHA256  $zip" | shasum -a 256 -c -
+        unzip -q "$zip" -d "$RUNNER_TEMP/xcodegen"
+        bin=$(dirname "$(find "$RUNNER_TEMP/xcodegen" -type f -name xcodegen -perm -u+x | head -n 1)")
+        echo "$bin" >> "$GITHUB_PATH"
+
+    # The toolchain the job runs on, before the long steps; an env.sh warning (a pin mismatch) fails here when strict.
+    - name: Toolchain pins
+      shell: bash
+      env:
+        STRICT: ${{ inputs.strict-pins }}
+      run: |
+        source scripts/ios/env.sh 2> "$RUNNER_TEMP/env.err"
+        cat "$RUNNER_TEMP/env.err"
+        if grep -q warning "$RUNNER_TEMP/env.err"; then
+          [ "$STRICT" != true ] || exit 1
+          echo "::warning::the toolchain differs from the pins in scripts/ios/env.sh"
+        fi
+        xcodebuild -version
+        xcodegen --version
+
+    # The JDK gradle/gradle-daemon-jvm.properties asks for, so the daemon never auto-provisions one.
+    - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      with:
+        distribution: jetbrains
+        java-version: 21
+
+    - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      with:
+        cache-provider: basic
+        cache-read-only: ${{ inputs.cache-write != 'true' }}
+
+    # Gradle uses only the JDK above and one worker: no parallel Kotlin/Native on the 7 GB runner.
+    - name: Gradle settings
+      shell: bash
+      run: |
+        mkdir -p "$GRADLE_USER_HOME"
+        {
+          echo "org.gradle.workers.max=1"
+          echo "org.gradle.java.installations.auto-download=false"
+          echo "org.gradle.java.installations.paths=$JAVA_HOME"
+        } >> "$GRADLE_USER_HOME/gradle.properties"
+
+    # Kotlin/Native (about 1 GB in ~/.konan) per Kotlin version and runner architecture.
+    - name: Kotlin/Native cache key
+      id: konan
+      shell: bash
+      run: |
+        version=$(sed -n 's/^kotlin = "\(.*\)"$/\1/p' gradle/libs.versions.toml)
+        echo "key=konan-$RUNNER_OS-$RUNNER_ARCH-$version" >> "$GITHUB_OUTPUT"
+
+    - name: Restore ~/.konan
+      id: konan-cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.konan
+        key: ${{ steps.konan.outputs.key }}
+
+    # The wrapper distribution and the build plugins, with retries before the long build: on a cache miss a plugin
+    # portal hiccup costs a retry, not the job. The daemon it starts is reused by the build inside xcodebuild.
+    - name: Resolve Gradle plugins
+      shell: bash
+      run: |
+        for attempt in 1 2 3; do
+          ./gradlew --quiet help && exit 0
+          echo "::warning::Gradle plugin resolution failed (attempt $attempt of 3)"
+          sleep $((attempt * 20))
+        done
+        exit 1

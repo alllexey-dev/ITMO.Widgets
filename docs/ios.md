@@ -395,9 +395,10 @@ Commands: [testing.md](testing.md#ios); `./gradlew verifyIosKlibs` compiles the 
   build by as much as it saved.
 - To open the project in Xcode run `xcodegen generate --spec iosApp/project.yml` first.
 - MyItmoApi comes from Maven Central; `MYITMOAPI_DIR` builds against a local checkout.
-- CI: `.github/workflows/ios.yml` runs `ios-check` (`scripts/ios/test.sh --ci`) on PRs that change iOS inputs and on
-  pushes to `master` that change `shared/` (see [testing.md](testing.md#ci)); `ios-nightly.yml` runs every module's
-  `kn` tests and all `UITests`.
+- CI (see [testing.md](testing.md#ci)): `ci.yml` builds the app without tests (`scripts/ios/test.sh --ci build`) on
+  PRs that change iOS inputs, and runs the unit and snapshot tests (`test.sh --ci`) on pushes to `master` that change
+  iOS inputs or `shared/` and on manual runs; `nightly.yml` runs every module's `kn` tests nightly and all `UITests`
+  on Sundays. The macOS jobs share `.github/actions/ios-setup`.
 - Release builds: `scripts/ios/archive.sh --unsigned` (an `.ipa` for self-signing) or `--signed [--upload]` with
   `Signing.local.xcconfig`. The build number is Android's `versionCode` from `app/build.gradle.kts`, and the build identity
   (`BuildChannel`, `BuildSource`, `BuildCommit`) is in [building](building.md#build-identity). Uploads are manual
@@ -407,9 +408,9 @@ Commands: [testing.md](testing.md#ios); `./gradlew verifyIosKlibs` compiles the 
 
 - SwiftUI screens and widget entry views have swift-snapshot-testing references in `__Snapshots__/` beside each test:
   `assertAppearances(of:named:)` renders light and dark at Dynamic Type L and AX1, 375 pt wide (iPhone SE, the
-  narrowest iPhone of iOS 26). `test.sh --ci` never records; when CI disagrees with a local recording, the CI images
-  win. The system spinner starts on a frame picked by the time it appears, so layer renders draw an indeterminate
-  `ProgressView` with a still stand-in (`StillSpinnerStyle` in `AssertAppearances.swift`).
+  narrowest iPhone of iOS 26). `test.sh --ci` never records; when CI (on `master`, a PR only builds) disagrees with a
+  local recording, the CI images win. The system spinner starts on a frame picked by the time it appears, so layer
+  renders draw an indeterminate `ProgressView` with a still stand-in (`StillSpinnerStyle` in `AssertAppearances.swift`).
 - Whole screens with system chrome (the glass tab bar, navigation bars, presented sheets) use
   `assertScreenAppearances(of:named:)`, which draws the view in a window of its own at 375 x 667 pt with UIKit
   animations off; a layer render misses that chrome (`ShellSnapshotTests`, `ScheduleSnapshotTests`).

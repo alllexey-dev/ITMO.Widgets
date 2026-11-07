@@ -12,7 +12,7 @@ import org.junit.runners.Parameterized
 /**
  * Frame timing of tab taps and of a push and pop, each in a fresh process (killed in the setup: a `startupMode`
  * would kill it again after the setup), without the app's profile and with it
- * (`BaselineProfileMode.Require` also fails when the APK ships no profile). Runs nightly (android-nightly.yml).
+ * (`BaselineProfileMode.Require` also fails when the APK ships no profile). Runs nightly (nightly.yml).
  */
 @RunWith(Parameterized::class)
 class NavigationBenchmark(private val compilation: CompilationMode) {

@@ -28,9 +28,8 @@ env.sh: warning: tested with XcodeGen 2.46.0, found: ...
 `scripts/ios/env.sh` pins the toolchain. Locally another version only warns
 and the build continues; CI fails instead. If the build breaks, install the
 pinned versions, or select the pinned Xcode with `DEVELOPER_DIR`. When the
-pin moves, update `scripts/ios/env.sh`, `.github/workflows/ios.yml` and
-`.github/workflows/ios-nightly.yml` together (CI checks that the XcodeGen
-versions match).
+pin moves, update `scripts/ios/env.sh` and `.github/actions/ios-setup/action.yml`
+(version and sha256) together (CI checks that the XcodeGen versions match).
 
 ## Xcode project out of date
 

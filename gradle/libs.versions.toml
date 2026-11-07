@@ -39,7 +39,7 @@ robolectric = "4.17"
 roborazzi = "1.77.0"
 composablePreviewScanner = "0.9.3"
 turbine = "1.2.1"
-# Advisory buildHealth in android-nightly.yml only.
+# Advisory buildHealth in nightly.yml only.
 dependencyAnalysis = "3.19.2"
 
 androidImageCropper = "4.7.0"

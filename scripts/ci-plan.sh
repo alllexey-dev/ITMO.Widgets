@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# ci-plan.sh [--full | --all] < changed-paths   what android-ci.yml and ios.yml run, as GitHub step outputs
+# ci-plan.sh [--full | --all] < changed-paths   what ci.yml runs, as GitHub step outputs
 # ci-plan.sh --self-test                fixed path lists against their expected plan
 #
 # Reads the changed paths, one per line, and prints:
 # - android=true|false  something Gradle builds for Android changed (always true with --all)
 # - ios=true|false      something only the iOS build reads changed: iosApp/, scripts/ios/, the iOS source sets,
-#                       the build files (a commonMain change is covered by verifyIosKlibs on Linux)
-# - shared=true|false   any shared/ module changed (ios.yml builds the app for these on pushes to master)
-# - gradle=<json>       the Gradle jobs of android-ci.yml: on a PR the githubDebug unit tests, Konsist, the build-logic
-#                       tests, the githubDebug APK and the shared host tests; with --full or --all verifyFull
-#                       (both flavours, lintGithubDebug, lintPlayDebug). [] when android is false
+#                       the build files (a commonMain change is covered by verifyIosKlibs on Linux); with --full
+#                       also any shared/ module, so a Kotlin API change that breaks Swift shows up on master; always
+#                       true with --all
+# - gradle=<json>       the Gradle jobs of ci.yml: on a PR the githubDebug unit tests, Konsist, the build-logic
+#                       tests, the androidTest compile, the githubDebug APK and the shared host tests; with --full or
+#                       --all verifyFull (both flavours, lintGithubDebug, lintPlayDebug). [] when android is false
 # - shots=<json>        the screenshot jobs: [] when no screenshot module changed, one job with the changed modules,
 #                       or `verify.sh shots all` in 3 shards (--full or --all with an Android change, more than 3
 #                       modules, or a change every module's screenshots depend on: designsystem, core, testing, the
@@ -19,7 +20,7 @@
 # Markdown outside a source set (module READMEs, CONTRACT.md) changes nothing: such paths are skipped. Markdown under
 # src/ stays a change, since tests may read or list their resource folders.
 #
-# --full: pushes to master and PRs labelled `full-ci`. --all: manual runs, as if every path changed.
+# --full: pushes to master. --all: manual runs, as if every path changed.
 # Portable to macOS /bin/bash 3.2.
 
 set -u
@@ -28,7 +29,7 @@ plan() { # [--full] < paths
   local full=false android=false ios=false shared=false all=false modules="" path module count=0
   case "${1:-}" in
     --full) full=true ;;
-    --all) full=true android=true ;;
+    --all) full=true android=true ios=true ;;
   esac
   while IFS= read -r path; do
     [ -n "$path" ] || continue
@@ -38,14 +39,15 @@ plan() { # [--full] < paths
     esac
     case "$path" in
       app/* | shared/* | konsist/* | build-logic/* | gradle/* | gradle.properties | gradlew | settings.gradle.kts | \
-        build.gradle.kts | scripts/verify.sh | .github/workflows/android-ci.yml | .github/actions/*)
+        build.gradle.kts | scripts/verify.sh | .github/workflows/ci.yml | .github/actions/android-setup/* | \
+        .github/actions/build-cache-save/*)
         android=true
         ;;
     esac
     case "$path" in
       iosApp/* | scripts/ios/* | shared/ios/* | shared/*/src/ios* | shared/*/build.gradle.kts | build-logic/* | \
         gradle/* | gradle.properties | settings.gradle.kts | build.gradle.kts | app/src/main/assets/* | \
-        .github/workflows/ios*.yml)
+        .github/workflows/ci.yml | .github/actions/ios-setup/*)
         ios=true
         ;;
     esac
@@ -53,8 +55,8 @@ plan() { # [--full] < paths
     case "$path" in
       shared/*/src/ios* | shared/ios/* | app/src/androidTest*) ;;
       shared/designsystem/* | shared/core/* | shared/testing/* | build-logic/* | gradle/* | gradle.properties | \
-        settings.gradle.kts | build.gradle.kts | scripts/verify.sh | .github/workflows/android-ci.yml | \
-        .github/actions/*)
+        settings.gradle.kts | build.gradle.kts | scripts/verify.sh | .github/workflows/ci.yml | \
+        .github/actions/android-setup/* | .github/actions/build-cache-save/*)
         all=true
         ;;
       app/*) add_module app ;;
@@ -69,10 +71,10 @@ plan() { # [--full] < paths
   [ "$count" -le 3 ] || all=true
   [ "$full" = false ] || all=true
   [ "$android" = true ] || all=false
+  [ "$full" = false ] || [ "$shared" = false ] || ios=true
 
   echo "android=$android"
   echo "ios=$ios"
-  echo "shared=$shared"
   if [ "$android" = false ]; then
     echo "gradle=[]"
   elif [ "$full" = true ]; then
@@ -82,7 +84,7 @@ plan() { # [--full] < paths
       `'{"name":"lint-play","tasks":":app:lintPlayDebug","home":"false"}]'
   else
     echo 'gradle=[{"name":"app","tasks":":app:testGithubDebugUnitTest :konsist:test :build-logic:convention:test '`
-      `':build-logic:strings:test :app:assembleGithubDebug","home":"false"},'`
+      `':build-logic:strings:test :app:compileGithubDebugAndroidTestKotlin :app:assembleGithubDebug","home":"false"},'`
       `'{"name":"unit-shared","tasks":"verifyQuickUnitShared","home":"false"}]'
   fi
   if [ "$all" = true ]; then
@@ -120,7 +122,15 @@ self_test() {
   printf 'docs/testing.md\n' | expect "docs only: no iOS" "ios=false"
   printf 'build-logic/README.md\niosApp/README.md\n' | expect "module README: no Android" "android=false"
   printf 'build-logic/README.md\niosApp/README.md\n' | expect "module README: no iOS" "ios=false"
-  printf 'shared/backend-client/CONTRACT.md\n' | expect "module doc: no shared" "shared=false"
+  printf 'shared/backend-client/CONTRACT.md\n' | expect "--full, module doc: no iOS" "ios=false" --full
+  printf 'shared/feature-sport/src/commonMain/kotlin/A.kt\n' | expect "--full, shared module: iOS" "ios=true" --full
+  printf '.github/actions/ios-setup/action.yml\n' | expect "ios-setup: iOS" "ios=true"
+  printf '.github/actions/ios-setup/action.yml\n' | expect "ios-setup: no Android" "android=false"
+  printf '.github/actions/android-setup/action.yml\n' | expect "android-setup: no iOS" "ios=false"
+  printf 'app/src/androidTest/kotlin/A.kt\n' | expect "androidTest: Android" "android=true"
+  printf 'app/src/androidTest/kotlin/A.kt\n' | expect "androidTest: no shots" "shots=[]"
+  printf 'app/src/androidTest/kotlin/A.kt\n' | expect "androidTest: compiled on a PR" \
+    'gradle=[{"name":"app","tasks":":app:testGithubDebugUnitTest :konsist:test :build-logic:convention:test :build-logic:strings:test :app:compileGithubDebugAndroidTestKotlin :app:assembleGithubDebug","home":"false"},{"name":"unit-shared","tasks":"verifyQuickUnitShared","home":"false"}]'
   printf 'shared/backend-client/src/commonTest/resources/contract/README.md\n' |
     expect "Markdown in a source set: Android" "android=true"
   printf 'iosApp/Sources/App.swift\n' | expect "Swift only: no Android" "android=false"
@@ -139,6 +149,7 @@ self_test() {
   printf 'app/build.gradle.kts\n' | expect "--full: lint" \
     'gradle=[{"name":"app","tasks":"verifyQuickUnitApp verifyQuickAssemble","home":"true"},{"name":"unit-shared","tasks":"verifyQuickUnitShared","home":"false"},{"name":"lint-github","tasks":"verifyQuickLint","home":"false"},{"name":"lint-play","tasks":":app:lintPlayDebug","home":"false"}]' --full
   printf 'docs/a.md\n' | expect "--all, docs only: Android" "android=true" --all
+  : | expect "--all, no paths: iOS" "ios=true" --all
   return "$failed"
 }
 
