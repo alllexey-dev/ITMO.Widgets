@@ -49,7 +49,7 @@ include(
     ":shared:ios",
 )
 include(":konsist")
-// Generates the app's baseline and startup profiles and runs the nightly frame-timing benchmarks (docs/testing.md).
+// Generates the app's baseline and startup profiles, by hand before a release (docs/testing.md).
 include(":baselineprofile")
 
 // MyItmoApi comes from Maven Central (libs.my.itmo.api.kmp). To develop the library alongside the app, set

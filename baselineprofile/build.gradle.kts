@@ -1,5 +1,5 @@
-// The baseline and startup profile generator and the frame-timing macrobenchmarks, both driving the demo session of
-// :app on a device (docs/testing.md "Baseline profiles"). Never part of verifyQuick or a PR check.
+// The baseline and startup profile generator, driving the demo session of :app on a device (docs/testing.md
+// "Baseline profiles"). Run by hand before a release; never part of verifyQuick or a CI job.
 plugins {
     id("com.android.test")
     id("androidx.baselineprofile")
@@ -10,7 +10,7 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        // BaselineProfileRule needs API 28 (rooted) or 33+; Macrobenchmark needs 23.
+        // BaselineProfileRule needs API 28 (rooted) or 33+.
         minSdk = 28
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

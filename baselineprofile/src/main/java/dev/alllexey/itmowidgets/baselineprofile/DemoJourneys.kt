@@ -7,7 +7,7 @@ import androidx.test.uiautomator.Until
 import java.util.regex.Pattern
 
 /**
- * The demo-session journeys the profile generators and the benchmarks share. They find the shell by its test tags,
+ * The demo-session journeys of the profile generators. They find the shell by its test tags,
  * which `ShellHost` exposes as resource ids (`ShellTags`, `TabRootTags`, `AuthTestTags`, `MeTestTags`).
  */
 internal const val PACKAGE = "dev.alllexey.itmowidgets"

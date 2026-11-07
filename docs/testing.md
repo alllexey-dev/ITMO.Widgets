@@ -169,17 +169,8 @@ ANDROID_SERIAL=emulator-5554 ./gradlew :app:generateBaselineProfile \
   -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
 ```
 
-`NavigationBenchmark` measures frame timing of tab taps and a push and pop with and without the profile (the profile
-run fails when the APK ships none). It runs nightly in `nightly.yml` (`benchmarks`); locally:
-
-```bash
-ANDROID_SERIAL=emulator-5554 ./gradlew :baselineprofile:connectedGithubBenchmarkReleaseAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark \
-  -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR
-```
-
-Results land in `baselineprofile/build/outputs/connected_android_test_additional_output/`. Judge smoothness on these
-builds, never on a debug build.
+No CI job generates or checks the profiles: regenerate them before every release ([release](release.md), Android
+build). Judge smoothness on a release or `minifiedSmoke` build, never on a debug build.
 
 ## CI
 
@@ -197,14 +188,14 @@ folder, such as a module README, runs nothing. The macOS jobs share one setup,
 | `ci.yml` | every PR into `master` | When an Android input changed: `app` (`:app:testGithubDebugUnitTest`, Konsist, the build-logic tests, the androidTest compile, `:app:assembleGithubDebug`) and `unit-shared` (the shared host tests); the screenshot tests of the changed modules (all of them in 3 shards when `designsystem`, `core`, `testing` or the build changed); `verifyIosKlibs` (the iOS main and test klibs). When an iOS input changed (`iosApp/`, `scripts/ios/`, an iOS source set, the build): `ios build` (`scripts/ios/test.sh --ci build`: checks, xcodegen, build-for-testing, no tests). `verify.sh checks` runs on every PR, docs-only included |
 | `ci.yml` | pushes to `master` | `verifyFull` (`app`, `unit-shared`, `lint-github`, `lint-play`), every screenshot module in 3 shards, and `ios tests` (`scripts/ios/test.sh --ci`: the unit and snapshot tests) when an iOS input or any `shared/` module changed; these runs write the build caches PRs read. A newer push cancels an older run; the diff base is the last successful `master` run |
 | `ci.yml` | on demand: `gh workflow run ci.yml --ref <branch>` | Everything, as if every path changed, iOS with all its tests |
-| `nightly.yml` | nightly on `master`; on demand | `platform`: the platform list on a Gradle Managed Device. `ui`: `verify.sh ui all` in 6 shards on an emulator without a cutout, `ShellSuite` in 2 shards with a tall cutout. `ship`: release checks without the key (`scripts/ship-check.sh` stages version, unsigned release builds with `check-play-policy.sh`, the upgrade from v2.2 and the shrunk builds on an emulator). `ios-kn`: `test.sh --ci kn` (every module with an iOS target). Advisory, never failing the run: `build-health` (the `buildHealth` report), `benchmarks` (`NavigationBenchmark`) and, on Sundays, `ios-ui` (all `UITests`) |
+| `nightly.yml` | nightly on `master`; on demand | `platform`: the platform list on a Gradle Managed Device. `ui`: `verify.sh ui all` in 6 shards on an emulator without a cutout, `ShellSuite` in 2 shards with a tall cutout. `ship`: release checks without the key (`scripts/ship-check.sh` stages version, unsigned release builds with `check-play-policy.sh`, the upgrade from v2.2 and the shrunk builds on an emulator). `ios-kn`: `test.sh --ci kn` (every module with an iOS target). Advisory, never failing the run: `build-health` (the `buildHealth` report) and, on Sundays, `ios-ui` (all `UITests`) |
 | `dist.yml` | on demand; published releases | Builds without the key ([building](building.md)): the self-signed `githubRelease` APK (on demand only) and `archive.sh --unsigned`, whose `.ipa` a release gets attached |
 
 - **The full suite on a branch.** For a risky PR (build changes, the shell,
   navigation, release or CI scripts) run `gh workflow run ci.yml --ref <branch>`
   for the full `ci.yml`, and the slow suites with
   `gh workflow run nightly.yml --ref <branch> -f suites="ui ship"` (suites:
-  `platform`, `ui`, `ship`, `ios-kn`, `build-health`, `benchmarks`, `ios-ui`,
+  `platform`, `ui`, `ship`, `ios-kn`, `build-health`, `ios-ui`,
   or `all`, the default).
 - **iOS snapshots.** A PR only builds the iOS app; the snapshot tests run on
   `master`, so a snapshot regression shows up there. To check a PR's snapshots,

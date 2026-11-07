@@ -127,7 +127,9 @@ published; Core 1.x stays at 1.7.0.
    `app/build.gradle.kts`, the dependency versions in
    `gradle/libs.versions.toml`, the `Unreleased` section of `CHANGELOG.md`
    renamed to the version and date, the release row in
-   [releases](product/releases.md).
+   [releases](product/releases.md), and the baseline and startup profiles
+   regenerated on an emulator and committed
+   ([testing](testing.md#baseline-profiles)).
 2. Build and check:
 
    ```bash

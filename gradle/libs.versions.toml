@@ -54,7 +54,7 @@ androidxTestMonitor = "1.8.0"
 androidxTestRunner = "1.7.0"
 androidxTestOrchestrator = "1.6.1"
 espressoCore = "3.7.0"
-# Baseline and startup profiles, the :baselineprofile generator and its nightly macrobenchmarks.
+# Baseline and startup profiles and the :baselineprofile generator.
 benchmark = "1.5.0"
 uiautomator = "2.4.0"
 profileinstaller = "1.4.1"
