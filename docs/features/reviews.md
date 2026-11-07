@@ -158,7 +158,7 @@ both survive recreation. Not dismissable while sending.
 
 Backend decides "taught the author" through ISU flows, and trusts every review
 of a coach of its sport catalog
-([Backend ADR 0037](../../../itmo-widgets-backend/docs/decisions/0037-sport-teacher-reviews.md));
+([Backend ADR 0037](../../../itmo-widgets-backend/docs/adr/0037-sport-teacher-reviews.md));
 the app only sends candidate flows and shows `verified`. `PENDING` and `UNVERIFIED` look the same,
 a review is never rejected because of the ISU check, and the check does not
 affect the order.

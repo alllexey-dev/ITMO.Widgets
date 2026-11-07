@@ -30,4 +30,4 @@ wifi.it.itmo.ru.
 
 ## Для разработчиков
 
-- [Wi-Fi](../features/wifi.md), [ADR 0037](../decisions/0037-on-device-isu-client.md)
+- [Wi-Fi](../features/wifi.md), [ADR 0037](../adr/0037-on-device-isu-client.md)

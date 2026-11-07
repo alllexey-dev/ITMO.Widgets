@@ -5,9 +5,9 @@ Product behaviour: [Как это работает: оценки](../how-it-work
 
 The own total of a subject from a teacher's public Google Sheet. The connection, the downloaded sheet
 and other people's names stay on the device: no connection to ITMO.Widgets needed
-(decision [0014](../decisions/0014-sheet-scores-on-device.md)). Only `Посчитать с ИИ` for a sheet a link shares
+(decision [0014](../adr/0014-sheet-scores-on-device.md)). Only `Посчитать с ИИ` for a sheet a link shares
 with a flow or everybody asks Backend for a rule, never with sheet data
-(decision [0038](../decisions/0038-ai-sheet-formula.md)). `feature/resources` only offers the action.
+(decision [0038](../adr/0038-ai-sheet-formula.md)). `feature/resources` only offers the action.
 
 ## Connecting
 
@@ -192,7 +192,7 @@ ITMO and BARS.
   `multiply`, `min`, `max`, `subtract`, `divide`, `round`), and for an AI rule `official`, `officialValue` and
   `summary`; `linkId` when known. Format 1 (2.2: `headerPath`, `columnIndex`) is read as a direct formula of
   `tabGid` and written back as format 2. 2.2 deletes a format 2 file, so a downgrade loses the connections
-  ([0038](../decisions/0038-ai-sheet-formula.md)). A corrupt file, another format, an invalid field or another
+  ([0038](../adr/0038-ai-sheet-formula.md)). A corrupt file, another format, an invalid field or another
   account's file is deleted.
 - `SheetScoresRepositoryImpl` is one Koin single and a `SessionDataCleaner`: sign-out deletes the
   file; a reading is written only when the session generation and the whole connection it was taken

@@ -2,7 +2,7 @@
 
 The rules every type and call of `:shared:backend-client` follows so that Backend, the client and the apps agree.
 They replace the "Decoding policy" of Core 1.x. The decision is
-[ADR 0026](../../docs/decisions/0026-core-2-backend-client.md); route semantics live in Backend's contract
+[ADR 0026](../../docs/adr/0026-core-2-backend-client.md); route semantics live in Backend's contract
 documents (docs/contracts in the Backend repository), and each area's facts are in the KDoc of its `*Api`
 interface.
 

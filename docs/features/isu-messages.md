@@ -43,7 +43,7 @@ runs in the background check.
 
 ## Data
 
-ISU is read through core's on-device `IsuWebClient` ([ADR 0037](../decisions/0037-on-device-isu-client.md)): it signs
+ISU is read through core's on-device `IsuWebClient` ([ADR 0037](../adr/0037-on-device-isu-client.md)): it signs
 in with the phone's ITMO.ID cookies, keeps ISU's cookies in one in-memory `IsuSession` and refuses any other host.
 `IsuMessagesRepositoryImpl` adds the messages app (2422) on top of it.
 

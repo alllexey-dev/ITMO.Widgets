@@ -457,7 +457,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   leaves a choice of row, tab or total. One connection per subject period,
   stored in `filesDir/sheet_scores/state.json`; names and marks of others are
   never stored, nothing reaches Backend, and `Подключение к ITMO.Widgets` is
-  not needed (decision [0014](docs/decisions/0014-sheet-scores-on-device.md)).
+  not needed (decision [0014](docs/adr/0014-sheet-scores-on-device.md)).
 - The subject page shows the total under `Баллы` with the tab, the header and
   when it was read, `Нет связи`, `Таблица закрыта`, `Строка не найдена`,
   `Столбец не найден` or `Таблица слишком большая`, and `Открыть таблицу`,
@@ -489,7 +489,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   page when one subject is unread, otherwise the recordbook.
 - BARS is renewed in the background without a WebView, by repeating the
   official ITMO.ID request with the WebView's cookies (decision
-  [0012](docs/decisions/0012-bars-background-renewal.md)); the check selects
+  [0012](docs/adr/0012-bars-background-renewal.md)); the check selects
   the user's BARS period back after reading. When the ITMO.ID session has
   ended, one `Войдите в БАРС` notification opens the BARS sign-in, and nothing
   more until BARS answers again.
@@ -529,7 +529,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   once, a new term landing on empty weeks is not a list of additions, and
   changes of lessons already over are dropped. Android picks the moment of a
   check, so delivery is not immediate. Nothing reaches Backend; see decision
-  [0013](docs/decisions/0013-schedule-changes-on-device.md).
+  [0013](docs/adr/0013-schedule-changes-on-device.md).
 - One notification per check in the new `Изменения расписания` channel,
   `Расписание изменилось: 3 пары` with the nearest change; with a sound only
   for today and tomorrow, nothing from 00:00 to 06:00 Moscow time (the first
@@ -597,7 +597,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - Needs Core and Backend `1.7.0-SNAPSHOT` with `summary`,
   `teacherSummaryLevels` and V10 (`V10__teacher_summaries.sql`); without V10 the
   reviews come without a summary and teachers without dots. See decision
-  [0011](docs/decisions/0011-ai-review-summaries.md).
+  [0011](docs/adr/0011-ai-review-summaries.md).
 
 ### 2026-09-28
 

@@ -9,8 +9,8 @@ export in [calendar](calendar.md).
 
 ## Modules
 
-- `:shared:feature-schedule` holds domain, Compose-free view models ([ADR 0031](../decisions/0031-swiftui-ios-screens.md)),
-  the Android screens in `androidMain` ([ADR 0035](../decisions/0035-ios-without-compose.md)) and data. `:app` keeps
+- `:shared:feature-schedule` holds domain, Compose-free view models ([ADR 0031](../adr/0031-swiftui-ios-screens.md)),
+  the Android screens in `androidMain` ([ADR 0035](../adr/0035-ios-without-compose.md)) and data. `:app` keeps
   only the Android widgets, workers, the change notification and the phone calendar; `ScheduleRulesTest` (`:konsist`)
   keeps them there. iOS draws the same view models in SwiftUI (`iosApp/Sources/Features/Schedule/`).
 - My ITMO comes through MyItmoApi, Backend through Core 2.0's `ScheduleApi`: `syncLessons` (best-effort upload of

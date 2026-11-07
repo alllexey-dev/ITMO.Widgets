@@ -110,6 +110,6 @@ The ITMO.ID page's sign-in (`completeItmoIdLogin`) keeps the web store: the
 ran in that store after it was cleared (both platforms clear it when the page
 opens), so its ITMO.ID SSO cookies belong to the account of the new tokens,
 and the BARS sign-in and renewal use them
-([ADR 0012](../decisions/0012-bars-background-renewal.md#the-sign-in-keeps-the-itmoid-session)).
+([ADR 0012](../adr/0012-bars-background-renewal.md#the-sign-in-keeps-the-itmoid-session)).
 A refresh-token sign-in, the demo, sign-out and a failed sign-in clear it as
 before.

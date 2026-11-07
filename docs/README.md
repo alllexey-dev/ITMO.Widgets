@@ -62,8 +62,17 @@ limits. Start there; the documents below are the developer reference.
 ## Decisions
 
 Short records of choices that were argued once; the index with statuses is
-[decisions/README.md](decisions/README.md). Add a new file instead of editing an
+[adr/README.md](adr/README.md). Add a new file instead of editing an
 old one when a decision changes.
+
+## Agent skills
+
+How the engineering skills (triage, tickets, specs, domain modeling) work in this repo:
+
+- [Issue tracker](agents/issue-tracker.md) - GitHub Issues through `gh`.
+- [Triage labels](agents/triage-labels.md) - the five triage roles and their labels.
+- [Domain docs](agents/domain.md) - the glossary and the ADRs the skills read first.
+
 
 ## Related repositories
 

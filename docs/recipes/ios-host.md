@@ -1,6 +1,6 @@
 # Recipe: Adding a SwiftUI screen over a shared view model
 
-How an iOS screen is built under [ADR 0031](../decisions/0031-swiftui-ios-screens.md): a native SwiftUI view in
+How an iOS screen is built under [ADR 0031](../adr/0031-swiftui-ios-screens.md): a native SwiftUI view in
 `iosApp/` over the feature's shared view model. The current state of the app is [the iOS app](../ios.md); the Android
 half and the shared module follow [one feature end to end](../feature-flow.md).
 

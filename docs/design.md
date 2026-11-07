@@ -20,7 +20,7 @@ Views remain only where the system or a library draws ([System surfaces](#system
 - Never stack a filled surface, a coloured stroke, a large status, a badge and a
   decorative progress on one element.
 - A look change goes through the tokens and the kit, not screen by screen
-  ([ADR 0021](decisions/0021-m3-expressive-order.md)).
+  ([ADR 0021](adr/0021-m3-expressive-order.md)).
 
 ## Tokens
 
@@ -448,7 +448,7 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
 ## The M3 Expressive kit
 
 `designsystem.kit` (`shared/designsystem/.../kit/`) is the kit of the redesigned Android screens, ported from the
-design lab: Material 3 Expressive; iOS draws the same screens in SwiftUI ([ADR 0031](decisions/0031-swiftui-ios-screens.md)). Its components take formatted text, icons and colours;
+design lab: Material 3 Expressive; iOS draws the same screens in SwiftUI ([ADR 0031](adr/0031-swiftui-ios-screens.md)). Its components take formatted text, icons and colours;
 what a lesson says and which pills it gets is decided by shared presentation: `core/lesson/LessonTimelines` builds
 `LessonUi` and `TimelineItem` (states, pills, gaps of an hour or more, progress, change notes) for every lesson list;
 a lesson is online by MyITMO's remote format or by a placeholder room (`дистант`, `онлайн`, `DayLesson.isOnline`),
@@ -480,7 +480,7 @@ one, otherwise from [Shared components](#shared-components).
 ## Expressive components
 
 Android screens use the Material 3 Expressive look
-([ADR 0021](decisions/0021-m3-expressive-order.md)) through the `Itmo*`
+([ADR 0021](adr/0021-m3-expressive-order.md)) through the `Itmo*`
 wrappers only; a new screen follows the rules below.
 
 - **Intensity: Foundational.** The quiet surfaces stay. Emphasis comes from

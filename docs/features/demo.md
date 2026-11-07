@@ -5,7 +5,7 @@ Product behaviour: [Как это работает: демо-режим](../how-
 A hidden session with fictional data for the Google Play review and store and
 landing screenshots. It needs no ITMO.ID account, network, Backend or My ITMO;
 nothing of it leaves the device. Rationale: decision
-[0015](../decisions/0015-demo-mode.md).
+[0015](../adr/0015-demo-mode.md).
 
 ## Entry
 
