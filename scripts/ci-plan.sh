@@ -16,6 +16,9 @@
 #                       build). Every job reads the build cache line shots-0: the shared modules a single module needs
 #                       are in every shard's line.
 #
+# Markdown outside a source set (module READMEs, CONTRACT.md) changes nothing: such paths are skipped. Markdown under
+# src/ stays a change, since tests may read or list their resource folders.
+#
 # --full: pushes to master and PRs labelled `full-ci`. --all: manual runs, as if every path changed.
 # Portable to macOS /bin/bash 3.2.
 
@@ -29,6 +32,10 @@ plan() { # [--full] < paths
   esac
   while IFS= read -r path; do
     [ -n "$path" ] || continue
+    case "$path" in
+      */src/*) ;;
+      *.md) continue ;;
+    esac
     case "$path" in
       app/* | shared/* | konsist/* | build-logic/* | gradle/* | gradle.properties | gradlew | settings.gradle.kts | \
         build.gradle.kts | scripts/verify.sh | .github/workflows/android-ci.yml | .github/actions/*)
@@ -111,6 +118,11 @@ self_test() {
   printf 'docs/testing.md\nREADME.md\n' | expect "docs only: no Android" "android=false"
   printf 'docs/testing.md\n' | expect "docs only: no shots" "shots=[]"
   printf 'docs/testing.md\n' | expect "docs only: no iOS" "ios=false"
+  printf 'build-logic/README.md\niosApp/README.md\n' | expect "module README: no Android" "android=false"
+  printf 'build-logic/README.md\niosApp/README.md\n' | expect "module README: no iOS" "ios=false"
+  printf 'shared/backend-client/CONTRACT.md\n' | expect "module doc: no shared" "shared=false"
+  printf 'shared/backend-client/src/commonTest/resources/contract/README.md\n' |
+    expect "Markdown in a source set: Android" "android=true"
   printf 'iosApp/Sources/App.swift\n' | expect "Swift only: no Android" "android=false"
   printf 'iosApp/Sources/App.swift\n' | expect "Swift only: iOS" "ios=true"
   printf 'shared/feature-sport/src/commonMain/kotlin/A.kt\n' | expect "feature: Android" "android=true"
