@@ -18,11 +18,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  # As in ios.yml: XcodeGen from its release, the version equal to ITMO_XCODEGEN_VERSION in scripts/ios/env.sh.
-  XCODEGEN_VERSION: 2.46.0
-  XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
-
 jobs:
   apk:
     if: github.event_name == 'workflow_dispatch'
@@ -57,61 +52,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Select the pinned Xcode
-        run: |
-          version=$(sed -n 's/^: "\${ITMO_XCODE_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
-          app="/Applications/Xcode_$version.app"
-          if [ -z "$version" ] || [ ! -d "$app" ]; then
-            echo "::error::Xcode ${version:-?} pinned in scripts/ios/env.sh is not on this runner image."
-            ls -d /Applications/Xcode*.app
-            exit 1
-          fi
-          echo "ITMO_DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
-          echo "DEVELOPER_DIR=$app/Contents/Developer" >> "$GITHUB_ENV"
-
-      - name: Install XcodeGen
-        run: |
-          pinned=$(sed -n 's/^: "\${ITMO_XCODEGEN_VERSION:=\(.*\)}"$/\1/p' scripts/ios/env.sh)
-          if [ "$pinned" != "$XCODEGEN_VERSION" ]; then
-            echo "::error::scripts/ios/env.sh pins XcodeGen $pinned, dist.yml installs $XCODEGEN_VERSION; update both."
-            exit 1
-          fi
-          zip="$RUNNER_TEMP/xcodegen.zip"
-          curl --retry 3 -fsSL -o "$zip" "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
-          echo "$XCODEGEN_SHA256  $zip" | shasum -a 256 -c -
-          unzip -q "$zip" -d "$RUNNER_TEMP/xcodegen"
-          bin=$(dirname "$(find "$RUNNER_TEMP/xcodegen" -type f -name xcodegen -perm -u+x | head -n 1)")
-          echo "$bin" >> "$GITHUB_PATH"
-
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      # A newer Xcode build on the image only warns here: a published release still gets its .ipa.
+      - uses: ./.github/actions/ios-setup
         with:
-          distribution: jetbrains
-          java-version: 21
-
-      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
-        with:
-          cache-provider: basic
-          cache-read-only: true
-
-      # One worker on the 7 GB runner (as ios.yml); Gradle uses only the JDK above.
-      - name: Gradle settings
-        run: |
-          mkdir -p "$GRADLE_USER_HOME"
-          {
-            echo "org.gradle.workers.max=1"
-            echo "org.gradle.java.installations.auto-download=false"
-            echo "org.gradle.java.installations.paths=$JAVA_HOME"
-          } >> "$GRADLE_USER_HOME/gradle.properties"
-
-      - name: Kotlin/Native version
-        id: kotlin-native
-        run: echo "version=$(sed -n 's/^kotlin = "\(.*\)"$/\1/p' gradle/libs.versions.toml)" >> "$GITHUB_OUTPUT"
-
-      - name: Restore ~/.konan
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.konan
-          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ steps.kotlin-native.outputs.version }}
+          strict-pins: "false"
 
       - name: scripts/ios/archive.sh --unsigned
         env:

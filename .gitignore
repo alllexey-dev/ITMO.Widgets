@@ -1,35 +1,33 @@
-*.iml
-.gradle
-/local.properties
-/.idea/*
-!/.idea/codeStyles/
-!/.idea/inspectionProfiles/
-!/.idea/dictionaries/
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-.refresh-token
-.keycloak-identity
-*.har
-app-keystore.jks
+# Build outputs
+build/
+.gradle/
+.kotlin/
 app/release/
 app/debug/
-.DS_Store
-.kotlin/
-.claude/
-keystore.properties
-/vibe/
 *.apk
 *.aab
+
+# IDE and OS
+.idea/
+*.iml
+.DS_Store
+
+# Local agent and planning files
+.claude/
+/vibe/
+
+# Secrets and local credentials
+local.properties
+keystore.properties
 *.jks
 *.keystore
 .env*
+.refresh-token
+.keycloak-identity
+*.har
+
 # Xcode (iosApp/project.yml generates the project; scripts/ios/test.sh builds into iosApp/build/)
 iosApp/*.xcodeproj
-iosApp/build/
 xcuserdata/
 *.xcuserstate
 Signing.local.xcconfig

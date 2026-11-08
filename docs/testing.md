@@ -111,6 +111,7 @@ and read the graph through `TestGraph`, never by writing token files directly.
 scripts/ios/test.sh                                            # checks, xcodegen, build, unit and snapshot tests
 scripts/ios/test.sh --only ITMOWidgetsTests/RouterTests        # one class
 scripts/ios/test.sh --record --only SnapshotTests/SampleSnapshotTests  # re-record snapshot references
+scripts/ios/test.sh build                                      # checks, xcodegen, build-for-testing only (a PR's ios build)
 scripts/ios/test.sh ui                                         # all UITests (slower)
 scripts/ios/test.sh ui SmokeUITests                            # some UITests classes
 scripts/ios/test.sh kn core feature-schedule                   # Kotlin iosSimulatorArm64Test of shared modules (all without names)
@@ -151,7 +152,7 @@ scripts/ios/test.sh --cleanup                                  # delete this che
   spinner keeps turning with animations off. A sheet's content does not inherit
   the style from its presenter, so a window test of a sheet sets it inside the
   sheet (`SheetScoresSnapshotTests`).
-- The last line is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha>`.
+- The last line is `test.sh: ios[-only|-ui|-kn|-build] PASS|FAIL <secs>s <sha>`.
 
 ## Baseline profiles
 
@@ -168,53 +169,47 @@ ANDROID_SERIAL=emulator-5554 ./gradlew :app:generateBaselineProfile \
   -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
 ```
 
-`NavigationBenchmark` measures frame timing of tab taps and a push and pop with and without the profile (the profile
-run fails when the APK ships none). It runs nightly in `android-nightly.yml`; locally:
-
-```bash
-ANDROID_SERIAL=emulator-5554 ./gradlew :baselineprofile:connectedGithubBenchmarkReleaseAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark \
-  -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR
-```
-
-Results land in `baselineprofile/build/outputs/connected_android_test_additional_output/`. Judge smoothness on these
-builds, never on a debug build.
+No CI job generates or checks the profiles: regenerate them before every release ([release](release.md), Android
+build). Judge smoothness on a release or `minifiedSmoke` build, never on a debug build.
 
 ## CI
 
 All workflows are in `.github/workflows/` and need no secrets. None is a
-required check. A PR runs only what is fast and catches most breakage, so it
-finishes in about 10 minutes; the emulator and release suites run nightly on
-`master` instead. `scripts/ci-plan.sh` decides from the changed paths what a PR
-runs (`scripts/ci-plan.sh --self-test` lists the cases); Markdown outside a
-`src/` folder, such as a module README, runs nothing.
+required check. A PR runs only what is fast and catches most breakage; the
+emulator, release and Kotlin/Native suites run nightly on `master` instead.
+`scripts/ci-plan.sh` decides from the changed paths what `ci.yml` runs
+(`scripts/ci-plan.sh --self-test` lists the cases); Markdown outside a `src/`
+folder, such as a module README, runs nothing. The macOS jobs share one setup,
+`.github/actions/ios-setup` (the pinned Xcode and XcodeGen, JDK, Gradle,
+`~/.konan`).
 
 | Workflow | When | What |
 |---|---|---|
-| `android-ci.yml` | every PR into `master`, when an Android input changed | `:app:testGithubDebugUnitTest`, Konsist, the build-logic tests and `:app:assembleGithubDebug`; the shared host tests; the screenshot tests of the changed modules (all of them in 3 shards when `designsystem`, `core`, `testing` or the build changed); `verifyIosKlibs` (the iOS main and test klibs; the iOS tests themselves run only in `ios-nightly`). `verify.sh checks` runs on every PR, docs-only included |
-| `android-ci.yml` | pushes to `master` and PRs labelled `full-ci` that change an Android input; every manual run | `verifyFull` (both flavours, `lintGithubDebug`, `lintPlayDebug`) and every screenshot module in 3 shards; these runs write the build caches PRs read |
-| `ios.yml` | PRs that change `iosApp/`, `scripts/ios/`, an iOS source set or the build; pushes to `master` that also change any `shared/` module; on demand, label `full-ci` | `scripts/ios/test.sh --ci` on the `xcode-27` runner with the pinned Xcode and XcodeGen |
-| `android-ui.yml` | nightly, on demand, label `full-ci` | `verify.sh ui all` in 6 shards on an emulator without a cutout, `ShellSuite` in 2 shards with a tall cutout |
-| `android-ship.yml` | nightly, on demand, label `full-ci` | Release checks without the key: `scripts/ship-check.sh` stages version, unsigned release builds with `check-play-policy.sh`, the upgrade from v2.2 and the shrunk builds on an emulator |
-| `android-nightly.yml` | nightly, on demand | The platform list on a Gradle Managed Device, `NavigationBenchmark` on an emulator, the advisory `buildHealth` report |
-| `ios-nightly.yml` | nightly, on demand | `test.sh --ci kn` (every module with an iOS target) and all `UITests` |
+| `ci.yml` | every PR into `master` | When an Android input changed: `app` (`:app:testGithubDebugUnitTest`, Konsist, the build-logic tests, the androidTest compile, `:app:assembleGithubDebug`) and `unit-shared` (the shared host tests); the screenshot tests of the changed modules (all of them in 3 shards when `designsystem`, `core`, `testing` or the build changed); `verifyIosKlibs` (the iOS main and test klibs). When an iOS input changed (`iosApp/`, `scripts/ios/`, an iOS source set, the build): `ios build` (`scripts/ios/test.sh --ci build`: checks, xcodegen, build-for-testing, no tests). `verify.sh checks` runs on every PR, docs-only included |
+| `ci.yml` | pushes to `master` | `verifyFull` (`app`, `unit-shared`, `lint-github`, `lint-play`), every screenshot module in 3 shards, and `ios tests` (`scripts/ios/test.sh --ci`: the unit and snapshot tests) when an iOS input or any `shared/` module changed; these runs write the build caches PRs read. A newer push cancels an older run; the diff base is the last successful `master` run |
+| `ci.yml` | on demand: `gh workflow run ci.yml --ref <branch>` | Everything, as if every path changed, iOS with all its tests |
+| `nightly.yml` | nightly on `master`; on demand | `platform`: the platform list on a Gradle Managed Device. `ui`: `verify.sh ui all` in 6 shards on an emulator without a cutout, `ShellSuite` in 2 shards with a tall cutout. `ship`: release checks without the key (`scripts/ship-check.sh` stages version, unsigned release builds with `check-play-policy.sh`, the upgrade from v2.2 and the shrunk builds on an emulator). `ios-kn`: `test.sh --ci kn` (every module with an iOS target). Advisory, never failing the run: `build-health` (the `buildHealth` report) and, on Sundays, `ios-ui` (all `UITests`) |
 | `dist.yml` | on demand; published releases | Builds without the key ([building](building.md)): the self-signed `githubRelease` APK (on demand only) and `archive.sh --unsigned`, whose `.ipa` a release gets attached |
 
-- **The full suite on a PR.** Add the label `full-ci` to a risky PR (build
-  changes, the shell, navigation, release or CI scripts): the PR then also runs
-  `android-ui`, `android-ship`, `ios` and the full `android-ci`, on every push
-  until the label is removed. To run one workflow on a branch without the
-  label: `gh workflow run android-ui.yml --ref <branch>` (also `android-ship`,
-  `android-nightly`, `ios-nightly`, `ios`, `android-ci`).
-- **Nightly failures.** A failed nightly of `android-ui`, `android-ship`,
-  `android-nightly` (platform tests, benchmarks) or `ios-nightly` opens an
-  issue titled `Nightly <workflow> is failing`, or comments on the open one;
-  the next passing nightly closes it. Fix it before the next release.
+- **The full suite on a branch.** For a risky PR (build changes, the shell,
+  navigation, release or CI scripts) run `gh workflow run ci.yml --ref <branch>`
+  for the full `ci.yml`, and the slow suites with
+  `gh workflow run nightly.yml --ref <branch> -f suites="ui ship"` (suites:
+  `platform`, `ui`, `ship`, `ios-kn`, `build-health`, `ios-ui`,
+  or `all`, the default).
+- **iOS snapshots.** A PR only builds the iOS app; the snapshot tests run on
+  `master`, so a snapshot regression shows up there. To check a PR's snapshots,
+  run `scripts/ios/test.sh` locally or dispatch `ci.yml` on the branch.
+- **Nightly runs.** A scheduled night is skipped when the previous scheduled
+  run already tested the same `master` head (`ios-ui` still runs on Sundays).
+  A failed night is reported only by GitHub's own "run failed" notification;
+  fix it before the next release.
 - **Forks.** Pushes and scheduled runs build nothing outside
   `alllexey-dev/ITMO.Widgets`, so a fork's sync with upstream costs it no
   minutes; manual runs and the fork's own PRs run as upstream.
-- **A newer push cancels** the older run of the same PR; every `master` push
-  keeps its own `android-ci` and `ios` result.
+- **A newer push cancels** the older `ci.yml` run of the same ref, on `master`
+  too; the next `master` run diffs against the last successful one, so nothing
+  goes untested.
 
 On failure the jobs upload test reports, screenshot diffs or the `.xcresult`
 as artifacts.
@@ -224,7 +219,7 @@ as artifacts.
 - **Instrumented order.** One run is one app process, so session state outlives
   a test class. A class that fails in a full run is re-run alone before the
   change is blamed; `ui-report.py` names which run failed.
-- **iOS CI memory.** The `ios-check` runner has 7 GB and the Kotlin/Native
+- **iOS CI memory.** The macOS runner has 7 GB and the Kotlin/Native
   link peaks near it; Gradle runs one worker there. An out-of-memory kill
   looks like a crashed `xcodebuild`.
 - **Screenshot tolerance.** A curved edge or text that anti-aliases differently

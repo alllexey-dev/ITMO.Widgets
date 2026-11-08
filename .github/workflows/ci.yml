@@ -1,28 +1,26 @@
-# Every PR into and every push to `master`. scripts/ci-plan.sh decides from the changed paths what runs:
-# - PR: the githubDebug unit tests, Konsist and the APK, the shared host tests, the screenshot tests of the changed
-#   modules (all of them when designsystem, core or the build changed), the docs check and the iOS klibs. A docs-only
-#   or Swift-only PR runs only the docs check.
-# - push to `master` and PRs labelled `full-ci`, when an Android input changed, and every manual run: verifyFull (both
-#   flavours, both lints) and every screenshot module; `master` runs also write the build caches PRs read.
-# The emulator, release and iOS suites are in android-ui.yml, android-ship.yml and ios.yml; nothing here is a
-# required check.
-name: android-ci
+# Every PR into `master`, every push to `master` and manual runs. scripts/ci-plan.sh decides from the changed paths
+# what runs (docs/testing.md#ci):
+# - PR: the githubDebug unit tests, Konsist, the androidTest compile and the APK, the shared host tests, the
+#   screenshot tests of the changed modules, the docs check and the iOS klibs; when an iOS input changed, the iOS app
+#   is built (`test.sh --ci build`, no tests). A docs-only PR runs only the docs check.
+# - push to `master`: verifyFull (both flavours, both lints), every screenshot module, and the iOS build with all its
+#   tests (`test.sh --ci`) when an iOS input or any shared/ module changed; `master` also writes the caches PRs read.
+#   The diff base is the last successful `master` run, so a cancelled or failed run loses nothing.
+# - manual run (`gh workflow run ci.yml --ref <branch>`): everything, as if every path changed. Use it for a risky PR.
+# The emulator, release and Kotlin/Native suites are in nightly.yml; nothing here is a required check.
+name: ci
 
 on:
   pull_request:
     branches: [master]
-    types: [opened, synchronize, reopened, labeled]
   push:
     branches: [master]
   workflow_dispatch:
 
-# Per ref; a newer push to a PR cancels its older run, every pushed `master` SHA keeps its own result. Adding any
-# label other than `full-ci` starts a run that does nothing, in a group of its own so it cancels nothing.
+# Per ref: a newer push cancels the older run (on `master` too, the next run's diff base covers its changes).
 concurrency:
-  group: >-
-    android-ci-${{ github.ref }}-${{ github.event.action == 'labeled' && github.event.label.name != 'full-ci'
-    && github.run_id || 'run' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -31,16 +29,17 @@ env:
   CI: "true"
 
 jobs:
-  # PR: the merge commit against its first parent (the base head).
   plan:
     # A fork's pushes (its sync with upstream) run nothing there; its manual runs and PRs still do.
-    if: >-
-      (github.event_name != 'push' || github.repository == 'alllexey-dev/ITMO.Widgets') &&
-      (github.event.action != 'labeled' || github.event.label.name == 'full-ci')
+    if: github.event_name != 'push' || github.repository == 'alllexey-dev/ITMO.Widgets'
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read # the last successful `master` run
     outputs:
       android: ${{ steps.plan.outputs.android }}
+      ios: ${{ steps.plan.outputs.ios }}
       gradle: ${{ steps.plan.outputs.gradle }}
       shots: ${{ steps.plan.outputs.shots }}
     steps:
@@ -49,17 +48,38 @@ jobs:
           persist-credentials: false
           fetch-depth: 2
 
+      # PR: the merge commit against its first parent (the base head). Push: the head of the last successful
+      # `master` run, else the push's `before`; without a base everything runs.
       - name: scripts/ci-plan.sh
         id: plan
         env:
           EVENT: ${{ github.event_name }}
-          LABELLED: ${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}
+          BEFORE: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -o pipefail
-          flags=""
-          [ "$EVENT" != push ] && [ "$LABELLED" != true ] || flags=--full
-          [ "$EVENT" != workflow_dispatch ] || flags=--all
-          git diff --name-only HEAD^1 HEAD | scripts/ci-plan.sh $flags | tee -a "$GITHUB_OUTPUT"
+          base="" flags=--all
+          case "$EVENT" in
+            pull_request) base=$(git rev-parse HEAD^1) flags="" ;;
+            push)
+              flags=--full
+              base=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=master&event=push&status=success&per_page=1" \
+                --jq '.workflow_runs[0].head_sha // empty' 2> /dev/null) || base=""
+              [ -n "$base" ] || base=$BEFORE
+              [ "$base" != 0000000000000000000000000000000000000000 ] || base=""
+              if [ -n "$base" ] && ! git cat-file -e "$base^{commit}" 2> /dev/null &&
+                ! git fetch --quiet --depth=1 origin "$base"; then
+                base=""
+              fi
+              [ -n "$base" ] || flags=--all
+              ;;
+          esac
+          echo "diff base: ${base:-none} ($EVENT ${flags:-pr})"
+          if [ -n "$base" ] && [ "$flags" != --all ]; then
+            git diff --name-only "$base" HEAD | scripts/ci-plan.sh $flags | tee -a "$GITHUB_OUTPUT"
+          else
+            scripts/ci-plan.sh --all < /dev/null | tee -a "$GITHUB_OUTPUT"
+          fi
 
   # The app's unit tests and its APK share one runner (they compile the same classes). The matrix name is also the
   # job's build cache line.
@@ -161,8 +181,9 @@ jobs:
 
   # The Gradle-free checks (docs links, the ui-report and ci-plan self-tests) on every run, then the iOS klibs when an
   # Android input changed (a commonMain change that breaks the iOS compile fails here, without a Mac).
-  checks-klibs:
+  checks:
     needs: plan
+    name: checks and iOS klibs
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -205,3 +226,48 @@ jobs:
         with:
           path: ~/.konan
           key: ${{ steps.konan-cache.outputs.cache-primary-key }}
+
+  # scripts/ios/test.sh on the macOS image with the Xcode pinned in scripts/ios/env.sh (arm64, 3 vCPU, 7 GB). A PR
+  # only builds the app and its test bundles (the snapshot tests alone take about 17 minutes); `master` and manual
+  # runs also run the unit and snapshot tests. No secrets, no signing.
+  ios:
+    needs: plan
+    if: needs.plan.outputs.ios == 'true'
+    name: ios ${{ github.event_name == 'pull_request' && 'build' || 'tests' }}
+    runs-on: xcode-27
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/ios-setup
+        id: setup
+        with:
+          cache-write: ${{ github.ref == 'refs/heads/master' }}
+
+      - name: test.sh --ci ${{ github.event_name == 'pull_request' && 'build' || '' }}
+        env:
+          MODE: ${{ github.event_name == 'pull_request' && 'build' || '' }}
+          TEST_RUNNER_SNAPSHOT_ARTIFACTS: ${{ github.workspace }}/iosApp/build/snapshot-artifacts
+        run: |
+          # shellcheck disable=SC2086 # empty for the full run
+          scripts/ios/test.sh --ci $MODE
+
+      - name: Save ~/.konan
+        if: github.ref == 'refs/heads/master' && steps.setup.outputs.konan-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.konan
+          key: ${{ steps.setup.outputs.konan-key }}
+
+      - name: Upload the result bundle and snapshot diffs
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ios-results
+          path: |
+            iosApp/build/test-results/
+            iosApp/build/snapshot-artifacts/
+          if-no-files-found: ignore
+          retention-days: 14

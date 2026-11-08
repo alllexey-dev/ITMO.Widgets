@@ -29,12 +29,13 @@ only when the steps it depends on are verified.
 ## 1. Check `master`
 
 1. Nothing else merges into `master` until the release commit.
-2. CI on the release candidate is green: `android-ci`, `android-ui`, `ios` and
-   `android-ship` (version scheme, unsigned release builds and the Play policy
-   check, the 2.2 -> head upgrade on an emulator, the shrunk builds started on
-   an emulator). `android-ui` and `android-ship` run nightly; when the last
-   nightly is older than the candidate, start them with
-   `gh workflow run <name>.yml --ref master`. Locally:
+2. CI on the release candidate is green: `ci` on `master` (iOS tests
+   included), and a `nightly` run on the candidate with `ui` and `ship`
+   (version scheme, unsigned release builds and the Play policy check, the
+   2.2 -> head upgrade on an emulator, the shrunk builds started on an
+   emulator). When the last nightly is older than the candidate, start them
+   with `gh workflow run nightly.yml --ref master -f suites="ui ship"`.
+   Locally:
 
    ```bash
    git status --short --branch
@@ -126,7 +127,9 @@ published; Core 1.x stays at 1.7.0.
    `app/build.gradle.kts`, the dependency versions in
    `gradle/libs.versions.toml`, the `Unreleased` section of `CHANGELOG.md`
    renamed to the version and date, the release row in
-   [releases](product/releases.md).
+   [releases](product/releases.md), and the baseline and startup profiles
+   regenerated on an emulator and committed
+   ([testing](testing.md#baseline-profiles)).
 2. Build and check:
 
    ```bash

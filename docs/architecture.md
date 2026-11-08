@@ -51,7 +51,7 @@ strings from `:shared:compose-strings` only, so its iOS klib has no Compose
 | `:shared:feature-sport` | Sport catalog, bookings, queues, score |
 | `:shared:ios` | Umbrella that builds the static framework `Shared` for Xcode, iOS Koin start, the Swift bridge |
 | `:konsist` | Architecture rules over the sources of `app/` and `shared/` |
-| `:baselineprofile` | Device-only: generates `:app`'s baseline and startup profiles and runs the nightly frame-timing benchmarks over the demo session (docs/testing.md) |
+| `:baselineprofile` | Device-only: generates `:app`'s baseline and startup profiles over the demo session, by hand before a release (docs/testing.md) |
 
 Allowed edges: a feature module depends on `:shared:core` (all targets) and on
 `:shared:designsystem` and `:shared:compose-strings` from `androidMain` only

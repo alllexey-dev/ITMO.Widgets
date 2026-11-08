@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ship-check.sh [--no-device] [--keep-going] [--only <n>[,<n>...]]
 #
-# The release checks of the Android app beyond the unit tests, run on the head commit. android-ship.yml runs stages
-# 1, 3, 5 and 6 on every push to master; locally run it before tagging a release (docs/release.md).
+# The release checks of the Android app beyond the unit tests, run on the head commit. nightly.yml (`ship`) runs
+# stages 1, 3, 5 and 6 nightly on master; locally run it before tagging a release (docs/release.md).
 #
 # Stages, each PASS or FAIL in $SHIP_DIR/summary/<sha7>/summary.md with its log beside it:
 #   1 version   versionCode/versionName per ADR 0030; origin/release/2.2 stays below 100

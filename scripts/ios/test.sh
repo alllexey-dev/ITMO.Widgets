@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # test.sh [--ci] [--record]                           checks, xcodegen, build and test of the scheme without UITests
 # test.sh [--ci] [--record] --only <Target>/<Class>   the same, one test class (xcodebuild -only-testing)
+# test.sh [--ci] build                                checks, xcodegen and build-for-testing only (no simulator boot)
 # test.sh [--ci] ui [<Class>...]                      the XCUITest target UITests, or only the listed classes
 # test.sh [--ci] kn [<module>...]                     iosSimulatorArm64Test of shared modules (`core` or `:shared:core`),
 #                                                     or of every module with an iOS target
@@ -17,6 +18,7 @@
 # - One simulator per worktree, `itmo-<worktree directory>` (`itmo-ci` with --ci), created from the pinned device
 #   type and runtime on first use; --cleanup (and the end of a --ci run) deletes it. No other simulator is touched.
 # - The default run and --only skip the UITests target; `ui` runs only it (XCUITest launches the app, so it is slower).
+#   `build` stops after build-for-testing: the compile check of a PR (ci.yml), without booting the simulator.
 #   It first waits for SpringBoard's notification server, then deletes the app, so iOS asks for notifications again.
 # - Snapshots (swift-snapshot-testing): the test process gets SNAPSHOT_TESTING_RECORD (all with --record, never
 #   with --ci, else unset: the library records a missing reference and fails the test) and SNAPSHOT_ARTIFACTS =
@@ -24,7 +26,7 @@
 # - kn: Gradle on the same simulator, with --continue: a failing module does not hide the rest.
 # - sim: the simulator scripts/ios/screenshots.sh drives between runs; prints only the UDID on stdout.
 # - --ci: CI=true; deletes the simulator at the end.
-# - The last line of a finished run is `test.sh: ios[-only|-ui|-kn] PASS|FAIL <secs>s <sha7>[+dirty]`.
+# - The last line of a finished run is `test.sh: ios[-only|-ui|-kn|-build] PASS|FAIL <secs>s <sha7>[+dirty]`.
 # - Exit code: 0 pass, 1 fail, 2 refused (usage).
 
 set -u
@@ -40,7 +42,7 @@ root=$(cd "$script_dir/../.." && pwd -P) || refuse "cannot resolve the repositor
 cd "$root" || refuse "cannot enter $root"
 
 usage() {
-  sed -n '2,8p' "$self" | sed 's/^# //' >&2
+  sed -n '2,9p' "$self" | sed 's/^# //' >&2
   exit 2
 }
 
@@ -61,6 +63,7 @@ while [ $# -gt 0 ]; do
       ;;
     --cleanup) mode=cleanup; shift ;;
     sim) mode=sim; shift ;;
+    build) mode=build; shift ;;
     ui)
       mode=ui
       shift
@@ -228,6 +231,7 @@ run_xcode() { # label
   )
   note "xcodebuild build-for-testing for $sim_name"
   xcodebuild "${xcode_args[@]}" build-for-testing || return 1
+  [ "$mode" != build ] || return 0
   if [ "$mode" = ui ]; then
     xcrun simctl bootstatus "$udid" -b > /dev/null || return 1
     wait_for_notification_server
@@ -261,7 +265,7 @@ EOF
 }
 
 case "$mode" in
-  all | only | ui)
+  all | only | ui | build)
     label=ios
     [ "$mode" = all ] || label="ios-$mode"
     run_xcode "$label"

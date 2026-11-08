@@ -5,8 +5,8 @@
 # verify.sh ui <Class>[,<Class>...]|all [--shard <i>/<n>]   :app:connectedGithubDebugAndroidTest on ANDROID_SERIAL
 # verify.sh ui @platform [--managed-device] the platform list under Orchestrator (an emulator, or CI's managed device)
 #
-# The modes CI runs (android-ci.yml, android-ui.yml, android-nightly.yml) that are more than one Gradle call. For
-# everything else call Gradle directly: ./gradlew verifyQuick, verifyFull, verifyIosKlibs.
+# The modes CI runs (ci.yml, nightly.yml) that are more than one Gradle call. For everything else call Gradle
+# directly: ./gradlew verifyQuick, verifyFull, verifyIosKlibs.
 #
 # - JAVA_HOME defaults to JDK 21 and ANDROID_HOME to ~/Library/Android/sdk on macOS; the Gradle daemon JDK comes
 #   from gradle/gradle-daemon-jvm.properties either way.

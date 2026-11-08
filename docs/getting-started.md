@@ -80,7 +80,7 @@ and runs the tests ([testing.md](testing.md#ios)).
 ## Everyday commands
 
 ```bash
-./gradlew verifyQuick     # what a PR's android-ci runs: unit and host tests, Konsist, lint, debug APKs
+./gradlew verifyQuick     # about what a PR's ci.yml runs: unit and host tests, Konsist, lint, debug APKs
 scripts/ios/test.sh       # iOS build, unit and snapshot tests
 ```
 

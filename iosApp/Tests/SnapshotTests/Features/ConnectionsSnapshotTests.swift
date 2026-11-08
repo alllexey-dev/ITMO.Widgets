@@ -4,7 +4,7 @@ import SwiftUI
 import XCTest
 @testable import ITMOWidgets
 
-/// Connected clients at the UX spec's states (vibe/plans/connected-clients-ux.md, iOS shots): the devices screen with
+/// Connected clients at the UX spec's states (iOS shots): the devices screen with
 /// every section and without the server, an install's facts sheet, an agent with an ending sign-in, a gone client,
 /// the renewal sheet and the pairing sheet's steps. The content views get synthetic states built from the catalog
 /// keys, under the pushed header or in their sheet, in a window.

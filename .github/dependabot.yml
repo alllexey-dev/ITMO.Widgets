@@ -1,12 +1,13 @@
-# Dependency updates into `master`, at most two open PRs per ecosystem.
+# Dependency updates into `master`: once a month, one grouped PR per ecosystem, no labels.
 version: 2
 
 updates:
   - package-ecosystem: gradle
     directory: /
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 2
+      interval: monthly
+    open-pull-requests-limit: 1
+    labels: []
     # Lockstep and pinned lines, bumped together by hand (ADR 0018, ADR 0021).
     ignore:
       # Kotlin, its compose compiler and the Kotlin compiler Konsist embeds.
@@ -25,33 +26,17 @@ updates:
       - dependency-name: "dev.alllexey:*"
       # Robolectric's SDK jars, pinned to the SDK levels the tests run on; they follow Robolectric by hand.
       - dependency-name: "org.robolectric:android-all-instrumented"
-    # A dependency matching several groups lands in the first, so androidx.test goes to test.
     groups:
-      test:
-        patterns:
-          - "junit:*"
-          - "androidx.test*"
-          - "org.robolectric:*"
-          - "io.github.takahirom.roborazzi*"
-          - "io.github.sergio-sastre*"
-          - "app.cash.turbine:*"
-      androidx:
-        patterns:
-          - "androidx.*"
-      firebase:
-        patterns:
-          - "com.google.firebase*"
-      ktor:
-        patterns:
-          - "io.ktor*"
-      koin:
-        patterns:
-          - "io.insert-koin*"
+      gradle:
+        patterns: ["*"]
 
-  # Keeps the SHA pins in .github/workflows and their version comments.
+  # Keeps the SHA pins in .github/workflows and the composite actions, and their version comments.
   - package-ecosystem: github-actions
-    # The workflows and the composite actions they call.
     directories: ["/", "/.github/actions/*"]
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 2
+      interval: monthly
+    open-pull-requests-limit: 1
+    labels: []
+    groups:
+      actions:
+        patterns: ["*"]
