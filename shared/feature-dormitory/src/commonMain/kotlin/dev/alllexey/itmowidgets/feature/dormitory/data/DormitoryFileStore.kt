@@ -23,13 +23,17 @@ internal data class StoredDormitory(
     val status: StoredStatus? = null,
 )
 
-/** The settlement instructions are kept as ITMO's HTML and parsed again on read, like the first time. */
+/**
+ * The settlement instructions are kept as ITMO's HTML and parsed again on read, like the first time.
+ * [placeOfferedSeenAt] is the wall-clock time the app first saw `Место предоставлено`, kept while the stage stays.
+ */
 @Serializable
 internal data class StoredStatus(
     val statusId: Int,
     val queuePlace: Int? = null,
     val dormitory: StoredDormitoryPlace? = null,
     val documents: List<StoredDocument> = emptyList(),
+    val placeOfferedSeenAt: Long? = null,
 )
 
 @Serializable

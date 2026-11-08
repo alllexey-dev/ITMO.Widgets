@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.dormitory.data.DormitoryFileStore
 import dev.alllexey.itmowidgets.feature.dormitory.data.DormitoryRepositoryImpl
 import dev.alllexey.itmowidgets.testkit.FakeClock
@@ -18,6 +19,9 @@ import io.ktor.client.request.HttpRequestData
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.IOException
 import okio.FileSystem
 import okio.Path.Companion.toPath
@@ -30,6 +34,15 @@ import okio.fakefilesystem.FakeFileSystem
  */
 class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolean = false) {
     val clock = FakeClock(Instant.parse("2026-11-08T09:00:00Z"))
+
+    /** The academic time over [clock], in Moscow: 12:00 at the start. */
+    val time = object : AcademicTimeProvider {
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+
+        override fun today(): LocalDate = now().toLocalDateTime(timeZone).date
+
+        override fun now(): Instant = clock.now()
+    }
     val files: FileSystem = FakeFileSystem()
     val requests = mutableListOf<HttpRequestData>()
     val answers = mutableMapOf<String, String>()

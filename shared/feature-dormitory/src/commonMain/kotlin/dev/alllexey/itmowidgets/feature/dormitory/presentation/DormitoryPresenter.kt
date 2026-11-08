@@ -2,8 +2,10 @@ package dev.alllexey.itmowidgets.feature.dormitory.presentation
 
 import dev.alllexey.itmowidgets.core.location.MapDestination
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryAnswer
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryStage
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryStatus
@@ -13,6 +15,8 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
+import kotlinx.datetime.format
+import kotlinx.datetime.toLocalDateTime
 
 /** Builds every text of the `Общежитие` screen, so Compose and SwiftUI only lay it out. */
 internal object DormitoryPresenter {
@@ -21,16 +25,16 @@ internal object DormitoryPresenter {
      * [answer] is the stored one (null before the first), [failure] the last refresh's error: with an answer it only
      * adds the age, without one it is the screen.
      */
-    fun present(answer: DormitoryAnswer?, failure: AppError?, refreshing: Boolean, now: Instant): DormitoryUiState {
+    fun present(answer: DormitoryAnswer?, failure: AppError?, refreshing: Boolean, time: AcademicTimeProvider): DormitoryUiState {
         if (answer == null) {
             val content = failure?.let { DormitoryContent.Failed(it.toUiText()) } ?: DormitoryContent.Loading
             return DormitoryUiState(content, refreshing)
         }
         val status = answer.status
         return DormitoryUiState(
-            content = if (status == null) DormitoryContent.NoApplication else shown(status),
+            content = if (status == null) DormitoryContent.NoApplication else shown(status, answer.fetchedAt, time),
             refreshing = refreshing,
-            stale = failure?.let { updatedText(answer.fetchedAt, now) },
+            stale = failure?.let { updatedText(answer.fetchedAt, time.now()) },
         )
     }
 
@@ -45,8 +49,8 @@ internal object DormitoryPresenter {
         }
     }
 
-    private fun shown(status: DormitoryStatus) = DormitoryContent.Shown(
-        stage = stageCard(status),
+    private fun shown(status: DormitoryStatus, fetchedAt: Instant, time: AcademicTimeProvider) = DormitoryContent.Shown(
+        stage = stageCard(status, fetchedAt, time),
         dormitory = status.dormitory?.let { place ->
             DormitoryPlace(place.name, place.address, MapDestination(place.name, place.address), place.instructions)
         },
@@ -60,7 +64,7 @@ internal object DormitoryPresenter {
         },
     )
 
-    private fun stageCard(status: DormitoryStatus): DormitoryStageCard = when (status.stage) {
+    private fun stageCard(status: DormitoryStatus, fetchedAt: Instant, time: AcademicTimeProvider): DormitoryStageCard = when (status.stage) {
         DormitoryStage.QUEUE -> DormitoryStageCard(
             title = UiText.Res(DormitoryStrings.dormitory_stage_queue),
             text = UiText.Res(DormitoryStrings.dormitory_queue_text),
@@ -72,6 +76,10 @@ internal object DormitoryPresenter {
             text = UiText.Res(DormitoryStrings.dormitory_place_offered_text),
             tone = DormitoryTone.ATTENTION,
             chooseDate = true,
+            seen = UiText.Res(
+                DormitoryStrings.dormitory_place_offered_seen,
+                listOf(seenText(status.placeOfferedSeenAt ?: fetchedAt, time)),
+            ),
         )
         DormitoryStage.DATE_CHOSEN -> DormitoryStageCard(
             title = UiText.Res(DormitoryStrings.dormitory_stage_date_chosen),
@@ -88,6 +96,12 @@ internal object DormitoryPresenter {
             text = UiText.Res(DormitoryStrings.dormitory_unknown_text),
             tone = DormitoryTone.NEUTRAL,
         )
+    }
+
+    /** When `Место предоставлено` was first seen: `09:40` today, `7 нояб., 09:40` before. */
+    fun seenText(at: Instant, time: AcademicTimeProvider): String {
+        val local = at.toLocalDateTime(time.timeZone)
+        return if (local.date == time.today()) local.time.format(DateTexts.TIME) else local.format(DateTexts.DAY_SHORT_MONTH_TIME)
     }
 
     /** The stage's name for Профиль's row. */

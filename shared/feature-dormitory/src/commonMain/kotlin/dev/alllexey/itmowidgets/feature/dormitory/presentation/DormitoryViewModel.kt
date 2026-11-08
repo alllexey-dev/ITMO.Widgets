@@ -6,8 +6,8 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryRepository
-import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.stateIn
  */
 class DormitoryViewModel(
     private val repository: DormitoryRepository,
-    private val clock: Clock,
+    private val time: AcademicTimeProvider,
 ) : ViewModel() {
 
     private val refreshes = RefreshTracker(viewModelScope)
@@ -34,7 +34,7 @@ class DormitoryViewModel(
         failure,
         refreshes.refreshing,
     ) { answer, error, refreshing ->
-        DormitoryPresenter.present(answer, error, refreshing, clock.now())
+        DormitoryPresenter.present(answer, error, refreshing, time)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, DormitoryUiState())
 
     init {

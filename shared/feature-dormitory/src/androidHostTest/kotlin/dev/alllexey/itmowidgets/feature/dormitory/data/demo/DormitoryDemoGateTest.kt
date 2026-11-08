@@ -1,9 +1,11 @@
 package dev.alllexey.itmowidgets.feature.dormitory.data.demo
 
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.today.TodayTodo
 import dev.alllexey.itmowidgets.feature.dormitory.DormitoryHarness
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryContent
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryProfileEntrySource
+import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryTodoSource
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryViewModel
 import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
@@ -29,21 +31,25 @@ class DormitoryDemoGateTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun theDemoShowsASettledResidentAndNoRequestLeavesTheDevice() = runTest(main.dispatcher) {
+    fun theDemoShowsASettledResidentWithNothingToDoAndNoRequestLeavesTheDevice() = runTest(main.dispatcher) {
         val harness = DormitoryHarness(main.dispatcher, demo = true)
         val repository = harness.repository()
 
-        val state = DormitoryViewModel(repository, harness.clock).also { advanceUntilIdle() }.uiState.value
+        val state = DormitoryViewModel(repository, harness.time).also { advanceUntilIdle() }.uiState.value
         val rows = mutableListOf<Any?>()
+        val todos = mutableListOf<List<TodayTodo>>()
         val reading = launch { DormitoryProfileEntrySource(repository, harness.clock).observe().collect { rows += it } }
+        val todoReading = launch { DormitoryTodoSource(repository, harness.time).observe().collect { todos += it } }
         advanceUntilIdle()
         reading.cancel()
+        todoReading.cancel()
 
         val shown = state.content as DormitoryContent.Shown
         assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), shown.stage.title)
         assertNotNull(shown.dormitory)
         assertNull(shown.documents)
         assertNotNull(rows.last())
+        assertEquals(emptyList(), todos.last())
         assertEquals(emptyList<HttpRequestData>(), harness.requests)
     }
 }

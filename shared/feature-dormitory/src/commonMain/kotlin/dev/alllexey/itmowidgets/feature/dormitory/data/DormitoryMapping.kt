@@ -29,6 +29,16 @@ internal fun ApiStatus.toStored(documents: List<ApiDocument>) = StoredStatus(
     documents = documents.map { StoredDocument(it.documentTypeName, it.statusName, it.status == DOCUMENT_CONFIRMED) },
 )
 
+/**
+ * [this] new status with the time `Место предоставлено` was first seen: kept from the [previous] answer while the
+ * stage stays, [fetchedAt] when it first appears, dropped once the stage leaves.
+ */
+internal fun StoredStatus.seenSince(previous: DormitoryStatus?, fetchedAt: Instant): StoredStatus {
+    if (stageOf(statusId) != DormitoryStage.PLACE_OFFERED) return copy(placeOfferedSeenAt = null)
+    val kept = previous?.takeIf { it.stage == DormitoryStage.PLACE_OFFERED }?.placeOfferedSeenAt
+    return copy(placeOfferedSeenAt = (kept ?: fetchedAt).toEpochMilliseconds())
+}
+
 internal fun StoredDormitory.toAnswer() = DormitoryAnswer(
     status = status?.let { stored ->
         DormitoryStatus(
@@ -36,6 +46,7 @@ internal fun StoredDormitory.toAnswer() = DormitoryAnswer(
             queuePlace = stored.queuePlace,
             dormitory = stored.dormitory?.let { AssignedDormitory(it.name, it.address, SafeHtml.parse(it.instructionsHtml)) },
             documents = stored.documents.map { SettlementDocument(it.name, it.status, it.confirmed) },
+            placeOfferedSeenAt = stored.placeOfferedSeenAt?.let(Instant::fromEpochMilliseconds),
         )
     },
     fetchedAt = Instant.fromEpochMilliseconds(fetchedAt),
