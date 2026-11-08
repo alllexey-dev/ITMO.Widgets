@@ -123,7 +123,7 @@ class DormitoryContractTest {
         assertEquals(listOf("00-00000002"), contracts.current.map { it.id })
         val past = checkNotNull(contracts.pastYears)
         assertEquals(false, past.expanded)
-        assertEquals(listOf(UiText.Res(CoreStrings.contract_academic_year, listOf(2025, 2026))), past.years.map { it.title })
+        assertEquals(listOf(UiText.Res(CoreStrings.contract_academic_year, listOf("2025", "2026"))), past.years.map { it.title })
         val card = past.years.single().contracts.single()
         assertEquals(BalanceLine(UiText.Res(CoreStrings.contract_balance), rubles("0"), PaymentTone.NEUTRAL), card.balance)
         assertEquals(false, card.pay)

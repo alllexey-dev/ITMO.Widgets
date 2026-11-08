@@ -336,4 +336,4 @@ private fun text(key: String, vararg arguments: Any): String = UiText.Res(key, a
 
 private val ButtonIcon = 18.dp
 
-private const val SEPARATOR = " · "
+private const val SEPARATOR = " \u00B7 "

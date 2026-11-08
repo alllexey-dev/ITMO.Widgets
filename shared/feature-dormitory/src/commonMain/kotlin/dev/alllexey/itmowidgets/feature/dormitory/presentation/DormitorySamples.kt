@@ -115,12 +115,8 @@ object DormitorySamples {
     /** A resident with a Долг: October overdue, November due today. */
     val debt: DormitoryUiState = shown(DormitoryStatus(DormitoryStage.SETTLED, null, dormitory, emptyList()), contracts = listOf(withDebt))
 
-    /** Last year's Договор найма unfolded under `Прошлые годы`. */
-    val pastYears: DormitoryUiState = shown(
-        DormitoryStatus(DormitoryStage.SETTLED, null, dormitory, emptyList()),
-        contracts = listOf(onTime, lastYear),
-        pastYearsExpanded = true,
-    )
+    /** A former resident: only last year's Договор найма, unfolded under `Прошлые годы`. */
+    val pastYears: DormitoryUiState = shown(null, contracts = listOf(lastYear), pastYearsExpanded = true)
 
     /** A Договор найма without a dormitory application. */
     val contractOnly: DormitoryUiState = shown(null, contracts = listOf(onTime))

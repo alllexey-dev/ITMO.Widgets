@@ -38,7 +38,7 @@ internal class DormitoryDebtPreview {
 }
 
 internal class DormitoryPastYearsPreview {
-    @Preview(name = "past-years", heightDp = 1500)
+    @Preview(name = "past-years", heightDp = 900)
     @Composable
     fun Dormitory() = ItmoPreview { DormitoryScreen(DormitorySamples.pastYears, DormitoryActions()) }
 }

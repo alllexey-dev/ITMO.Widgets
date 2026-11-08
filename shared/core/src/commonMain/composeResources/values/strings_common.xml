@@ -168,7 +168,7 @@
     <string name="contract_kind_rent">Договор найма</string>
     <string name="contract_kind_tuition">Договор об обучении</string>
     <string name="contract_subtitle">№ %1$s · %2$s – %3$s</string>
-    <string name="contract_academic_year">%1$d/%2$d учебный год</string>
+    <string name="contract_academic_year">%1$s/%2$s учебный год</string>
     <string name="contract_debt">Долг</string>
     <string name="contract_overpaid">Переплата</string>
     <string name="contract_balance">Баланс</string>

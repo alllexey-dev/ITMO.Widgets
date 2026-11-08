@@ -49,8 +49,9 @@ object PaymentTexts {
         listOf(contract.number, contract.start.format(DateTexts.DAY_MONTH_YEAR), contract.end.format(DateTexts.DAY_MONTH_YEAR)),
     )
 
-    /** `2025/2026 учебный год`. */
-    fun academicYear(year: AcademicYear): UiText = UiText.Res(CoreStrings.contract_academic_year, listOf(year.startYear, year.endYear))
+    /** `2025/2026 учебный год`; the years go as text, so no platform groups their digits. */
+    fun academicYear(year: AcademicYear): UiText =
+        UiText.Res(CoreStrings.contract_academic_year, listOf(year.startYear.toString(), year.endYear.toString()))
 
     /** The Долг when there is one, else the overpayment or a zero balance. */
     fun balance(contract: Contract, today: LocalDate): BalanceLine {
