@@ -213,6 +213,20 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   load shows the list skeleton on Android, the error and sign-in states have icons, and attachments show a download
   mark.
 
+### Общежитие и оплата
+
+- `Общежитие` in Профиль (a new `Университет` group) on both platforms while the student has a dormitory
+  application: the Этап общежития (`В очереди` with the queue place, `Место предоставлено` with
+  `Выбрать дату заселения`, `Дата заселения выбрана`, `Заселён`), the assigned dormitory with its address,
+  `На карте` in the system map app and the settlement instructions as safe text, and the Документы для заселения
+  with their status and `Загрузить` while a place is offered or a date is picked. Picking a date and uploading open
+  my.itmo's dormitory section inside the app. The last answer is kept on the device: offline or on an error the
+  screen shows it with `Обновлено N назад`. The demo shows a settled resident and sends nothing. Read from my.itmo
+  through MyItmoApi's dormitory area; nothing goes to Backend.
+- For developers: the ISU HTML parser moved to core as `SafeHtml`/`RichText` (with the kit's `RichTextParagraph`
+  and iOS `ItmoRichText`), `AppRoutes.MyItmoWeb(path)` opens a section of my.itmo, and features add rows to
+  Профиль through `ProfileEntrySource`.
+
 ### Widgets
 
 - Rebuilt on one shared snapshot (RemoteViews on Android, WidgetKit on iOS): `Пара` with the lesson to go to and a

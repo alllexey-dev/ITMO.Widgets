@@ -57,6 +57,8 @@ Non-obvious per-area rules:
 - `Синхронизация с календарём` returns `CalendarSyncResult.DEMO_UNAVAILABLE`;
   `.ics` export works on the demo schedule.
 - Sport auto-sign pushes are ignored (`SportSignPushHandler`).
+- `Общежитие` shows a settled resident of the fictional `Общежитие №1` (`DemoDormitory`); `Выбрать дату заселения`
+  and `Загрузить` would open My ITMO, which the demo refuses.
 - Widgets do not show demo data on Android: without an ITMO.ID token they stay
   signed out. Store widget images come from `WidgetPreviewImagesTest` (`ITMO_WRITE_WIDGET_PREVIEWS=1`).
 
