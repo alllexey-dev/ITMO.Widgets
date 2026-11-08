@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.dormitory.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,11 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.location.MapDestination
+import dev.alllexey.itmowidgets.core.text.PaymentTone
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
@@ -40,7 +43,9 @@ import dev.alllexey.itmowidgets.designsystem.kit.StaleContent
 import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.dormitory.presentation.ContractCard
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryContent
+import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryContracts
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryDocuments
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryPlace
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryStageCard
@@ -52,6 +57,8 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_apartment
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_event_available
+import dev.alllexey.itmowidgets.shared.designsystem.ic_expand_more
+import dev.alllexey.itmowidgets.shared.designsystem.ic_history
 import dev.alllexey.itmowidgets.shared.designsystem.ic_map
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_upload
@@ -67,6 +74,9 @@ data class DormitoryActions(
     val onOpenMyItmo: () -> Unit = {},
     val onOpenMap: (MapDestination) -> Unit = {},
     val onLink: (String) -> Unit = {},
+    /** `Оплатить`: my.itmo in the system browser. */
+    val onPay: () -> Unit = {},
+    val onTogglePastYears: () -> Unit = {},
 )
 
 /** Tags for host tests. */
@@ -74,11 +84,14 @@ object DormitoryTestTags {
     const val CHOOSE_DATE = "dormitory_choose_date"
     const val UPLOAD = "dormitory_upload"
     const val MAP = "dormitory_map"
+    const val PAY = "dormitory_pay"
+    const val PAST_YEARS = "dormitory_past_years"
 }
 
 /**
  * `Общежитие` (docs/features/dormitory.md): the Этап общежития with the queue place or `Выбрать дату заселения`, the
- * Документы для заселения while they matter, the assigned dormitory with `На карте` and the settlement instructions;
+ * Документы для заселения while they matter, the Договоры найма with their Платежи and `Оплатить`, the assigned
+ * dormitory with `На карте` and the settlement instructions;
  * the stored answer dimmed under `Обновлено 2 ч назад` when my.itmo did not answer. Stateless; [DormitoryRoute] feeds
  * it.
  */
@@ -135,6 +148,7 @@ private fun Shown(content: DormitoryContent.Shown, actions: DormitoryActions) {
     Column(verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content)) {
         content.stage?.let { Stage(it, actions) }
         content.documents?.let { Documents(it, actions) }
+        content.contracts?.let { Contracts(it, actions) }
         content.dormitory?.let { Place(it, actions) }
     }
 }
@@ -228,6 +242,89 @@ private fun Place(place: DormitoryPlace, actions: DormitoryActions) {
     }
 }
 
+/** The current Договоры найма, then `Прошлые годы`, unfolded on a tap. */
+@Composable
+private fun Contracts(contracts: DormitoryContracts, actions: DormitoryActions) {
+    contracts.current.forEach { ContractSection(it, actions) }
+    val past = contracts.pastYears ?: return
+    ListGroup(Modifier.padding(top = ItmoTheme.spacing.content)) {
+        item {
+            ListRow(
+                text(CoreStrings.contract_past_years),
+                Modifier.testTag(DormitoryTestTags.PAST_YEARS),
+                icon = painterResource(Res.drawable.ic_history),
+                iconTone = Tone.Neutral,
+                accessory = {
+                    Icon(
+                        painterResource(Res.drawable.ic_expand_more),
+                        null,
+                        Modifier.rotate(if (past.expanded) 180f else 0f),
+                        tint = ItmoTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                onClick = actions.onTogglePastYears,
+            )
+        }
+    }
+    if (past.expanded) {
+        past.years.forEach { year ->
+            Text(
+                year.title.asString(),
+                Modifier.padding(top = ItmoTheme.spacing.content, start = ItmoTheme.spacing.related).semantics { heading() },
+                color = ItmoTheme.colorScheme.onSurfaceVariant,
+                style = ItmoTheme.typography.labelLarge,
+            )
+            year.contracts.forEach { ContractSection(it, actions) }
+        }
+    }
+}
+
+/** One Договор: its kind, number and dates, the balance with `Оплатить`, then its Платежи. */
+@Composable
+private fun ContractSection(contract: ContractCard, actions: DormitoryActions) {
+    SectionHeader(contract.title.asString(), Modifier.padding(top = ItmoTheme.spacing.content))
+    ItmoCard(tone = if (contract.balance.tone == PaymentTone.DEBT) Tone.Error else null) {
+        Text(contract.subtitle.asString(), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+        Row(
+            Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.related),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+        ) {
+            Text(contract.balance.label.asString(), Modifier.weight(1f), style = ItmoTheme.typography.titleMedium)
+            Text(contract.balance.amount.asString(), style = ItmoTheme.typography.titleLarge)
+        }
+        if (contract.pay) {
+            TonalButton(
+                onClick = actions.onPay,
+                modifier = Modifier.padding(top = ItmoTheme.spacing.related).testTag(DormitoryTestTags.PAY),
+            ) {
+                Icon(painterResource(Res.drawable.ic_open_in_new), null, Modifier.size(ButtonIcon))
+                Text(text(CoreStrings.contract_pay), Modifier.padding(start = ItmoTheme.spacing.related))
+            }
+        }
+    }
+    if (contract.payments.isEmpty()) return
+    ListGroup(Modifier.padding(top = ItmoTheme.spacing.related)) {
+        contract.payments.forEach { payment ->
+            item {
+                ListRow(
+                    payment.period,
+                    subtitle = listOfNotNull(payment.due, payment.paid).map { it.asString() }.joinToString(SEPARATOR),
+                    trailing = payment.amount.asString(),
+                    below = payment.pill?.let { pill -> { StatusPill(pill.text.asString(), tone = pill.tone.kitTone()) } },
+                )
+            }
+        }
+    }
+}
+
+private fun PaymentTone.kitTone(): Tone = when (this) {
+    PaymentTone.NEUTRAL -> Tone.Neutral
+    PaymentTone.DONE -> Tone.Success
+    PaymentTone.ATTENTION -> Tone.Warning
+    PaymentTone.DEBT -> Tone.Error
+}
+
 private fun DormitoryTone.cardTone(): Tone? = when (this) {
     DormitoryTone.NEUTRAL -> null
     DormitoryTone.ATTENTION -> Tone.Warning
@@ -238,3 +335,5 @@ private fun DormitoryTone.cardTone(): Tone? = when (this) {
 private fun text(key: String, vararg arguments: Any): String = UiText.Res(key, arguments.toList()).asString()
 
 private val ButtonIcon = 18.dp
+
+private const val SEPARATOR = " · "

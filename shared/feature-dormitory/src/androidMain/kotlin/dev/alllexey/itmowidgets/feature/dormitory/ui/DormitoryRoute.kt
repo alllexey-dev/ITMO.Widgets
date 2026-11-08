@@ -12,12 +12,15 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryViewModel
+import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryWeb
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
 import kotlinx.coroutines.launch
 
 /**
  * The dormitory screen over its view model. `На карте` opens the system map app (a snackbar when none can), links in
- * the instructions open outside the app, [onOpenMyItmo] the dormitory section of my.itmo in the app.
+ * the instructions open outside the app, [onOpenMyItmo] the dormitory section of my.itmo in the app, `Оплатить` the same
+ * section in the system browser (a snackbar when none can).
  */
 @Composable
 fun DormitoryRoute(
@@ -42,6 +45,12 @@ fun DormitoryRoute(
             onOpenMyItmo = onOpenMyItmo,
             onOpenMap = { destination -> if (!platform.openMap(destination)) mapFailed() },
             onLink = { url -> platform.openLink(url) },
+            onPay = {
+                if (!platform.openLink(DormitoryWeb.PAY_URL)) {
+                    scope.launch { snackbars.showSnackbar(UiText.Res(CoreStrings.contract_pay_unavailable).resolve()) }
+                }
+            },
+            onTogglePastYears = viewModel::togglePastYears,
         ),
         modifier = modifier,
         snackbarHostState = snackbars,

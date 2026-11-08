@@ -28,8 +28,9 @@ class DormitoryScreenTest {
         setContent { ItmoTheme { DormitoryScreen(state, DormitoryActions()) } }
 
         for (value in listOf(
-            DormitorySamples.placeOffered, DormitorySamples.dateChosen, DormitorySamples.settled, DormitorySamples.offline,
-            DormitorySamples.none, DormitorySamples.failed, DormitorySamples.loading,
+            DormitorySamples.placeOffered, DormitorySamples.dateChosen, DormitorySamples.settled, DormitorySamples.debt,
+            DormitorySamples.pastYears, DormitorySamples.contractOnly, DormitorySamples.offline, DormitorySamples.none,
+            DormitorySamples.failed, DormitorySamples.loading,
         )) {
             state = value
             waitForIdle()
@@ -51,6 +52,33 @@ class DormitoryScreenTest {
 
         assertEquals(2, myItmo)
         assertEquals(listOf(MapDestination("Общежитие №1", "Санкт-Петербург, Примерный пер., 1")), maps)
+    }
+
+    @Test
+    fun aDebtShowsEveryPaymentAndPayOpensTheBrowser() = runComposeUiTest {
+        var pays = 0
+        setContent { ItmoTheme { DormitoryScreen(DormitorySamples.debt, DormitoryActions(onPay = { pays++ })) } }
+
+        onNodeWithText("Долг").performScrollTo().assertExists()
+        onNodeWithText("Просрочен").performScrollTo().assertExists()
+        onNodeWithText("Сегодня").performScrollTo().assertExists()
+        onNodeWithTag(DormitoryTestTags.PAY).performScrollTo().performClick()
+
+        assertEquals(1, pays)
+    }
+
+    @Test
+    fun pastYearsUnfoldOnATap() = runComposeUiTest {
+        var toggles = 0
+        var state by mutableStateOf(DormitorySamples.settled)
+        setContent { ItmoTheme { DormitoryScreen(state, DormitoryActions(onTogglePastYears = { toggles++ })) } }
+        onNodeWithTag(DormitoryTestTags.PAST_YEARS).assertDoesNotExist()
+
+        state = DormitorySamples.pastYears
+        onNodeWithText("2025/2026 учебный год").performScrollTo().assertExists()
+        onNodeWithTag(DormitoryTestTags.PAST_YEARS).performScrollTo().performClick()
+
+        assertEquals(1, toggles)
     }
 
     @Test

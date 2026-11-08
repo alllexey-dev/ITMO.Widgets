@@ -26,9 +26,27 @@ internal class DormitoryDateChosenPreview {
 }
 
 internal class DormitorySettledPreview {
-    @Preview(name = "settled", heightDp = 900)
+    @Preview(name = "settled", heightDp = 1300)
     @Composable
     fun Dormitory() = ItmoPreview { DormitoryScreen(DormitorySamples.settled, DormitoryActions()) }
+}
+
+internal class DormitoryDebtPreview {
+    @Preview(name = "debt", heightDp = 1100)
+    @Composable
+    fun Dormitory() = ItmoPreview { DormitoryScreen(DormitorySamples.debt, DormitoryActions()) }
+}
+
+internal class DormitoryPastYearsPreview {
+    @Preview(name = "past-years", heightDp = 1500)
+    @Composable
+    fun Dormitory() = ItmoPreview { DormitoryScreen(DormitorySamples.pastYears, DormitoryActions()) }
+}
+
+internal class DormitoryContractOnlyPreview {
+    @Preview(name = "contract-only", heightDp = 900)
+    @Composable
+    fun Dormitory() = ItmoPreview { DormitoryScreen(DormitorySamples.contractOnly, DormitoryActions()) }
 }
 
 internal class DormitoryOfflinePreview {
