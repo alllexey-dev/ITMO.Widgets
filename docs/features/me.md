@@ -19,7 +19,8 @@ settings: [Settings](../settings.md).
 - `Университет`: the rows features add without Профиль depending on them, each a `ProfileEntry` (`core/profile`: id,
   icon, title, subtitle, route) from a `ProfileEntrySource` the feature registers under its own qualifier;
   `MeViewModel` reads `getAll()` and shows a row while its source has one, ordered by id. The group is drawn only with
-  a row: `Общежитие` ([Dormitory](dormitory.md)) while the student has a Этап общежития or a Договор найма.
+  a row: `Общежитие` ([Dormitory](dormitory.md)) while the student has a Этап общежития or a Договор найма, and
+  `Оплата обучения` ([Finances](finances.md)) while the student has a Договор об обучении.
 - `Виджеты` (the gallery), `Устройства` (installs, connected clients and ITMO.ID sessions, with the count and a
   warning pill, [connected clients](connections.md)), `Настройки` (every setting, the connection, privacy and
   notifications included)

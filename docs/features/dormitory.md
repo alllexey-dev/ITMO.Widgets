@@ -51,7 +51,8 @@ text, so both platforms only lay it out.
 ## Договор найма
 
 Each Договор найма is a section titled `Договор найма`; `DormitoryPresenter` builds it from core's payments domain
-(`core/payments`, texts in `core/text/PaymentTexts.kt`), which the tuition screen shares.
+(`core/payments`, texts in `core/text/PaymentTexts.kt`, the sections in `core/text/ContractCards.kt`, drawn by the
+kit's `ContractSections` and iOS `ItmoContractList`), which the [tuition screen](finances.md) shares.
 
 - A card with `№ <number> · <start> - <end>` and one balance line: `Долг` with the amount (error tone) when the
   Договор is a Долг, `Переплата` for a positive balance, else `Баланс 0 ₽`. The Долг amount is the negative balance,

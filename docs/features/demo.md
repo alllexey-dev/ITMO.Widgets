@@ -60,6 +60,7 @@ Non-obvious per-area rules:
 - `Общежитие` shows a settled resident of the fictional `Общежитие №1` (`DemoDormitory`) with one Договор найма and
   one upcoming Платёж, 12 days ahead; `Выбрать дату заселения` and `Загрузить` would open My ITMO, which the demo
   refuses.
+- `Оплата обучения` has no row: the demo student is on a budget place (`DemoTuition`), no request is sent.
 - Widgets do not show demo data on Android: without an ITMO.ID token they stay
   signed out. Store widget images come from `WidgetPreviewImagesTest` (`ITMO_WRITE_WIDGET_PREVIEWS=1`).
 

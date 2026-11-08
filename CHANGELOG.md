@@ -238,6 +238,14 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   Профиль through `ProfileEntrySource`. The payments domain shared by dormitory and tuition is in core
   (`core/payments`: `Contract`, `Payment`, `Money`, `PaymentState`, `ContractsByYear`; texts in
   `core/text/PaymentTexts.kt`).
+- `Оплата обучения` in Профиль on both platforms for a student on paid study: each Договор об обучении with its
+  balance, the Долг or overpayment, and the schedule of Платежи, drawn like the Договор найма; earlier years fold
+  into `Прошлые годы`. `Оплатить` opens my.itmo's tuition page in the system browser. The row is hidden on a budget
+  place and in the demo; the last answer is kept on the device with `Обновлено N назад`. Read from my.itmo through
+  MyItmoApi's finances area; nothing goes to Backend.
+- For developers: new module `:shared:feature-finances` (the scholarship joins it later). The Договор sections are
+  shared: `ContractList` in core (`core/text/ContractCards.kt`), the kit's `ContractSections` on Android and
+  `ItmoContractList` in the iOS DesignSystem; the stored answer's age is core's `updatedAgo`.
 
 ### Widgets
 

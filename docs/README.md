@@ -40,6 +40,7 @@ limits. Start there; the documents below are the developer reference.
 - [Campus map](features/map.md) - floor plans, room mapping, the router.
 - [ISU messages](features/isu-messages.md) - the own ISU inbox, read on the device.
 - [Dormitory](features/dormitory.md) - the Этап общежития, the assigned dormitory, the settlement documents.
+- [Finances](features/finances.md) - the Договоры об обучении with their Платежи.
 - [Sport](features/sport.md) - catalog, bookings, queues.
 - [Recordbook](features/recordbook.md) - the MyITMO record book and the BARS overlay.
 - [Subject page](features/subject-page.md) - one subject's result, links, teachers, lessons.
