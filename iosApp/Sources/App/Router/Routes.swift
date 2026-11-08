@@ -44,6 +44,7 @@ enum Routes {
         case .map: return map(route)
         case .messages: return messages(route)
         case .dormitory: return dormitory(route)
+        case .finances: return finances(route)
         case .debug: return debug(route)
         }
     }

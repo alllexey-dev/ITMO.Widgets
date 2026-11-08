@@ -1,0 +1,42 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "tuition_none_text" : {
+      "comment" : "Generated from strings_finances.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если вы учитесь на платной основе, договор появится здесь, когда ИТМО его оформит"
+          }
+        }
+      }
+    },
+    "tuition_none_title" : {
+      "comment" : "Generated from strings_finances.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Договоров об обучении нет"
+          }
+        }
+      }
+    },
+    "tuition_title" : {
+      "comment" : "Generated from strings_finances.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оплата обучения"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

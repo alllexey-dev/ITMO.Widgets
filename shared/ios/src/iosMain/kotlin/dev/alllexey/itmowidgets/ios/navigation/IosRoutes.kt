@@ -38,6 +38,7 @@ enum class RouteFeature {
     MAP,
     MESSAGES,
     DORMITORY,
+    FINANCES,
     DEBUG,
 }
 
@@ -116,6 +117,7 @@ object IosRoutes {
         AppRoutes.CampusMap::class to RouteFeature.MAP,
         AppRoutes.IsuMessages::class to RouteFeature.MESSAGES,
         AppRoutes.Dormitory::class to RouteFeature.DORMITORY,
+        AppRoutes.Tuition::class to RouteFeature.FINANCES,
         AppRoutes.UserSport::class to RouteFeature.SPORT,
         AppRoutes.SportPoints::class to RouteFeature.SPORT,
         AppRoutes.CancelBookingConfirm::class to RouteFeature.SPORT,
