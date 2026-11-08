@@ -110,6 +110,28 @@ Ideas that need a decision before they become work:
 - Subject links: a cross-subject list of own links, a Сегодня card for
   moderation results.
 - Teacher reviews: hand ITMO.Widgets reviews over to the Reviews project.
-- Proposed without a verdict: sport debt and history, the official teacher
-  card, request statuses, scholarship totals, a live "идёт пара" update,
-  lesson reminders, electives, the study plan, a session view.
+- Accepted, not scheduled (owner, 2026-11-08):
+  - Sport: remaining sign-up attempts in `Моё`.
+  - Session: the next exam and consultation in the record book's session
+    window and on the subject page. No admission requirements: teachers set
+    their own rules.
+  - Scholarship: payments in Профиль and a bell event (MyItmoApi needs the
+    `income` and `account` calls).
+  - Requests and certificates: statuses, ready PDFs and a bell event on a
+    status change; submitting a request comes later.
+  - Lesson reminders and a live "идёт пара" notification (Android) or Live
+    Activity (iOS).
+  - Dormitory: stage, queue place, contract balance and payments due; a
+    must-have.
+  - Calendar subscription: a secret `.ics` URL served by Backend.
+  - Electives: built during a development election campaign, so it can be
+    tested on real data.
+- Later: background checks of ISU messages and messages per subject; room
+  booking with friends on the campus map (separate tables of a quiet coworking
+  drawn on the map), a large feature.
+- Rejected for now: the study plan (ITMO's data is unreliable), room occupancy
+  (works poorly), the day's lessons inside sport sign-up, the record book
+  change feed, the electronic queue, sport competitions, small schedule options
+  (the flow in the lesson row, snapping back to today).
+- Still without a verdict: sport debt and history, the medical group, the
+  official teacher card.
