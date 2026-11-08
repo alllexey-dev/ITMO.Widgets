@@ -47,6 +47,7 @@ include(
     ":shared:feature-map",
     ":shared:feature-messages",
     ":shared:feature-dormitory",
+    ":shared:feature-finances",
     ":shared:ios",
 )
 include(":konsist")

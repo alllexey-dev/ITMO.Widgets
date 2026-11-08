@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsIosModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
 import dev.alllexey.itmowidgets.feature.dormitory.di.dormitoryModule
+import dev.alllexey.itmowidgets.feature.finances.di.financesModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapIosModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapModule
@@ -102,6 +103,8 @@ object IosKoinModules {
         messagesModule, messagesIosModule,
         // The dormitory from my.itmo with its stored answer and its row in Профиль.
         dormitoryModule,
+        // The Договоры об обучении from my.itmo with their stored answer and the row in Профиль.
+        financesModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record, the build's site until then. */

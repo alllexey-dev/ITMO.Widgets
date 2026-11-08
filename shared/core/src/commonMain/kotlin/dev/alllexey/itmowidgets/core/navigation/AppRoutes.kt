@@ -239,6 +239,12 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** `Оплата обучения` of Профиль (docs/features/finances.md): the Договоры об обучении with their Платежи. */
+    @Serializable
+    data object Tuition : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
     /** `ИСУ` of Профиль (docs/features/me.md): the entries to [IsuMessages] and [Wifi]. */
     @Serializable
     data object Isu : AppRoute {
@@ -307,6 +313,7 @@ object AppRoutes {
         subclass(PendingSportDetails::class)
         subclass(CampusMap::class)
         subclass(Dormitory::class)
+        subclass(Tuition::class)
         subclass(Isu::class)
         subclass(IsuMessages::class)
         subclass(ReportReview::class)

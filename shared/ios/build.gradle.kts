@@ -46,6 +46,8 @@ kotlin {
             export(project(":shared:feature-messages"))
             // The dormitory ViewModel and its samples.
             export(project(":shared:feature-dormitory"))
+            // The tuition ViewModel and its samples.
+            export(project(":shared:feature-finances"))
         }
     }
 
@@ -60,6 +62,7 @@ kotlin {
             api(project(":shared:feature-map"))
             api(project(":shared:feature-messages"))
             api(project(":shared:feature-dormitory"))
+            api(project(":shared:feature-finances"))
             api(project(":shared:feature-recordbook"))
             api(project(":shared:feature-social"))
             api(project(":shared:feature-settings"))

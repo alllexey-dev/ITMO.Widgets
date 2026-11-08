@@ -52,6 +52,7 @@ object RouteSamples {
         AppRoutes.PendingSportDetails(pendingSport),
         AppRoutes.CampusMap(CampusMapArgs(lesson, route = true)),
         AppRoutes.Dormitory,
+        AppRoutes.Tuition,
         AppRoutes.Isu,
         AppRoutes.IsuMessages,
         AppRoutes.ReportReview(teacher, "review-1"),

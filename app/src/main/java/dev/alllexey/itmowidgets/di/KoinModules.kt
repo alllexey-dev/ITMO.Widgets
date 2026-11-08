@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
 import dev.alllexey.itmowidgets.feature.dormitory.di.dormitoryModule
+import dev.alllexey.itmowidgets.feature.finances.di.financesModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
@@ -60,6 +61,7 @@ object KoinModules {
         campusMapModule,
         messagesModule,
         dormitoryModule,
+        financesModule,
         settingsDataModule,
         settingsModule,
         recordbookModule,
