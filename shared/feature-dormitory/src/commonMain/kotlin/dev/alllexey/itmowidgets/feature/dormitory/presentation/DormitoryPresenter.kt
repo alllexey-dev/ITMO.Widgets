@@ -38,12 +38,11 @@ internal object DormitoryPresenter {
             val content = failure?.let { DormitoryContent.Failed(it.toUiText()) } ?: DormitoryContent.Loading
             return DormitoryUiState(content, refreshing)
         }
-        val status = answer.status
         return DormitoryUiState(
-            content = if (!answer.hasAnything) {
-                DormitoryContent.NoApplication
+            content = if (answer.hasAnything) {
+                shown(answer.status, contracts(answer.contracts, today, pastYearsExpanded))
             } else {
-                shown(status).copy(contracts = contracts(answer.contracts, today, pastYearsExpanded))
+                DormitoryContent.NoApplication
             },
             refreshing = refreshing,
             stale = failure?.let { updatedText(answer.fetchedAt, now) },
@@ -92,7 +91,7 @@ internal object DormitoryPresenter {
         }
     }
 
-    private fun shown(status: DormitoryStatus?) = DormitoryContent.Shown(
+    private fun shown(status: DormitoryStatus?, contracts: DormitoryContracts?) = DormitoryContent.Shown(
         stage = status?.let(::stageCard),
         dormitory = status?.dormitory?.let { place ->
             DormitoryPlace(place.name, place.address, MapDestination(place.name, place.address), place.instructions)
@@ -105,6 +104,7 @@ internal object DormitoryPresenter {
         } else {
             null
         },
+        contracts = contracts,
     )
 
     private fun stageCard(status: DormitoryStatus): DormitoryStageCard = when (status.stage) {
