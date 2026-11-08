@@ -8,6 +8,7 @@
     <!-- Профиль hub -->
     <string name="me_group_people">Люди</string>
     <string name="me_group_links">Ссылки</string>
+    <string name="me_group_university">Университет</string>
     <string name="me_friends_title">Друзья</string>
     <string name="me_friends_none">Пока никого</string>
     <string name="me_friends_loading">Загружаем…</string>

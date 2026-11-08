@@ -57,7 +57,7 @@ struct MeContentActions {
     var signOut: () -> Void = {}
 }
 
-/// The tab without the ViewModel: the identity card, the people, app and link groups and the sign-out.
+/// The tab without the ViewModel: the identity card, the people, feature, app and link groups and the sign-out.
 struct MeContent: View {
     let state: MeUiState
     var actions = MeContentActions()
@@ -67,6 +67,10 @@ struct MeContent: View {
             MeIdentityCard(header: state.header)
             ItmoSectionHeader(title: AppStrings.string("me_group_people"))
             people
+            if !state.entries.isEmpty {
+                ItmoSectionHeader(title: AppStrings.string("me_group_university"))
+                university
+            }
             ItmoSectionHeader(title: AppStrings.string("me_group_app"))
             app
             ItmoSectionHeader(title: AppStrings.string("me_group_links"))
@@ -107,6 +111,23 @@ struct MeContent: View {
                     Text(verbatim: requests > 0 ? AppStrings.string("me_requests_badge_accessibility", [requests]) : "")
                 )
                 .accessibilityIdentifier("friends_row")
+            }
+        }
+    }
+
+    /// The rows features add (the dormitory), each opening the route it names.
+    private var university: some View {
+        ItmoListGroup {
+            ForEach(state.entries, id: \.id) { entry in
+                ItmoRow(
+                    title: entry.title.resolved,
+                    subtitle: entry.subtitle?.resolved,
+                    symbol: entry.icon.symbol,
+                    tone: .primary,
+                    chevron: true,
+                    action: { actions.open(entry.route) }
+                )
+                .accessibilityIdentifier("profile_entry_\(entry.id)")
             }
         }
     }

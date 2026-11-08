@@ -154,6 +154,7 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb()) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },
     onOpenDebugTools = { navigator.open(AppRoutes.DebugTools) },
+    onOpenRoute = { route -> navigator.open(route) },
     onShareProfile = { name, isu ->
         context.shareOwnProfile(KoinStarter.ensureStarted(context).get<ShareLinkFactory>(), name, isu)
     },

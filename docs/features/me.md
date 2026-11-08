@@ -16,6 +16,10 @@ settings: [Settings](../settings.md).
   user, else Backend's own profile; the study group line only from Backend's primary group; the ISU.
 - `Друзья` with the counts and the incoming requests as a badge. Without the connection
   (`MeFriendsSummary.Disabled`) a gate with `Подключить` stands in its place and opens «Сервер ITMO.Widgets».
+- `Университет`: the rows features add without Профиль depending on them, each a `ProfileEntry` (`core/profile`: id,
+  icon, title, subtitle, route) from a `ProfileEntrySource` the feature registers under its own qualifier;
+  `MeViewModel` reads `getAll()` and shows a row while its source has one, ordered by id. The group is drawn only with
+  a row: `Общежитие` while the student has a Этап общежития.
 - `Виджеты` (the gallery), `Устройства` (installs, connected clients and ITMO.ID sessions, with the count and a
   warning pill, [connected clients](connections.md)), `Настройки` (every setting, the connection, privacy and
   notifications included)

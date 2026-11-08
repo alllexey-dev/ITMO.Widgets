@@ -1,11 +1,14 @@
 package dev.alllexey.itmowidgets.feature.me.presentation
 
 import dev.alllexey.itmowidgets.core.model.RelationshipState
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.model.UserGroup
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.profile.ProfileEntry
+import dev.alllexey.itmowidgets.core.profile.ProfileEntrySource
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.session.CurrentUser
@@ -15,6 +18,7 @@ import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeDevicesOverview
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CorePlurals
 import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
@@ -23,6 +27,8 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
@@ -150,6 +156,29 @@ class MeViewModelTest {
 
         assertEquals(1, repository.signOutRequests)
         assertEquals(false, viewModel.uiState.value.signOutInProgress)
+    }
+
+    @Test
+    fun featureRowsShowWhileTheirSourceHasOneInAStableOrder() = runTest(main.dispatcher) {
+        val payments = ProfileEntry("payments", AppIcon.TABLE, UiText.Dynamic("Оплата"), null, AppRoutes.Bell)
+        val dormitory = ProfileEntry("dormitory", AppIcon.SCHOOL, UiText.Dynamic("Общежитие"), UiText.Dynamic("Заселён"), AppRoutes.Friends)
+        val dormitoryRow = MutableStateFlow<ProfileEntry?>(null)
+        val sources = listOf(ProfileEntrySource { flowOf(payments) }, ProfileEntrySource { dormitoryRow })
+
+        val viewModel = MeViewModel(
+            FakeSessionRepository(SessionState.SignedIn(null)), FakeSocialRepository(), FakeCustomServicesRepository(true),
+            FakeDevicesOverview(), sources,
+        )
+        advanceUntilIdle()
+        assertEquals(listOf(payments), viewModel.uiState.value.entries)
+
+        dormitoryRow.value = dormitory
+        advanceUntilIdle()
+        assertEquals(listOf(dormitory, payments), viewModel.uiState.value.entries)
+
+        dormitoryRow.value = null
+        advanceUntilIdle()
+        assertEquals(listOf(payments), viewModel.uiState.value.entries)
     }
 
     private fun friendProfile(isu: Int) = UserProfile(

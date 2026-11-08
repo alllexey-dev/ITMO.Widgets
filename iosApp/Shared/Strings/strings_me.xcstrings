@@ -169,6 +169,18 @@
         }
       }
     },
+    "me_group_university" : {
+      "comment" : "Generated from strings_me.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Университет"
+          }
+        }
+      }
+    },
     "me_isu" : {
       "comment" : "Generated from strings_me.xml",
       "extractionState" : "manual",
