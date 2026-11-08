@@ -37,6 +37,7 @@ enum class AppIcon(val id: String) {
     NOTIFICATION("notification"),
     OPEN_IN_NEW("open_in_new"),
     PALETTE("palette"),
+    PAYMENTS("payments"),
     PERSON("person"),
     PERSON_FILLED("person_filled"),
     QR_CODE("qr_code"),

@@ -33,6 +33,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_palette
+import dev.alllexey.itmowidgets.shared.designsystem.ic_payments
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person_filled
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
@@ -84,6 +85,7 @@ val AppIcon.drawable: DrawableResource
         AppIcon.NOTIFICATION -> Res.drawable.ic_notification
         AppIcon.OPEN_IN_NEW -> Res.drawable.ic_open_in_new
         AppIcon.PALETTE -> Res.drawable.ic_palette
+        AppIcon.PAYMENTS -> Res.drawable.ic_payments
         AppIcon.PERSON -> Res.drawable.ic_person
         AppIcon.PERSON_FILLED -> Res.drawable.ic_person_filled
         AppIcon.QR_CODE -> Res.drawable.ic_qr_code
