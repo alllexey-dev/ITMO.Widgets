@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.feature.messages.presentation
 
+import dev.alllexey.itmowidgets.core.text.RichText
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuFolder
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageBody
 
 /**
  * The ISU messages screen: the [folder] tabs, the list of the chosen folder and, when [opened] is set, one message
@@ -61,7 +61,7 @@ data class IsuMessageDetail(
     val subject: String,
     val sender: String,
     val date: String,
-    val body: MessageBody,
+    val body: RichText,
     val attachments: List<IsuAttachmentRow>,
     val unread: Boolean,
 )

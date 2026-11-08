@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.messages.data
 
 import com.fleeksoft.ksoup.nodes.Entities
+import dev.alllexey.itmowidgets.core.text.SafeHtml
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuAttachment
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuMessage
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuMessagesPage
@@ -45,7 +46,7 @@ internal object IsuMessagesJson {
             date = item.string("date")?.let(::date),
             time = item.string("sender_date")?.let(::time),
             read = item.string("is_read")?.equals("Y", ignoreCase = true) ?: true,
-            body = MessageHtml.parse(item.string("text").orEmpty()),
+            body = SafeHtml.parse(item.string("text").orEmpty()),
             attachments = (item["files"] as? JsonArray).orEmpty().mapNotNull { (it as? JsonObject)?.let(::attachment) },
         )
     }

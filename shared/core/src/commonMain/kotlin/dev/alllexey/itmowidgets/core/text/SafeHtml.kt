@@ -1,26 +1,23 @@
-package dev.alllexey.itmowidgets.feature.messages.data
+package dev.alllexey.itmowidgets.core.text
 
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Element
 import com.fleeksoft.ksoup.nodes.Node
 import com.fleeksoft.ksoup.nodes.TextNode
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageBlock
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageBody
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageSpan
 
 /**
- * Turns the HTML of an ISU message (TinyMCE output: `p`, `div`, `span`, `br`, `strong`, `em`, `u`, `a`, `ol`/`ul`,
- * tables) into a [MessageBody] by a whitelist. Text, bold, italic, underline, lists and `http(s)` links survive;
+ * Turns HTML from ITMO (an ISU message's TinyMCE output, my.itmo's dormitory settlement instructions: `p`, `div`,
+ * `span`, `br`, `strong`, `em`, `u`, `a`, `ol`/`ul`, tables) into a [RichText] by a whitelist. Text, bold, italic, underline, lists and `http(s)` links survive;
  * everything else (styles, classes, images, scripts, forms, other link schemes) is dropped, keeping the text it
  * holds. Bare `http(s)` addresses in the text become links too, as teachers often paste them unformatted.
  */
-internal object MessageHtml {
+object SafeHtml {
 
-    fun parse(html: String): MessageBody {
-        if (html.isBlank()) return MessageBody.EMPTY
+    fun parse(html: String): RichText {
+        if (html.isBlank()) return RichText.EMPTY
         val builder = Builder()
         builder.walk(Ksoup.parseBodyFragment(html).body(), Style())
-        return MessageBody(builder.finish())
+        return RichText(builder.finish())
     }
 
     private data class Style(
@@ -31,8 +28,8 @@ internal object MessageHtml {
     )
 
     private class Builder {
-        private val blocks = mutableListOf<MessageBlock>()
-        private var spans = mutableListOf<MessageSpan>()
+        private val blocks = mutableListOf<RichTextBlock>()
+        private var spans = mutableListOf<RichTextSpan>()
         private var marker: String? = null
 
         fun walk(node: Node, style: Style) {
@@ -94,7 +91,7 @@ internal object MessageHtml {
                 text
             }
             if (trimmed.isEmpty()) return
-            val run = MessageSpan(trimmed, style.bold, style.italic, style.underline, style.link)
+            val run = RichTextSpan(trimmed, style.bold, style.italic, style.underline, style.link)
             if (last != null && last.copy(text = "") == run.copy(text = "")) {
                 spans[spans.lastIndex] = last.copy(text = last.text + trimmed)
             } else {
@@ -104,18 +101,18 @@ internal object MessageHtml {
 
         fun flush() {
             val cleaned = trim(spans)
-            if (cleaned.isNotEmpty()) blocks += MessageBlock(cleaned.flatMap(::autolink), marker)
+            if (cleaned.isNotEmpty()) blocks += RichTextBlock(cleaned.flatMap(::autolink), marker)
             spans = mutableListOf()
             marker = null
         }
 
-        fun finish(): List<MessageBlock> {
+        fun finish(): List<RichTextBlock> {
             flush()
             return blocks
         }
 
         /** Drops spaces and line breaks at the block's ends and runs left empty. */
-        private fun trim(runs: List<MessageSpan>): List<MessageSpan> {
+        private fun trim(runs: List<RichTextSpan>): List<RichTextSpan> {
             val list = runs.toMutableList()
             while (list.isNotEmpty()) {
                 val first = list.first().let { it.copy(text = it.text.trimStart(' ', '\n')) }
@@ -129,11 +126,11 @@ internal object MessageHtml {
         }
 
         /** Splits bare `http(s)` addresses out of an unlinked run. */
-        private fun autolink(span: MessageSpan): List<MessageSpan> {
+        private fun autolink(span: RichTextSpan): List<RichTextSpan> {
             if (span.link != null) return listOf(span)
             val matches = BARE_URL.findAll(span.text).toList()
             if (matches.isEmpty()) return listOf(span)
-            val parts = mutableListOf<MessageSpan>()
+            val parts = mutableListOf<RichTextSpan>()
             var at = 0
             matches.forEach { match ->
                 val url = match.value.trimEnd(*TRAILING_PUNCTUATION)
@@ -147,7 +144,7 @@ internal object MessageHtml {
     }
 
     /** Only absolute `http` and `https` addresses; `javascript:`, `mailto:`, relative links and the like are text. */
-    internal fun safeLink(href: String): String? {
+    fun safeLink(href: String): String? {
         val value = href.trim()
         val scheme = value.substringBefore(':', "").lowercase()
         if (scheme != "http" && scheme != "https") return null

@@ -233,19 +233,7 @@ struct IsuMessageDetailView: View {
                 }
             }
             .padding(.top, ItmoSpacing.compact)
-            VStack(alignment: .leading, spacing: ItmoSpacing.content) {
-                ForEach(Array(detail.body.blocks.enumerated()), id: \.offset) { _, block in
-                    HStack(alignment: .firstTextBaseline, spacing: ItmoSpacing.related) {
-                        if let marker = block.marker {
-                            Text(verbatim: marker).foregroundStyle(.secondary).frame(minWidth: 20, alignment: .leading)
-                        }
-                        Text(Self.attributed(block))
-                    }
-                    .font(.itmo(.bodyLarge))
-                }
-            }
-            .textSelection(.enabled)
-            .itmoTint()
+            ItmoRichText(text: detail.body)
             if !detail.attachments.isEmpty {
                 ItmoSectionHeader(title: AppStrings.string("isu_messages_files"), count: "\(detail.attachments.count)")
                 ItmoListGroup {
@@ -274,19 +262,5 @@ struct IsuMessageDetailView: View {
         }
         .itmoDetailHeader(title: detail.subject, subtitle: nil)
         .accessibilityIdentifier("isu_messages.detail")
-    }
-
-    /// The block's runs with their styles; a link is an `https` address the shared parser let through.
-    static func attributed(_ block: MessageBlock) -> AttributedString {
-        block.spans.reduce(into: AttributedString()) { result, span in
-            var part = AttributedString(span.text)
-            var intent: InlinePresentationIntent = []
-            if span.bold { intent.insert(.stronglyEmphasized) }
-            if span.italic { intent.insert(.emphasized) }
-            part.inlinePresentationIntent = intent
-            if span.underline { part.underlineStyle = .single }
-            if let link = span.link, let url = URL(string: link) { part.link = url }
-            result += part
-        }
     }
 }

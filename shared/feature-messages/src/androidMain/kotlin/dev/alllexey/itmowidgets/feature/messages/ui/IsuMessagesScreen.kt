@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -28,17 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withLink
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -58,12 +48,12 @@ import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroup
 import dev.alllexey.itmowidgets.designsystem.kit.ListGroupNote
 import dev.alllexey.itmowidgets.designsystem.kit.ListRow
+import dev.alllexey.itmowidgets.designsystem.kit.RichTextParagraph
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.SegmentedChoice
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuFolder
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageBlock
 import dev.alllexey.itmowidgets.feature.messages.presentation.IsuMessageDetail
 import dev.alllexey.itmowidgets.feature.messages.presentation.IsuMessageRow
 import dev.alllexey.itmowidgets.feature.messages.presentation.IsuMessagesList
@@ -280,7 +270,7 @@ private fun MessageDetail(message: IsuMessageDetail, downloading: String?, actio
                     Modifier.padding(vertical = ItmoTheme.spacing.related),
                     verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
                 ) {
-                    message.body.blocks.forEach { block -> BodyBlock(block, actions.onLink) }
+                    message.body.blocks.forEach { block -> RichTextParagraph(block, actions.onLink) }
                 }
             }
         }
@@ -316,32 +306,6 @@ private fun MessageDetail(message: IsuMessageDetail, downloading: String?, actio
     }
 }
 
-/** A paragraph, or a list item with its marker hanging before the text. */
-@Composable
-private fun BodyBlock(block: MessageBlock, onLink: (String) -> Unit) {
-    val colors = ItmoTheme.colorScheme
-    val links = TextLinkStyles(SpanStyle(color = colors.primary, textDecoration = TextDecoration.Underline))
-    val text: AnnotatedString = buildAnnotatedString {
-        block.spans.forEach { span ->
-            val style = SpanStyle(
-                fontWeight = if (span.bold) FontWeight.Bold else null,
-                fontStyle = if (span.italic) FontStyle.Italic else null,
-                textDecoration = if (span.underline) TextDecoration.Underline else null,
-            )
-            val link = span.link
-            if (link == null) {
-                withStyle(style) { append(span.text) }
-            } else {
-                withLink(LinkAnnotation.Url(link, links) { onLink(link) }) { withStyle(style) { append(span.text) } }
-            }
-        }
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
-        block.marker?.let { Text(it, Modifier.widthIn(min = MarkerWidth), style = ItmoTheme.typography.bodyLarge, color = colors.onSurfaceVariant) }
-        Text(text, style = ItmoTheme.typography.bodyLarge, color = colors.onSurface)
-    }
-}
-
 @Composable
 private fun screenPadding() = PaddingValues(
     start = ItmoTheme.spacing.screenMargin,
@@ -357,4 +321,3 @@ private const val SKELETON_ROWS = 5
 private val AvatarSize = 40.dp
 private val SmallIcon = 16.dp
 private val UnreadDot = 8.dp
-private val MarkerWidth = 20.dp

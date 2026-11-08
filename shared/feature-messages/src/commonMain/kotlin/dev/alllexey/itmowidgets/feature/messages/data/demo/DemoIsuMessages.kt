@@ -1,6 +1,6 @@
 package dev.alllexey.itmowidgets.feature.messages.data.demo
 
-import dev.alllexey.itmowidgets.feature.messages.data.MessageHtml
+import dev.alllexey.itmowidgets.core.text.SafeHtml
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuAttachment
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuFolder
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuMessage
@@ -78,5 +78,5 @@ internal object DemoIsuMessages {
         read: Boolean,
         html: String,
         attachments: List<IsuAttachment> = emptyList(),
-    ) = IsuMessage(id, sender, subject, date, time, read, MessageHtml.parse(html), attachments)
+    ) = IsuMessage(id, sender, subject, date, time, read, SafeHtml.parse(html), attachments)
 }
