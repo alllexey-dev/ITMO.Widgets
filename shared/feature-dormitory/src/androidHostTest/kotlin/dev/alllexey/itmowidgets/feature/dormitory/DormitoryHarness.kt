@@ -98,7 +98,7 @@ class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolea
         documents?.let { answers[DOCUMENTS] = fixture(it) }
     }
 
-    /** The academic years in [periods] and, for each year that starts on a key of [contracts], its Договоры найма. */
+    /** The calendar-year periods in [periods] and, for each period that starts on a key of [contracts], its Договоры найма. */
     fun contracts(periods: String, contracts: Map<String, String>) {
         answers[PERIODS] = fixture(periods)
         contracts.forEach { (from, name) -> answers["$CONTRACTS?from=$from"] = fixture(name) }

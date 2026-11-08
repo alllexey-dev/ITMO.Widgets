@@ -37,19 +37,25 @@ internal fun ApiStatus.toStored(documents: List<ApiDocument>) = StoredStatus(
     documents = documents.map { StoredDocument(it.documentTypeName, it.statusName, it.status == DOCUMENT_CONFIRMED) },
 )
 
-/** A Договор найма of the academic year starting in [year]; ITMO's dates are read as calendar dates in [zone]. */
-internal fun ApiContract.toStored(year: Int, zone: TimeZone) = StoredContract(
-    id = contractId,
-    number = number,
-    start = dateStart.toLocalDateTime(zone).date,
-    end = dateEnd.toLocalDateTime(zone).date,
-    academicYear = year,
-    active = active,
-    balance = Money.ofRubles(balance).kopecks,
-    payments = payments.map {
-        StoredPayment(Money.ofRubles(it.sum).kopecks, Money.ofRubles(it.paid).kopecks, it.payUntil.toLocalDateTime(zone).date, it.period)
-    },
-)
+/**
+ * A Договор найма of the academic year its start date falls in, whatever period listed it; ITMO's dates are read as
+ * calendar dates in [zone].
+ */
+internal fun ApiContract.toStored(zone: TimeZone): StoredContract {
+    val start = dateStart.toLocalDateTime(zone).date
+    return StoredContract(
+        id = contractId,
+        number = number,
+        start = start,
+        end = dateEnd.toLocalDateTime(zone).date,
+        academicYear = AcademicYear.of(start).startYear,
+        active = active,
+        balance = Money.ofRubles(balance).kopecks,
+        payments = payments.map {
+            StoredPayment(Money.ofRubles(it.sum).kopecks, Money.ofRubles(it.paid).kopecks, it.payUntil.toLocalDateTime(zone).date, it.period)
+        },
+    )
+}
 
 private fun StoredContract.toContract() = Contract(
     id = id,

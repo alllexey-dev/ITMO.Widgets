@@ -41,7 +41,7 @@ class DormitoryContractTest {
     @Test
     fun aResidentSeesTheBalanceAndEveryPaymentWithWhatIsPaid() = runTest(main.dispatcher) {
         harness.answer("status-settled.json")
-        harness.contracts("periods-current.json", mapOf("2026-09-01" to "contracts-debt.json"))
+        harness.contracts("periods-current.json", mapOf("2026-01-01" to "contracts-debt.json"))
 
         val contracts = shown().contracts
 
@@ -85,13 +85,13 @@ class DormitoryContractTest {
             harness.paths(),
         )
         val query = harness.requests.last().url.parameters
-        assertEquals("2026-09-01" to "2027-08-31", query["from"] to query["to"])
+        assertEquals("2026-01-01" to "2026-12-31", query["from"] to query["to"])
     }
 
     @Test
     fun anOverpaymentAndAPartlyPaidPaymentDueWithinAWeek() = runTest(main.dispatcher) {
         harness.answer("status-settled.json")
-        harness.contracts("periods-current.json", mapOf("2026-09-01" to "contracts-clear.json"))
+        harness.contracts("periods-current.json", mapOf("2026-01-01" to "contracts-clear.json"))
 
         val card = checkNotNull(shown().contracts).current.single()
 
@@ -110,11 +110,29 @@ class DormitoryContractTest {
     }
 
     @Test
+    fun aContractInTwoCalendarYearsIsShownOnceAsTheLatestPeriodHasIt() = runTest(main.dispatcher) {
+        harness.answer("status-settled.json")
+        harness.contracts(
+            "periods-two-years.json",
+            mapOf("2025-01-01" to "contracts-overlap-earlier.json", "2026-01-01" to "contracts-overlap-latest.json"),
+        )
+
+        val contracts = checkNotNull(shown().contracts)
+
+        assertEquals(listOf("00-00000002", "00-00000005"), contracts.current.map { it.id })
+        val card = contracts.current.last()
+        assertEquals(BalanceLine(UiText.Res(CoreStrings.contract_debt), rubles("1${NBSP}400"), PaymentTone.DEBT), card.balance)
+        assertEquals(PaymentPill(UiText.Res(CoreStrings.payment_paid), PaymentTone.DONE), card.payments.first().pill)
+        assertNull(contracts.pastYears)
+    }
+
+    /** The 2025/2026 Договор comes in the 2026 calendar period too and still folds under its academic year. */
+    @Test
     fun earlierAcademicYearsFoldIntoPastYears() = runTest(main.dispatcher) {
         harness.answer("status-settled.json")
         harness.contracts(
             "periods-two-years.json",
-            mapOf("2025-09-01" to "contracts-past.json", "2026-09-01" to "contracts-clear.json"),
+            mapOf("2025-01-01" to "contracts-past.json", "2026-01-01" to "contracts-clear-and-past.json"),
         )
 
         val viewModel = viewModel().also { advanceUntilIdle() }
@@ -138,7 +156,7 @@ class DormitoryContractTest {
         harness.answer("status-settled.json")
         harness.contracts(
             "periods-two-years.json",
-            mapOf("2025-09-01" to "contracts-past-debt.json", "2026-09-01" to "contracts-clear.json"),
+            mapOf("2025-01-01" to "contracts-past-debt.json", "2026-01-01" to "contracts-clear.json"),
         )
 
         val contracts = checkNotNull(shown().contracts)
@@ -154,7 +172,7 @@ class DormitoryContractTest {
     @Test
     fun aContractWithoutAnApplicationIsShownWithoutAStage() = runTest(main.dispatcher) {
         harness.answer("status-empty.json")
-        harness.contracts("periods-current.json", mapOf("2026-09-01" to "contracts-clear.json"))
+        harness.contracts("periods-current.json", mapOf("2026-01-01" to "contracts-clear.json"))
 
         val shown = shown()
 
@@ -166,7 +184,7 @@ class DormitoryContractTest {
     @Test
     fun offlineTheContractsComeFromTheStoredAnswer() = runTest(main.dispatcher) {
         harness.answer("status-settled.json")
-        harness.contracts("periods-current.json", mapOf("2026-09-01" to "contracts-debt.json"))
+        harness.contracts("periods-current.json", mapOf("2026-01-01" to "contracts-debt.json"))
         viewModel().also { advanceUntilIdle() }
 
         harness.offline = true
