@@ -1,24 +1,18 @@
 package dev.alllexey.itmowidgets.feature.dormitory.presentation
 
 import dev.alllexey.itmowidgets.core.location.MapDestination
-import dev.alllexey.itmowidgets.core.payments.Contract
-import dev.alllexey.itmowidgets.core.payments.ContractsByYear
 import dev.alllexey.itmowidgets.core.result.AppError
+import dev.alllexey.itmowidgets.core.text.ContractList
 import dev.alllexey.itmowidgets.core.text.DateTexts
-import dev.alllexey.itmowidgets.core.text.PaymentTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
+import dev.alllexey.itmowidgets.core.text.updatedAgo
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryAnswer
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryStage
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryStatus
-import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryPlurals
 import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 
@@ -43,62 +37,20 @@ internal object DormitoryPresenter {
         }
         return DormitoryUiState(
             content = if (answer.hasAnything) {
-                shown(answer.status, answer.fetchedAt, time, contracts(answer.contracts, time.today(), pastYearsExpanded))
+                shown(answer.status, answer.fetchedAt, time, ContractList.of(answer.contracts, time.today(), pastYearsExpanded))
             } else {
                 DormitoryContent.NoApplication
             },
             refreshing = refreshing,
-            stale = failure?.let { updatedText(answer.fetchedAt, time.now()) },
+            stale = failure?.let { updatedAgo(answer.fetchedAt, time.now()) },
         )
-    }
-
-    private fun contracts(contracts: List<Contract>, today: LocalDate, pastYearsExpanded: Boolean): DormitoryContracts? {
-        if (contracts.isEmpty()) return null
-        val byYear = ContractsByYear.of(contracts, today)
-        return DormitoryContracts(
-            current = byYear.current.map { card(it, today) },
-            pastYears = byYear.past.takeIf { it.isNotEmpty() }?.let { past ->
-                PastYears(
-                    expanded = pastYearsExpanded,
-                    years = past.map { year -> ContractYearGroup(PaymentTexts.academicYear(year.year), year.contracts.map { card(it, today) }) },
-                )
-            },
-        )
-    }
-
-    private fun card(contract: Contract, today: LocalDate) = ContractCard(
-        id = contract.id,
-        title = PaymentTexts.kind(contract.kind),
-        subtitle = PaymentTexts.subtitle(contract),
-        balance = PaymentTexts.balance(contract, today),
-        pay = contract.hasSomethingToPay(),
-        payments = contract.payments.map { payment ->
-            PaymentRow(
-                period = payment.period,
-                amount = PaymentTexts.money(payment.amount),
-                due = PaymentTexts.due(payment, today),
-                paid = PaymentTexts.paidPart(payment),
-                pill = PaymentTexts.pill(payment, today),
-            )
-        },
-    )
-
-    /** `Обновлено 5 мин назад`, `Обновлено 3 ч назад`, `Обновлено 2 дня назад`. */
-    fun updatedText(at: Instant, now: Instant): UiText {
-        val elapsed = now - at
-        return when {
-            elapsed < 1.minutes -> UiText.Res(DormitoryStrings.dormitory_updated_now)
-            elapsed < 1.hours -> UiText.Res(DormitoryStrings.dormitory_updated_minutes, listOf(elapsed.inWholeMinutes.toInt()))
-            elapsed < 1.days -> UiText.Res(DormitoryStrings.dormitory_updated_hours, listOf(elapsed.inWholeHours.toInt()))
-            else -> elapsed.inWholeDays.toInt().let { UiText.Plural(DormitoryPlurals.dormitory_updated_days, it, listOf(it)) }
-        }
     }
 
     private fun shown(
         status: DormitoryStatus?,
         fetchedAt: Instant,
         time: AcademicTimeProvider,
-        contracts: DormitoryContracts?,
+        contracts: ContractList?,
     ) = DormitoryContent.Shown(
         stage = status?.let { stageCard(it, fetchedAt, time) },
         dormitory = status?.dormitory?.let { place ->

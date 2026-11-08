@@ -39,13 +39,4 @@
     <!-- States -->
     <string name="dormitory_none_title">Заявки на общежитие нет</string>
     <string name="dormitory_none_text">Когда вы встанете в очередь в my.itmo, здесь появится ваш этап</string>
-    <string name="dormitory_updated_now">Обновлено только что</string>
-    <string name="dormitory_updated_minutes">Обновлено %1$d мин назад</string>
-    <string name="dormitory_updated_hours">Обновлено %1$d ч назад</string>
-    <plurals name="dormitory_updated_days">
-        <item quantity="one">Обновлено %1$d день назад</item>
-        <item quantity="few">Обновлено %1$d дня назад</item>
-        <item quantity="many">Обновлено %1$d дней назад</item>
-        <item quantity="other">Обновлено %1$d дня назад</item>
-    </plurals>
 </resources>

@@ -1,13 +1,14 @@
 package dev.alllexey.itmowidgets.feature.dormitory.presentation
 
 import dev.alllexey.itmowidgets.core.text.BalanceLine
+import dev.alllexey.itmowidgets.core.text.ContractCard
 import dev.alllexey.itmowidgets.core.text.PaymentPill
+import dev.alllexey.itmowidgets.core.text.PaymentRow
 import dev.alllexey.itmowidgets.core.text.PaymentTone
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.dormitory.DormitoryHarness
 import dev.alllexey.itmowidgets.shared.core.CorePlurals
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
-import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -176,7 +177,7 @@ class DormitoryContractTest {
         val card = checkNotNull((state.content as DormitoryContent.Shown).contracts).current.single()
         assertEquals(rubles("1${NBSP}500"), card.balance.amount)
         assertEquals(4, card.payments.size)
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_updated_hours, listOf(2)), state.stale)
+        assertEquals(UiText.Res(CoreStrings.common_updated_hours, listOf(2)), state.stale)
     }
 
     @Test

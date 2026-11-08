@@ -7,7 +7,8 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.dormitory.DormitoryHarness
-import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryPlurals
+import dev.alllexey.itmowidgets.shared.core.CorePlurals
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
@@ -122,7 +123,7 @@ class DormitoryViewModelTest {
         val state = viewModel().also { advanceUntilIdle() }.uiState.value
 
         assertEquals(UiText.Res(DormitoryStrings.dormitory_queue_place, listOf(42)), (state.content as DormitoryContent.Shown).stage?.queuePlace)
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_updated_hours, listOf(2)), state.stale)
+        assertEquals(UiText.Res(CoreStrings.common_updated_hours, listOf(2)), state.stale)
     }
 
     @Test
@@ -135,7 +136,7 @@ class DormitoryViewModelTest {
         val viewModel = viewModel().also { advanceUntilIdle() }
         assertEquals(listOf(DormitoryHarness.STATUS, DormitoryHarness.PERIODS, DormitoryHarness.STATUS), harness.paths())
         assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), (viewModel.uiState.value.content as DormitoryContent.Shown).stage?.title)
-        assertEquals(UiText.Plural(DormitoryPlurals.dormitory_updated_days, 3, listOf(3)), viewModel.uiState.value.stale)
+        assertEquals(UiText.Plural(CorePlurals.common_updated_days, 3, listOf(3)), viewModel.uiState.value.stale)
 
         harness.answer("status-queue.json")
         viewModel.refresh()

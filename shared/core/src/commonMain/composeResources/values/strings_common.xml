@@ -164,6 +164,16 @@
     <string name="services_stored_links">Ваши ссылки к предметам</string>
     <string name="services_stored_device">Токен уведомлений этого устройства</string>
     <string name="services_stored_token">Токен ITMO.ID сервер проверяет один раз и не сохраняет. Пароль он не видит никогда.</string>
+    <!-- The age of a stored answer after a refresh failed -->
+    <string name="common_updated_now">Обновлено только что</string>
+    <string name="common_updated_minutes">Обновлено %1$d мин назад</string>
+    <string name="common_updated_hours">Обновлено %1$d ч назад</string>
+    <plurals name="common_updated_days">
+        <item quantity="one">Обновлено %1$d день назад</item>
+        <item quantity="few">Обновлено %1$d дня назад</item>
+        <item quantity="many">Обновлено %1$d дней назад</item>
+        <item quantity="other">Обновлено %1$d дня назад</item>
+    </plurals>
     <!-- Договоры and Платежи (dormitory and tuition) -->
     <string name="contract_kind_rent">Договор найма</string>
     <string name="contract_kind_tuition">Договор об обучении</string>

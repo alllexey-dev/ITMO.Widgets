@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.alllexey.itmowidgets.core.location.MapDestination
+import dev.alllexey.itmowidgets.designsystem.kit.ContractTestTags
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitorySamples
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
@@ -62,7 +63,7 @@ class DormitoryScreenTest {
         onNodeWithText("Долг").performScrollTo().assertExists()
         onNodeWithText("Просрочен").performScrollTo().assertExists()
         onNodeWithText("Сегодня").performScrollTo().assertExists()
-        onNodeWithTag(DormitoryTestTags.PAY).performScrollTo().performClick()
+        onNodeWithTag(ContractTestTags.PAY).performScrollTo().performClick()
 
         assertEquals(1, pays)
     }
@@ -72,11 +73,11 @@ class DormitoryScreenTest {
         var toggles = 0
         var state by mutableStateOf(DormitorySamples.settled)
         setContent { ItmoTheme { DormitoryScreen(state, DormitoryActions(onTogglePastYears = { toggles++ })) } }
-        onNodeWithTag(DormitoryTestTags.PAST_YEARS).assertDoesNotExist()
+        onNodeWithTag(ContractTestTags.PAST_YEARS).assertDoesNotExist()
 
         state = DormitorySamples.pastYears
         onNodeWithText("2025/2026 учебный год").performScrollTo().assertExists()
-        onNodeWithTag(DormitoryTestTags.PAST_YEARS).performScrollTo().performClick()
+        onNodeWithTag(ContractTestTags.PAST_YEARS).performScrollTo().performClick()
 
         assertEquals(1, toggles)
     }
