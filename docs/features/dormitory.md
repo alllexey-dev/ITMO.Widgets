@@ -24,7 +24,7 @@ text, so both platforms only lay it out.
   | `statusId` | Stage | Shows |
   |---|---|---|
   | 1 | `В очереди` | `Место в очереди: N` |
-  | 2 | `Место предоставлено` (warning tone) | that the window to pick a date is limited, never a computed deadline; `Выбрать дату заселения` |
+  | 2 | `Место предоставлено` (warning tone) | that the window to pick a date is limited, never a computed deadline; `Приложение видит этот этап с 09:40` (the time the app first saw it); `Выбрать дату заселения` |
   | 3 | `Дата заселения выбрана` | that ITMO must confirm the documents |
   | 4 | `Заселён` (success tone) | that the student lives in the dormitory |
   | other | `Заявка на общежитие` | a pointer to my.itmo |
@@ -43,6 +43,25 @@ text, so both platforms only lay it out.
 - States: loading (no stored answer yet); `Заявки на общежитие нет` for an empty status; `Не удалось загрузить` with
   the error and `Повторить` when nothing is stored and the request failed. Pull to refresh on both platforms.
 
+## Нужно сделать
+
+`DormitoryTodoSource` contributes to `Нужно сделать` on Сегодня ([Home](home.md)) through `core/today/TodayTodoSource`
+(qualifier `dormitory`). It reads only the stored answer, so the items show offline and Сегодня sends no dormitory
+request; the answer is refreshed by the screen and the Профиль row.
+
+| Item | While | Text |
+|---|---|---|
+| `Выберите дату заселения` | `Место предоставлено` | `Место предоставлено (видим с 09:40), время на выбор ограничено`; `7 нояб., 09:40` before today |
+| `Документ «…»` | `Место предоставлено` or `Дата заселения выбрана`, one per document not confirmed | ITMO's status label, `— нужен для заселения` |
+
+Each item's action is `Открыть`: `EntryRoute(AppTab.HOME, overlay = AppRoutes.Dormitory)`, the `Общежитие` screen over
+Сегодня on both platforms. Ids are stable (`dormitory-date`, `dormitory-document-<name>`). An item leaves with the
+answer that changes the stage or confirms the document. The demo is `Заселён`, so it shows none.
+
+The time is when the app first saw `Место предоставлено`, not when ITMO offered the place (my.itmo gives no time):
+a refresh that brings the stage stores its wall-clock time with the answer, later answers in the same stage keep it,
+an answer in another stage drops it, and sign-out removes it with the file. No deadline is computed.
+
 ## Data
 
 `DormitoryRepositoryImpl` (one instance, `dormitoryModule`) reads my.itmo through MyItmoApi's dormitory area:
@@ -53,8 +72,9 @@ text, so both platforms only lay it out.
 | `getDormitoryDocuments()` (`GET /api/dormitory/documents`) | only for stages 2 and 3 | `documentTypeName`, `status`, `status_name` |
 
 - **Stored answer.** The last successful answer is kept in dormitory/state.json in the no-backup directory (`DormitoryFileStore`)
-  with its wall-clock time and the account's ISU; the instructions are kept as ITMO's HTML and parsed again on read.
-  The screen and the Профиль row read it first, so they open offline. A file of another account or a corrupt one is
+  with its wall-clock time and the account's ISU, and while `Место предоставлено` the time the app first saw it; the
+  instructions are kept as ITMO's HTML and parsed again on read.
+  The screen, the Профиль row and `Нужно сделать` read it first, so they open offline. A file of another account or a corrupt one is
   removed. Sign-out removes it (`SessionDataCleaner` `dormitory`); an answer that lands after sign-out is dropped.
 - **Offline and errors.** A failed refresh keeps the stored answer and the screen shows it dimmed under
   `Обновлено N мин / ч назад` or `Обновлено N дней назад`; a later successful refresh drops the line. Errors map in
@@ -63,8 +83,8 @@ text, so both platforms only lay it out.
 - **Demo.** The demo session answers from `DemoDormitory` (`Заселён` in the fictional `Общежитие №1`) and sends no
   request (`DormitoryDemoGateTest`).
 
-Not here yet: the Договор найма and its Платежи (#569), the `Нужно сделать` items with the time `Место предоставлено`
-was first seen (#571), the background check, its notifications and bell events (#573).
+Not here yet: the Договор найма and its Платежи (#569), the background check, its notifications and bell events
+(#573).
 
 ## iOS
 
@@ -74,8 +94,10 @@ the Профиль row comes from the same `ProfileEntrySource` through `MeViewM
 
 ## Tests
 
-- `DormitoryViewModelTest`, `DormitoryProfileEntryTest`, `DormitoryDemoGateTest` (`androidHostTest`): the real
-  MyItmoApi client over a Ktor `MockEngine` for my.itmo.ru with synthetic fixtures in
-  `src/androidHostTest/resources/myitmo/dormitory/`, a fixed clock and a fake file system.
+- `DormitoryViewModelTest`, `DormitoryProfileEntryTest`, `DormitoryTodoSourceTest`, `DormitoryDemoGateTest`
+  (`androidHostTest`): the real MyItmoApi client over a Ktor `MockEngine` for my.itmo.ru with synthetic fixtures in
+  `src/androidHostTest/resources/myitmo/dormitory/`, a fixed clock and a fake file system; `DormitoryTodoSourceTest`
+  covers the items appearing and leaving with the stage and the documents, and the first-seen time across restarts,
+  stage changes and sign-out.
 - `DormitoryScreenTest` (Compose actions and touch targets), `DormitoryScreenshotTest` (baselines in
   `shared/feature-dormitory/screenshots/`), `DormitoryModuleTest`.

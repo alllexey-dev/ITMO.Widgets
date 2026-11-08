@@ -223,6 +223,10 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   my.itmo's dormitory section inside the app. The last answer is kept on the device: offline or on an error the
   screen shows it with `Обновлено N назад`. The demo shows a settled resident and sends nothing. Read from my.itmo
   through MyItmoApi's dormitory area; nothing goes to Backend.
+- `Нужно сделать` on Сегодня reminds about the dormitory on both platforms: `Выберите дату заселения` while
+  `Место предоставлено`, with the time the app first saw that stage and a note that the window is limited (no
+  deadline is computed), and one item per Документ для заселения ITMO has not confirmed. The items come from the
+  stored answer, so they show offline; tapping opens `Общежитие`. The screen shows the same first-seen time.
 - For developers: the ISU HTML parser moved to core as `SafeHtml`/`RichText` (with the kit's `RichTextParagraph`
   and iOS `ItmoRichText`), `AppRoutes.MyItmoWeb(path)` opens a section of my.itmo, and features add rows to
   Профиль through `ProfileEntrySource`.
