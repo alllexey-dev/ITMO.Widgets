@@ -5,7 +5,8 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The dormitory screen under the native bar on the shared states of `DormitorySamples`: each stage of the
-/// application, the stored answer offline, no application and a failure. Drawn without the ViewModel, 375 pt wide.
+/// application, the rental agreement with a debt, past years and without an application, the stored answer offline,
+/// no application and a failure. Drawn without the ViewModel, 375 pt wide.
 @MainActor
 final class DormitorySnapshotTests: XCTestCase {
     private let samples = DormitorySamples.shared
@@ -24,6 +25,18 @@ final class DormitorySnapshotTests: XCTestCase {
 
     func testSettled() {
         assertScreen(samples.settled, named: "settled")
+    }
+
+    func testDebt() {
+        assertScreen(samples.debt, named: "debt")
+    }
+
+    func testPastYears() {
+        assertScreen(samples.pastYears, named: "past-years")
+    }
+
+    func testContractOnly() {
+        assertScreen(samples.contractOnly, named: "contract-only")
     }
 
     func testOffline() {

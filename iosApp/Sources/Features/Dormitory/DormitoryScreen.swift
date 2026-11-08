@@ -3,8 +3,10 @@ import SwiftUI
 
 /// `dormitory_title` (`AppRoutes.Dormitory`, docs/features/dormitory.md) over the shared `DormitoryViewModel`: the
 /// stage of the dormitory application, the settlement documents while they matter, the assigned dormitory with
-/// `dormitory_on_map` in Apple Maps and the settlement instructions as the shared view model's plain blocks. Picking a
-/// date and uploading documents open my.itmo's dormitory section in the app (`DormitoryWeb.route`).
+/// `dormitory_on_map` in Apple Maps and the settlement instructions as the shared view model's plain blocks, and the
+/// rental agreements with their payments. Picking a date and uploading documents open my.itmo's dormitory section in
+/// the app (`DormitoryWeb.route`); `contract_pay` opens the same section in the system browser (`DormitoryWeb.PAY_URL`),
+/// since the in-app view does not follow the redirect to the bank.
 struct DormitoryScreen: View {
     @Environment(AppRouter.self) private var router
     @State private var model = ObservableViewModel(DormitoryViewModel.self, state: \.uiState)
@@ -32,7 +34,14 @@ struct DormitoryScreen: View {
                 if platform?.openMap(destination: destination) != true {
                     message = SettingsMessage(text: AppStrings.string("dormitory_map_unavailable"))
                 }
-            }
+            },
+            pay: {
+                let platform = IosKoin.shared.get(protocol: PlatformActions.self) as? PlatformActions
+                if platform?.openLink(url: DormitoryWeb.shared.PAY_URL) != true {
+                    message = SettingsMessage(text: AppStrings.string("contract_pay_unavailable"))
+                }
+            },
+            togglePastYears: { model.viewModel.togglePastYears() }
         )
     }
 
@@ -52,6 +61,8 @@ struct DormitoryActions {
     var retry: () -> Void = {}
     var openMyItmo: () -> Void = {}
     var openMap: (MapDestination) -> Void = { _ in }
+    var pay: () -> Void = {}
+    var togglePastYears: () -> Void = {}
 }
 
 /// The screen for one `DormitoryUiState`, without the ViewModel.
@@ -95,17 +106,17 @@ private struct DormitoryShownView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: ItmoSpacing.content) {
-            stage
+            if let stage = shown.stage { stageCard(stage) }
             if let documents = shown.documents {
                 DormitoryDocumentsView(documents: documents, upload: actions.openMyItmo)
             }
+            if let contracts = shown.contracts { DormitoryContractsView(contracts: contracts, actions: actions) }
             if let place = shown.dormitory { DormitoryPlaceView(place: place, openMap: actions.openMap) }
         }
     }
 
-    private var stage: some View {
-        let card = shown.stage
-        return ItmoCard(tone: card.tone.itmo, hero: true) {
+    private func stageCard(_ card: DormitoryStageCard) -> some View {
+        ItmoCard(tone: card.tone.itmo, hero: true) {
             Text(verbatim: card.title.resolved)
                 .font(.itmo(.titleLarge, emphasized: true))
                 .accessibilityAddTraits(.isHeader)
@@ -196,6 +207,100 @@ private struct DormitoryPlaceView: View {
             ItmoCard {
                 ItmoRichText(text: place.instructions)
             }
+        }
+    }
+}
+
+/// The current agreements, then `contract_past_years`, unfolded on a tap.
+private struct DormitoryContractsView: View {
+    let contracts: DormitoryContracts
+    let actions: DormitoryActions
+
+    var body: some View {
+        ForEach(contracts.current, id: \.id) { ContractView(contract: $0, pay: actions.pay) }
+        if let past = contracts.pastYears {
+            ItmoListGroup {
+                ItmoRow(
+                    title: AppStrings.string("contract_past_years"),
+                    symbol: .history,
+                    tone: .neutral,
+                    action: actions.togglePastYears
+                )
+                .accessory {
+                    AppSymbol.expandMore.image
+                        .font(.itmo(.bodySmall, emphasized: true))
+                        .foregroundStyle(.tertiary)
+                        .rotationEffect(.degrees(past.expanded ? 180 : 0))
+                        .accessibilityHidden(true)
+                }
+                .accessibilityIdentifier("dormitory.past_years")
+            }
+            if past.expanded {
+                ForEach(Array(past.years.enumerated()), id: \.offset) { _, year in
+                    Text(verbatim: year.title.resolved)
+                        .font(.itmo(.labelLarge, emphasized: true))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, ItmoKit.padding)
+                        .accessibilityAddTraits(.isHeader)
+                    ForEach(year.contracts, id: \.id) { ContractView(contract: $0, pay: actions.pay) }
+                }
+            }
+        }
+    }
+}
+
+/// One agreement: its kind, number and dates, the balance with `contract_pay`, then its payments.
+private struct ContractView: View {
+    let contract: ContractCard
+    let pay: () -> Void
+
+    var body: some View {
+        ItmoSectionHeader(title: contract.title.resolved)
+        ItmoCard(tone: contract.balance.tone == .debt ? .bad : nil) {
+            Text(verbatim: contract.subtitle.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline) {
+                Text(verbatim: contract.balance.label.resolved).font(.itmo(.titleMedium, emphasized: true))
+                Spacer(minLength: ItmoSpacing.content)
+                Text(verbatim: contract.balance.amount.resolved).font(.itmo(.titleLarge, emphasized: true))
+            }
+            .padding(.top, ItmoSpacing.related)
+            if contract.pay {
+                Button(action: pay) {
+                    Label {
+                        Text(verbatim: AppStrings.string("contract_pay"))
+                    } icon: {
+                        AppSymbol.openInNew.image
+                    }
+                    .foregroundStyle(ItmoColor.onPrimary)
+                }
+                .buttonStyle(.glassProminent)
+                .itmoTint()
+                .padding(.top, ItmoSpacing.related)
+                .accessibilityIdentifier("dormitory.pay")
+            }
+        }
+        if !contract.payments.isEmpty {
+            ItmoListGroup {
+                ForEach(Array(contract.payments.enumerated()), id: \.offset) { _, payment in
+                    ItmoRow(
+                        title: payment.period,
+                        subtitle: [payment.due, payment.paid].compactMap { $0?.resolved }.joined(separator: " \u{00B7} "),
+                        trailing: payment.amount.resolved,
+                        pill: payment.pill.map { ItmoPill(text: $0.text.resolved, tone: $0.tone.itmo) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+private extension PaymentTone {
+    var itmo: ItmoTone {
+        switch self {
+        case .neutral: .neutral
+        case .done: .ok
+        case .attention: .warn
+        case .debt: .bad
         }
     }
 }
