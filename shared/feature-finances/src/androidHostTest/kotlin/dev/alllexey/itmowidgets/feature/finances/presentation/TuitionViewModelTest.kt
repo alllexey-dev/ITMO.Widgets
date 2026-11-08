@@ -92,7 +92,7 @@ class TuitionViewModelTest {
         assertEquals(BalanceLine(UiText.Res(CoreStrings.contract_overpaid), rubles("250,75"), PaymentTone.DONE), card.balance)
         assertEquals(
             PaymentRow(
-                "Весенний семестр 2027",
+                "Ноябрь 2026",
                 rubles("120${NBSP}000"),
                 due("13 ноября"),
                 paid = UiText.Res(CoreStrings.payment_paid_part, listOf(rubles("20${NBSP}000"))),

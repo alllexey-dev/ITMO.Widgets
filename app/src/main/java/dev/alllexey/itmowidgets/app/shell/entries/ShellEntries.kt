@@ -39,4 +39,5 @@ fun shellEntries(debugTools: Boolean = BuildConfig.DEBUG): EntryRegistry = entry
     mapEntries()
     messagesEntries()
     dormitoryEntries()
+    financesEntries()
 }
