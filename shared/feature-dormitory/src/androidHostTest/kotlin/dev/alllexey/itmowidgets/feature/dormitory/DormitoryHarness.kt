@@ -1,0 +1,104 @@
+package dev.alllexey.itmowidgets.feature.dormitory
+
+import dev.alllexey.itmoapi.itmoid.TokenSet
+import dev.alllexey.itmoapi.itmoid.TokenStorage
+import dev.alllexey.itmoapi.myitmo.MyItmoClient
+import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
+import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
+import dev.alllexey.itmowidgets.core.session.CurrentUser
+import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
+import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.feature.dormitory.data.DormitoryFileStore
+import dev.alllexey.itmowidgets.feature.dormitory.data.DormitoryRepositoryImpl
+import dev.alllexey.itmowidgets.testkit.FakeClock
+import dev.alllexey.itmowidgets.testkit.respondJson
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockEngineConfig
+import io.ktor.client.request.HttpRequestData
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.io.IOException
+import okio.FileSystem
+import okio.Path.Companion.toPath
+import okio.fakefilesystem.FakeFileSystem
+
+/**
+ * The dormitory over the real MyItmoApi client on a `MockEngine`: my.itmo.ru answers by path from [answers], the
+ * stored token outlives every test. A fixed [clock], and a fake file system that outlives a [repository] as the
+ * device's files outlive the process. [offline] makes every request fail before an answer.
+ */
+class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolean = false) {
+    val clock = FakeClock(Instant.parse("2026-11-08T09:00:00Z"))
+    val files: FileSystem = FakeFileSystem()
+    val requests = mutableListOf<HttpRequestData>()
+    val answers = mutableMapOf<String, String>()
+    var offline = false
+    var isu: Int? = OWNER
+    val demoMode = FakeDemoMode(active = demo)
+
+    // On the test's dispatcher, so `advanceUntilIdle` waits for the answers too.
+    private val engine = MockEngine(
+        MockEngineConfig().apply {
+            dispatcher = this@DormitoryHarness.dispatcher
+            addHandler { request ->
+                requests += request
+                if (offline) throw IOException("offline")
+                when (request.url.host) {
+                    "my.itmo.ru" -> respondJson(
+                        answers[request.url.encodedPath]
+                            ?: throw AssertionError("Unexpected MyITMO request ${request.url.encodedPath}"),
+                    )
+                    else -> throw AssertionError("Unexpected host ${request.url.host}")
+                }
+            }
+        },
+    )
+
+    private val client = MyItmoClient(
+        MyItmoConfiguration.DEFAULT,
+        storage = InMemoryTokenStorage(TokenSet("stored-access", clock.now() + 365.days, "stored-refresh", clock.now() + 365.days, "header.payload.signature")),
+        engine = engine,
+        clock = clock,
+    )
+
+    private val user = object : CurrentUserProvider {
+        override suspend fun getCurrentUser(): CurrentUser? = CurrentUser(isu, null, null)
+    }
+
+    /** A new repository over the same files: a restart of the app. */
+    fun repository() = DormitoryRepositoryImpl(
+        client,
+        demoMode,
+        DormitoryFileStore("/no-backup/dormitory".toPath(), files),
+        user,
+        clock,
+        AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher),
+    )
+
+    fun answer(status: String, documents: String? = null) {
+        answers[STATUS] = fixture(status)
+        documents?.let { answers[DOCUMENTS] = fixture(it) }
+    }
+
+    fun paths(): List<String> = requests.filter { it.url.host == "my.itmo.ru" }.map { it.url.encodedPath }
+
+    private fun fixture(name: String): String =
+        checkNotNull(javaClass.getResourceAsStream("/myitmo/dormitory/$name")) { "No fixture $name" }
+            .use { it.readBytes().decodeToString() }
+
+    private class InMemoryTokenStorage(private var tokens: TokenSet?) : TokenStorage {
+
+        override suspend fun read(): TokenSet? = tokens
+
+        override suspend fun write(tokens: TokenSet?) {
+            this.tokens = tokens
+        }
+    }
+
+    companion object {
+        const val OWNER = 100001
+        const val STATUS = "/api/dormitory/status/full"
+        const val DOCUMENTS = "/api/dormitory/documents"
+    }
+}

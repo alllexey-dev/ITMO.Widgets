@@ -1,5 +1,8 @@
 package dev.alllexey.itmowidgets.feature.me.ui.preview
 
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.profile.ProfileEntry
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
 import dev.alllexey.itmowidgets.feature.me.presentation.MeHeader
@@ -8,7 +11,7 @@ import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 
 /**
  * Мария's Профиль (the design lab's synthetic data) at the lab's axes, for the Android previews and the iOS snapshot
- * tests: the connection on or off, incoming requests or none, and a long name.
+ * tests: the connection on or off, incoming requests or none, a feature's row, and a long name.
  */
 object MeSamples {
     private const val ISU = 284731
@@ -33,6 +36,13 @@ object MeSamples {
     )
 
     val loading: MeUiState = MeUiState(header = header(NAME), friends = MeFriendsSummary.Loading)
+
+    /** A row a feature adds: `Общежитие` with its stage, under `Университет`. */
+    val university: MeUiState = state(requests = "no").copy(
+        entries = listOf(
+            ProfileEntry("dormitory", AppIcon.APARTMENT, UiText.Dynamic("Общежитие"), UiText.Dynamic("Заселён"), AppRoutes.Dormitory),
+        ),
+    )
 
     val longName: MeUiState = state(requests = "no").copy(header = header(LONG_NAME).copy(initials = "КА"))
 }

@@ -630,6 +630,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.LessonDetails(args: lesson), .swiftUISheet),
             (AppRoutes.PendingSportDetails(args: pendingSport), .swiftUISheet),
             (AppRoutes.CampusMap(args: CampusMapArgs(lesson: lesson, route: true)), .fullScreen),
+            (AppRoutes.Dormitory.shared, .swiftUI),
             (AppRoutes.Isu.shared, .swiftUI),
             (AppRoutes.IsuMessages.shared, .swiftUI),
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .swiftUISheet),

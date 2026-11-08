@@ -4,6 +4,7 @@
 enum AppSymbol: String, CaseIterable {
     case accountBalance = "account_balance"
     case add = "add"
+    case apartment = "apartment"
     case arrowBack = "arrow_back"
     case arrowDropDown = "arrow_drop_down"
     case arrowForward = "arrow_forward"
@@ -114,6 +115,7 @@ enum AppSymbol: String, CaseIterable {
     case todayFilled = "today_filled"
     case tune = "tune"
     case undo = "undo"
+    case upload = "upload"
     case videocam = "videocam"
     case visibility = "visibility"
     case visibilityOff = "visibility_off"
@@ -128,6 +130,7 @@ enum AppSymbol: String, CaseIterable {
         switch self {
         case .accountBalance: "building.columns"
         case .add: "plus"
+        case .apartment: "building.2"
         case .arrowBack: "chevron.backward"
         case .arrowDropDown: "arrowtriangle.down.fill"
         case .arrowForward: "arrow.right"
@@ -238,6 +241,7 @@ enum AppSymbol: String, CaseIterable {
         case .todayFilled: "sun.max.fill"
         case .tune: "slider.horizontal.3"
         case .undo: "arrow.uturn.backward"
+        case .upload: "square.and.arrow.up"
         case .videocam: "video"
         case .visibility: "eye"
         case .visibilityOff: "eye.slash"

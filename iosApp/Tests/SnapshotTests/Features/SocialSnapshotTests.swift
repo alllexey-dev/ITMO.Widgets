@@ -24,6 +24,10 @@ final class SocialSnapshotTests: XCTestCase {
         assertProfile(me.state(connection: "off", requests: "no"), named: "profile-off", appearances: [.light, .dark])
     }
 
+    func testProfileWithAFeatureRow() {
+        assertProfile(me.university, named: "profile-university", appearances: [.light, .dark])
+    }
+
     func testProfileLongName() {
         assertProfile(me.longName, named: "profile-long-name", appearances: [.light, .lightAX1])
     }

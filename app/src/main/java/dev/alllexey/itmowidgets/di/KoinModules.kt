@@ -2,11 +2,13 @@ package dev.alllexey.itmowidgets.di
 
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
+import dev.alllexey.itmowidgets.feature.dormitory.di.dormitoryModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.messages.di.messagesModule
-import dev.alllexey.itmowidgets.feature.wifi.di.wifiModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrModule
@@ -20,8 +22,7 @@ import dev.alllexey.itmowidgets.feature.settings.di.settingsModule
 import dev.alllexey.itmowidgets.feature.social.di.socialModule
 import dev.alllexey.itmowidgets.feature.sport.di.sportModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
-import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
-import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
+import dev.alllexey.itmowidgets.feature.wifi.di.wifiModule
 import org.koin.core.module.Module
 
 /**
@@ -58,6 +59,7 @@ object KoinModules {
         resourcesModule,
         campusMapModule,
         messagesModule,
+        dormitoryModule,
         settingsDataModule,
         settingsModule,
         recordbookModule,

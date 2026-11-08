@@ -1,0 +1,15 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": {
+    "statusId": 3,
+    "queuePlace": null,
+    "dormType": "test",
+    "assignedDormitory": {
+      "buildingId": 9001,
+      "name": "Синтетическое общежитие",
+      "address": "Тестовая ул., 1",
+      "settlementProcedureText": "<p>Возьмите <b>паспорт</b>.</p><ul><li>фото 3x4</li></ul><script>alert(1)</script>"
+    }
+  }
+}

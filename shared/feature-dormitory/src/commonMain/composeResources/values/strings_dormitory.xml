@@ -1,0 +1,43 @@
+<resources>
+    <!-- Профиль and the screen title -->
+    <string name="dormitory_title">Общежитие</string>
+
+    <!-- Этап общежития -->
+    <string name="dormitory_stage_queue">В очереди</string>
+    <string name="dormitory_stage_place_offered">Место предоставлено</string>
+    <string name="dormitory_stage_date_chosen">Дата заселения выбрана</string>
+    <string name="dormitory_stage_settled">Заселён</string>
+    <string name="dormitory_stage_unknown">Заявка на общежитие</string>
+    <string name="dormitory_queue_place">Место в очереди: %1$d</string>
+    <string name="dormitory_queue_text">Когда подойдёт очередь, ИТМО предоставит место</string>
+    <string name="dormitory_place_offered_text">Выберите дату заселения в my.itmo — время на выбор ограничено</string>
+    <string name="dormitory_date_chosen_text">Дата выбрана. Перед заселением ИТМО должен подтвердить документы</string>
+    <string name="dormitory_settled_text">Вы живёте в общежитии ИТМО</string>
+    <string name="dormitory_unknown_text">Подробности — в my.itmo</string>
+    <string name="dormitory_choose_date">Выбрать дату заселения</string>
+
+    <!-- The assigned dormitory -->
+    <string name="dormitory_place_section">Ваше общежитие</string>
+    <string name="dormitory_on_map">На карте</string>
+    <string name="dormitory_map_unavailable">Не удалось открыть карту</string>
+    <string name="dormitory_instructions_section">Как заселиться</string>
+
+    <!-- Документы для заселения -->
+    <string name="dormitory_documents_section">Документы для заселения</string>
+    <string name="dormitory_documents_none">ИТМО пока не запросил документы</string>
+    <string name="dormitory_upload">Загрузить</string>
+    <string name="dormitory_upload_subtitle">Документы загружаются в my.itmo</string>
+
+    <!-- States -->
+    <string name="dormitory_none_title">Заявки на общежитие нет</string>
+    <string name="dormitory_none_text">Когда вы встанете в очередь в my.itmo, здесь появится ваш этап</string>
+    <string name="dormitory_updated_now">Обновлено только что</string>
+    <string name="dormitory_updated_minutes">Обновлено %1$d мин назад</string>
+    <string name="dormitory_updated_hours">Обновлено %1$d ч назад</string>
+    <plurals name="dormitory_updated_days">
+        <item quantity="one">Обновлено %1$d день назад</item>
+        <item quantity="few">Обновлено %1$d дня назад</item>
+        <item quantity="many">Обновлено %1$d дней назад</item>
+        <item quantity="other">Обновлено %1$d дня назад</item>
+    </plurals>
+</resources>

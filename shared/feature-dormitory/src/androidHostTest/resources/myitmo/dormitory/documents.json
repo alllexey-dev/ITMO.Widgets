@@ -1,0 +1,22 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "documentType": 7001,
+      "documentTypeName": "Синтетическая справка",
+      "status": 1,
+      "status_name": "Отсутствует",
+      "requestId": null,
+      "templateId": 8001
+    },
+    {
+      "documentType": 7002,
+      "documentTypeName": "Синтетический анализ",
+      "status": 2,
+      "status_name": "Подтверждено",
+      "requestId": null,
+      "templateId": 8002
+    }
+  ]
+}

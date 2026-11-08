@@ -7,13 +7,16 @@ import dev.alllexey.itmowidgets.core.text.UiTextResolver
 import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsIosModule
+import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
+import dev.alllexey.itmowidgets.feature.dormitory.di.dormitoryModule
 import dev.alllexey.itmowidgets.feature.home.di.homeModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapIosModule
 import dev.alllexey.itmowidgets.feature.map.di.campusMapModule
 import dev.alllexey.itmowidgets.feature.me.di.meModule
 import dev.alllexey.itmowidgets.feature.messages.di.messagesIosModule
 import dev.alllexey.itmowidgets.feature.messages.di.messagesModule
-import dev.alllexey.itmowidgets.feature.wifi.di.wifiModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingDataModule
 import dev.alllexey.itmowidgets.feature.onboarding.di.onboardingModule
 import dev.alllexey.itmowidgets.feature.qr.di.qrIosModule
@@ -41,9 +44,7 @@ import dev.alllexey.itmowidgets.feature.sport.di.sportWidgetIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateIosModule
 import dev.alllexey.itmowidgets.feature.update.di.updateModule
 import dev.alllexey.itmowidgets.feature.update.domain.AppStoreListing
-import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
-import dev.alllexey.itmowidgets.feature.connections.di.connectionsIosModule
-import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
+import dev.alllexey.itmowidgets.feature.wifi.di.wifiModule
 import dev.alllexey.itmowidgets.ios.IosPlatform
 import kotlinx.datetime.LocalDate
 import org.koin.core.module.Module
@@ -99,6 +100,8 @@ object IosKoinModules {
         campusMapModule, campusMapIosModule,
         // ISU messages over the core ISU client; attachments in the temporary directory.
         messagesModule, messagesIosModule,
+        // The dormitory from my.itmo with its stored answer and its row in Профиль.
+        dormitoryModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record, the build's site until then. */
