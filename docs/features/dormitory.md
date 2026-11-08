@@ -105,10 +105,13 @@ an answer in another stage drops it, and sign-out removes it with the file. No d
 |---|---|---|
 | `getDormitoryStatus()` (`GET /api/dormitory/status/full`) | every refresh | `statusId`, `queuePlace`, `assignedDormitory {name, address, settlementProcedureText}`; a null result is no application |
 | `getDormitoryDocuments()` (`GET /api/dormitory/documents`) | only for stages 2 and 3 | `documentTypeName`, `status`, `status_name` |
-| `getDormitoryContractPeriods()` (`GET /api/dormitory/payments/contracts/periods`) | every refresh | `year`, `dateFrom`, `dateTo` of each academic year with agreements |
-| `getDormitoryContracts(dateFrom, dateTo)` (`GET /api/dormitory/payments/contracts?from&to`) | once per listed year | `contractId`, `number`, `dateStart`, `dateEnd`, `active`, `balance`, `payments {sum, paid, payUntil, period}` |
+| `getDormitoryContractPeriods()` (`GET /api/dormitory/payments/contracts/periods`) | every refresh | `year`, `dateFrom`, `dateTo` of each period with agreements: calendar years, 1 January - 31 December |
+| `getDormitoryContracts(dateFrom, dateTo)` (`GET /api/dormitory/payments/contracts?from&to`) | once per listed period | `contractId`, `number`, `dateStart`, `dateEnd`, `active`, `balance`, `payments {sum, paid, payUntil, period}` |
 
 A refresh succeeds only when every call does, so the stored answer never mixes a new status with old agreements.
+Each period's answer has every agreement that overlaps it, so one running from September to June comes in two
+periods: it is kept once by `contractId`, as the latest period has it. Its academic year comes from its `dateStart`
+(1 September - 31 August), never from the period.
 ITMO's rubles become kopecks and its dates Moscow calendar dates when stored.
 
 - **Stored answer.** The last successful answer is kept in dormitory/state.json in the no-backup directory (`DormitoryFileStore`)
@@ -138,7 +141,8 @@ the Профиль row comes from the same `ProfileEntrySource` through `MeViewM
 - `DormitoryViewModelTest`, `DormitoryContractTest`, `DormitoryProfileEntryTest`, `DormitoryTodoSourceTest`,
   `DormitoryDemoGateTest` (`androidHostTest`): the real MyItmoApi client over a Ktor `MockEngine` for my.itmo.ru with
   synthetic fixtures in `src/androidHostTest/resources/myitmo/dormitory/`, a fixed clock and a fake file system;
-  `DormitoryContractTest` covers the balance, paid and unpaid Платежи, a Долг and several academic years;
+  `DormitoryContractTest` covers the balance, paid and unpaid Платежи, a Долг, several academic years and an
+  agreement listed in two calendar-year periods;
   `DormitoryTodoSourceTest` covers the items appearing and leaving with the stage and the documents, and the
   first-seen time across restarts, stage changes and sign-out.
 - `DormitoryScreenTest` (Compose actions and touch targets), `DormitoryScreenshotTest` (baselines in

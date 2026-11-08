@@ -33,7 +33,7 @@ class DormitoryProfileEntryTest {
     @Test
     fun aContractWithoutAnApplicationShowsTheRow() = runTest(dispatcher) {
         harness.answer("status-empty.json")
-        harness.contracts("periods-current.json", mapOf("2026-09-01" to "contracts-clear.json"))
+        harness.contracts("periods-current.json", mapOf("2026-01-01" to "contracts-clear.json"))
 
         assertEquals(UiText.Res(CoreStrings.contract_kind_rent), entry()?.subtitle)
         assertEquals(AppRoutes.Dormitory, entry()?.route)

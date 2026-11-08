@@ -28,7 +28,7 @@ import kotlinx.coroutines.withContext
 
 /**
  * One instance per process (the `dormitoryModule` single): the status from my.itmo through MyItmoApi, the Документы
- * для заселения only while the stage needs them, the Договоры найма of every academic year, and the last successful
+ * для заселения only while the stage needs them, the Договоры найма of every period my.itmo lists, and the last successful
  * answer in [store] with its time, so the screen, Профиль and `Нужно сделать` read it offline, with the time the app
  * first saw `Место предоставлено`. The demo answers from [DemoDormitory] and sends nothing. Sign-out removes the file;
  * an answer that lands after it is dropped. Nothing here is logged: numbers and amounts are personal financial data.
@@ -92,12 +92,16 @@ class DormitoryRepositoryImpl internal constructor(
         }
     }
 
-    /** The Договоры найма of every academic year my.itmo lists, one request per year. */
+    /**
+     * The Договоры найма of every period my.itmo lists, one request per period. Periods are calendar years and each
+     * answer has every Договор overlapping it, so one running from September to June comes in two: it is kept once,
+     * as the latest period has it.
+     */
     private suspend fun contracts(): List<StoredContract> =
-        client.dormitory.getDormitoryContractPeriods().requireResult().flatMap { period ->
-            client.dormitory.getDormitoryContracts(period.dateFrom, period.dateTo).requireResult()
-                .map { it.toStored(period.year, time.timeZone) }
-        }
+        client.dormitory.getDormitoryContractPeriods().requireResult().sortedBy { it.dateFrom }
+            .flatMap { period -> client.dormitory.getDormitoryContracts(period.dateFrom, period.dateTo).requireResult() }
+            .associateBy { it.contractId }.values
+            .map { it.toStored(time.timeZone) }
 
     override suspend fun clearSessionData() = lock.withLock {
         generation.addAndFetch(1L)

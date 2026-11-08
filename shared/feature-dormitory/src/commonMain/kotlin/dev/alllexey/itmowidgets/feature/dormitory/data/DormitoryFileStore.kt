@@ -44,7 +44,10 @@ internal data class StoredDormitoryPlace(val name: String, val address: String, 
 @Serializable
 internal data class StoredDocument(val name: String, val status: String, val confirmed: Boolean)
 
-/** A Договор найма: amounts in kopecks, dates as Moscow calendar dates, [academicYear] its period's first year. */
+/**
+ * A Договор найма: amounts in kopecks, dates as Moscow calendar dates, [academicYear] the first year of the academic
+ * year its [start] falls in.
+ */
 @Serializable
 internal data class StoredContract(
     val id: String,
