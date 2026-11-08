@@ -1,0 +1,16 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "year": 2025,
+      "dateFrom": "2025-09-01",
+      "dateTo": "2026-08-31"
+    },
+    {
+      "year": 2026,
+      "dateFrom": "2026-09-01",
+      "dateTo": "2027-08-31"
+    }
+  ]
+}

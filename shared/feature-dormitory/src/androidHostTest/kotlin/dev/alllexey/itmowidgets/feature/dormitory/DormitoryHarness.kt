@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.dormitory.data.DormitoryFileStore
 import dev.alllexey.itmowidgets.feature.dormitory.data.DormitoryRepositoryImpl
 import dev.alllexey.itmowidgets.testkit.FakeClock
@@ -18,6 +19,9 @@ import io.ktor.client.request.HttpRequestData
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.IOException
 import okio.FileSystem
 import okio.Path.Companion.toPath
@@ -46,8 +50,7 @@ class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolea
                 if (offline) throw IOException("offline")
                 when (request.url.host) {
                     "my.itmo.ru" -> respondJson(
-                        answers[request.url.encodedPath]
-                            ?: throw AssertionError("Unexpected MyITMO request ${request.url.encodedPath}"),
+                        answers[keyOf(request)] ?: throw AssertionError("Unexpected MyITMO request ${keyOf(request)}"),
                     )
                     else -> throw AssertionError("Unexpected host ${request.url.host}")
                 }
@@ -62,6 +65,15 @@ class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolea
         clock = clock,
     )
 
+    /** The academic time over [clock], in Moscow as in the app. */
+    val time = object : AcademicTimeProvider {
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+
+        override fun today(): LocalDate = clock.now().toLocalDateTime(timeZone).date
+
+        override fun now(): Instant = clock.now()
+    }
+
     private val user = object : CurrentUserProvider {
         override suspend fun getCurrentUser(): CurrentUser? = CurrentUser(isu, null, null)
     }
@@ -73,12 +85,28 @@ class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolea
         DormitoryFileStore("/no-backup/dormitory".toPath(), files),
         user,
         clock,
+        time,
         AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher),
     )
+
+    init {
+        answers[PERIODS] = fixture("periods-empty.json")
+    }
 
     fun answer(status: String, documents: String? = null) {
         answers[STATUS] = fixture(status)
         documents?.let { answers[DOCUMENTS] = fixture(it) }
+    }
+
+    /** The academic years in [periods] and, for each year that starts on a key of [contracts], its Договоры найма. */
+    fun contracts(periods: String, contracts: Map<String, String>) {
+        answers[PERIODS] = fixture(periods)
+        contracts.forEach { (from, name) -> answers["$CONTRACTS?from=$from"] = fixture(name) }
+    }
+
+    private fun keyOf(request: HttpRequestData): String {
+        val path = request.url.encodedPath
+        return if (path == CONTRACTS) "$path?from=${request.url.parameters["from"]}" else path
     }
 
     fun paths(): List<String> = requests.filter { it.url.host == "my.itmo.ru" }.map { it.url.encodedPath }
@@ -100,5 +128,7 @@ class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolea
         const val OWNER = 100001
         const val STATUS = "/api/dormitory/status/full"
         const val DOCUMENTS = "/api/dormitory/documents"
+        const val PERIODS = "/api/dormitory/payments/contracts/periods"
+        const val CONTRACTS = "/api/dormitory/payments/contracts"
     }
 }

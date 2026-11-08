@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.profile.ProfileEntry
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.dormitory.DormitoryHarness
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,6 +31,15 @@ class DormitoryProfileEntryTest {
     }
 
     @Test
+    fun aContractWithoutAnApplicationShowsTheRow() = runTest(dispatcher) {
+        harness.answer("status-empty.json")
+        harness.contracts("periods-current.json", mapOf("2026-09-01" to "contracts-clear.json"))
+
+        assertEquals(UiText.Res(CoreStrings.contract_kind_rent), entry()?.subtitle)
+        assertEquals(AppRoutes.Dormitory, entry()?.route)
+    }
+
+    @Test
     fun theRowNamesTheStageAndOpensTheDormitory() = runTest(dispatcher) {
         harness.answer("status-offered.json", documents = "documents.json")
 
@@ -52,12 +62,12 @@ class DormitoryProfileEntryTest {
 
         harness.clock.advanceBy(1.hours)
         assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_queue), entry()?.subtitle)
-        assertEquals(1, harness.paths().size)
+        assertEquals(1, harness.paths().count { it == DormitoryHarness.STATUS })
 
         harness.answer("status-settled.json")
         harness.clock.advanceBy(3.hours)
         assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), entry()?.subtitle)
-        assertEquals(2, harness.paths().size)
+        assertEquals(2, harness.paths().count { it == DormitoryHarness.STATUS })
     }
 
     @Test

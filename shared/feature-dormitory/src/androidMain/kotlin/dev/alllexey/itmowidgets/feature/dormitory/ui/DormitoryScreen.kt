@@ -133,7 +133,7 @@ fun DormitoryScreen(
 @Composable
 private fun Shown(content: DormitoryContent.Shown, actions: DormitoryActions) {
     Column(verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content)) {
-        Stage(content.stage, actions)
+        content.stage?.let { Stage(it, actions) }
         content.documents?.let { Documents(it, actions) }
         content.dormitory?.let { Place(it, actions) }
     }

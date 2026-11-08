@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.dormitory.data.demo.DemoDormitory
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryAnswer
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryRepository
@@ -27,9 +28,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * One instance per process (the `dormitoryModule` single): the status from my.itmo through MyItmoApi, the Документы
- * для заселения only while the stage needs them, and the last successful answer in [store] with its time, so the
- * screen and Профиль read it offline. The demo answers from [DemoDormitory] and sends nothing. Sign-out removes the file;
- * an answer that lands after it is dropped.
+ * для заселения only while the stage needs them, the Договоры найма of every academic year, and the last successful
+ * answer in [store] with its time, so the screen and Профиль read it offline. The demo answers from [DemoDormitory] and
+ * sends nothing. Sign-out removes the file; an answer that lands after it is dropped. Nothing here is logged: numbers
+ * and amounts are personal financial data.
  */
 @OptIn(ExperimentalAtomicApi::class)
 class DormitoryRepositoryImpl internal constructor(
@@ -38,6 +40,7 @@ class DormitoryRepositoryImpl internal constructor(
     private val store: DormitoryFileStore,
     private val currentUser: CurrentUserProvider,
     private val clock: Clock,
+    private val time: AcademicTimeProvider,
     private val dispatchers: AppDispatchers,
 ) : DormitoryRepository, SessionDataCleaner {
 
@@ -52,7 +55,7 @@ class DormitoryRepositoryImpl internal constructor(
 
     override suspend fun refresh(): AppResult<DormitoryAnswer> {
         if (demo.isActive()) {
-            return AppResult.Success(DemoDormitory.answer(clock.now()).also { state.value = Loaded(it) })
+            return AppResult.Success(DemoDormitory.answer(clock.now(), time.today()).also { state.value = Loaded(it) })
         }
         val started = generation.load()
         val fetchedAt = clock.now()
@@ -68,6 +71,7 @@ class DormitoryRepositoryImpl internal constructor(
                     owner = currentUser.getCurrentUser()?.isu,
                     fetchedAt = fetchedAt.toEpochMilliseconds(),
                     status = status?.toStored(documents),
+                    contracts = contracts(),
                 )
             }
         }
@@ -83,6 +87,13 @@ class DormitoryRepositoryImpl internal constructor(
             }
         }
     }
+
+    /** The Договоры найма of every academic year my.itmo lists, one request per year. */
+    private suspend fun contracts(): List<StoredContract> =
+        client.dormitory.getDormitoryContractPeriods().requireResult().flatMap { period ->
+            client.dormitory.getDormitoryContracts(period.dateFrom, period.dateTo).requireResult()
+                .map { it.toStored(period.year, time.timeZone) }
+        }
 
     override suspend fun clearSessionData() = lock.withLock {
         generation.addAndFetch(1L)

@@ -16,7 +16,7 @@ import org.koin.dsl.module
 
 /**
  * The dormitory. The platform provides the core types (`MyItmoClient`, `DemoMode`, `CurrentUserProvider`, `Clock`,
- * `AppDirectories`, `AppDispatchers`); the module adds its row to Профиль and its file to sign-out.
+ * `AcademicTimeProvider`, `AppDirectories`, `AppDispatchers`); the module adds its row to Профиль and its file to sign-out.
  */
 val dormitoryModule = module {
     singleOf<DormitoryFileStore, AppDirectories>(::DormitoryFileStore)

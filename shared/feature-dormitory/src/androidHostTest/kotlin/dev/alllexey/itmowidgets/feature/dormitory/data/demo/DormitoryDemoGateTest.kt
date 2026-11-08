@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.feature.dormitory.DormitoryHarness
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryContent
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryProfileEntrySource
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryViewModel
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import io.ktor.client.request.HttpRequestData
@@ -29,20 +30,27 @@ class DormitoryDemoGateTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun theDemoShowsASettledResidentAndNoRequestLeavesTheDevice() = runTest(main.dispatcher) {
+    fun theDemoShowsASettledResidentWithOneUpcomingPaymentAndNoRequestLeavesTheDevice() = runTest(main.dispatcher) {
         val harness = DormitoryHarness(main.dispatcher, demo = true)
         val repository = harness.repository()
 
-        val state = DormitoryViewModel(repository, harness.clock).also { advanceUntilIdle() }.uiState.value
+        val state = DormitoryViewModel(repository, harness.clock, harness.time).also { advanceUntilIdle() }.uiState.value
         val rows = mutableListOf<Any?>()
         val reading = launch { DormitoryProfileEntrySource(repository, harness.clock).observe().collect { rows += it } }
         advanceUntilIdle()
         reading.cancel()
 
         val shown = state.content as DormitoryContent.Shown
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), shown.stage.title)
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), shown.stage?.title)
         assertNotNull(shown.dormitory)
         assertNull(shown.documents)
+        val contract = checkNotNull(shown.contracts).current.single()
+        assertEquals(UiText.Res(CoreStrings.contract_kind_rent), contract.title)
+        assertEquals(UiText.Res(CoreStrings.contract_balance), contract.balance.label)
+        val payment = contract.payments.single()
+        assertNull(payment.pill)
+        assertEquals(UiText.Res(CoreStrings.payment_due, listOf("20 ноября")), payment.due)
+        assertNull(shown.contracts?.pastYears)
         assertNotNull(rows.last())
         assertEquals(emptyList<HttpRequestData>(), harness.requests)
     }

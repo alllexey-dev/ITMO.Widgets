@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import kotlin.test.Test
 import kotlin.time.Clock
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -22,6 +23,7 @@ class DormitoryModuleTest {
                 DemoMode::class,
                 CurrentUserProvider::class,
                 Clock::class,
+                AcademicTimeProvider::class,
                 AppDirectories::class,
                 AppDispatchers::class,
             ),

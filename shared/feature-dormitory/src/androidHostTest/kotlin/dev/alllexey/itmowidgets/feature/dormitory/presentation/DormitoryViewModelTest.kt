@@ -14,7 +14,6 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
@@ -43,13 +42,13 @@ class DormitoryViewModelTest {
         val state = viewModel().also { advanceUntilIdle() }.uiState.value
 
         val shown = state.content as DormitoryContent.Shown
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_queue), shown.stage.title)
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_queue_place, listOf(42)), shown.stage.queuePlace)
-        assertEquals(false, shown.stage.chooseDate)
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_queue), shown.stage?.title)
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_queue_place, listOf(42)), shown.stage?.queuePlace)
+        assertEquals(false, shown.stage?.chooseDate)
         assertNull(shown.dormitory)
         assertNull(shown.documents)
         assertNull(state.stale)
-        assertEquals(listOf(DormitoryHarness.STATUS), harness.paths())
+        assertEquals(listOf(DormitoryHarness.STATUS, DormitoryHarness.PERIODS), harness.paths())
     }
 
     @Test
@@ -58,9 +57,9 @@ class DormitoryViewModelTest {
 
         val shown = viewModel().also { advanceUntilIdle() }.uiState.value.content as DormitoryContent.Shown
 
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_place_offered), shown.stage.title)
-        assertEquals(DormitoryTone.ATTENTION, shown.stage.tone)
-        assertTrue(shown.stage.chooseDate)
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_place_offered), shown.stage?.title)
+        assertEquals(DormitoryTone.ATTENTION, shown.stage?.tone)
+        assertEquals(true, shown.stage?.chooseDate)
         assertEquals(
             DormitoryDocuments(
                 rows = listOf(
@@ -71,7 +70,7 @@ class DormitoryViewModelTest {
             ),
             shown.documents,
         )
-        assertEquals(listOf(DormitoryHarness.STATUS, DormitoryHarness.DOCUMENTS), harness.paths())
+        assertEquals(listOf(DormitoryHarness.STATUS, DormitoryHarness.DOCUMENTS, DormitoryHarness.PERIODS), harness.paths())
         assertEquals(AppRoutes.MyItmoWeb("/services/dormitories"), DormitoryWeb.route)
     }
 
@@ -81,8 +80,8 @@ class DormitoryViewModelTest {
 
         val shown = viewModel().also { advanceUntilIdle() }.uiState.value.content as DormitoryContent.Shown
 
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_date_chosen), shown.stage.title)
-        assertFalse(shown.stage.chooseDate)
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_date_chosen), shown.stage?.title)
+        assertEquals(false, shown.stage?.chooseDate)
         assertEquals(listOf(DormitoryDocumentRow("Синтетическая справка", "Подтверждено", confirmed = true)), shown.documents?.rows)
         assertEquals(false, shown.documents?.upload)
     }
@@ -93,15 +92,15 @@ class DormitoryViewModelTest {
 
         val shown = viewModel().also { advanceUntilIdle() }.uiState.value.content as DormitoryContent.Shown
 
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), shown.stage.title)
-        assertEquals(DormitoryTone.DONE, shown.stage.tone)
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), shown.stage?.title)
+        assertEquals(DormitoryTone.DONE, shown.stage?.tone)
         assertNull(shown.documents)
         val place = checkNotNull(shown.dormitory)
         assertEquals("Синтетическое общежитие", place.name)
         assertEquals(MapDestination("Синтетическое общежитие", "Тестовая ул., 1"), place.map)
         assertEquals("Возьмите паспорт.\n• фото 3x4", place.instructions.plainText)
         assertTrue(place.instructions.blocks.first().spans.any { it.bold && it.text == "паспорт" })
-        assertEquals(listOf(DormitoryHarness.STATUS), harness.paths())
+        assertEquals(listOf(DormitoryHarness.STATUS, DormitoryHarness.PERIODS), harness.paths())
     }
 
     @Test
@@ -120,7 +119,7 @@ class DormitoryViewModelTest {
         harness.clock.advanceBy(2.hours)
         val state = viewModel().also { advanceUntilIdle() }.uiState.value
 
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_queue_place, listOf(42)), (state.content as DormitoryContent.Shown).stage.queuePlace)
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_queue_place, listOf(42)), (state.content as DormitoryContent.Shown).stage?.queuePlace)
         assertEquals(UiText.Res(DormitoryStrings.dormitory_updated_hours, listOf(2)), state.stale)
     }
 
@@ -132,15 +131,15 @@ class DormitoryViewModelTest {
         harness.clock.advanceBy(3.days)
 
         val viewModel = viewModel().also { advanceUntilIdle() }
-        assertEquals(listOf(DormitoryHarness.STATUS, DormitoryHarness.STATUS), harness.paths())
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), (viewModel.uiState.value.content as DormitoryContent.Shown).stage.title)
+        assertEquals(listOf(DormitoryHarness.STATUS, DormitoryHarness.PERIODS, DormitoryHarness.STATUS), harness.paths())
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), (viewModel.uiState.value.content as DormitoryContent.Shown).stage?.title)
         assertEquals(UiText.Plural(DormitoryPlurals.dormitory_updated_days, 3, listOf(3)), viewModel.uiState.value.stale)
 
         harness.answer("status-queue.json")
         viewModel.refresh()
         advanceUntilIdle()
         assertNull(viewModel.uiState.value.stale)
-        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_queue), (viewModel.uiState.value.content as DormitoryContent.Shown).stage.title)
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_queue), (viewModel.uiState.value.content as DormitoryContent.Shown).stage?.title)
     }
 
     @Test
@@ -181,5 +180,5 @@ class DormitoryViewModelTest {
         assertEquals(DormitoryContent.Failed(AppError.Network.toUiText()), state.content)
     }
 
-    private fun viewModel() = DormitoryViewModel(harness.repository(), harness.clock)
+    private fun viewModel() = DormitoryViewModel(harness.repository(), harness.clock, harness.time)
 }

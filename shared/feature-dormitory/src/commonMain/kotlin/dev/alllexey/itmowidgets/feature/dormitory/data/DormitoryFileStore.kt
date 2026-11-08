@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.dormitory.data
 
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -12,8 +13,8 @@ import okio.Path
 private const val FORMAT = 1
 
 /**
- * The last successful dormitory answer: [status] null for no application, [fetchedAt] the wall-clock time it came,
- * [owner] the ISU of the account it belongs to.
+ * The last successful dormitory answer: [status] null for no application, [contracts] the Договоры найма,
+ * [fetchedAt] the wall-clock time it came, [owner] the ISU of the account it belongs to.
  */
 @Serializable
 internal data class StoredDormitory(
@@ -21,6 +22,7 @@ internal data class StoredDormitory(
     val owner: Int? = null,
     val fetchedAt: Long,
     val status: StoredStatus? = null,
+    val contracts: List<StoredContract> = emptyList(),
 )
 
 /** The settlement instructions are kept as ITMO's HTML and parsed again on read, like the first time. */
@@ -37,6 +39,22 @@ internal data class StoredDormitoryPlace(val name: String, val address: String, 
 
 @Serializable
 internal data class StoredDocument(val name: String, val status: String, val confirmed: Boolean)
+
+/** A Договор найма: amounts in kopecks, dates as Moscow calendar dates, [academicYear] its period's first year. */
+@Serializable
+internal data class StoredContract(
+    val id: String,
+    val number: String,
+    val start: LocalDate,
+    val end: LocalDate,
+    val academicYear: Int,
+    val active: Boolean,
+    val balance: Long,
+    val payments: List<StoredPayment> = emptyList(),
+)
+
+@Serializable
+internal data class StoredPayment(val amount: Long, val paid: Long, val dueDate: LocalDate, val period: String)
 
 /**
  * `noBackup/dormitory/state.json`: never backed up, cleared with the session. Caller owns IO dispatch.

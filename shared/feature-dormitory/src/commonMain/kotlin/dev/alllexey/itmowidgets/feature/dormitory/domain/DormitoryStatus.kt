@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.dormitory.domain
 
+import dev.alllexey.itmowidgets.core.payments.Contract
 import dev.alllexey.itmowidgets.core.text.RichText
 import kotlin.time.Instant
 
@@ -38,5 +39,15 @@ data class DormitoryStatus(
     val documents: List<SettlementDocument>,
 )
 
-/** The last successful answer from my.itmo and when it came; [status] is null for a student without an application. */
-data class DormitoryAnswer(val status: DormitoryStatus?, val fetchedAt: Instant)
+/**
+ * The last successful answer from my.itmo and when it came: [status] is null for a student without an application,
+ * [contracts] are the student's Договоры найма of every academic year, which a student may have without a status.
+ */
+data class DormitoryAnswer(
+    val status: DormitoryStatus?,
+    val fetchedAt: Instant,
+    val contracts: List<Contract> = emptyList(),
+) {
+    /** Something to show: an application or a Договор найма. */
+    val hasAnything: Boolean get() = status != null || contracts.isNotEmpty()
+}
