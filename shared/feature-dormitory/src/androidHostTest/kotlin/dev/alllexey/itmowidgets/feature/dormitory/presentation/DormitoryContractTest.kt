@@ -189,7 +189,7 @@ class DormitoryContractTest {
     private fun TestScope.shown(): DormitoryContent.Shown =
         viewModel().also { advanceUntilIdle() }.uiState.value.content as DormitoryContent.Shown
 
-    private fun viewModel() = DormitoryViewModel(harness.repository(), harness.clock, harness.time)
+    private fun viewModel() = DormitoryViewModel(harness.repository(), harness.time)
 
     private fun rubles(digits: String) = UiText.Dynamic("$digits$NBSP\u20BD")
 

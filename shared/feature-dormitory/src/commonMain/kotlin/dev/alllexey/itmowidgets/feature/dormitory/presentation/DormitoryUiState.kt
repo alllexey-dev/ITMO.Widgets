@@ -44,7 +44,8 @@ enum class DormitoryTone { NEUTRAL, ATTENTION, DONE }
 
 /**
  * The Этап общежития: [title] the stage, [text] what it means, [queuePlace] `Место в очереди: 42`; [chooseDate] adds
- * `Выбрать дату заселения`, which opens [DormitoryWeb.route].
+ * `Выбрать дату заселения`, which opens [DormitoryWeb.route]; [seen] is since when the app has seen `Место
+ * предоставлено`, never a deadline.
  */
 data class DormitoryStageCard(
     val title: UiText,
@@ -52,6 +53,7 @@ data class DormitoryStageCard(
     val tone: DormitoryTone,
     val queuePlace: UiText? = null,
     val chooseDate: Boolean = false,
+    val seen: UiText? = null,
 )
 
 /** The assigned dormitory with its address for `На карте` and the settlement instructions as safe text. */

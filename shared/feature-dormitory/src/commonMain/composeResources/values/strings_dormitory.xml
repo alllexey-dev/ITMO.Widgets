@@ -14,6 +14,7 @@
     <string name="dormitory_date_chosen_text">Дата выбрана. Перед заселением ИТМО должен подтвердить документы</string>
     <string name="dormitory_settled_text">Вы живёте в общежитии ИТМО</string>
     <string name="dormitory_unknown_text">Подробности — в my.itmo</string>
+    <string name="dormitory_place_offered_seen">Приложение видит этот этап с %1$s</string>
     <string name="dormitory_choose_date">Выбрать дату заселения</string>
 
     <!-- The assigned dormitory -->
@@ -27,6 +28,13 @@
     <string name="dormitory_documents_none">ИТМО пока не запросил документы</string>
     <string name="dormitory_upload">Загрузить</string>
     <string name="dormitory_upload_subtitle">Документы загружаются в my.itmo</string>
+
+    <!-- Нужно сделать on Сегодня -->
+    <string name="dormitory_todo_date_title">Выберите дату заселения</string>
+    <string name="dormitory_todo_date_reason">Место предоставлено (видим с %1$s), время на выбор ограничено</string>
+    <string name="dormitory_todo_document_title">Документ «%1$s»</string>
+    <string name="dormitory_todo_document_reason">%1$s — нужен для заселения</string>
+    <string name="dormitory_todo_open">Открыть</string>
 
     <!-- States -->
     <string name="dormitory_none_title">Заявки на общежитие нет</string>

@@ -26,6 +26,7 @@ class DormitoryModuleTest {
                 AcademicTimeProvider::class,
                 AppDirectories::class,
                 AppDispatchers::class,
+                AcademicTimeProvider::class,
             ),
         )
     }

@@ -28,6 +28,9 @@ day as the timeline and `Нужно сделать` when there is something, wit
   the earliest lesson going on).
 - `Нужно сделать`: `BarsTodoSource` (recordbook) while the background mark check found the BARS session ended
   (`BarsLoginPrompt` not `NONE`); `Войти` opens the BARS sign-in.
+  `DormitoryTodoSource` ([dormitory](dormitory.md#нужно-сделать)) from the stored dormitory answer: `Выберите дату
+  заселения` while `Место предоставлено` and one item per Документ для заселения ITMO has not confirmed; `Открыть`
+  opens `Общежитие` over Сегодня.
 - States: `Loading` while nothing is cached and the first refresh runs; `Failed` when it failed; after a failed
   refresh over the cache the day is dimmed under `Данные на 11:44`. The first show refreshes once (silent), a pull and
   a return of the app to the foreground (`AppForeground`) after five minutes refresh again; a tab switch or a sheet

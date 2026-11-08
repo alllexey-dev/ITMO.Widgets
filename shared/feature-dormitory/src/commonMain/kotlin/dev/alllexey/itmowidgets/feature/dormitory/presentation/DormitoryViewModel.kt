@@ -8,7 +8,6 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryRepository
-import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.update
  */
 class DormitoryViewModel(
     private val repository: DormitoryRepository,
-    private val clock: Clock,
     private val time: AcademicTimeProvider,
 ) : ViewModel() {
 
@@ -41,7 +39,7 @@ class DormitoryViewModel(
         refreshes.refreshing,
         pastYearsExpanded,
     ) { answer, error, refreshing, expanded ->
-        DormitoryPresenter.present(answer, error, refreshing, clock.now(), time.today(), expanded)
+        DormitoryPresenter.present(answer, error, refreshing, time, expanded)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, DormitoryUiState())
 
     init {

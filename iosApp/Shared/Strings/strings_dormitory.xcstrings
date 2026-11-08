@@ -109,6 +109,18 @@
         }
       }
     },
+    "dormitory_place_offered_seen" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение видит этот этап с %1$@"
+          }
+        }
+      }
+    },
     "dormitory_place_offered_text" : {
       "comment" : "Generated from strings_dormitory.xml",
       "extractionState" : "manual",
@@ -237,6 +249,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Общежитие"
+          }
+        }
+      }
+    },
+    "dormitory_todo_date_reason" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место предоставлено (видим с %1$@), время на выбор ограничено"
+          }
+        }
+      }
+    },
+    "dormitory_todo_date_title" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите дату заселения"
+          }
+        }
+      }
+    },
+    "dormitory_todo_document_reason" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — нужен для заселения"
+          }
+        }
+      }
+    },
+    "dormitory_todo_document_title" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документ «%1$@»"
+          }
+        }
+      }
+    },
+    "dormitory_todo_open" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть"
           }
         }
       }

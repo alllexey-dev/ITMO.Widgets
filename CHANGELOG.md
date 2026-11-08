@@ -229,6 +229,10 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   dormitory section in the system browser, since the in-app view does not follow the redirect to the bank. The
   `Общежитие` row also appears for a student with a Договор найма but no dormitory application. The demo shows one
   Договор найма with one upcoming Платёж.
+- `Нужно сделать` on Сегодня reminds about the dormitory on both platforms: `Выберите дату заселения` while
+  `Место предоставлено`, with the time the app first saw that stage and a note that the window is limited (no
+  deadline is computed), and one item per Документ для заселения ITMO has not confirmed. The items come from the
+  stored answer, so they show offline; tapping opens `Общежитие`. The screen shows the same first-seen time.
 - For developers: the ISU HTML parser moved to core as `SafeHtml`/`RichText` (with the kit's `RichTextParagraph`
   and iOS `ItmoRichText`), `AppRoutes.MyItmoWeb(path)` opens a section of my.itmo, and features add rows to
   Профиль through `ProfileEntrySource`. The payments domain shared by dormitory and tuition is in core

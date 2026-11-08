@@ -153,13 +153,16 @@ private fun Shown(content: DormitoryContent.Shown, actions: DormitoryActions) {
     }
 }
 
-/** The stage as the screen's hero: what it means, the queue place, the date to pick. */
+/** The stage as the screen's hero: what it means, the queue place, since when the place is seen, the date to pick. */
 @Composable
 private fun Stage(stage: DormitoryStageCard, actions: DormitoryActions) {
     ItmoCard(hero = true, tone = stage.tone.cardTone()) {
         Text(stage.title.asString(), Modifier.semantics { heading() }, style = ItmoTheme.typography.titleLarge)
         stage.queuePlace?.let { Text(it.asString(), style = ItmoTheme.typography.titleMedium) }
         Text(stage.text.asString(), style = ItmoTheme.typography.bodyMedium)
+        stage.seen?.let {
+            Text(it.asString(), style = ItmoTheme.typography.labelMedium)
+        }
         if (stage.chooseDate) {
             TonalButton(
                 onClick = actions.onOpenMyItmo,

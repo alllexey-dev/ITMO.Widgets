@@ -60,6 +60,7 @@ class DormitoryViewModelTest {
         assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_place_offered), shown.stage?.title)
         assertEquals(DormitoryTone.ATTENTION, shown.stage?.tone)
         assertEquals(true, shown.stage?.chooseDate)
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_place_offered_seen, listOf("12:00")), shown.stage?.seen)
         assertEquals(
             DormitoryDocuments(
                 rows = listOf(
@@ -82,6 +83,7 @@ class DormitoryViewModelTest {
 
         assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_date_chosen), shown.stage?.title)
         assertEquals(false, shown.stage?.chooseDate)
+        assertNull(shown.stage?.seen)
         assertEquals(listOf(DormitoryDocumentRow("Синтетическая справка", "Подтверждено", confirmed = true)), shown.documents?.rows)
         assertEquals(false, shown.documents?.upload)
     }
@@ -180,5 +182,5 @@ class DormitoryViewModelTest {
         assertEquals(DormitoryContent.Failed(AppError.Network.toUiText()), state.content)
     }
 
-    private fun viewModel() = DormitoryViewModel(harness.repository(), harness.clock, harness.time)
+    private fun viewModel() = DormitoryViewModel(harness.repository(), harness.time)
 }

@@ -124,6 +124,9 @@ private struct DormitoryShownView: View {
                 Text(verbatim: place.resolved).font(.itmo(.titleMedium, emphasized: true))
             }
             Text(verbatim: card.text.resolved).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+            if let seen = card.seen {
+                Text(verbatim: seen.resolved).font(.itmo(.labelMedium)).foregroundStyle(.secondary)
+            }
             if card.chooseDate {
                 Button(action: actions.openMyItmo) {
                     Label {

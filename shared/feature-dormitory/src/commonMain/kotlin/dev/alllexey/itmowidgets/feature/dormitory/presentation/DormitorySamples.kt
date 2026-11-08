@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.payments.Money
 import dev.alllexey.itmowidgets.core.payments.Payment
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.text.SafeHtml
+import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.dormitory.domain.AssignedDormitory
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryAnswer
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryStage
@@ -15,6 +16,8 @@ import dev.alllexey.itmowidgets.feature.dormitory.domain.SettlementDocument
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Synthetic `Общежитие` screens for the Android previews and the iOS snapshot tests, one per Этап общежития and
@@ -22,6 +25,15 @@ import kotlinx.datetime.LocalDate
  */
 object DormitorySamples {
     private val now = Instant.parse("2026-11-08T09:00:00Z")
+
+    /** The academic time standing at [now], 12:00 in Moscow. */
+    private val time = object : AcademicTimeProvider {
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+
+        override fun today(): LocalDate = now.toLocalDateTime(timeZone).date
+
+        override fun now(): Instant = now
+    }
 
     private val dormitory = AssignedDormitory(
         name = "Общежитие №1",
@@ -36,8 +48,6 @@ object DormitorySamples {
         SettlementDocument("Флюорография", "Подтверждено", confirmed = true),
         SettlementDocument("Справка о прививках", "Отсутствует", confirmed = false),
     )
-
-    private val today = LocalDate(2026, 11, 8)
 
     private fun payment(rubles: Double, due: LocalDate, period: String, paid: Double = 0.0) =
         Payment(Money.ofRubles(rubles), Money.ofRubles(paid), due, period)
@@ -98,13 +108,16 @@ object DormitorySamples {
         contracts: List<Contract> = emptyList(),
         pastYearsExpanded: Boolean = false,
     ) = DormitoryPresenter.present(
-        DormitoryAnswer(status, now - age.hours, contracts), failure, refreshing = false, now = now, today = today,
+        DormitoryAnswer(status, now - age.hours, contracts), failure, refreshing = false, time = time,
         pastYearsExpanded = pastYearsExpanded,
     )
 
     val queue: DormitoryUiState = shown(DormitoryStatus(DormitoryStage.QUEUE, 42, null, emptyList()))
 
-    val placeOffered: DormitoryUiState = shown(DormitoryStatus(DormitoryStage.PLACE_OFFERED, null, dormitory, documents))
+    /** Seen by the app at 09:00, three hours ago. */
+    val placeOffered: DormitoryUiState = shown(
+        DormitoryStatus(DormitoryStage.PLACE_OFFERED, null, dormitory, documents, placeOfferedSeenAt = now - 3.hours),
+    )
 
     val dateChosen: DormitoryUiState = shown(
         DormitoryStatus(DormitoryStage.DATE_CHOSEN, null, dormitory, documents.map { it.copy(status = "Подтверждено", confirmed = true) }),
@@ -124,9 +137,9 @@ object DormitorySamples {
     /** Offline: the stored answer from 2 hours ago. */
     val offline: DormitoryUiState = shown(DormitoryStatus(DormitoryStage.SETTLED, null, dormitory, emptyList()), AppError.Network, age = 2)
 
-    val none: DormitoryUiState = DormitoryPresenter.present(DormitoryAnswer(null, now), null, refreshing = false, now = now, today = today)
+    val none: DormitoryUiState = DormitoryPresenter.present(DormitoryAnswer(null, now), null, refreshing = false, time = time)
 
-    val failed: DormitoryUiState = DormitoryPresenter.present(null, AppError.Network, refreshing = false, now = now, today = today)
+    val failed: DormitoryUiState = DormitoryPresenter.present(null, AppError.Network, refreshing = false, time = time)
 
     val loading: DormitoryUiState = DormitoryUiState()
 }

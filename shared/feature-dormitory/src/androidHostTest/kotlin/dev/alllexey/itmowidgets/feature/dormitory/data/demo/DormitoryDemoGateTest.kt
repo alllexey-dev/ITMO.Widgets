@@ -1,9 +1,11 @@
 package dev.alllexey.itmowidgets.feature.dormitory.data.demo
 
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.core.today.TodayTodo
 import dev.alllexey.itmowidgets.feature.dormitory.DormitoryHarness
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryContent
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryProfileEntrySource
+import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryTodoSource
 import dev.alllexey.itmowidgets.feature.dormitory.presentation.DormitoryViewModel
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
@@ -34,11 +36,14 @@ class DormitoryDemoGateTest {
         val harness = DormitoryHarness(main.dispatcher, demo = true)
         val repository = harness.repository()
 
-        val state = DormitoryViewModel(repository, harness.clock, harness.time).also { advanceUntilIdle() }.uiState.value
+        val state = DormitoryViewModel(repository, harness.time).also { advanceUntilIdle() }.uiState.value
         val rows = mutableListOf<Any?>()
+        val todos = mutableListOf<List<TodayTodo>>()
         val reading = launch { DormitoryProfileEntrySource(repository, harness.clock).observe().collect { rows += it } }
+        val todoReading = launch { DormitoryTodoSource(repository, harness.time).observe().collect { todos += it } }
         advanceUntilIdle()
         reading.cancel()
+        todoReading.cancel()
 
         val shown = state.content as DormitoryContent.Shown
         assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), shown.stage?.title)
@@ -52,6 +57,7 @@ class DormitoryDemoGateTest {
         assertEquals(UiText.Res(CoreStrings.payment_due, listOf("20 ноября")), payment.due)
         assertNull(shown.contracts?.pastYears)
         assertNotNull(rows.last())
+        assertEquals(emptyList(), todos.last())
         assertEquals(emptyList<HttpRequestData>(), harness.requests)
     }
 }

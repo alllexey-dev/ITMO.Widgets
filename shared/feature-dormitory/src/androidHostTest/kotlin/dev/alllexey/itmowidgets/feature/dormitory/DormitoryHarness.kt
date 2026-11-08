@@ -34,6 +34,15 @@ import okio.fakefilesystem.FakeFileSystem
  */
 class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolean = false) {
     val clock = FakeClock(Instant.parse("2026-11-08T09:00:00Z"))
+
+    /** The academic time over [clock], in Moscow: 12:00 at the start. */
+    val time = object : AcademicTimeProvider {
+        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
+
+        override fun today(): LocalDate = now().toLocalDateTime(timeZone).date
+
+        override fun now(): Instant = clock.now()
+    }
     val files: FileSystem = FakeFileSystem()
     val requests = mutableListOf<HttpRequestData>()
     val answers = mutableMapOf<String, String>()
@@ -64,15 +73,6 @@ class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolea
         engine = engine,
         clock = clock,
     )
-
-    /** The academic time over [clock], in Moscow as in the app. */
-    val time = object : AcademicTimeProvider {
-        override val timeZone: TimeZone = TimeZone.of("Europe/Moscow")
-
-        override fun today(): LocalDate = clock.now().toLocalDateTime(timeZone).date
-
-        override fun now(): Instant = clock.now()
-    }
 
     private val user = object : CurrentUserProvider {
         override suspend fun getCurrentUser(): CurrentUser? = CurrentUser(isu, null, null)

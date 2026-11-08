@@ -30,13 +30,15 @@ data class SettlementDocument(val name: String, val status: String, val confirme
 
 /**
  * A student's dormitory application: [stage] is null for a stage this version does not know, [queuePlace] is set in
- * the queue; [documents] are read only while the stage needs them.
+ * the queue; [documents] are read only while the stage needs them. [placeOfferedSeenAt] is when the app first saw
+ * `Место предоставлено`, set only in that stage: ITMO gives no time of its own and the app computes no deadline.
  */
 data class DormitoryStatus(
     val stage: DormitoryStage?,
     val queuePlace: Int?,
     val dormitory: AssignedDormitory?,
     val documents: List<SettlementDocument>,
+    val placeOfferedSeenAt: Instant? = null,
 )
 
 /**

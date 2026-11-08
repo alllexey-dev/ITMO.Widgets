@@ -29,9 +29,9 @@ import kotlinx.coroutines.withContext
 /**
  * One instance per process (the `dormitoryModule` single): the status from my.itmo through MyItmoApi, the Документы
  * для заселения only while the stage needs them, the Договоры найма of every academic year, and the last successful
- * answer in [store] with its time, so the screen and Профиль read it offline. The demo answers from [DemoDormitory] and
- * sends nothing. Sign-out removes the file; an answer that lands after it is dropped. Nothing here is logged: numbers
- * and amounts are personal financial data.
+ * answer in [store] with its time, so the screen, Профиль and `Нужно сделать` read it offline, with the time the app
+ * first saw `Место предоставлено`. The demo answers from [DemoDormitory] and sends nothing. Sign-out removes the file;
+ * an answer that lands after it is dropped. Nothing here is logged: numbers and amounts are personal financial data.
  */
 @OptIn(ExperimentalAtomicApi::class)
 class DormitoryRepositoryImpl internal constructor(
@@ -57,6 +57,8 @@ class DormitoryRepositoryImpl internal constructor(
         if (demo.isActive()) {
             return AppResult.Success(DemoDormitory.answer(clock.now(), time.today()).also { state.value = Loaded(it) })
         }
+        // The stored answer first: the time `Место предоставлено` was first seen carries over from it.
+        loaded()
         val started = generation.load()
         val fetchedAt = clock.now()
         val result = appResultOf({ it.toDormitoryAppError() }) {
@@ -80,8 +82,10 @@ class DormitoryRepositoryImpl internal constructor(
             is AppResult.Success -> lock.withLock {
                 // Signed out while the answer was on its way: nothing of it stays.
                 if (generation.load() != started) return@withLock AppResult.Success(result.value.toAnswer())
-                withContext(dispatchers.io) { store.write(result.value) }
-                val answer = result.value.toAnswer()
+                val previous = state.value?.answer?.status
+                val stored = result.value.copy(status = result.value.status?.seenSince(previous, fetchedAt))
+                withContext(dispatchers.io) { store.write(stored) }
+                val answer = stored.toAnswer()
                 state.value = Loaded(answer)
                 AppResult.Success(answer)
             }
