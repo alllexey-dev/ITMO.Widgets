@@ -1,16 +1,19 @@
 # Dormitory
 
 `Общежитие` shows where a student stands with an ITMO dormitory: the Этап общежития, the queue place, the assigned
-dormitory with its address and the settlement instructions, and the Документы для заселения while they matter.
-Read-only: picking a settlement date and uploading documents happen in my.itmo, opened inside the app. The code is
-the `:shared:feature-dormitory` module; the spec is issue #566 (this screen #568). Vocabulary: [GLOSSARY.md](../../GLOSSARY.md).
+dormitory with its address and the settlement instructions, the Документы для заселения while they matter, and the
+Договор найма with its balance and schedule of Платежи. Read-only: picking a settlement date and uploading documents
+happen in my.itmo, opened inside the app; paying happens in my.itmo in the system browser. The code is the
+`:shared:feature-dormitory` module; the spec is issue #566 (this screen #568, the Договор найма #569). Vocabulary:
+[GLOSSARY.md](../../GLOSSARY.md).
 
 ## Профиль row
 
 `DormitoryProfileEntrySource` contributes the `Общежитие` row to the `Университет` group of Профиль through
 `core/profile/ProfileEntrySource` ([Profile](me.md)): title `Общежитие`, the stage as the subtitle, `AppRoutes.Dormitory`
-on tap. The row is shown while the stored answer has an application and hidden for an empty status (my.itmo answers
-`result: null`) or before any answer. A Профиль that finds no stored answer, or one older than 3 hours, asks my.itmo
+on tap. The row is shown while the stored answer has an application or a Договор найма (then the subtitle is
+`Договор найма`), and hidden for an empty status (my.itmo answers `result: null`) without agreements or before any
+answer. A Профиль that finds no stored answer, or one older than 3 hours, asks my.itmo
 again once, so a new application shows up without the student doing anything; a failure keeps the stored answer.
 
 ## Screen
@@ -35,13 +38,44 @@ text, so both platforms only lay it out.
 - `Ваше общежитие` once a dormitory is assigned: its name and address, `На карте` and `Как заселиться`, the settlement
   instructions. The instructions are ITMO's HTML turned into safe text by core's `SafeHtml` (the same whitelist as
   [ISU messages](isu-messages.md)); links in them open outside the app.
+- The Договоры найма, after the documents and before the dormitory, see [Договор найма](#договор-найма). A student
+  with agreements but no application sees them without the stage card.
 - `Выбрать дату заселения` and `Загрузить` open my.itmo's dormitory section in the app's browser:
   `AppRoutes.MyItmoWeb("/services/dormitories")` (`DormitoryWeb.route`; the path is the site's own route for the
   dormitory service). Its navigation policy is unchanged ([My ITMO in the app](my-itmo-web.md)).
 - `На карте` opens the system map app on the address (`PlatformActions.openMap(MapDestination)`: Android `geo:`,
   iOS Apple Maps), as the sport screens do; a snackbar says so when no app can. The campus map has no dormitories.
-- States: loading (no stored answer yet); `Заявки на общежитие нет` for an empty status; `Не удалось загрузить` with
-  the error and `Повторить` when nothing is stored and the request failed. Pull to refresh on both platforms.
+- States: loading (no stored answer yet); `Заявки на общежитие нет` for an empty status without agreements;
+  `Не удалось загрузить` with the error and `Повторить` when nothing is stored and the request failed. Pull to refresh on both platforms.
+
+## Договор найма
+
+Each Договор найма is a section titled `Договор найма`; `DormitoryPresenter` builds it from core's payments domain
+(`core/payments`, texts in `core/text/PaymentTexts.kt`), which the tuition screen shares.
+
+- A card with `№ <number> · <start> - <end>` and one balance line: `Долг` with the amount (error tone) when the
+  Договор is a Долг, `Переплата` for a positive balance, else `Баланс 0 ₽`. The Долг amount is the negative balance,
+  or, with a balance of zero or more, what is left of the overdue Платежи.
+- `Оплатить` while something is left to pay (a negative balance or an unpaid Платёж). It opens
+  `https://my.itmo.ru/services/dormitories` (`DormitoryWeb.PAY_URL`) in the system browser through
+  `PlatformActions.openLink`: the in-app view does not follow the redirect to the bank, and its policy
+  (`MyItmoWebPolicy`) stays as it is. A snackbar says so when no browser can open it.
+- The Платежи in ITMO's order: ITMO's period label, `до 10 октября` (with the year when it is not this year's),
+  `оплачено 500 ₽` for a part payment, the amount, and a pill by `Payment.stateOn(today)`, today being the Moscow day
+  of `AcademicTimeProvider`:
+
+  | State | Rule | Pill |
+  |---|---|---|
+  | `PAID` | paid at least the amount | `Оплачен` (success) |
+  | `OVERDUE` | unpaid, past the due date | `Просрочен` (error); makes the Договор a Долг |
+  | `DUE_TODAY` | unpaid, due today | `Сегодня` (warning) |
+  | `DUE_SOON` | unpaid, due in 1-7 days | `Через N дней` (warning) |
+  | `UPCOMING` | unpaid, due later | none |
+
+- `ContractsByYear`: the agreements of this academic year (1 September - 31 August) or later, and any Долг whatever its
+  year, are shown in full, newest year first; the other earlier years fold into `Прошлые годы`, a row that unfolds
+  them (`DormitoryViewModel.togglePastYears`), each under `2025/2026 учебный год`.
+- Amounts are kopecks (`Money`), shown as `1 500 ₽` or `1 500,50 ₽` with no-break spaces.
 
 ## Data
 
@@ -51,6 +85,11 @@ text, so both platforms only lay it out.
 |---|---|---|
 | `getDormitoryStatus()` (`GET /api/dormitory/status/full`) | every refresh | `statusId`, `queuePlace`, `assignedDormitory {name, address, settlementProcedureText}`; a null result is no application |
 | `getDormitoryDocuments()` (`GET /api/dormitory/documents`) | only for stages 2 and 3 | `documentTypeName`, `status`, `status_name` |
+| `getDormitoryContractPeriods()` (`GET /api/dormitory/payments/contracts/periods`) | every refresh | `year`, `dateFrom`, `dateTo` of each academic year with agreements |
+| `getDormitoryContracts(dateFrom, dateTo)` (`GET /api/dormitory/payments/contracts?from&to`) | once per listed year | `contractId`, `number`, `dateStart`, `dateEnd`, `active`, `balance`, `payments {sum, paid, payUntil, period}` |
+
+A refresh succeeds only when every call does, so the stored answer never mixes a new status with old agreements.
+ITMO's rubles become kopecks and its dates Moscow calendar dates when stored.
 
 - **Stored answer.** The last successful answer is kept in dormitory/state.json in the no-backup directory (`DormitoryFileStore`)
   with its wall-clock time and the account's ISU; the instructions are kept as ITMO's HTML and parsed again on read.
@@ -60,11 +99,12 @@ text, so both platforms only lay it out.
   `Обновлено N мин / ч назад` or `Обновлено N дней назад`; a later successful refresh drops the line. Errors map in
   `toDormitoryAppError` (network first, then `MyItmoException`).
 - **Privacy.** Nothing goes to Backend or a widget, nothing is logged; exception messages carry no student data.
-- **Demo.** The demo session answers from `DemoDormitory` (`Заселён` in the fictional `Общежитие №1`) and sends no
-  request (`DormitoryDemoGateTest`).
+  Agreement numbers and amounts are personal financial data: they stay in the no-backup file and on the screen.
+- **Demo.** The demo session answers from `DemoDormitory` (`Заселён` in the fictional `Общежитие №1`, one Договор
+  найма with one upcoming Платёж) and sends no request (`DormitoryDemoGateTest`).
 
-Not here yet: the Договор найма and its Платежи (#569), the `Нужно сделать` items with the time `Место предоставлено`
-was first seen (#571), the background check, its notifications and bell events (#573).
+Not here yet: the `Нужно сделать` items for the stage and documents with the time `Место предоставлено` was first
+seen (#571) and for Платежи (#572), the background check, its notifications and bell events (#573).
 
 ## iOS
 
@@ -74,7 +114,8 @@ the Профиль row comes from the same `ProfileEntrySource` through `MeViewM
 
 ## Tests
 
-- `DormitoryViewModelTest`, `DormitoryProfileEntryTest`, `DormitoryDemoGateTest` (`androidHostTest`): the real
+- `DormitoryViewModelTest`, `DormitoryContractTest`, `DormitoryProfileEntryTest`, `DormitoryDemoGateTest`
+  (`androidHostTest`): the real
   MyItmoApi client over a Ktor `MockEngine` for my.itmo.ru with synthetic fixtures in
   `src/androidHostTest/resources/myitmo/dormitory/`, a fixed clock and a fake file system.
 - `DormitoryScreenTest` (Compose actions and touch targets), `DormitoryScreenshotTest` (baselines in

@@ -40,7 +40,7 @@ strings from `:shared:compose-strings` only, so its iOS klib has no Compose
 | `:shared:feature-account` | Sign-in, first-run flow, profile tab, web sign-in, My ITMO web page, update offer |
 | `:shared:feature-map` | Campus map: plan data, room mapping, the indoor router and trip planner |
 | `:shared:feature-messages` | ISU messages over core's `IsuWebClient`: the inbox and archive, attachments; bodies through core's `SafeHtml` |
-| `:shared:feature-dormitory` | The dormitory from my.itmo: Этап общежития, assigned dormitory, settlement documents, the stored answer, the Профиль row |
+| `:shared:feature-dormitory` | The dormitory from my.itmo: Этап общежития, assigned dormitory, settlement documents, the Договор найма and its Платежи (over `core/payments`), the stored answer, the Профиль row |
 | `:shared:feature-home` | Сегодня and the bell over every feature's `DayLessonsGateway`, `TodayTodoSource`s and `BellSource`s |
 | `:shared:feature-qr` | QR pass, its cache and widget state |
 | `:shared:feature-recordbook` | Record book, BARS overlay, subject page, marks tracking, sheet scores |

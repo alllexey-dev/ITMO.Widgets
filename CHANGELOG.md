@@ -223,9 +223,17 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   my.itmo's dormitory section inside the app. The last answer is kept on the device: offline or on an error the
   screen shows it with `Обновлено N назад`. The demo shows a settled resident and sends nothing. Read from my.itmo
   through MyItmoApi's dormitory area; nothing goes to Backend.
+- `Общежитие` shows the Договор найма: its number and dates, the Долг or overpayment, and the schedule of
+  Платежи with amounts, due dates and what is paid (`Оплачен`, `Сегодня`, `Через N дней`, `Просрочен`). Earlier
+  academic years fold into `Прошлые годы`; a Долг from an earlier year stays in front. `Оплатить` opens my.itmo's
+  dormitory section in the system browser, since the in-app view does not follow the redirect to the bank. The
+  `Общежитие` row also appears for a student with a Договор найма but no dormitory application. The demo shows one
+  Договор найма with one upcoming Платёж.
 - For developers: the ISU HTML parser moved to core as `SafeHtml`/`RichText` (with the kit's `RichTextParagraph`
   and iOS `ItmoRichText`), `AppRoutes.MyItmoWeb(path)` opens a section of my.itmo, and features add rows to
-  Профиль through `ProfileEntrySource`.
+  Профиль through `ProfileEntrySource`. The payments domain shared by dormitory and tuition is in core
+  (`core/payments`: `Contract`, `Payment`, `Money`, `PaymentState`, `ContractsByYear`; texts in
+  `core/text/PaymentTexts.kt`).
 
 ### Widgets
 
