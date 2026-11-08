@@ -113,9 +113,12 @@ object AppRoutes {
         override val sheetPolicy get() = SheetPolicy()
     }
 
-    /** Refused in the demo session ([ShellGate.check]). */
+    /**
+     * my.itmo.ru in the app's browser, starting at [path] of the site (the home page by default, a section such as
+     * `/services/dormitories` otherwise). Refused in the demo session ([ShellGate.check]).
+     */
     @Serializable
-    data object MyItmoWeb : AppRoute {
+    data class MyItmoWeb(val path: String = "/") : AppRoute {
         override val kind get() = RouteKind.SCREEN
     }
 

@@ -165,7 +165,7 @@ struct MeContent: View {
             )
             .accessibilityIdentifier("isu_row")
             external("me_my_itmo", "me_my_itmo_subtitle", .language, id: "my_itmo_row") {
-                actions.open(AppRoutes.MyItmoWeb.shared)
+                actions.open(AppRoutes.MyItmoWeb(path: "/"))
             }
             external("me_telegram", "me_telegram_subtitle", .brandTelegram, id: "telegram_row") {
                 actions.openProjectLink(ProjectLinks.shared.TELEGRAM_URL)

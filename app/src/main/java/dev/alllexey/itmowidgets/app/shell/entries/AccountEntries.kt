@@ -72,6 +72,7 @@ import dev.alllexey.itmowidgets.feature.update.navigation.UpdateRoutes
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateRoute
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import dev.alllexey.itmowidgets.feature.update.ui.toBundle
+import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoBrowser
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebContent
 import dev.alllexey.itmowidgets.feature.web.ui.openExternalPage
@@ -111,7 +112,7 @@ internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
         )
     }
     entry<AppRoutes.Connection> { key, navigator -> ConnectionEntry(key.id, navigator, onBack = { navigator.close(key) }) }
-    entry<AppRoutes.MyItmoWeb> { key, navigator -> MyItmoWebEntry(onClose = { navigator.close(key) }) }
+    entry<AppRoutes.MyItmoWeb> { key, navigator -> MyItmoWebEntry(key.path, onClose = { navigator.close(key) }) }
     entry<AppRoutes.Isu> { key, navigator ->
         IsuHubScreen(
             IsuHubActions(
@@ -150,7 +151,7 @@ private fun meActions(navigator: Nav3AppNavigator, context: Context) = MeActions
     onOpenWidgets = { navigator.open(AppRoutes.Settings(SettingsPage.WIDGETS.name)) },
     onOpenMap = { navigator.open(AppRoutes.CampusMap()) },
     onOpenIsu = { navigator.open(AppRoutes.Isu) },
-    onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb) },
+    onOpenMyItmo = { navigator.open(AppRoutes.MyItmoWeb()) },
     onOpenSettings = { navigator.open(AppRoutes.Settings()) },
     onOpenDebugTools = { navigator.open(AppRoutes.DebugTools) },
     onShareProfile = { name, isu ->
@@ -277,7 +278,7 @@ private fun rememberDeviceUnlock(): DeviceUnlock {
  * takes it, so the predictive gesture previews closing the screen.
  */
 @Composable
-private fun MyItmoWebEntry(onClose: () -> Unit) {
+private fun MyItmoWebEntry(path: String, onClose: () -> Unit) {
     val context = LocalContext.current
     val resources = LocalResources.current
     val scope = rememberCoroutineScope()
@@ -290,13 +291,14 @@ private fun MyItmoWebEntry(onClose: () -> Unit) {
             }
         }
     }
-    val saver = remember(openExternal) {
+    val startUrl = remember(path) { MyItmoWebPolicy.startUrl(path) }
+    val saver = remember(openExternal, startUrl) {
         Saver<MyItmoBrowser, Bundle>(
             save = { it.save() },
-            restore = { saved -> MyItmoBrowser(openExternal).apply { restore(saved) } },
+            restore = { saved -> MyItmoBrowser(openExternal, startUrl).apply { restore(saved) } },
         )
     }
-    val browser = rememberSaveable(saver = saver) { MyItmoBrowser(openExternal).apply { restore(null) } }
+    val browser = rememberSaveable(saver = saver) { MyItmoBrowser(openExternal, startUrl).apply { restore(null) } }
     BackHandler(enabled = browser.canGoBack) { if (!browser.goBack()) onClose() }
     LifecycleResumeEffect(browser) {
         browser.onResume()

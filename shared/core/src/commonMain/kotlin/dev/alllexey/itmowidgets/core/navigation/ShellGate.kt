@@ -62,6 +62,6 @@ object ShellGate {
     }
 
     /** My ITMO in the browser, pairing and «Устройства» with its clients need a real account. */
-    private fun AppRoute.needsRealAccount(): Boolean = this == AppRoutes.MyItmoWeb || this is AppRoutes.Pairing ||
+    private fun AppRoute.needsRealAccount(): Boolean = this is AppRoutes.MyItmoWeb || this is AppRoutes.Pairing ||
         this == AppRoutes.Devices || this is AppRoutes.Connection
 }

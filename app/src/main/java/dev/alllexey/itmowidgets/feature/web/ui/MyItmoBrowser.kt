@@ -67,11 +67,13 @@ fun openExternalPage(context: Context, url: String, onFailed: () -> Unit) {
  * One My ITMO browser: at most one WebView at a time, the last official page, the failure and the saved history, and
  * the screen state derived from the WebView's callbacks. A host creates the WebView through [create] and releases it
  * through [release], forwards resume and pause, Back through [goBack] (while [canGoBack]), and saves and restores
- * through [save] and [restore]. [openExternal] opens a page outside the official hosts; [onBrowserCreated] and
+ * through [save] and [restore]. It starts at [startUrl], an official page (`MyItmoWebPolicy.startUrl`).
+ * [openExternal] opens a page outside the official hosts; [onBrowserCreated] and
  * [interceptRequest] are hooks for debug hosts.
  */
 class MyItmoBrowser(
     private val openExternal: (url: String) -> Unit,
+    startUrl: String = MyItmoWebPolicy.HOME_URL,
     private val onBrowserCreated: (WebView) -> Unit = {},
     private val interceptRequest: (WebResourceRequest) -> WebResourceResponse? = { null },
 ) {
@@ -80,7 +82,7 @@ class MyItmoBrowser(
     private var failed = false
 
     /** The last official page the browser started; its host is the bar's subtitle. */
-    var lastTrustedUrl by mutableStateOf(MyItmoWebPolicy.HOME_URL)
+    var lastTrustedUrl by mutableStateOf(startUrl.takeIf(MyItmoWebPolicy::isInternal) ?: MyItmoWebPolicy.HOME_URL)
         private set
     var screenState by mutableStateOf(MyItmoWebState.Loading)
         private set

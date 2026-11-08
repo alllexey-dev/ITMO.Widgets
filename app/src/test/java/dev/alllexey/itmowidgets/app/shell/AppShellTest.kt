@@ -471,11 +471,11 @@ class AppShellTest {
     @Test
     fun theGateRefusesInDemoWithoutOpening() {
         var refusals = 0
-        navigator.guard = { if (it == AppRoutes.MyItmoWeb) OpenDecision.REFUSE_IN_DEMO else OpenDecision.OPEN }
+        navigator.guard = { if (it == AppRoutes.MyItmoWeb()) OpenDecision.REFUSE_IN_DEMO else OpenDecision.OPEN }
         navigator.onRefusedInDemo = { refusals++ }
         show()
 
-        act { assertEquals(OpenDecision.REFUSE_IN_DEMO, open(AppRoutes.MyItmoWeb)) }
+        act { assertEquals(OpenDecision.REFUSE_IN_DEMO, open(AppRoutes.MyItmoWeb())) }
 
         assertEquals(1, refusals)
         assertTrue(navigator.state.overlays.isEmpty())
