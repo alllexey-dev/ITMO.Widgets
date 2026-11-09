@@ -25,6 +25,7 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import okio.Path.Companion.toPath
 
 /** `Оплата обучения` over my.itmo. Today is 8 November 2026 in Moscow. */
 class TuitionViewModelTest {
@@ -161,6 +162,17 @@ class TuitionViewModelTest {
         assertFalse("1500" in failure.error.toString())
         assertFalse("T-0000-0011" in failure.error.toString())
         assertEquals(TuitionContent.Failed(failure.error.toUiText()), state.content)
+    }
+
+    @Test
+    fun anAnswerThatCannotBeStoredIsAFailure() = runTest(main.dispatcher) {
+        harness.paid("payments-debt.json")
+        // A directory where the new file goes: the write fails as a full or broken disk would.
+        harness.files.createDirectories("/no-backup/finances/tuition.json.new".toPath())
+
+        val failure = harness.repository().refresh() as AppResult.Failure
+
+        assertTrue(failure.error is AppError.Unknown)
     }
 
     @Test

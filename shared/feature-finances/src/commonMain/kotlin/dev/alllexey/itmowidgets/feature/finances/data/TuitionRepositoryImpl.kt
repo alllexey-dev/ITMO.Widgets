@@ -6,6 +6,7 @@ import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
@@ -76,7 +77,8 @@ class TuitionRepositoryImpl internal constructor(
                 // Signed out while the answer was on its way: nothing of it stays.
                 if (generation.load() != started) return@withLock AppResult.Success(result.value.toAnswer())
                 val previous = state.value?.answer
-                withContext(dispatchers.io) { store.write(result.value) }
+                val written = appResultOf({ AppError.Unknown(it) }) { withContext(dispatchers.io) { store.write(result.value) } }
+                if (written is AppResult.Failure) return@withLock written
                 val answer = result.value.toAnswer()
                 state.value = Loaded(answer)
                 bell.record(previous, answer)

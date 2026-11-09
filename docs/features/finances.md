@@ -73,7 +73,8 @@ other Профиль row. ITMO's rubles become kopecks and its dates Moscow cale
   (`SessionDataCleaner` `tuition`); an answer that lands after sign-out is dropped.
 - **Offline and errors.** A failed refresh keeps the stored answer and the screen shows it dimmed under
   `Обновлено N мин / ч назад` or `Обновлено N дней назад` (core's `updatedAgo`); a later successful refresh drops the
-  line. Errors map in `toFinancesAppError` (network first, then `MyItmoException`).
+  line. Errors map in `toFinancesAppError` (network first, then `MyItmoException`); a file that cannot be written is
+  `AppError.Unknown` and changes nothing.
 - **Privacy.** Nothing goes to Backend or a widget, nothing is logged; exception messages carry no student data.
   Agreement numbers and amounts are personal financial data: they stay in the no-backup file and on the screen.
 - **Demo.** The demo session is on a budget place (`DemoTuition`): no Договор об обучении, no row, no request
