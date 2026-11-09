@@ -225,7 +225,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   my.itmo's dormitory section inside the app. The last answer is kept on the device: offline or on an error the
   screen shows it with `Обновлено N назад`; when only the Договоры fail, the new stage is shown beside the stored
   Договоры. The demo shows a settled resident and sends nothing. Read from my.itmo
-  through MyItmoApi's dormitory area; nothing goes to Backend.
+  through MyItmoApi's dormitory area (MyItmoApi 2.4.0); nothing goes to Backend.
 - `Общежитие` shows the Договор найма: its number and dates, the Долг or overpayment, and the schedule of
   Платежи with amounts, due dates and what is paid (`Оплачен`, `Сегодня`, `Через N дней`, `Просрочен`). Earlier
   academic years fold into `Прошлые годы`; a Долг from an earlier year stays in front. `Оплатить` opens my.itmo's
