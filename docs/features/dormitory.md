@@ -191,8 +191,9 @@ the Профиль row comes from the same `ProfileEntrySource` through `MeViewM
 - `DormitoryPaymentsCheckTest` (`androidHostTest`): the check over the same harness: `Место предоставлено` once and
   again after the stage came back, a Платёж reminded three days before and on the due day once each (and at once two
   days ahead), no reminder for a Долг, the quiet hours on Android (held until 06:00) and iOS (scheduled for 06:00
-  once), the bell's queue move, assigned dormitory and paid Платёж, the switch off (nothing posted, the bell written),
-  the 3-hour versus daily cadence (a part that keeps failing, or whose daily refresh failed, waits a day after the
-  attempt), offline reminders from the stored answer, sign-out, no session and the demo.
+  once), the bell's queue move, assigned dormitory and paid Платёж, the switch off (nothing posted, the bell
+  written, no backlog once it is back on), the 3-hour versus daily cadence (a part that keeps failing, or whose daily
+  refresh failed, waits a day after the attempt), offline reminders from the stored answer, sign-out, no session and
+  the demo.
 - `DormitoryScreenTest` (Compose actions and touch targets), `DormitoryScreenshotTest` (baselines in
   `shared/feature-dormitory/screenshots/`), `DormitoryModuleTest`.

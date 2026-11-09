@@ -233,6 +233,26 @@ class DormitoryPaymentsCheckTest {
     }
 
     @Test
+    fun turningTheSwitchBackOnPostsNoStaleBacklog() = runTest(dispatcher) {
+        preferences.setNotificationsEnabled(false)
+        harness.answer("status-offered.json", documents = "documents.json")
+        check.run()
+        harness.clock.advanceBy(3.hours)
+        settledWith("contracts-clear.json")
+        advanceTo(LocalDateTime(2026, 11, 10, 12, 0))
+        check.run()
+
+        preferences.setNotificationsEnabled(true)
+        harness.clock.advanceBy(3.hours)
+        check.run()
+        assertEquals(emptyList(), notifier.shown, "the old Место предоставлено and the reminder three days before")
+
+        advanceTo(LocalDateTime(2026, 11, 13, 9, 0))
+        check.run()
+        assertEquals(listOf(reminder(TODAY)), notifier.shown.withoutIds())
+    }
+
+    @Test
     fun anApplicationIsAskedAboutEveryRun() = runTest(dispatcher) {
         harness.answer("status-settled.json")
         check.run()

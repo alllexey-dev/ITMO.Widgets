@@ -281,7 +281,8 @@ on: the checks, and the pushes while connected) or `запрещены в сис
   absent means on; a device setting that survives sign-out); it does not need
   the connection. Unlike the other checks it gates only the system
   notifications: the check runs with any session either way, so the bell,
-  `Нужно сделать` and the screens stay fresh with it off.
+  `Нужно сделать` and the screens stay fresh with it off. What comes up while
+  it is off is not posted later: turning it back on brings no backlog.
 - Turning a check on without the permission asks for it as the gate does; the
   switch stays on whatever the answer is.
 - The pushes of ITMO.Widgets (`Спорт`, `Друзья`, `Новые устройства`) have a
