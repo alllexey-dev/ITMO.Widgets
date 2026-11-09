@@ -67,38 +67,41 @@ internal object DormitoryPresenter {
         contracts = contracts,
     )
 
-    private fun stageCard(status: DormitoryStatus, fetchedAt: Instant, time: AcademicTimeProvider): DormitoryStageCard = when (status.stage) {
-        DormitoryStage.QUEUE -> DormitoryStageCard(
-            title = UiText.Res(DormitoryStrings.dormitory_stage_queue),
-            text = UiText.Res(DormitoryStrings.dormitory_queue_text),
-            tone = DormitoryTone.NEUTRAL,
-            queuePlace = status.queuePlace?.let { UiText.Res(DormitoryStrings.dormitory_queue_place, listOf(it)) },
-        )
-        DormitoryStage.PLACE_OFFERED -> DormitoryStageCard(
-            title = UiText.Res(DormitoryStrings.dormitory_stage_place_offered),
-            text = UiText.Res(DormitoryStrings.dormitory_place_offered_text),
-            tone = DormitoryTone.ATTENTION,
-            chooseDate = true,
-            seen = UiText.Res(
-                DormitoryStrings.dormitory_place_offered_seen,
-                listOf(seenText(status.placeOfferedSeenAt ?: fetchedAt, time)),
-            ),
-        )
-        DormitoryStage.DATE_CHOSEN -> DormitoryStageCard(
-            title = UiText.Res(DormitoryStrings.dormitory_stage_date_chosen),
-            text = UiText.Res(DormitoryStrings.dormitory_date_chosen_text),
-            tone = DormitoryTone.NEUTRAL,
-        )
-        DormitoryStage.SETTLED -> DormitoryStageCard(
-            title = UiText.Res(DormitoryStrings.dormitory_stage_settled),
-            text = UiText.Res(DormitoryStrings.dormitory_settled_text),
-            tone = DormitoryTone.DONE,
-        )
-        null -> DormitoryStageCard(
-            title = UiText.Res(DormitoryStrings.dormitory_stage_unknown),
-            text = UiText.Res(DormitoryStrings.dormitory_unknown_text),
-            tone = DormitoryTone.NEUTRAL,
-        )
+    private fun stageCard(status: DormitoryStatus, fetchedAt: Instant, time: AcademicTimeProvider): DormitoryStageCard {
+        val title = stageName(status.stage)
+        return when (status.stage) {
+            DormitoryStage.QUEUE -> DormitoryStageCard(
+                title = title,
+                text = UiText.Res(DormitoryStrings.dormitory_queue_text),
+                tone = DormitoryTone.NEUTRAL,
+                queuePlace = status.queuePlace?.let { UiText.Res(DormitoryStrings.dormitory_queue_place, listOf(it)) },
+            )
+            DormitoryStage.PLACE_OFFERED -> DormitoryStageCard(
+                title = title,
+                text = UiText.Res(DormitoryStrings.dormitory_place_offered_text),
+                tone = DormitoryTone.ATTENTION,
+                chooseDate = true,
+                seen = UiText.Res(
+                    DormitoryStrings.dormitory_place_offered_seen,
+                    listOf(seenText(status.placeOfferedSeenAt ?: fetchedAt, time)),
+                ),
+            )
+            DormitoryStage.DATE_CHOSEN -> DormitoryStageCard(
+                title = title,
+                text = UiText.Res(DormitoryStrings.dormitory_date_chosen_text),
+                tone = DormitoryTone.NEUTRAL,
+            )
+            DormitoryStage.SETTLED -> DormitoryStageCard(
+                title = title,
+                text = UiText.Res(DormitoryStrings.dormitory_settled_text),
+                tone = DormitoryTone.DONE,
+            )
+            null -> DormitoryStageCard(
+                title = title,
+                text = UiText.Res(DormitoryStrings.dormitory_unknown_text),
+                tone = DormitoryTone.NEUTRAL,
+            )
+        }
     }
 
     /** When `Место предоставлено` was first seen: `09:40` today, `7 нояб., 09:40` before. */
@@ -107,7 +110,7 @@ internal object DormitoryPresenter {
         return if (local.date == time.today()) local.time.format(DateTexts.TIME) else local.format(DateTexts.DAY_SHORT_MONTH_TIME)
     }
 
-    /** The stage's name for Профиль's row. */
+    /** The stage's name: the stage card's title and the subtitle of Профиль's row. */
     fun stageName(stage: DormitoryStage?): UiText = when (stage) {
         DormitoryStage.QUEUE -> UiText.Res(DormitoryStrings.dormitory_stage_queue)
         DormitoryStage.PLACE_OFFERED -> UiText.Res(DormitoryStrings.dormitory_stage_place_offered)
