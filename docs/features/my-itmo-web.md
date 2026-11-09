@@ -8,7 +8,10 @@ sign-in is a separate WebView ([Sign-in](auth.md)).
 
 ## Screen
 
-- Key `AppRoutes.MyItmoWeb`, opened from the `My ITMO` row of Профиль. The demo session refuses it before it opens
+- Key `AppRoutes.MyItmoWeb(path)`, opened from the `My ITMO` row of Профиль at the home page (`/`) and by features at a
+  section of the site (the dormitory at `/services/dormitories`). `MyItmoWebPolicy.startUrl(path)` turns the path
+  into the first page and falls back to the home page for anything that is not a plain absolute path on my.itmo.ru;
+  the navigation rules below are the same for every start. The demo session refuses it before it opens
   (`ShellGate`). No ViewModel: the WebView is the state.
 - Android: `MyItmoBrowser` (`:app`) derives `MyItmoWebState` (`Loading`, `Shown`, `Failed`) from WebView callbacks.
   The browser slot is never removed from composition, so the WebView survives every state; in `Failed` the host hides

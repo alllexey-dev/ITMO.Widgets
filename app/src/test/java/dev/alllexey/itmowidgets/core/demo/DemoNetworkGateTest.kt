@@ -178,6 +178,7 @@ class DemoNetworkGateTest {
         stores.deviceHints,
         stores.appearance,
         stores.pushCategories,
+        stores.paymentsChecks,
         gate,
         backendClient.users,
         demo,

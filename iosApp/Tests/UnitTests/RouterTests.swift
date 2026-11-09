@@ -401,13 +401,13 @@ final class RouterTests: XCTestCase {
         XCTAssertEqual(router.open(AppRoutes.QrPass.shared), .ignored, "nothing opens before the session is ready")
 
         router.sessionChanged(ShellSessionState.demo.sessionState, onboarding: .passed)
-        XCTAssertEqual(router.open(AppRoutes.MyItmoWeb.shared), .refusedInDemo)
+        XCTAssertEqual(router.open(AppRoutes.MyItmoWeb(path: "/")), .refusedInDemo)
         XCTAssertEqual(router.open(AppRoutes.Pairing(link: nil)), .refusedInDemo)
         XCTAssertEqual(router.open(AppRoutes.Devices.shared), .refusedInDemo)
         XCTAssertEqual(router.open(AppRoutes.Connection(id: "0190f1a2-3b4c-7d5e-8f60-718293a4b5c6")), .refusedInDemo)
 
         router.sessionChanged(signedIn, onboarding: .passed)
-        XCTAssertEqual(router.open(AppRoutes.MyItmoWeb.shared), .opened)
+        XCTAssertEqual(router.open(AppRoutes.MyItmoWeb(path: "/")), .opened)
         XCTAssertEqual(router.open(AppRoutes.IcsExport.shared), .notOnIOS)
     }
 
@@ -615,7 +615,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.SportPoints.shared, .swiftUI),
             (AppRoutes.Bell.shared, .swiftUISheet),
             (AppRoutes.QrPass.shared, .swiftUISheet),
-            (AppRoutes.MyItmoWeb.shared, .swiftUI),
+            (AppRoutes.MyItmoWeb(path: "/"), .swiftUI),
             (AppRoutes.FriendSelector(selectedIsu: 0), .swiftUISheet),
             (AppRoutes.ScheduleMonth(date: "2026-10-06", userIsu: -1), .swiftUISheet),
             (AppRoutes.SheetScores(args: scores), .swiftUISheet),
@@ -630,6 +630,8 @@ final class RouterTests: XCTestCase {
             (AppRoutes.LessonDetails(args: lesson), .swiftUISheet),
             (AppRoutes.PendingSportDetails(args: pendingSport), .swiftUISheet),
             (AppRoutes.CampusMap(args: CampusMapArgs(lesson: lesson, route: true)), .fullScreen),
+            (AppRoutes.Dormitory.shared, .swiftUI),
+            (AppRoutes.Tuition.shared, .swiftUI),
             (AppRoutes.Isu.shared, .swiftUI),
             (AppRoutes.IsuMessages.shared, .swiftUI),
             (AppRoutes.ReportReview(args: teacher, reviewId: "review-1"), .swiftUISheet),

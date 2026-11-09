@@ -9,8 +9,8 @@ extension Routes {
         switch route {
         case is AppRoutes.Auth, is AppRoutes.Onboarding:
             return .gate
-        case is AppRoutes.MyItmoWeb:
-            return .swiftUI { AnyView(MyItmoWebScreen()) }
+        case let web as AppRoutes.MyItmoWeb:
+            return .swiftUI { AnyView(MyItmoWebScreen(path: web.path)) }
         case let pairing as AppRoutes.Pairing:
             return .swiftUISheet { AnyView(PairingSheet(link: pairing.link)) }
         case is AppRoutes.Devices:

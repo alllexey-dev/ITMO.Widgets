@@ -456,6 +456,7 @@ class SettingsRepositoryImplTest {
                 stores.deviceHints,
                 stores.appearance,
                 stores.pushCategories,
+                stores.paymentsChecks,
                 StoredOptInGate(stores.servicesOptIn, demo),
                 backend.client.users,
                 demo,

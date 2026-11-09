@@ -63,6 +63,8 @@ object NotificationTapRoutes {
         NotificationDestination.Devices -> action(AppEntryIntents.ACTION_OPEN_DEVICES)
         is NotificationDestination.Connection ->
             action(AppEntryIntents.ACTION_OPEN_CONNECTION) + (CONNECTION_KEY to destination.id)
+        NotificationDestination.Dormitory -> action(AppEntryIntents.ACTION_OPEN_DORMITORY)
+        NotificationDestination.Tuition -> action(AppEntryIntents.ACTION_OPEN_TUITION)
     }
 
     /**
@@ -151,6 +153,8 @@ object NotificationTapRoutes {
         AppEntryIntents.ACTION_OPEN_BARS_LOGIN,
         AppEntryIntents.ACTION_OPEN_DEVICES,
         AppEntryIntents.ACTION_OPEN_CONNECTION,
+        AppEntryIntents.ACTION_OPEN_DORMITORY,
+        AppEntryIntents.ACTION_OPEN_TUITION,
     )
 
     private fun profileRoute(isu: Int) = EntryRoute(AppTab.ME, overlay = AppRoutes.UserProfile(isu))

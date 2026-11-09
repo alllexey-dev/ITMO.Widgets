@@ -35,6 +35,12 @@ internal class MeScreenNotConnectedPreview {
     fun MeScreen() = MePreview(MeSamples.state(connection = "off"))
 }
 
+internal class MeScreenUniversityPreview {
+    @Preview(name = "university", heightDp = 1300)
+    @Composable
+    fun MeScreen() = MePreview(MeSamples.university)
+}
+
 internal class MeScreenLongNamePreview {
     @Preview(name = "long-name")
     @Composable

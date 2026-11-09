@@ -106,7 +106,7 @@ class NotificationSettingsViewModelTest {
         assertEquals(
             dev.alllexey.itmowidgets.core.text.UiText.Res(
                 dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings.notifications_subtitle_count,
-                listOf(2, 2),
+                listOf(3, 3),
             ),
             state.subtitle,
         )
@@ -153,6 +153,27 @@ class NotificationSettingsViewModelTest {
         advanceUntilIdle()
         assertEquals(1, fixture.settings.hintShownCalls, "the hint is once per device")
         assertEquals(listOf(true), fixture.marks.myItmoCalls)
+    }
+
+    @Test
+    fun theDormitoryAndPaymentsSwitchSilencesOnlyItsNotifications() = runTest(main.dispatcher) {
+        val fixture = fixture()
+        val events = events(fixture)
+        fixture.viewModel.onPermissionChanged(granted = false)
+        advanceUntilIdle()
+        assertTrue(fixture.viewModel.uiState.value.dormitoryPayments, "on by default")
+
+        fixture.viewModel.setDormitoryPayments(false)
+        advanceUntilIdle()
+        assertEquals(false, fixture.viewModel.uiState.value.dormitoryPayments)
+        assertEquals(emptyList(), events)
+
+        fixture.viewModel.setDormitoryPayments(true)
+        advanceUntilIdle()
+        assertEquals(true, fixture.viewModel.uiState.value.dormitoryPayments)
+        assertEquals(listOf<NotificationSettingsEvent>(NotificationSettingsEvent.RequestPermission), events)
+        // The check runs with the switch off too: the switch never touches the background work.
+        assertEquals(emptyList(), fixture.tracking.setCalls)
     }
 
     @Test
@@ -253,7 +274,7 @@ class NotificationSettingsViewModelTest {
         assertEquals(
             dev.alllexey.itmowidgets.core.text.UiText.Res(
                 dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings.notifications_subtitle_count,
-                listOf(1, 2),
+                listOf(2, 3),
             ),
             fixture.viewModel.uiState.value.subtitle,
         )
@@ -264,7 +285,7 @@ class NotificationSettingsViewModelTest {
         assertEquals(
             dev.alllexey.itmowidgets.core.text.UiText.Res(
                 dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings.notifications_subtitle_count,
-                listOf(3, 5),
+                listOf(4, 6),
             ),
             connected.viewModel.uiState.value.subtitle,
         )

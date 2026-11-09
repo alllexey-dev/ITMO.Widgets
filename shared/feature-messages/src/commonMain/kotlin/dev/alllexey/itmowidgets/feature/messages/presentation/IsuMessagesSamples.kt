@@ -1,10 +1,10 @@
 package dev.alllexey.itmowidgets.feature.messages.presentation
 
+import dev.alllexey.itmowidgets.core.text.RichText
+import dev.alllexey.itmowidgets.core.text.RichTextBlock
+import dev.alllexey.itmowidgets.core.text.RichTextSpan
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuFolder
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageBlock
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageBody
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageSpan
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.messages.MessagesPlurals
 import dev.alllexey.itmowidgets.shared.feature.messages.MessagesStrings
@@ -76,20 +76,20 @@ object IsuMessagesSamples {
             subject = "Расписание консультаций перед рубежным контролем",
             sender = "Деканат ФИКТ",
             date = "сб, 24 октября, 16:40",
-            body = MessageBody(
+            body = RichText(
                 listOf(
-                    MessageBlock(listOf(MessageSpan("Уважаемые студенты!"))),
-                    MessageBlock(
+                    RichTextBlock(listOf(RichTextSpan("Уважаемые студенты!"))),
+                    RichTextBlock(
                         listOf(
-                            MessageSpan("Во вложении расписание консультаций на неделю. Записи "),
-                            MessageSpan("нет", bold = true),
-                            MessageSpan(", вопросы можно прислать заранее в "),
-                            MessageSpan("чат курса", link = "https://t.me/example"),
-                            MessageSpan("."),
+                            RichTextSpan("Во вложении расписание консультаций на неделю. Записи "),
+                            RichTextSpan("нет", bold = true),
+                            RichTextSpan(", вопросы можно прислать заранее в "),
+                            RichTextSpan("чат курса", link = "https://t.me/example"),
+                            RichTextSpan("."),
                         ),
                     ),
-                    MessageBlock(listOf(MessageSpan("консультации проходят очно;")), marker = "1."),
-                    MessageBlock(listOf(MessageSpan("с собой зачётка", italic = true)), marker = "2."),
+                    RichTextBlock(listOf(RichTextSpan("консультации проходят очно;")), marker = "1."),
+                    RichTextBlock(listOf(RichTextSpan("с собой зачётка", italic = true)), marker = "2."),
                 ),
             ),
             attachments = listOf(

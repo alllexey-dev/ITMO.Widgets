@@ -113,6 +113,8 @@ class AndroidAppNotifier(
                 action = AppEntryIntents.ACTION_OPEN_CONNECTION
                 putExtra(AppEntryIntents.EXTRA_CONNECTION, target.id)
             }
+            NotificationDestination.Dormitory -> action = AppEntryIntents.ACTION_OPEN_DORMITORY
+            NotificationDestination.Tuition -> action = AppEntryIntents.ACTION_OPEN_TUITION
         }
     }
 

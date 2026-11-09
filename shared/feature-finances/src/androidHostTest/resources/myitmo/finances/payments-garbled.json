@@ -1,0 +1,12 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "contractId": "00-00000011",
+      "number": "T-0000-0011",
+      "balance": "-1500 rubles",
+      "payments": {"sum": 1500}
+    }
+  ]
+}

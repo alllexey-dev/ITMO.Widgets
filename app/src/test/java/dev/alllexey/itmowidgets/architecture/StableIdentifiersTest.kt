@@ -291,7 +291,8 @@ class StableIdentifiersTest {
             "dev.alllexey.itmowidgets.core.notification.FcmMessageWorker",
             "dev.alllexey.itmowidgets.feature.schedule.work.ScheduleWidgetUpdateWorker",
             "dev.alllexey.itmowidgets.feature.schedule.work.CalendarSyncWorker",
-            "dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesWorker"
+            "dev.alllexey.itmowidgets.feature.schedule.work.ScheduleChangesWorker",
+            "dev.alllexey.itmowidgets.core.payments.work.PaymentsWorker"
         )
 
         val WORK_NAMES = listOf(
@@ -301,6 +302,8 @@ class StableIdentifiersTest {
             "schedule-changes-now",
             "calendar-sync",
             "calendar-sync-now",
+            "dormitory-payments-check",
+            "dormitory-payments-check-now",
             "bars-cookie-probe",
             "fcm-token-sync",
             "fcm-messages",
@@ -321,13 +324,15 @@ class StableIdentifiersTest {
             "dev.alllexey.itmowidgets.action.OPEN_BARS_LOGIN",
             "dev.alllexey.itmowidgets.action.OPEN_QR_PASS",
             "dev.alllexey.itmowidgets.action.OPEN_TODAY",
+            "dev.alllexey.itmowidgets.action.OPEN_DORMITORY",
+            "dev.alllexey.itmowidgets.action.OPEN_TUITION",
             "dev.alllexey.itmowidgets.action.QR_WIDGET_CLICK",
             "dev.alllexey.itmowidgets.action.QR_WIDGET_AUTO_HIDE",
             "dev.alllexey.itmowidgets.action.SCHEDULE_WIDGET_REFRESH",
             "dev.alllexey.itmowidgets.action.WIDGET_PINNED"
         )
 
-        val NOTIFICATION_CHANNELS = listOf("sport", "friends", "schedule_changes", "marks")
+        val NOTIFICATION_CHANNELS = listOf("sport", "friends", "schedule_changes", "marks", "dormitory_payments")
 
         val NO_BACKUP_FILES = listOf(
             "myitmo_tokens.enc",

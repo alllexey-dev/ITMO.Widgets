@@ -7,6 +7,8 @@ import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.model.primaryGroup
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
+import dev.alllexey.itmowidgets.core.profile.ProfileEntry
+import dev.alllexey.itmowidgets.core.profile.ProfileEntrySource
 import dev.alllexey.itmowidgets.core.presentation.RefreshTracker
 import dev.alllexey.itmowidgets.core.result.LoadState
 import dev.alllexey.itmowidgets.core.services.CustomServicesRepository
@@ -18,11 +20,13 @@ import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -37,6 +41,8 @@ class MeViewModel(
     private val socialRepository: SocialRepository,
     private val customServices: CustomServicesRepository,
     private val devicesOverview: DevicesOverview,
+    /** The rows features add (`Общежитие`); each is shown while its source has one. */
+    private val entrySources: List<ProfileEntrySource> = emptyList(),
 ) : ViewModel() {
 
     private val signOutInProgress = MutableStateFlow(false)
@@ -50,13 +56,14 @@ class MeViewModel(
         socialRepository.observeCurrentUser(),
         socialRepository.observeFriends(),
         socialRepository.observeRequests(),
-        combine(signOutInProgress, devicesOverview.observe(), ::Pair),
-    ) { session, backendUser, friends, requests, (signingOut, devices) ->
+        combine(signOutInProgress, devicesOverview.observe(), observeEntries(), ::Triple),
+    ) { session, backendUser, friends, requests, (signingOut, devices, entries) ->
         MeUiState(
             header = header((session as? SessionState.SignedIn)?.user, backendUser),
             friends = summarize(friends, requests),
             signOutInProgress = signingOut,
             devices = devices,
+            entries = entries,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, MeUiState())
 
@@ -83,6 +90,13 @@ class MeViewModel(
             signOutInProgress.value = false
         }
     }
+
+    private fun observeEntries(): Flow<List<ProfileEntry>> =
+        if (entrySources.isEmpty()) {
+            flowOf(emptyList())
+        } else {
+            combine(entrySources.map { it.observe() }) { rows -> rows.filterNotNull().sortedBy { it.id } }
+        }
 
     /** Name and avatar from the ID token, else from Backend; the group only from Backend; the ISU from either. */
     private fun header(user: CurrentUser?, backend: UserSummary?): MeHeader {

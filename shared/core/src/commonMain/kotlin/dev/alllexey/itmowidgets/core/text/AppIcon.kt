@@ -6,6 +6,7 @@ package dev.alllexey.itmowidgets.core.text
  * registry's SF Symbol. Add a constant when presentation first needs the icon.
  */
 enum class AppIcon(val id: String) {
+    APARTMENT("apartment"),
     ASSIGNMENT("assignment"),
     BADGE("badge"),
     BOOK_2("book_2"),
@@ -36,6 +37,7 @@ enum class AppIcon(val id: String) {
     NOTIFICATION("notification"),
     OPEN_IN_NEW("open_in_new"),
     PALETTE("palette"),
+    PAYMENTS("payments"),
     PERSON("person"),
     PERSON_FILLED("person_filled"),
     QR_CODE("qr_code"),

@@ -31,4 +31,12 @@ class MyItmoWebPolicyTest {
             assertEquals(MyItmoWebPolicy.Navigation.BLOCKED, MyItmoWebPolicy.navigation(blocked, true, true))
         }
     }
+
+    @Test fun aSectionOpensOnMyItmoAndAnythingElseFallsBackToTheHomePage() {
+        assertEquals("https://my.itmo.ru/", MyItmoWebPolicy.startUrl("/"))
+        assertEquals("https://my.itmo.ru/services/dormitories", MyItmoWebPolicy.startUrl("/services/dormitories"))
+        for (path in listOf("", "services", "@evil.invalid/", ".evil.invalid/", ":8443/", "//evil.invalid/x", "/a\\b", "/a b")) {
+            assertEquals("https://my.itmo.ru/", MyItmoWebPolicy.startUrl(path), path)
+        }
+    }
 }

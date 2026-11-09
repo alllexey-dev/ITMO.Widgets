@@ -67,6 +67,7 @@ interface DebugToolsActions {
     fun setCustomServicesEnabled(enabled: Boolean)
     fun checkScheduleChanges()
     fun checkMarks()
+    fun checkPayments()
     fun probeBarsSession()
 }
 
@@ -267,6 +268,7 @@ private fun ChecksCard(actions: DebugToolsActions) {
         listOf(
             R.string.debug_schedule_changes_check to actions::checkScheduleChanges,
             R.string.debug_marks_check to actions::checkMarks,
+            R.string.debug_payments_check to actions::checkPayments,
             R.string.debug_bars_session_probe to actions::probeBarsSession,
         ).forEach { (label, onClick) ->
             ProgressButton(

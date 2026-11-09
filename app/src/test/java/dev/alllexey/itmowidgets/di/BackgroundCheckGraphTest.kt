@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.di
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.alllexey.itmowidgets.app.ItmoWidgetsApplication
+import dev.alllexey.itmowidgets.core.payments.check.PaymentsTracking
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.work.BackgroundCheck
@@ -32,17 +33,18 @@ class BackgroundCheckGraphTest {
     val stopKoin = StopKoinRule()
 
     @Test
-    fun `the set holds the three checks once each, as the instances of their own bindings`() {
+    fun `the set holds the four checks once each, as the instances of their own bindings`() {
         bootApplication()
         val koin = GlobalContext.get()
         val checks = koin.getAll<BackgroundCheck>()
         val expected = listOf(
             koin.get<ScheduleChangeTracking>(),
             koin.get<DefaultCalendarSync>(),
-            koin.get<MarkTracking>()
+            koin.get<MarkTracking>(),
+            koin.get<PaymentsTracking>()
         )
 
-        assertEquals(3, checks.size)
+        assertEquals(4, checks.size)
         expected.forEach { binding ->
             assertEquals("$binding in $checks", 1, checks.count { it === binding })
         }

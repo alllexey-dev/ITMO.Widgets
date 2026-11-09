@@ -149,7 +149,8 @@ enum SettingsFixtures {
             ),
             widgetsFollowTheme: true,
             homePassVisible: true,
-            disabledPushes: []
+            disabledPushes: [],
+            dormitoryPaymentsEnabled: true
         )
     }
 

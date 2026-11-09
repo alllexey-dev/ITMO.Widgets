@@ -4,6 +4,9 @@ import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.text.RichText
+import dev.alllexey.itmowidgets.core.text.RichTextBlock
+import dev.alllexey.itmowidgets.core.text.RichTextSpan
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.feature.messages.domain.AttachmentFile
@@ -12,9 +15,6 @@ import dev.alllexey.itmowidgets.feature.messages.domain.IsuFolder
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuMessage
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuMessagesPage
 import dev.alllexey.itmowidgets.feature.messages.domain.IsuMessagesRepository
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageBlock
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageBody
-import dev.alllexey.itmowidgets.feature.messages.domain.MessageSpan
 import dev.alllexey.itmowidgets.shared.feature.messages.MessagesPlurals
 import dev.alllexey.itmowidgets.shared.feature.messages.MessagesStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
@@ -272,7 +272,7 @@ class IsuMessagesViewModelTest {
             date = date,
             time = LocalTime(9, 30),
             read = read,
-            body = MessageBody(listOf(MessageBlock(listOf(MessageSpan("Текст $id"))))),
+            body = RichText(listOf(RichTextBlock(listOf(RichTextSpan("Текст $id"))))),
             attachments = attachments,
         )
     }

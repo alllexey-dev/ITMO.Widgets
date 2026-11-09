@@ -62,9 +62,11 @@ in with the phone's ITMO.ID cookies, keeps ISU's cookies in one in-memory `IsuSe
   `isu-messages`).
 - **Format.** `IsuMessagesJson` reads fields by name and tolerates numbers as strings; an item without `msgid` is
   skipped, an answer without `incoming` is a failure. Only a 32-hex `hash_id` becomes an attachment.
-- **Body.** `MessageHtml` turns the HTML into `MessageBody` blocks by a whitelist (ksoup): paragraphs, line breaks,
-  bold, italic, underline, list items and `http(s)` links, bare `http(s)` addresses as links. Scripts, styles,
-  images, forms and other link schemes are dropped with no trace but their text. No HTML is rendered anywhere.
+- **Body.** Core's `SafeHtml` (`core/text`, shared with the dormitory settlement instructions) turns the HTML
+  into `RichText` blocks by a whitelist (ksoup): paragraphs, line breaks, bold, italic, underline, list items and
+  `http(s)` links, bare `http(s)` addresses as links. Scripts, styles, images, forms and other link schemes are
+  dropped with no trace but their text. No HTML is rendered anywhere: Android draws the blocks with the kit's
+  `RichTextParagraph`, iOS with `ItmoRichText`.
 - **Demo.** The demo session reads `DemoIsuMessages` (fictional senders and links) and never reaches ISU;
   attachments answer `error_demo_unavailable`.
 

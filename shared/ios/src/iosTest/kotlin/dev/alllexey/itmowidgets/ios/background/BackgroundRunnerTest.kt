@@ -183,6 +183,7 @@ class BackgroundRunnerTest {
     fun theBoundStepsRunInTheFixedOrderAndAnUnplacedStepIsAWiringError() {
         val bound = listOf(
             step(RefreshStepKeys.CALENDAR_SYNC),
+            step(RefreshStepKeys.PAYMENTS),
             step(RefreshStepKeys.MARKS),
             step(RefreshStepKeys.SCHEDULE_CHANGES),
             step(RefreshStepKeys.SPORT_WIDGET),

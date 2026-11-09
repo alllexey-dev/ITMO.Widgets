@@ -63,6 +63,7 @@ import dev.alllexey.itmowidgets.core.settings.HomePassVisibility
 import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.QrSettingsPreferences
 import dev.alllexey.itmowidgets.core.storage.RetiredPreferenceKeys
+import dev.alllexey.itmowidgets.core.storage.PaymentsCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.ScheduleCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.SecureStore
 import dev.alllexey.itmowidgets.core.storage.ServicesOptInPreferences
@@ -152,6 +153,7 @@ fun iosCoreModule(
     singleOf(::AppearancePreferences)
     singleOf(::BellPreferences)
     singleOf(::ScheduleCheckPreferences)
+    singleOf(::PaymentsCheckPreferences)
     singleOf(::WidgetSettingsPreferences)
     singleOf(::SportSignSelectorPreferences)
     singleOf(::MarkSourcePreferences)

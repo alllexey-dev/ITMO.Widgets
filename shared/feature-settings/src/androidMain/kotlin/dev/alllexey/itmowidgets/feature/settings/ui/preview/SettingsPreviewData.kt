@@ -86,7 +86,7 @@ internal object SettingsPreviewData {
             items = listOf(
                 navigation(
                     SettingsPage.NOTIFICATIONS,
-                    value = UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(5, 5)),
+                    value = UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(6, 6)),
                     icon = AppIcon.NOTIFICATION
                 ),
                 navigation(SettingsPage.WIDGETS, icon = AppIcon.WIDGETS),

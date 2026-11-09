@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.messages.domain
 
+import dev.alllexey.itmowidgets.core.text.RichText
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 
@@ -17,7 +18,7 @@ data class IsuMessage(
     val date: LocalDate?,
     val time: LocalTime?,
     val read: Boolean,
-    val body: MessageBody,
+    val body: RichText,
     val attachments: List<IsuAttachment>,
 ) {
     override fun toString(): String = "IsuMessage($id)"

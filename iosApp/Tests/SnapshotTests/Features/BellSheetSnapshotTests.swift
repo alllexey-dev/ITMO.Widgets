@@ -5,7 +5,7 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The bell's sheet over Сегодня at its tall height, on the shared `BellUiState` of `TodaySamples`: new events with
-/// their dots, nothing new, and empty.
+/// their dots, nothing new, empty, and the events of the check `Общежитие и оплата`.
 @MainActor
 final class BellSheetSnapshotTests: XCTestCase {
     private let samples = TodaySamples.shared
@@ -20,6 +20,10 @@ final class BellSheetSnapshotTests: XCTestCase {
 
     func testEmpty() {
         assertBell(samples.BellEmpty, named: "empty", appearances: [.light, .dark])
+    }
+
+    func testDormitoryPayments() {
+        assertBell(samples.BellDormitoryPayments, named: "dormitory-payments", appearances: [.light, .dark])
     }
 
     private func assertBell(

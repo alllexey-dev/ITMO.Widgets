@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.designsystem.icons
 
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.shared.designsystem.Res
+import dev.alllexey.itmowidgets.shared.designsystem.ic_apartment
 import dev.alllexey.itmowidgets.shared.designsystem.ic_assignment
 import dev.alllexey.itmowidgets.shared.designsystem.ic_badge
 import dev.alllexey.itmowidgets.shared.designsystem.ic_book_2
@@ -32,6 +33,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
 import dev.alllexey.itmowidgets.shared.designsystem.ic_palette
+import dev.alllexey.itmowidgets.shared.designsystem.ic_payments
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person_filled
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code
@@ -52,6 +54,7 @@ import org.jetbrains.compose.resources.DrawableResource
 /** The `ic_<id>` drawable of an [AppIcon] for Compose; Views map it in `core/ui/AppIconRes.kt` of `:app`. */
 val AppIcon.drawable: DrawableResource
     get() = when (this) {
+        AppIcon.APARTMENT -> Res.drawable.ic_apartment
         AppIcon.ASSIGNMENT -> Res.drawable.ic_assignment
         AppIcon.BADGE -> Res.drawable.ic_badge
         AppIcon.BOOK_2 -> Res.drawable.ic_book_2
@@ -82,6 +85,7 @@ val AppIcon.drawable: DrawableResource
         AppIcon.NOTIFICATION -> Res.drawable.ic_notification
         AppIcon.OPEN_IN_NEW -> Res.drawable.ic_open_in_new
         AppIcon.PALETTE -> Res.drawable.ic_palette
+        AppIcon.PAYMENTS -> Res.drawable.ic_payments
         AppIcon.PERSON -> Res.drawable.ic_person
         AppIcon.PERSON_FILLED -> Res.drawable.ic_person_filled
         AppIcon.QR_CODE -> Res.drawable.ic_qr_code

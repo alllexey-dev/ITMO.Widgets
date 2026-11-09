@@ -6,19 +6,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.v2.runComposeUiTest
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
+import dev.alllexey.itmowidgets.core.profile.ProfileEntry
 import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeDevicesOverview
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSocialRepository
+import dev.alllexey.itmowidgets.core.text.AppIcon
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.me.presentation.MeFriendsSummary
 import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
@@ -85,6 +90,23 @@ class MeScreenTest {
         onNodeWithText("Друзья недоступны").assertExists()
         onNodeWithText("Подключить").performClick()
         assertEquals(1, opened)
+    }
+
+    @Test
+    fun aFeatureRowJoinsTheMapAndIsuUnderUniversityAndOpensItsRoute() = runComposeUiTest {
+        val opened = mutableListOf<AppRoute>()
+        val entry = ProfileEntry("dormitory", AppIcon.SCHOOL, UiText.Dynamic("Общежитие"), UiText.Dynamic("Заселён"), AppRoutes.Bell)
+        var state by mutableStateOf(Connected)
+        setContent { ItmoTheme { MeScreen(state, showDebugTools = false, actions = MeActions(onOpenRoute = { opened += it })) } }
+
+        scrollTo(MeTestTags.ISU_ROW)
+        onNodeWithText("Университет").assertExists()
+        onNodeWithTag(MeTestTags.entry("dormitory")).assertDoesNotExist()
+        state = Connected.copy(entries = listOf(entry))
+        waitForIdle()
+        scrollTo(MeTestTags.entry("dormitory"))
+        onNodeWithTag(MeTestTags.entry("dormitory")).assertExists().performClick()
+        assertEquals(listOf<AppRoute>(AppRoutes.Bell), opened)
     }
 
     @Test

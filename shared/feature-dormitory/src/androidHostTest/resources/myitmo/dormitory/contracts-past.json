@@ -1,0 +1,23 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "contractId": "00-00000003",
+      "number": "0000.00.00.0003",
+      "dateStart": "2025-09-01T00:00:00+03:00",
+      "dateEnd": "2026-06-30T00:00:00+03:00",
+      "name": "Синтетический договор найма",
+      "active": false,
+      "balance": 0,
+      "payments": [
+        {
+          "sum": 1400,
+          "payUntil": "2025-09-10T00:00:00+03:00",
+          "period": "Сентябрь 2025",
+          "paid": 1400
+        }
+      ]
+    }
+  ]
+}

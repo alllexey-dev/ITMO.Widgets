@@ -17,6 +17,8 @@ data class NotificationSettingsUiState(
     /** Null where the platform has no mark checks. */
     val marks: MarksNotifications? = null,
     val scheduleChanges: Boolean = true,
+    /** `Общежитие и оплата`: Место предоставлено and the Платежи reminders. */
+    val dormitoryPayments: Boolean = true,
     /** The pushes of ITMO.Widgets, each with the app's switch. */
     val pushes: List<PushNotifications> = emptyList(),
     /** The connection to ITMO.Widgets is on; without it Backend sends no push, so their switches wait for it. */
@@ -32,7 +34,8 @@ data class NotificationSettingsUiState(
             !loaded -> null
             else -> notificationsSummary(
                 denied = permission == NotificationPermission.DENIED,
-                switches = listOfNotNull(marks?.enabled, scheduleChanges) + if (connected) pushes.map { it.enabled } else emptyList(),
+                switches = listOfNotNull(marks?.enabled, scheduleChanges, dormitoryPayments) +
+                    if (connected) pushes.map { it.enabled } else emptyList(),
             )
         }
 }
@@ -53,7 +56,7 @@ internal fun notificationSwitches(local: LocalSettings, capabilities: PlatformCa
     } else {
         emptyList()
     }
-    return listOfNotNull(marks, local.scheduleChangesEnabled) + pushes
+    return listOfNotNull(marks, local.scheduleChangesEnabled, local.dormitoryPaymentsEnabled) + pushes
 }
 
 enum class NotificationPermission { UNKNOWN, ALLOWED, DENIED }

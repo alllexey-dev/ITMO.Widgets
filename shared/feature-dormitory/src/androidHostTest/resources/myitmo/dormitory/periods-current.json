@@ -1,0 +1,11 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": [
+    {
+      "year": 2026,
+      "dateFrom": "2026-01-01",
+      "dateTo": "2026-12-31"
+    }
+  ]
+}

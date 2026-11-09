@@ -39,7 +39,9 @@ strings from `:shared:compose-strings` only, so its iOS klib has no Compose
 | `:shared:testing` | Test kit: fake clocks, files and HTTP for every target; Robolectric, Compose UI test, semantics checks and the screenshot harness on Android |
 | `:shared:feature-account` | Sign-in, first-run flow, profile tab, web sign-in, My ITMO web page, update offer |
 | `:shared:feature-map` | Campus map: plan data, room mapping, the indoor router and trip planner |
-| `:shared:feature-messages` | ISU messages over core's `IsuWebClient`: the inbox and archive, the HTML-to-text body, attachments |
+| `:shared:feature-messages` | ISU messages over core's `IsuWebClient`: the inbox and archive, attachments; bodies through core's `SafeHtml` |
+| `:shared:feature-dormitory` | The dormitory from my.itmo: Этап общежития, assigned dormitory, settlement documents, the Договор найма and its Платежи (over `core/payments`), the stored answer, the Профиль row |
+| `:shared:feature-finances` | Finances from my.itmo: the Договоры об обучении and their Платежи (over `core/payments`), the stored answer, the Профиль row; later the scholarship |
 | `:shared:feature-home` | Сегодня and the bell over every feature's `DayLessonsGateway`, `TodayTodoSource`s and `BellSource`s |
 | `:shared:feature-qr` | QR pass, its cache and widget state |
 | `:shared:feature-recordbook` | Record book, BARS overlay, subject page, marks tracking, sheet scores |
@@ -96,16 +98,19 @@ busy. Repositories hand cached data to screens as `LoadState` or `AppResult`.
 Only the route obtains a view model (`koinViewModel()` or a passed instance);
 the screen takes state and lambdas, so previews and tests call it directly.
 Exceptions become `AppError` at the `data` boundary
-(`core/network/BackendErrors.kt` decodes Backend errors); server messages never
-reach the UI.
+(`core/network/BackendErrors.kt` decodes Backend errors,
+`core/network/MyItmoErrors.kt` MyItmoApi's with `toMyItmoAppError`); server
+messages never reach the UI.
 
 ## Dependency injection
 
 Koin is the only DI framework. Each shared feature exposes Koin modules in
 `feature/<x>/di/` (for example `scheduleModule` and `scheduleDataModule`);
 view models use `viewModelOf`, repositories `singleOf(...) { bind<...>() }`.
-Open sets (session cleaners, bell and todo sources, background checks, push
-handlers) are qualified definitions read with `getAll<T>()`.
+Open sets (session cleaners, bell and todo sources, Профиль rows
+(`ProfileEntrySource`), the parts of the payments check (`PaymentsCheckPart`),
+background checks, push handlers) are qualified definitions read with
+`getAll<T>()`.
 
 - **Android.** `app/src/main/java/dev/alllexey/itmowidgets/di/KoinModules.kt`
   lists every module: the Android ones in the same `di/` package (platform
@@ -197,6 +202,7 @@ never enforces privacy on its behalf.
 | Settings and flags | One DataStore file, `app_preferences`, read through per-concern stores in `core/storage` (`AppearancePreferences`, `WidgetSettingsPreferences`, ...) built on `DataStorePreferences` |
 | Tokens, the BARS session and the Wi-Fi password | `SecureStore`: `FileSecureStore` on Android (files in `noBackupFilesDir` sealed with an Android Keystore key), `KeychainSecureStore` on iOS |
 | Caches and feature state (schedule cache, QR cache, found changes, marks, queue results, sheet scores, calendar sync, links) | JSON files under `AppDirectories` written with `AtomicTextFile`; device-only state is excluded from backup |
+| Dormitory and tuition answers, their bell events, the payments check's notices | No-backup JSON files written with `AtomicTextFile`: dormitory/state.json, finances/tuition.json, dormitory_bell.json, tuition_bell.json, payments_notices.json (the handled notice keys and each part's last request); all cleared on sign-out |
 | Widget snapshots | Android: `widgets/schedule_snapshot.json` and the QR state; iOS: JSON files in the App Group container that the widget extension reads |
 
 `SharedPreferences` is not used. Every store of user-scoped data implements
@@ -219,9 +225,10 @@ Widget data is shared, rendering is native.
   that links no Kotlin. The app writes a timeline into the App Group
   (`ScheduleTimelineWriter`, the QR pass snapshot); the extension only picks
   the entry for the moment.
-- **Background checks** (schedule changes, new marks, calendar sync) implement
-  `BackgroundCheck` (`core/work`). The check logic is shared
-  (`ScheduleChangesCheck`, `MarksCheck`); Android runs it from a WorkManager
+- **Background checks** (schedule changes, new marks, calendar sync, dormitory
+  and payments) implement `BackgroundCheck` (`core/work`). The check logic is
+  shared (`ScheduleChangesCheck`, `MarksCheck`, `PaymentsCheck` over the
+  features' `PaymentsCheckPart`s); Android runs it from a WorkManager
   `CoroutineWorker` scheduled by `PeriodicCheckScheduler`, iOS from one
   `BGAppRefreshTask` (`iosApp/Sources/Background/BackgroundRefresh.swift`).
   The app start and the session lifecycle call `syncWork()` on every check.
@@ -238,8 +245,8 @@ Backend sends push messages for friendships and sport bookings.
   without Kotlin; the app registers the APNs token (`IosPushDevice`) and
   handles taps in `iosApp/Sources/Push/`.
 
-Local notifications (schedule changes, marks) are posted by platform notifiers
-behind shared ports. Details: [notifications](features/notifications.md).
+Local notifications (schedule changes, marks, dormitory and payments) are posted
+by platform notifiers behind shared ports. Details: [notifications](features/notifications.md).
 
 ## Strings
 

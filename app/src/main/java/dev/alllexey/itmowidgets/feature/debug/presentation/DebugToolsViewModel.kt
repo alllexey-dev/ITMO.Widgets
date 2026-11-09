@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.debug.SportLessonTemplateController
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverride
 import dev.alllexey.itmowidgets.core.debug.SportScoreOverrideController
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
+import dev.alllexey.itmowidgets.core.payments.check.PaymentsTracking
 import dev.alllexey.itmowidgets.core.recordbook.MarkTracking
 import dev.alllexey.itmowidgets.core.schedule.ScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.result.AppResult
@@ -35,7 +36,8 @@ class DebugToolsViewModel(
     private val customServicesRepository: CustomServicesRepository,
     private val scheduleChangeTracking: ScheduleChangeTracking,
     private val barsSessionProbe: BarsSessionProbe,
-    private val markTracking: MarkTracking
+    private val markTracking: MarkTracking,
+    private val paymentsTracking: PaymentsTracking
 ) : ViewModel() {
 
     private val mutableUiState =
@@ -64,6 +66,9 @@ class DebugToolsViewModel(
 
     /** One background check of own marks in both sources, as soon as the network allows. */
     fun checkMarks() = markTracking.checkNow()
+
+    /** One run of the check `Общежитие и оплата`, as soon as the network allows. */
+    fun checkPayments() = paymentsTracking.checkNow()
 
     /** Renews BARS through ITMO.ID cookies once, in a fresh process; the outcome goes to logcat only. */
     fun probeBarsSession() = barsSessionProbe.start()

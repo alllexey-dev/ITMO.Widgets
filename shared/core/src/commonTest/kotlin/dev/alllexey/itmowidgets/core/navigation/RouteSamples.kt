@@ -34,7 +34,7 @@ object RouteSamples {
         AppRoutes.SportPoints,
         AppRoutes.Bell,
         AppRoutes.QrPass,
-        AppRoutes.MyItmoWeb,
+        AppRoutes.MyItmoWeb("/services/dormitories"),
         AppRoutes.FriendSelector(),
         AppRoutes.ScheduleMonth("2026-09-17"),
         AppRoutes.SheetScores(
@@ -51,6 +51,8 @@ object RouteSamples {
         AppRoutes.LessonDetails(lesson),
         AppRoutes.PendingSportDetails(pendingSport),
         AppRoutes.CampusMap(CampusMapArgs(lesson, route = true)),
+        AppRoutes.Dormitory,
+        AppRoutes.Tuition,
         AppRoutes.Isu,
         AppRoutes.IsuMessages,
         AppRoutes.ReportReview(teacher, "review-1"),

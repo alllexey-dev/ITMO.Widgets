@@ -27,6 +27,8 @@ kotlin {
             implementation(libs.kotlinx.atomicfu)
             // The widget palettes without Compose (ThemeSeeds.kt); the same version material-kolor builds on.
             implementation(libs.material.color.utilities)
+            // HTML from ITMO (ISU messages, settlement instructions) is parsed into plain blocks, never rendered.
+            implementation(libs.ksoup)
         }
         // The Darwin engine of every iOS Ktor client; the clients take the engine.
         iosMain.dependencies {

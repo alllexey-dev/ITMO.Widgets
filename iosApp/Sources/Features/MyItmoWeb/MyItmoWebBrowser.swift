@@ -42,7 +42,7 @@ enum MyItmoWebDecision: Equatable {
 /// The `WKWebView` of the My ITMO page on `WKWebsiteDataStore.default()`, the store the ITMO.ID sign-in uses and that
 /// sign-out clears (`IosCoreHost.clearWebsiteData`): the website keeps its own session, the app injects no token,
 /// adds no script bridge and logs no console. Every navigation goes through `MyItmoWebDecision`; the last trusted
-/// page is what a reload or a retry loads.
+/// page is what a reload or a retry loads; the first is `startURL`, the home page or a section of the site.
 @MainActor
 @Observable
 final class MyItmoWebBrowser: NSObject, WKNavigationDelegate, WKUIDelegate {
@@ -51,13 +51,16 @@ final class MyItmoWebBrowser: NSObject, WKNavigationDelegate, WKUIDelegate {
     private(set) var progress: Double = 0
 
     @ObservationIgnored let webView: WKWebView
-    @ObservationIgnored private var lastTrustedURL = URL(string: MyItmoWebPolicy.shared.HOME_URL)!
+    @ObservationIgnored private var lastTrustedURL: URL
     @ObservationIgnored private var progressObservation: NSKeyValueObservation?
     @ObservationIgnored private var started = false
     /// Opens a page outside the app; the screen sets it to SwiftUI's `openURL`.
     @ObservationIgnored var openExternally: (URL) -> Void = { UIApplication.shared.open($0) }
 
-    override init() {
+    /// `path` is the site path of `AppRoutes.MyItmoWeb`; `MyItmoWebPolicy.startUrl` keeps it on the official hosts.
+    init(path: String = "/") {
+        let policy = MyItmoWebPolicy.shared
+        lastTrustedURL = URL(string: policy.startUrl(path: path)) ?? URL(string: policy.HOME_URL)!
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .default()
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
@@ -76,7 +79,7 @@ final class MyItmoWebBrowser: NSObject, WKNavigationDelegate, WKUIDelegate {
         }
     }
 
-    /// Loads the home page the first time the screen shows.
+    /// Loads the start page the first time the screen shows.
     func start() {
         guard !started else { return }
         started = true

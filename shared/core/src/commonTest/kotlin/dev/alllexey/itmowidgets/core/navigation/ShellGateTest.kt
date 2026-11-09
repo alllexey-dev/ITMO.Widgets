@@ -78,7 +78,8 @@ class ShellGateTest {
     @Test
     fun myItmoWebPairingAndTheDevicesAreRefusedOnlyInTheDemo() {
         val real = listOf(
-            AppRoutes.MyItmoWeb,
+            AppRoutes.MyItmoWeb(),
+            AppRoutes.MyItmoWeb("/services/dormitories"),
             AppRoutes.Pairing(),
             AppRoutes.Pairing(link = "https://widgets.alllexey.dev/pair#1.x"),
             AppRoutes.Devices,

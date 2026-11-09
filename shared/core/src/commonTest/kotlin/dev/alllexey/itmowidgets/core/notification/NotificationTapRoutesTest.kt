@@ -89,6 +89,8 @@ class NotificationTapRoutesTest {
             NotificationDestination.BarsLogin,
             NotificationDestination.Devices,
             NotificationDestination.Connection("conn-1"),
+            NotificationDestination.Dormitory,
+            NotificationDestination.Tuition,
         )
 
         for (destination in destinations) {
@@ -196,6 +198,8 @@ class NotificationTapRoutesTest {
         NotificationDestination.BarsLogin -> EntryRoute(AppTab.RECORDBOOK, activity = ActivityRoute.BARS_LOGIN)
         NotificationDestination.Devices -> EntryRoute(AppTab.ME, overlay = AppRoutes.Devices)
         is NotificationDestination.Connection -> EntryRoute(AppTab.ME, overlay = AppRoutes.Connection(destination.id))
+        NotificationDestination.Dormitory -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Dormitory)
+        NotificationDestination.Tuition -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Tuition)
     }
 
     /** The route of Android's notification intent for [destination] (`AndroidAppNotifier`'s action and extras). */
@@ -211,6 +215,8 @@ class NotificationTapRoutesTest {
         NotificationDestination.Devices -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_DEVICES)
         is NotificationDestination.Connection ->
             EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_CONNECTION, connection = destination.id)
+        NotificationDestination.Dormitory -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_DORMITORY)
+        NotificationDestination.Tuition -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_TUITION)
     }
 
     private val subject = RecordbookSubjectArgs(11, 1, 3, "2026/2027", 7, "flow", "7")

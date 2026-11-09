@@ -26,10 +26,13 @@ import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.connections.DevicesSummary
+import dev.alllexey.itmowidgets.core.navigation.AppRoute
+import dev.alllexey.itmowidgets.core.profile.ProfileEntry
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.avatar.Avatar
 import dev.alllexey.itmowidgets.designsystem.components.dialogs.ConfirmDialog
+import dev.alllexey.itmowidgets.designsystem.icons.drawable
 import dev.alllexey.itmowidgets.designsystem.kit.GateCard
 import dev.alllexey.itmowidgets.designsystem.kit.HeaderAction
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
@@ -46,16 +49,16 @@ import dev.alllexey.itmowidgets.feature.me.presentation.MeUiState
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_account_balance
-import dev.alllexey.itmowidgets.shared.designsystem.ic_feedback
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_github
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_telegram
 import dev.alllexey.itmowidgets.shared.designsystem.ic_code_blocks
+import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
+import dev.alllexey.itmowidgets.shared.designsystem.ic_feedback
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
 import dev.alllexey.itmowidgets.shared.designsystem.ic_language
 import dev.alllexey.itmowidgets.shared.designsystem.ic_logout
 import dev.alllexey.itmowidgets.shared.designsystem.ic_map
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
-import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
 import dev.alllexey.itmowidgets.shared.designsystem.ic_share
 import dev.alllexey.itmowidgets.shared.designsystem.ic_widgets
@@ -85,6 +88,8 @@ data class MeActions(
     val onOpenMyItmo: () -> Unit = {},
     val onOpenSettings: () -> Unit = {},
     val onOpenDebugTools: () -> Unit = {},
+    /** A row a feature added (`MeUiState.entries`): the route it names. */
+    val onOpenRoute: (AppRoute) -> Unit = {},
     /** Shares the profile under the [name] the header shows. */
     val onShareProfile: (name: String, isu: Int) -> Unit = { _, _ -> },
     val onOpenProjectLink: (MeProjectLink) -> Boolean = { true },
@@ -111,13 +116,16 @@ object MeTestTags {
     const val GITHUB = "github_row"
     const val FEEDBACK = "feedback_row"
     const val SIGN_OUT = "sign_out_row"
+
+    /** A feature's row (`ProfileEntry.id`). */
+    fun entry(id: String) = "profile_entry_$id"
 }
 
 /**
  * The Профиль tab (DECISIONS.md, Профиль): the one-line root header with `Поделиться`, the identity card, then
  * groups of rows. Friends and requests are a counter here (their home is Друзья); without the connection a gate
- * stands in their place. Then the widgets and the settings, which hold everything else, and the links. The sign-out
- * asks first. [showDebugTools] adds the developer tools row (Android debug builds). Stateless; [MeRoute] feeds it.
+ * stands in their place. Then the rows features add (`Университет`, only with one), the widgets and the settings,
+ * which hold everything else, and the links. The sign-out asks first. [showDebugTools] adds the developer tools row (Android debug builds). Stateless; [MeRoute] feeds it.
  */
 @Composable
 fun MeScreen(
@@ -159,6 +167,8 @@ fun MeScreen(
                 item(key = "people") { People(state, actions) }
                 item(key = "app:title") { SectionHeader(text(CoreStrings.me_group_app)) }
                 item(key = "app") { App(state.devices, showDebugTools, actions) }
+                item(key = "university:title") { SectionHeader(text(AccountStrings.me_group_university)) }
+                item(key = "university") { University(state.entries, actions) }
                 item(key = "links:title") { SectionHeader(text(AccountStrings.me_group_links)) }
                 item(key = "links") { Links(actions) }
                 item(key = "sign-out") {
@@ -250,6 +260,57 @@ private fun People(state: MeUiState, actions: MeActions) {
     }
 }
 
+/** The campus map, ISU (messages and Wi-Fi), My ITMO, then the rows features add (`Общежитие`), each opening its own screen. */
+@Composable
+private fun University(entries: List<ProfileEntry>, actions: MeActions) {
+    ListGroup {
+        item {
+            ListRow(
+                text(AccountStrings.me_map),
+                Modifier.testTag(MeTestTags.MAP_ROW),
+                subtitle = text(AccountStrings.me_map_subtitle),
+                icon = painterResource(Res.drawable.ic_map),
+                iconTone = Tone.Neutral,
+                chevron = true,
+                onClick = actions.onOpenMap,
+            )
+        }
+        item {
+            ListRow(
+                text(AccountStrings.me_isu_hub),
+                Modifier.testTag(MeTestTags.ISU_ROW),
+                subtitle = text(AccountStrings.me_isu_hub_subtitle),
+                icon = painterResource(Res.drawable.ic_account_balance),
+                iconTone = Tone.Neutral,
+                chevron = true,
+                onClick = actions.onOpenIsu,
+            )
+        }
+        item {
+            ExternalRow(
+                text(AccountStrings.me_my_itmo),
+                text(AccountStrings.me_my_itmo_subtitle),
+                painterResource(Res.drawable.ic_language),
+                MeTestTags.MY_ITMO_ROW,
+                actions.onOpenMyItmo,
+            )
+        }
+        entries.forEach { entry ->
+            item {
+                ListRow(
+                    entry.title.asString(),
+                    Modifier.testTag(MeTestTags.entry(entry.id)),
+                    subtitle = entry.subtitle?.asString(),
+                    icon = painterResource(entry.icon.drawable),
+                    iconTone = Tone.Primary,
+                    chevron = true,
+                    onClick = { actions.onOpenRoute(entry.route) },
+                )
+            }
+        }
+    }
+}
+
 /** The widgets gallery, «Устройства», the settings and, in debug builds, the developer tools. */
 @Composable
 private fun App(devices: DevicesSummary, showDebugTools: Boolean, actions: MeActions) {
@@ -301,41 +362,10 @@ private fun App(devices: DevicesSummary, showDebugTools: Boolean, actions: MeAct
     }
 }
 
-/** The campus map, ISU (messages and Wi-Fi), the university's site, the project's pages and the feedback site. */
+/** The project's pages and the feedback site. */
 @Composable
 private fun Links(actions: MeActions) {
     ListGroup {
-        item {
-            ListRow(
-                text(AccountStrings.me_map),
-                Modifier.testTag(MeTestTags.MAP_ROW),
-                subtitle = text(AccountStrings.me_map_subtitle),
-                icon = painterResource(Res.drawable.ic_map),
-                iconTone = Tone.Neutral,
-                chevron = true,
-                onClick = actions.onOpenMap,
-            )
-        }
-        item {
-            ListRow(
-                text(AccountStrings.me_isu_hub),
-                Modifier.testTag(MeTestTags.ISU_ROW),
-                subtitle = text(AccountStrings.me_isu_hub_subtitle),
-                icon = painterResource(Res.drawable.ic_account_balance),
-                iconTone = Tone.Neutral,
-                chevron = true,
-                onClick = actions.onOpenIsu,
-            )
-        }
-        item {
-            ExternalRow(
-                text(AccountStrings.me_my_itmo),
-                text(AccountStrings.me_my_itmo_subtitle),
-                painterResource(Res.drawable.ic_language),
-                MeTestTags.MY_ITMO_ROW,
-                actions.onOpenMyItmo,
-            )
-        }
         item {
             ExternalRow(
                 text(AccountStrings.me_telegram),

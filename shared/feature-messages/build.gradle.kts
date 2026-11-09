@@ -14,7 +14,7 @@ kotlin {
             api(libs.jetbrains.lifecycle.viewmodel)
             api(libs.koin.core)
             api(libs.koin.core.viewmodel)
-            // Message bodies are HTML: parsed into plain blocks, never rendered as HTML.
+            // ISU escapes names and subjects as HTML entities; bodies go through core's SafeHtml.
             implementation(libs.ksoup)
         }
         androidMain.dependencies {

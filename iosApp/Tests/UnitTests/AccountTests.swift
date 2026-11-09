@@ -69,7 +69,7 @@ final class AccountTests: XCTestCase {
     }
 
     func testMyItmoWebIsASwiftUIScreenUnderTheNativeBar() {
-        XCTAssertEqual(target(AppRoutes.MyItmoWeb.shared), .swiftUI)
+        XCTAssertEqual(target(AppRoutes.MyItmoWeb(path: "/")), .swiftUI)
     }
 
     // MARK: Update offer

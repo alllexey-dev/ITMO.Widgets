@@ -163,4 +163,25 @@ object TodaySamples {
     )
 
     val BellEmpty = BellUiState(loading = false)
+
+    /** The events of the check `Общежитие и оплата`: a queue move, an assigned dormitory and a paid Платёж. */
+    val BellDormitoryPayments = BellUiState(
+        loading = false,
+        fresh = listOf(
+            BellItem(
+                id = "queue", kind = BellKind.DORMITORY, at = at,
+                title = UiText.Dynamic("Место в очереди на общежитие"), was = UiText.Dynamic("42"), now = UiText.Dynamic("37"),
+            ),
+            BellItem(
+                id = "assigned", kind = BellKind.DORMITORY, at = at,
+                title = UiText.Dynamic("Назначено общежитие"), text = UiText.Dynamic("Общежитие на Вяземском, 5/7"),
+            ),
+        ).map { BellRow(it, new = true, time = UiText.Dynamic("12:05")) },
+        earlier = listOf(
+            BellItem(
+                id = "paid", kind = BellKind.PAYMENT, at = Instant.parse("2026-09-06T12:00:00Z"),
+                title = UiText.Dynamic("Платёж зачислен"), text = UiText.Dynamic("Договор найма · Сентябрь 2026 · 1\u00A0500\u00A0₽"),
+            ),
+        ).map { BellRow(it, new = false, time = UiText.Dynamic("вчера")) },
+    )
 }

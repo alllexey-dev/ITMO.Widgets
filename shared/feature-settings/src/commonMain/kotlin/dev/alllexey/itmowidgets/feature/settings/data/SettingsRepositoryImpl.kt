@@ -23,6 +23,7 @@ import dev.alllexey.itmowidgets.core.storage.SportSignSelectorPreferences
 import dev.alllexey.itmowidgets.core.storage.MarkSourcePreferences
 import dev.alllexey.itmowidgets.core.storage.DeviceHintPreferences
 import dev.alllexey.itmowidgets.core.storage.AppearancePreferences
+import dev.alllexey.itmowidgets.core.storage.PaymentsCheckPreferences
 import dev.alllexey.itmowidgets.core.storage.PushCategoryPreferences
 import dev.alllexey.itmowidgets.core.storage.safeEnumOf
 import dev.alllexey.itmowidgets.feature.settings.domain.LocalSettings
@@ -51,6 +52,7 @@ class SettingsRepositoryImpl(
     private val deviceHints: DeviceHintPreferences,
     private val appearance: AppearancePreferences,
     private val pushCategories: PushCategoryPreferences,
+    private val paymentsChecks: PaymentsCheckPreferences,
     private val backend: BackendGate,
     private val users: UsersApi,
     private val demo: DemoMode,
@@ -106,19 +108,24 @@ class SettingsRepositoryImpl(
             markSources.observeSheetMarksEnabled(),
             ::MarkLocalSettings
         )
+        val notifications = combine(
+            pushCategories.observeDisabled(),
+            paymentsChecks.observeNotificationsEnabled(),
+            ::NotificationLocalSettings
+        )
         val app = combine(
             scheduleChecks.observeScheduleSportAutoSignEnabled(),
             scheduleChecks.observeScheduleChangesEnabled(),
             marks,
             device,
-            pushCategories.observeDisabled()
-        ) { showSportAutoSign, scheduleChangesEnabled, markSettings, deviceSettings, disabledPushes ->
+            notifications
+        ) { showSportAutoSign, scheduleChangesEnabled, markSettings, deviceSettings, notificationSettings ->
             AppLocalSettings(
                 showSportAutoSign = showSportAutoSign,
                 scheduleChangesEnabled = scheduleChangesEnabled,
                 marks = markSettings,
                 device = deviceSettings,
-                disabledPushes = disabledPushes
+                notifications = notificationSettings
             )
         }
 
@@ -144,7 +151,8 @@ class SettingsRepositoryImpl(
                 theme = appSettings.device.theme,
                 widgetsFollowTheme = appSettings.device.widgetsFollowTheme,
                 homePassVisible = appSettings.device.homePassVisible,
-                disabledPushes = appSettings.disabledPushes,
+                disabledPushes = appSettings.notifications.disabledPushes,
+                dormitoryPaymentsEnabled = appSettings.notifications.dormitoryPayments,
             )
         }
     }
@@ -205,6 +213,10 @@ class SettingsRepositoryImpl(
 
     override suspend fun setPushEnabled(channel: String, enabled: Boolean) {
         pushCategories.setEnabled(channel, enabled)
+    }
+
+    override suspend fun setDormitoryPaymentsEnabled(enabled: Boolean) {
+        paymentsChecks.setNotificationsEnabled(enabled)
     }
 
     override suspend fun setQrTileAdded(added: Boolean) {
@@ -339,7 +351,12 @@ private data class AppLocalSettings(
     val scheduleChangesEnabled: Boolean,
     val marks: MarkLocalSettings,
     val device: DeviceLocalSettings,
-    val disabledPushes: Set<String>
+    val notifications: NotificationLocalSettings
+)
+
+private data class NotificationLocalSettings(
+    val disabledPushes: Set<String>,
+    val dormitoryPayments: Boolean
 )
 
 private data class MarkLocalSettings(

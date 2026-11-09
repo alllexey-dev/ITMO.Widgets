@@ -1,0 +1,10 @@
+{
+  "error_code": 0,
+  "error_message": null,
+  "result": {
+    "statusId": 1,
+    "queuePlace": 42,
+    "dormType": "test",
+    "assignedDormitory": null
+  }
+}

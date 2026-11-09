@@ -198,6 +198,10 @@ struct BellEventRow: View {
             ItmoAvatar(initials: item.initials ?? UserNamesKt.personInitials(name: item.lead ?? ""), pictureUrl: item.pictureUrl)
         case .connection:
             ItmoIconTile(symbol: .key, tone: item.failed ? .bad : .warn)
+        case .dormitory:
+            ItmoIconTile(symbol: .apartment, tone: .primary)
+        case .payment:
+            ItmoIconTile(symbol: .payments, tone: .ok)
         }
     }
 }

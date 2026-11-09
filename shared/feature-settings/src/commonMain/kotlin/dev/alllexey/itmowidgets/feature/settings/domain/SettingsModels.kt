@@ -29,7 +29,9 @@ data class LocalSettings(
     val widgetsFollowTheme: Boolean = true,
     val homePassVisible: Boolean = true,
     /** The push channels whose notifications the user turned off in the app. */
-    val disabledPushes: Set<String> = emptySet()
+    val disabledPushes: Set<String> = emptySet(),
+    /** `Общежитие и оплата`: the notifications of the dormitory and payments check, which runs either way. */
+    val dormitoryPaymentsEnabled: Boolean = true,
 )
 
 /** Stored as `hide*` to preserve the existing preference keys. */
@@ -81,6 +83,9 @@ interface SettingsRepository {
 
     /** The app's switch of one push category (a push channel id). */
     suspend fun setPushEnabled(channel: String, enabled: Boolean)
+
+    /** `Общежитие и оплата`: only its notifications; the check keeps the bell and `Нужно сделать` fresh either way. */
+    suspend fun setDormitoryPaymentsEnabled(enabled: Boolean)
 
     /** Changes the stored appearance from its current value in one write. */
     suspend fun updateTheme(change: (ThemeSpec) -> ThemeSpec)

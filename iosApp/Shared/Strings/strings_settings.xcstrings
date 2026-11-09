@@ -817,6 +817,30 @@
         }
       }
     },
+    "notifications_dormitory_payments" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общежитие и оплата"
+          }
+        }
+      }
+    },
+    "notifications_dormitory_payments_text" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место в общежитии и сроки платежей"
+          }
+        }
+      }
+    },
     "notifications_friends" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",

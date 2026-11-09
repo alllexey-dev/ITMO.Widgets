@@ -258,7 +258,7 @@ class ShellHostTest {
 
             compose.onNodeWithText(OPEN_WEB).performClick()
             compose.waitForIdle()
-            assertEquals(listOf<AppRoute>(AppRoutes.MyItmoWeb), snapshot(scenario).backStack.overlays)
+            assertEquals(listOf<AppRoute>(AppRoutes.MyItmoWeb()), snapshot(scenario).backStack.overlays)
 
             sessions.state.value = SessionState.ReauthenticationRequired
             compose.waitForIdle()
@@ -385,7 +385,7 @@ class ShellHostTestActivity : ComponentActivity() {
             shellHostEntries()
             entry<AppRoutes.TabRoot> { key, navigator ->
                 Column(Modifier.fillMaxSize().testTag("root:${key.tab}")) {
-                    Button(onClick = { navigator.open(AppRoutes.MyItmoWeb) }) { Text("open:web") }
+                    Button(onClick = { navigator.open(AppRoutes.MyItmoWeb()) }) { Text("open:web") }
                     Button(onClick = { navigator.open(AppRoutes.Pairing()) }) { Text("open:pairing") }
                     Button(onClick = { navigator.open(AppRoutes.Devices) }) { Text("open:devices") }
                     Button(onClick = { navigator.open(AppRoutes.Connection("conn-1")) }) { Text("open:connection") }

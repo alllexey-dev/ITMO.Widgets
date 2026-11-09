@@ -1,0 +1,390 @@
+{
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "dormitory_bell_assigned" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назначено общежитие"
+          }
+        }
+      }
+    },
+    "dormitory_bell_queue" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место в очереди на общежитие"
+          }
+        }
+      }
+    },
+    "dormitory_choose_date" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать дату заселения"
+          }
+        }
+      }
+    },
+    "dormitory_date_chosen_text" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дата выбрана. Перед заселением ИТМО должен подтвердить документы"
+          }
+        }
+      }
+    },
+    "dormitory_documents_none" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИТМО пока не запросил документы"
+          }
+        }
+      }
+    },
+    "dormitory_documents_section" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документы для заселения"
+          }
+        }
+      }
+    },
+    "dormitory_instructions_section" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как заселиться"
+          }
+        }
+      }
+    },
+    "dormitory_map_unavailable" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось открыть карту"
+          }
+        }
+      }
+    },
+    "dormitory_none_text" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда вы встанете в очередь в my.itmo, здесь появится ваш этап"
+          }
+        }
+      }
+    },
+    "dormitory_none_title" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заявки на общежитие нет"
+          }
+        }
+      }
+    },
+    "dormitory_notification_offered_title" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место в общежитии предоставлено"
+          }
+        }
+      }
+    },
+    "dormitory_on_map" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На карте"
+          }
+        }
+      }
+    },
+    "dormitory_place_offered_seen" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение видит этот этап с %1$@"
+          }
+        }
+      }
+    },
+    "dormitory_place_offered_text" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите дату заселения в my.itmo — время на выбор ограничено"
+          }
+        }
+      }
+    },
+    "dormitory_place_section" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваше общежитие"
+          }
+        }
+      }
+    },
+    "dormitory_queue_place" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место в очереди: %1$lld"
+          }
+        }
+      }
+    },
+    "dormitory_queue_text" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда подойдёт очередь, ИТМО предоставит место"
+          }
+        }
+      }
+    },
+    "dormitory_settled_text" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы живёте в общежитии ИТМО"
+          }
+        }
+      }
+    },
+    "dormitory_stage_date_chosen" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дата заселения выбрана"
+          }
+        }
+      }
+    },
+    "dormitory_stage_place_offered" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место предоставлено"
+          }
+        }
+      }
+    },
+    "dormitory_stage_queue" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В очереди"
+          }
+        }
+      }
+    },
+    "dormitory_stage_settled" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заселён"
+          }
+        }
+      }
+    },
+    "dormitory_stage_unknown" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заявка на общежитие"
+          }
+        }
+      }
+    },
+    "dormitory_title" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общежитие"
+          }
+        }
+      }
+    },
+    "dormitory_todo_date_reason" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место предоставлено (видим с %1$@), время на выбор ограничено"
+          }
+        }
+      }
+    },
+    "dormitory_todo_date_title" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите дату заселения"
+          }
+        }
+      }
+    },
+    "dormitory_todo_document_reason" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — нужен для заселения"
+          }
+        }
+      }
+    },
+    "dormitory_todo_document_title" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документ «%1$@»"
+          }
+        }
+      }
+    },
+    "dormitory_todo_open" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть"
+          }
+        }
+      }
+    },
+    "dormitory_unknown_text" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подробности — в my.itmo"
+          }
+        }
+      }
+    },
+    "dormitory_upload" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузить"
+          }
+        }
+      }
+    },
+    "dormitory_upload_subtitle" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документы загружаются в my.itmo"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

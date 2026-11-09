@@ -113,10 +113,18 @@ object AppRoutes {
         override val sheetPolicy get() = SheetPolicy()
     }
 
-    /** Refused in the demo session ([ShellGate.check]). */
+    /**
+     * my.itmo.ru in the app's browser, starting at [path] of the site (the home page by default, a section such as
+     * `/services/dormitories` otherwise). Refused in the demo session ([ShellGate.check]).
+     */
     @Serializable
-    data object MyItmoWeb : AppRoute {
+    data class MyItmoWeb(val path: String = "/") : AppRoute {
         override val kind get() = RouteKind.SCREEN
+
+        companion object {
+            /** The site's origin, which the browser's start page and the `Оплатить` links of the system browser share. */
+            const val ORIGIN = "https://my.itmo.ru"
+        }
     }
 
     /** The schedule's friend picker; [selectedIsu] is [FriendSelectionContract.NO_USER_ISU] for the own schedule. */
@@ -230,6 +238,18 @@ object AppRoutes {
         override val kind get() = RouteKind.SCREEN
     }
 
+    /** `Общежитие` of Профиль (docs/features/dormitory.md): the Этап общежития and the assigned dormitory. */
+    @Serializable
+    data object Dormitory : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
+    /** `Оплата обучения` of Профиль (docs/features/finances.md): the Договоры об обучении with their Платежи. */
+    @Serializable
+    data object Tuition : AppRoute {
+        override val kind get() = RouteKind.SCREEN
+    }
+
     /** `ИСУ` of Профиль (docs/features/me.md): the entries to [IsuMessages] and [Wifi]. */
     @Serializable
     data object Isu : AppRoute {
@@ -297,6 +317,8 @@ object AppRoutes {
         subclass(LessonDetails::class)
         subclass(PendingSportDetails::class)
         subclass(CampusMap::class)
+        subclass(Dormitory::class)
+        subclass(Tuition::class)
         subclass(Isu::class)
         subclass(IsuMessages::class)
         subclass(ReportReview::class)

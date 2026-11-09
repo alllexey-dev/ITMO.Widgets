@@ -191,6 +191,8 @@
     <string name="notifications_marks_bars">БАРС</string>
     <string name="notifications_marks_sheets">Таблицы преподавателей</string>
     <string name="notifications_changes">Изменения расписания</string>
+    <string name="notifications_dormitory_payments">Общежитие и оплата</string>
+    <string name="notifications_dormitory_payments_text">Место в общежитии и сроки платежей</string>
     <string name="notifications_sport">Спорт</string>
     <string name="notifications_friends">Друзья</string>
     <string name="notifications_devices">Новые устройства</string>

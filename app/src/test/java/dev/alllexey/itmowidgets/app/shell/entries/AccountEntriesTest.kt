@@ -52,6 +52,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeDevicesOverview
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
+import dev.alllexey.itmowidgets.core.testing.RecordingPaymentsScheduler
+import dev.alllexey.itmowidgets.core.payments.check.PaymentsTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
@@ -176,6 +178,7 @@ class AccountEntriesTest {
                             FakeScheduleChangeTracking(),
                             NoBarsProbe,
                             FakeMarkTracking(),
+                            PaymentsTracking(FakeSessionTokenStore(signedIn = false), RecordingPaymentsScheduler()),
                         )
                     }
                     viewModel { WifiViewModel(wifi) }
@@ -258,12 +261,21 @@ class AccountEntriesTest {
     @Test
     fun myItmoInTheBrowserRendersAndClosesItself() {
         show()
-        act { open(AppRoutes.MyItmoWeb) }
+        act { open(AppRoutes.MyItmoWeb()) }
 
         compose.onNodeWithTag(MyItmoWebTestTags.RELOAD).assertIsDisplayed()
         compose.onNodeWithTag(MyItmoWebTestTags.CLOSE).performClick()
         compose.waitForIdle()
         assertTrue(navigator.state.overlays.isEmpty())
+    }
+
+    @Test
+    fun myItmoInTheBrowserStartsAtTheSectionItWasOpenedFor() {
+        show()
+        act { open(AppRoutes.MyItmoWeb("/services/dormitories")) }
+
+        val page = webView(compose.activity.window.decorView)
+        compose.runOnIdle { assertEquals("https://my.itmo.ru/services/dormitories", shadowOf(page).lastLoadedUrl) }
     }
 
     /**
@@ -273,7 +285,7 @@ class AccountEntriesTest {
     @Test
     fun backOnMyItmoGoesBackInTheWebHistoryThenLeavesItToTheOverlayGesture() {
         show()
-        act { open(AppRoutes.MyItmoWeb) }
+        act { open(AppRoutes.MyItmoWeb()) }
         val page = webView(compose.activity.window.decorView)
         compose.runOnIdle {
             // The shadow keeps no history of its own loads: the home page, then a second one.
@@ -287,9 +299,9 @@ class AccountEntriesTest {
         compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitForIdle()
         assertEquals(1, shadowOf(page).goBackInvocations)
-        assertEquals(listOf<AppRoute>(AppRoutes.MyItmoWeb), navigator.state.overlays)
+        assertEquals(listOf<AppRoute>(AppRoutes.MyItmoWeb()), navigator.state.overlays)
 
-        val screen = compose.onNodeWithTag(ShellTags.overlay(AppRoutes.MyItmoWeb.toString()))
+        val screen = compose.onNodeWithTag(ShellTags.overlay(AppRoutes.MyItmoWeb().toString()))
         val full = screen.getBoundsInRoot()
         compose.runOnIdle {
             compose.activity.onBackPressedDispatcher.dispatchOnBackStarted(backEvent(0f))
@@ -312,7 +324,7 @@ class AccountEntriesTest {
         surface = ShellSurface.Tabs(demoBanner = true)
         show()
 
-        listOf(AppRoutes.Pairing(), AppRoutes.Devices, AppRoutes.Connection("conn-1"), AppRoutes.MyItmoWeb).forEach { route ->
+        listOf(AppRoutes.Pairing(), AppRoutes.Devices, AppRoutes.Connection("conn-1"), AppRoutes.MyItmoWeb()).forEach { route ->
             ShadowToast.reset()
             act { open(route) }
             assertEquals("$route", ShellBackStack(AppTab.ME), navigator.state)

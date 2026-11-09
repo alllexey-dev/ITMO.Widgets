@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.core.work
 
+import dev.alllexey.itmowidgets.core.payments.work.PAYMENTS_SPEC
+import dev.alllexey.itmowidgets.core.payments.work.PaymentsWorker
 import dev.alllexey.itmowidgets.feature.recordbook.work.MARKS_SPEC
 import dev.alllexey.itmowidgets.feature.recordbook.work.MarksWorker
 import dev.alllexey.itmowidgets.feature.schedule.work.CALENDAR_SYNC_SPEC
@@ -56,6 +58,21 @@ class PeriodicCheckSpecTest {
                 backoff = 15.minutes
             ),
             MARKS_SPEC
+        )
+    }
+
+    @Test
+    fun `the dormitory and payments check runs every three hours`() {
+        assertEquals(
+            PeriodicCheckSpec(
+                worker = PaymentsWorker::class,
+                periodicWork = "dormitory-payments-check",
+                oneOffWork = "dormitory-payments-check-now",
+                tag = "dormitory-payments",
+                period = 3.hours,
+                backoff = 15.minutes
+            ),
+            PAYMENTS_SPEC
         )
     }
 }

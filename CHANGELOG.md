@@ -215,6 +215,60 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   load shows the list skeleton on Android, the error and sign-in states have icons, and attachments show a download
   mark.
 
+### Общежитие и оплата
+
+- Профиль gets a `Университет` group below `Приложение`: `Карта`, `ИСУ` and `My ITMO` move there from the links, and the
+  feature rows join them.
+- `Общежитие` in Профиль (`Университет`) on both platforms while the student has a dormitory
+  application: the Этап общежития (`В очереди` with the queue place, `Место предоставлено` with
+  `Выбрать дату заселения`, `Дата заселения выбрана`, `Заселён`), the assigned dormitory with its address,
+  `На карте` in the system map app and the settlement instructions as safe text, and the Документы для заселения
+  with their status and `Загрузить` while a place is offered or a date is picked. Picking a date and uploading open
+  my.itmo's dormitory section inside the app. The last answer is kept on the device: offline or on an error the
+  screen shows it with `Обновлено N назад`; when only the Договоры fail, the new stage is shown beside the stored
+  Договоры. The demo shows a settled resident and sends nothing. Read from my.itmo
+  through MyItmoApi's dormitory area (MyItmoApi 2.4.0); nothing goes to Backend.
+- `Общежитие` shows the Договор найма: its number and dates, the Долг or overpayment, and the schedule of
+  Платежи with amounts, due dates and what is paid (`Оплачен`, `Сегодня`, `Через N дней`, `Просрочен`). Earlier
+  academic years fold into `Прошлые годы`; a Долг from an earlier year stays in front. `Оплатить` opens my.itmo's
+  dormitory section in the system browser, since the in-app view does not follow the redirect to the bank. The
+  `Общежитие` row also appears for a student with a Договор найма but no dormitory application. The demo shows one
+  Договор найма with one upcoming Платёж.
+- `Нужно сделать` on Сегодня reminds about the dormitory on both platforms: `Выберите дату заселения` while
+  `Место предоставлено`, with the time the app first saw that stage and a note that the window is limited (no
+  deadline is computed), and one item per Документ для заселения ITMO has not confirmed. The items come from the
+  stored answer, so they show offline; tapping opens `Общежитие`. The screen shows the same first-seen time.
+- For developers: the ISU HTML parser moved to core as `SafeHtml`/`RichText` (with the kit's `RichTextParagraph`
+  and iOS `ItmoRichText`), `AppRoutes.MyItmoWeb(path)` opens a section of my.itmo, and features add rows to
+  Профиль through `ProfileEntrySource`. The payments domain shared by dormitory and tuition is in core
+  (`core/payments`: `Contract`, `Payment`, `Money`, `PaymentState`, `ContractsByYear`; texts in
+  `core/text/PaymentTexts.kt`).
+- `Оплата обучения` in Профиль on both platforms for a student on paid study: each Договор об обучении with its
+  balance, the Долг or overpayment, and the schedule of Платежи, drawn like the Договор найма; earlier years fold
+  into `Прошлые годы`. `Оплатить` opens my.itmo's tuition page in the system browser. The row is hidden on a budget
+  place and in the demo; the last answer is kept on the device with `Обновлено N назад`. Read from my.itmo through
+  MyItmoApi's finances area; nothing goes to Backend.
+- For developers: new module `:shared:feature-finances` (the scholarship joins it later). The Договор sections are
+  shared: `ContractList` in core (`core/text/ContractCards.kt`), the kit's `ContractSections` on Android and
+  `ItmoContractList` in the iOS DesignSystem; the stored answer's age is core's `updatedAgo`.
+- `Нужно сделать` on Сегодня reminds about Платежи for the Договор найма and the Договор об обучении on both
+  platforms: `Оплатить до 13 ноября, 1 000 ₽` from 7 days before an unpaid Платёж is due to its due day, with what
+  is left of it, and `Погасить долг, 1 500 ₽` for each Договор with a Долг until it is paid off (an overdue Платёж
+  is part of that item, not one of its own). The items come from the stored answers, so they show offline and Сегодня
+  sends no request; tapping opens `Общежитие` or `Оплата обучения`. The demo shows none.
+- One background check `Общежитие и оплата` on both platforms keeps the dormitory and tuition answers fresh: every
+  3 hours while there is a Этап общежития or something left to pay, once a day otherwise (also a day after a failed
+  request with nothing pending), so a new application is found within a day. It notifies `Место предоставлено` once when the app first sees it, and each Платёж 3 days
+  before and on its due day (`Платёж через 3 дня`, `Сегодня последний день платежа`, with what is left to pay);
+  nothing about a Долг, nothing between 00:00 and 06:00. The bell records a queue place that moved, an assigned
+  dormitory and a Платёж that became paid. The new switch `Общежитие и оплата` in `Уведомления` (on by default) and
+  the Android channel of the same name silence only the notifications; the bell and `Нужно сделать` keep working,
+  and what came up while it was off is not posted once it is back on.
+  The demo sends nothing and posts nothing; the debug tools have `Проверить общежитие и оплату`.
+- For developers: the check is core's `PaymentsCheck` over each feature's `PaymentsCheckPart`; bell events of a
+  stored answer go through core's `BellEventStore`, the paid Платёж rule is `PaymentBellEvents`, and `BellKind`
+  has `DORMITORY` and `PAYMENT`.
+
 ### Widgets
 
 - Rebuilt on one shared snapshot (RemoteViews on Android, WidgetKit on iOS): `Пара` with the lesson to go to and a

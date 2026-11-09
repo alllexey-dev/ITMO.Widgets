@@ -136,6 +136,7 @@ internal fun NotificationSettingsEntry(key: AppRoutes.Settings, navigator: Nav3A
             onMarks = viewModel::setMarks,
             onMarkSource = viewModel::setMarkSource,
             onScheduleChanges = viewModel::setScheduleChanges,
+            onDormitoryPayments = viewModel::setDormitoryPayments,
             onPush = viewModel::setPush,
             onConnection = viewModel::openConnection,
             onRequestPermission = viewModel::requestPermission,

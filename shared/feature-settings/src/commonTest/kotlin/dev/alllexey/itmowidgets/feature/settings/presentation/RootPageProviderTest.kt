@@ -101,8 +101,8 @@ class RootPageProviderTest {
             advanceUntilIdle()
             val row = { navigation(fixture, SettingsPage.NOTIFICATIONS) }
 
-            // Not connected: the marks and the schedule changes, both on by default.
-            assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(2, 2)), row().value)
+            // Not connected: the marks, the schedule changes and `Общежитие и оплата`, all on by default.
+            assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(3, 3)), row().value)
             fixture.viewModel.onNotificationPermissionChanged(granted = false)
             advanceUntilIdle()
             assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_denied), row().value)
@@ -112,7 +112,7 @@ class RootPageProviderTest {
                 disabledPushes = setOf(AppNotificationChannels.FRIENDS),
             )
             advanceUntilIdle()
-            assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(4, 5)), row().value)
+            assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(5, 6)), row().value)
         }
 
     @Test

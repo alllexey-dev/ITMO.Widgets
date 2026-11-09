@@ -24,6 +24,7 @@ struct NotificationSettingsScreen: View {
                 marks: { viewModel.setMarks(enabled: $0) },
                 markSource: { viewModel.setMarkSource(source: $0, enabled: $1) },
                 scheduleChanges: { viewModel.setScheduleChanges(enabled: $0) },
+                dormitoryPayments: { viewModel.setDormitoryPayments(enabled: $0) },
                 push: { viewModel.setPush(kind: $0, enabled: $1) },
                 connection: { viewModel.openConnection() },
                 requestPermission: { viewModel.requestPermission() },
@@ -115,6 +116,7 @@ struct NotificationSettingsActions {
     var marks: (Bool) -> Void = { _ in }
     var markSource: (MarkCheckSource, Bool) -> Void = { _, _ in }
     var scheduleChanges: (Bool) -> Void = { _ in }
+    var dormitoryPayments: (Bool) -> Void = { _ in }
     var push: (PushKind, Bool) -> Void = { _, _ in }
     var connection: () -> Void = {}
     var requestPermission: () -> Void = {}
@@ -160,6 +162,14 @@ struct NotificationSettingsContent: View {
                             isOn: Binding(get: { state.scheduleChanges }, set: actions.scheduleChanges)
                         )
                         .accessibilityIdentifier("notifications.changes")
+                        typeSwitch(
+                            title: "notifications_dormitory_payments",
+                            text: "notifications_dormitory_payments_text",
+                            symbol: .apartment,
+                            tone: .primary,
+                            isOn: Binding(get: { state.dormitoryPayments }, set: actions.dormitoryPayments)
+                        )
+                        .accessibilityIdentifier("notifications.dormitoryPayments")
                         // The connection only gates the push switches, which iOS does not list yet.
                         if !state.connected && !state.pushes.isEmpty {
                             ItmoRow(

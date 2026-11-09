@@ -493,6 +493,18 @@
         }
       }
     },
+    "notification_channel_dormitory_payments" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общежитие и оплата"
+          }
+        }
+      }
+    },
     "notification_channel_friends" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",

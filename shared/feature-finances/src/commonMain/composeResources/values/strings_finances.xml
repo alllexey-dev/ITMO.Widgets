@@ -1,0 +1,8 @@
+<resources>
+    <!-- Профиль and the screen title -->
+    <string name="tuition_title">Оплата обучения</string>
+
+    <!-- States -->
+    <string name="tuition_none_title">Договоров об обучении нет</string>
+    <string name="tuition_none_text">Если вы учитесь на платной основе, договор появится здесь, когда ИТМО его оформит</string>
+</resources>

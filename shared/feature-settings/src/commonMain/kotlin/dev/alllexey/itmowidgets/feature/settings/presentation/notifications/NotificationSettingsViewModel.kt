@@ -28,7 +28,7 @@ import kotlinx.coroutines.sync.withLock
 
 /**
  * «Уведомления», the one home of notification settings (DECISIONS.md). Every type has its switch here: the local checks
- * (marks, schedule changes) start and stop the check itself, the pushes of ITMO.Widgets are dropped on the device while
+ * (marks, schedule changes) start and stop the check itself, `Общежитие и оплата` silences only its notifications, the pushes of ITMO.Widgets are dropped on the device while
  * off (`FcmPayloadDispatcher`, the iOS notification service). Turning a type on without the permission asks for it;
  * turning a check on while the system restricts the app in the background offers the once-per-device hint.
  *
@@ -66,16 +66,19 @@ class NotificationSettingsViewModel(
         val wanted = listOfNotNull(
             AppNotificationChannels.MARKS.takeIf { marks?.enabled == true },
             AppNotificationChannels.SCHEDULE_CHANGES.takeIf { stored.scheduleChangesEnabled },
+            AppNotificationChannels.DORMITORY_PAYMENTS.takeIf { stored.dormitoryPaymentsEnabled },
         ) + pushes.filter { it.enabled && stored.customServicesEnabled }.map { it.kind.channel }
         NotificationSettingsUiState(
             loaded = true,
             permission = granted,
             marks = marks,
             scheduleChanges = stored.scheduleChangesEnabled,
+            dormitoryPayments = stored.dormitoryPaymentsEnabled,
             pushes = pushes,
             connected = stored.customServicesEnabled,
             systemChannelsOff = granted != NotificationPermission.DENIED && wanted.any { channelStates?.get(it) == false },
-            backgroundWorkRestricted = unrestricted == false && (stored.scheduleChangesEnabled || marks?.enabled == true),
+            backgroundWorkRestricted = unrestricted == false &&
+                (stored.scheduleChangesEnabled || marks?.enabled == true || stored.dormitoryPaymentsEnabled),
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, NotificationSettingsUiState())
 
@@ -120,6 +123,9 @@ class NotificationSettingsViewModel(
     }
 
     fun setScheduleChanges(enabled: Boolean) = updateCheck(enabled) { scheduleChanges.setEnabled(enabled) }
+
+    /** `Общежитие и оплата` gates only the notifications: the check itself runs with any session. */
+    fun setDormitoryPayments(enabled: Boolean) = updateCheck(enabled) { settings.setDormitoryPaymentsEnabled(enabled) }
 
     /** A push needs no background work of the app, so no hint; the permission is still asked for. */
     fun setPush(kind: PushKind, enabled: Boolean) =
