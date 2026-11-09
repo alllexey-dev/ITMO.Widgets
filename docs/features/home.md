@@ -52,6 +52,8 @@ day as the timeline and `Нужно сделать` when there is something, wit
 | A schedule change | `ScheduleChangesBellSource` (schedule), the change history | the lesson's sheet |
 | A queue's result | `SportBellSource` over `SportResultLog` (sport), written by the queue push booker | Спорт |
 | An incoming friend request with `Принять` and `Отклонить` | `FriendRequestsBellSource` (social), behind the opt-in | the person |
+| A dormitory queue place that moved, an assigned dormitory, a paid Платёж of the Договор найма | `DormitoryBellSource` over `DormitoryBellEvents` (dormitory), written by every refresh ([dormitory](dormitory.md#background-check)) | `Общежитие` |
+| A paid Платёж of the Договор об обучении | `TuitionBellSource` over `TuitionBellEvents` (finances) | `Оплата обучения` |
 
 - `BellRepositoryImpl` joins the sources (requests first, each part newest first, an unknown moment last; a failing
   source counts as empty) and keeps the seen event ids in `BellPreferences` (`bell_seen`, cleared on sign-out). An

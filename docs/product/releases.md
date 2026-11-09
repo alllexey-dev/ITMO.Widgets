@@ -121,8 +121,9 @@ Ideas that need a decision before they become work:
     status change; submitting a request comes later.
   - Lesson reminders and a live "идёт пара" notification (Android) or Live
     Activity (iOS).
-  - Dormitory: stage, queue place, contract balance and payments due; a
-    must-have.
+  - Done in 2.3 (#566): dormitory and payments: stage, queue place, the
+    Договор найма and the Договор об обучении with their Платежи, `Нужно
+    сделать`, the background check with its notifications and bell events.
   - Calendar subscription: a secret `.ics` URL served by Backend.
   - Electives: built during a development election campaign, so it can be
     tested on real data.

@@ -251,6 +251,17 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   is left of it, and `Погасить долг, 1 500 ₽` for each Договор with a Долг until it is paid off (an overdue Платёж
   is part of that item, not one of its own). The items come from the stored answers, so they show offline and Сегодня
   sends no request; tapping opens `Общежитие` or `Оплата обучения`. The demo shows none.
+- One background check `Общежитие и оплата` on both platforms keeps the dormitory and tuition answers fresh: every
+  3 hours while there is a Этап общежития or something left to pay, once a day otherwise, so a new application is
+  found within a day. It notifies `Место предоставлено` once when the app first sees it, and each Платёж 3 days
+  before and on its due day (`Платёж через 3 дня`, `Сегодня последний день платежа`, with what is left to pay);
+  nothing about a Долг, nothing between 00:00 and 06:00. The bell records a queue place that moved, an assigned
+  dormitory and a Платёж that became paid. The new switch `Общежитие и оплата` in «Уведомления» (on by default) and
+  the Android channel of the same name silence only the notifications; the bell and `Нужно сделать` keep working.
+  The demo sends nothing and posts nothing; the debug tools have `Проверить общежитие и оплату`.
+- For developers: the check is core's `PaymentsCheck` over each feature's `PaymentsCheckPart`; bell events of a
+  stored answer go through core's `BellEventStore`, the paid Платёж rule is `PaymentBellEvents`, and `BellKind`
+  has `DORMITORY` and `PAYMENT`.
 
 ### Widgets
 

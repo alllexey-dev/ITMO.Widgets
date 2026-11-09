@@ -18,7 +18,8 @@ failure keeps the stored answer.
 
 `TuitionTodoSource` contributes to `Нужно сделать` on Сегодня ([Home](home.md)) through `core/today/TodayTodoSource`
 (qualifier `tuition`). It reads only the stored answer, so the items show offline and Сегодня sends no tuition
-request; the answer is refreshed by the screen and the Профиль row. The items are core's `PaymentTodos`, the same as
+request; the answer is refreshed by the screen, the Профиль row and the [background check](#background-check). The
+items are core's `PaymentTodos`, the same as
 the [dormitory's](dormitory.md#нужно-сделать) for the Договор найма:
 
 | Item | While | Text |
@@ -78,7 +79,17 @@ other Профиль row. ITMO's rubles become kopecks and its dates Moscow cale
 - **Demo.** The demo session is on a budget place (`DemoTuition`): no Договор об обучении, no row, no request
   (`FinancesDemoGateTest`).
 
-Not here yet: the background check, its notifications and bell events (#573), the scholarship.
+## Background check
+
+`TuitionCheckPart` is this module's part of the one check `Общежитие и оплата` (rules in
+[dormitory](dormitory.md#background-check)): the Договоры об обучении keep the 3-hour cadence while something is left
+to pay, and a budget place is asked once a day. Each unpaid Платёж is reminded three days before and on its due day
+(`Договор об обучении · Ноябрь 2026 · 100 000 ₽`), nothing for a Долг, nothing 00:00-06:00; a tap opens `Оплата
+обучения` over Сегодня. Every successful refresh records `Платёж зачислен` in the bell when an unpaid Платёж became
+paid (`TuitionBellEvents`, tuition_bell.json in the no-backup directory, qualifier `tuition`), with the switch off too; the first
+answer is a baseline.
+
+Not here yet: the scholarship.
 
 ## iOS
 
@@ -96,5 +107,8 @@ Not here yet: the background check, its notifications and bell events (#573), th
   from the stored answer with its age, an ITMO error and an undecodable answer, sign-out (also while a request is on
   its way) and another account's file; the `Нужно сделать` items: a Долг until paid off, a Платёж due within a week,
   due today and then overdue as a Долг offline without a request, a budget place and sign-out.
+- `TuitionPaymentsCheckTest` (`androidHostTest`): the check over the same harness: a Платёж reminded three days
+  before and on the due day once each, no reminder for a Долг, the paid Платёж in the bell, the 3-hour cadence while
+  something is left to pay, a budget place asked once a day, and the demo.
 - `TuitionScreenTest` (Compose actions and touch targets), `FinancesScreenshotTest` (baselines in
   `shared/feature-finances/screenshots/`), `FinancesModuleTest`.

@@ -62,8 +62,9 @@ before clearing credentials.
 | `connections` | `Подключения устройств` | FCM |
 | `schedule_changes` | `Изменения расписания` | the local schedule check |
 | `marks` | `Оценки` | the local mark check |
+| `dormitory_payments` | `Общежитие и оплата` | the local dormitory and payments check |
 
-- All five are at default importance, created on start (`AppNotificationChannels`). Android owns the permission,
+- All six are at default importance, created on start (`AppNotificationChannels`). Android owns the permission,
   sound and per-channel visibility. The switches of «Уведомления» ([settings](../settings.md#notifications)) switch
   the checks themselves and, for the pushes, whether the device shows them; they never change a channel.
 - A denied notification permission suppresses only the visual alert, not sport automation already enabled or the
@@ -113,6 +114,26 @@ tag `marks`.
 - `markRead` leaving no unread subject and `markAllRead()` cancel the digest.
   Without the permission subjects count as delivered, the prompt as shown.
 
+## Dormitory and payments
+
+Local: `PaymentsCheck` (`shared/core`, `core/payments/check`) runs the parts of the dormitory and the tuition
+(`PaymentsCheckPart`) and decides; rules in [dormitory](dormitory.md#background-check) and
+[tuition](finances.md#background-check). Channel and tag `dormitory_payments`.
+
+- `Место предоставлено`: once per time the app first saw the stage (a stage that leaves and comes back is told
+  again); text `Выберите дату заселения в my.itmo - время на выбор ограничено`.
+- A Платёж: `Платёж через 3 дня` (once, within three days of the due date; a Платёж first seen two days ahead gets
+  `через 2 дня`) and `Сегодня последний день платежа` (once, on the due day). The text is `Договор найма · Ноябрь
+  2026 · 1 000 ₽`, what is left to pay; the lock screen shows the title only (`publicTitle`). Both reminders of one
+  Платёж share one id, so the due day's replaces the earlier one. Nothing for a Долг: an overdue Платёж has no
+  reminder, `Нужно сделать` keeps it.
+- Each notice is posted at most once: the keys go to payments_notices.json in the no-backup directory (ids and dates, never a
+  number or an amount), cleared on sign-out. The switch `Общежитие и оплата` gates the posting only; a notice found
+  with it off is not spent and is posted if the switch is turned on while it still applies.
+- Nothing is shown 00:00-06:00 Moscow time; the first run after 06:00 posts what waited.
+- Taps: `ACTION_OPEN_DORMITORY` and `ACTION_OPEN_TUITION` open «Общежитие» or «Оплата обучения» over Сегодня.
+- Without the permission the notices count as posted.
+
 ## iOS
 
 See [iOS app](../ios.md#notifications) and
@@ -121,7 +142,7 @@ See [iOS app](../ios.md#notifications) and
 - `IosAppNotifier` (`shared/core`, iosMain): identifier `<channel>-<id>`,
   thread = channel id, no sound when `silent`; `publicTitle` is unused. Sign-out
   removes shown and scheduled notifications.
-- `IosScheduleChangeNotifier` and `IosMarksNotifier` match Android. Checks run
+- `IosScheduleChangeNotifier`, `IosMarksNotifier` and `IosPaymentsNotifier` match Android. Checks run
   only on background refresh or app open, so they may be hours late; a find in
   00:00-06:00 is scheduled for 06:00 with a calendar trigger.
 - Taps: `NotificationTapRoutes.userInfoOf` stores Android's action and extras;

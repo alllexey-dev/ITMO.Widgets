@@ -273,6 +273,15 @@ on: the checks, and the pushes while connected) or `запрещены в сис
   (`schedule_changes_enabled`, absent means on); it does not need the
   connection. Off cancels the work and forgets the snapshot, the history stays;
   on schedules it again and the first check only takes a new snapshot.
+- `Общежитие и оплата` silences the notifications of the dormitory and
+  payments check ([dormitory](features/dormitory.md#background-check),
+  [tuition](features/finances.md#background-check)): `Место предоставлено` and
+  the Платежи reminders. On by default
+  (`dormitory_payments_notifications_enabled` in `PaymentsCheckPreferences`,
+  absent means on; a device setting that survives sign-out); it does not need
+  the connection. Unlike the other checks it gates only the system
+  notifications: the check runs with any session either way, so the bell,
+  `Нужно сделать` and the screens stay fresh with it off.
 - Turning a check on without the permission asks for it as the gate does; the
   switch stays on whatever the answer is.
 - The pushes of ITMO.Widgets (`Спорт`, `Друзья`, `Новые устройства`) have a
@@ -328,8 +337,8 @@ leaves a backgrounded app without network.
 - The app does not hold `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` and never shows
   the system exemption dialog: Google Play allows it only for apps whose core
   function needs it. It only opens the page.
-- Turning on `Изменения расписания` or a source of `Баллы` while the app is
-  restricted shows a dialog once per device (`Разрешить` opens the same page,
+- Turning on `Изменения расписания`, a source of `Баллы` or `Общежитие и
+  оплата` while the app is restricted shows a dialog once per device (`Разрешить` opens the same page,
   `Не сейчас`). The fact is stored as `background_work_hint_shown` and survives
   sign-out.
 - On MIUI the `Без ограничений` mode may leave

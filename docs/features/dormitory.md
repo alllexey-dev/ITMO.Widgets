@@ -4,7 +4,8 @@
 dormitory with its address and the settlement instructions, the Документы для заселения while they matter, and the
 Договор найма with its balance and schedule of Платежи. Read-only: picking a settlement date and uploading documents
 happen in my.itmo, opened inside the app; paying happens in my.itmo in the system browser. The code is the
-`:shared:feature-dormitory` module; the spec is issue #566 (this screen #568, the Договор найма #569). Vocabulary:
+`:shared:feature-dormitory` module; the spec is issue #566 (this screen #568, the Договор найма #569, the background
+check #573). Vocabulary:
 [GLOSSARY.md](../../GLOSSARY.md).
 
 ## Профиль row
@@ -82,7 +83,7 @@ kit's `ContractSections` and iOS `ItmoContractList`), which the [tuition screen]
 
 `DormitoryTodoSource` contributes to `Нужно сделать` on Сегодня ([Home](home.md)) through `core/today/TodayTodoSource`
 (qualifier `dormitory`). It reads only the stored answer, so the items show offline and Сегодня sends no dormitory
-request; the answer is refreshed by the screen and the Профиль row.
+request; the answer is refreshed by the screen, the Профиль row and the [background check](#background-check).
 
 | Item | While | Text |
 |---|---|---|
@@ -137,7 +138,32 @@ ITMO's rubles become kopecks and its dates Moscow calendar dates when stored.
 - **Demo.** The demo session answers from `DemoDormitory` (`Заселён` in the fictional `Общежитие №1`, one Договор
   найма with one upcoming Платёж) and sends no request (`DormitoryDemoGateTest`).
 
-Not here yet: the background check, its notifications and bell events (#573).
+## Background check
+
+One check `Общежитие и оплата` keeps the stored answers of the dormitory and the [tuition](finances.md) fresh and tells
+the student what happened. It is core's `PaymentsCheck` (`core/payments/check`) over every feature's
+`PaymentsCheckPart` (qualifiers `dormitory`, `tuition`), so the two features never import each other;
+`DormitoryCheckPart` is this module's.
+
+- **Cadence.** Android runs it every 3 hours with a network (`PaymentsWorker`, `PAYMENTS_SPEC`, unique work
+  `dormitory-payments-check` and `dormitory-payments-check-now`); iOS as the step `dormitory-payments` of the one app
+  refresh task, at most every 3 hours. A run asks my.itmo while any stored answer has a Этап общежития (any status,
+  `Заселён` included) or something left to pay (an unpaid Платёж or a negative balance), and otherwise only once the
+  oldest answer is 24 hours old, so a status that appears is found within a day (`PaymentsCadence`). A run that asks
+  nothing is `SKIPPED`. It runs with any session; the demo and a signed-out device send nothing and post nothing.
+- **Notifications** ([notifications](notifications.md#dormitory-and-payments), switch `Общежитие и оплата`,
+  [settings](../settings.md#notifications)): `Место предоставлено` once per time the app first saw the stage, and
+  each Платёж three days before and on its due day (`PaymentReminders`, shared with tuition); nothing for a Долг.
+  They come from the stored answers after the request, so they work offline. Nothing is posted 00:00-06:00 Moscow:
+  Android posts it at the first run after 06:00, iOS hands it to the system for 06:00.
+- **Bell** ([the bell](home.md#the-bell), qualifier `dormitory`, kinds `DORMITORY` and `PAYMENT`): every successful
+  refresh, whoever asks, compares the previous stored answer with the new one (`DormitoryBellEvents`,
+  dormitory_bell.json in the no-backup directory, 60 days, at most 50 events, cleared on sign-out) and records `Место в очереди на
+  общежитие` with `было` and `стало` when the queue place moved, `Назначено общежитие` with its name when a dormitory
+  is assigned (or another one), and `Платёж зачислен` (`Договор найма · Ноябрь 2026 · 1 500 ₽`, core's
+  `PaymentBellEvents`) when an unpaid Платёж became paid. The first answer is a baseline. The bell is written with the
+  switch off. Each event opens `Общежитие` over Сегодня.
+- The debug tools' `Проверить общежитие и оплату` asks for one run.
 
 ## iOS
 
@@ -156,5 +182,10 @@ the Профиль row comes from the same `ProfileEntrySource` through `MeViewM
   year, offline from the stored answer without a request;
   `DormitoryTodoSourceTest` covers the items appearing and leaving with the stage and the documents, and the
   first-seen time across restarts, stage changes and sign-out.
+- `DormitoryPaymentsCheckTest` (`androidHostTest`): the check over the same harness: `Место предоставлено` once and
+  again after the stage came back, a Платёж reminded three days before and on the due day once each (and at once two
+  days ahead), no reminder for a Долг, the quiet hours on Android (held until 06:00) and iOS (scheduled for 06:00
+  once), the bell's queue move, assigned dormitory and paid Платёж, the switch off (nothing posted, the bell written),
+  the 3-hour versus daily cadence, offline reminders from the stored answer, sign-out, no session and the demo.
 - `DormitoryScreenTest` (Compose actions and touch targets), `DormitoryScreenshotTest` (baselines in
   `shared/feature-dormitory/screenshots/`), `DormitoryModuleTest`.
