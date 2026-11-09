@@ -221,7 +221,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   `На карте` in the system map app and the settlement instructions as safe text, and the Документы для заселения
   with their status and `Загрузить` while a place is offered or a date is picked. Picking a date and uploading open
   my.itmo's dormitory section inside the app. The last answer is kept on the device: offline or on an error the
-  screen shows it with `Обновлено N назад`. The demo shows a settled resident and sends nothing. Read from my.itmo
+  screen shows it with `Обновлено N назад`; when only the Договоры fail, the new stage is shown beside the stored
+  Договоры. The demo shows a settled resident and sends nothing. Read from my.itmo
   through MyItmoApi's dormitory area; nothing goes to Backend.
 - `Общежитие` shows the Договор найма: its number and dates, the Долг or overpayment, and the schedule of
   Платежи with amounts, due dates and what is paid (`Оплачен`, `Сегодня`, `Через N дней`, `Просрочен`). Earlier
@@ -252,12 +253,13 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   is part of that item, not one of its own). The items come from the stored answers, so they show offline and Сегодня
   sends no request; tapping opens `Общежитие` or `Оплата обучения`. The demo shows none.
 - One background check `Общежитие и оплата` on both platforms keeps the dormitory and tuition answers fresh: every
-  3 hours while there is a Этап общежития or something left to pay, once a day otherwise, so a new application is
-  found within a day. It notifies `Место предоставлено` once when the app first sees it, and each Платёж 3 days
+  3 hours while there is a Этап общежития or something left to pay, once a day otherwise (also a day after a failed
+  request with nothing pending), so a new application is found within a day. It notifies `Место предоставлено` once when the app first sees it, and each Платёж 3 days
   before and on its due day (`Платёж через 3 дня`, `Сегодня последний день платежа`, with what is left to pay);
   nothing about a Долг, nothing between 00:00 and 06:00. The bell records a queue place that moved, an assigned
   dormitory and a Платёж that became paid. The new switch `Общежитие и оплата` in `Уведомления` (on by default) and
-  the Android channel of the same name silence only the notifications; the bell and `Нужно сделать` keep working.
+  the Android channel of the same name silence only the notifications; the bell and `Нужно сделать` keep working,
+  and what came up while it was off is not posted once it is back on.
   The demo sends nothing and posts nothing; the debug tools have `Проверить общежитие и оплату`.
 - For developers: the check is core's `PaymentsCheck` over each feature's `PaymentsCheckPart`; bell events of a
   stored answer go through core's `BellEventStore`, the paid Платёж rule is `PaymentBellEvents`, and `BellKind`
