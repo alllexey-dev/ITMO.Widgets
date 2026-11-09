@@ -28,8 +28,8 @@ import org.koin.dsl.module
  */
 val dormitoryModule = module {
     singleOf<DormitoryFileStore, AppDirectories>(::DormitoryFileStore)
-    // One instance keeps the answer in memory for the screen and Профиль; sign-out removes its file.
     single { DormitoryBellEvents(get<AppDirectories>(), get(), get()) }
+    // One instance keeps the answer in memory for the screen and Профиль; sign-out removes its file.
     singleOf(::DormitoryRepositoryImpl) { bind<DormitoryRepository>() }
     single<SessionDataCleaner>(named("dormitory")) { get<DormitoryRepositoryImpl>() }
     single<SessionDataCleaner>(named("dormitory-bell")) { get<DormitoryBellEvents>() }

@@ -29,8 +29,8 @@ import org.koin.dsl.module
  */
 val financesModule = module {
     singleOf<TuitionFileStore, AppDirectories>(::TuitionFileStore)
-    // One instance keeps the answer in memory for the screen and Профиль; sign-out removes its file.
     single { TuitionBellEvents(get<AppDirectories>(), get(), get()) }
+    // One instance keeps the answer in memory for the screen and Профиль; sign-out removes its file.
     singleOf(::TuitionRepositoryImpl) { bind<TuitionRepository>() }
     single<SessionDataCleaner>(named("tuition")) { get<TuitionRepositoryImpl>() }
     single<SessionDataCleaner>(named("tuition-bell")) { get<TuitionBellEvents>() }
