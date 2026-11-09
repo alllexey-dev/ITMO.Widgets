@@ -13,17 +13,19 @@ final class BackgroundRunnerTests: XCTestCase {
         XCTAssertEqual(info["UIBackgroundModes"] as? [String], ["fetch"])
     }
 
-    func testTheEntryPointRunsTheWidgetsThenScheduleChangesThenMarksThenTheCalendarSync() async throws {
+    func testTheEntryPointRunsTheWidgetsThenScheduleChangesThenMarksThenDormitoryPaymentsThenTheCalendarSync() async throws {
         let finished = await BackgroundRefresh.run()
         let report = try XCTUnwrap(finished)
 
         XCTAssertEqual(
-            report.steps.map(\.key), ["widget-snapshots", "sport-widget", "schedule-changes", "marks", "calendar-sync"]
+            report.steps.map(\.key),
+            ["widget-snapshots", "sport-widget", "schedule-changes", "marks", "dormitory-payments", "calendar-sync"]
         )
         XCTAssertEqual(report.resultOf(key: "widget-snapshots"), .done)
         // The hosted tests' session has no ITMO.ID token, so the checks skip without a request.
         XCTAssertEqual(report.resultOf(key: "schedule-changes"), .skipped)
         XCTAssertEqual(report.resultOf(key: "marks"), .skipped)
+        XCTAssertEqual(report.resultOf(key: "dormitory-payments"), .skipped)
         XCTAssertEqual(report.resultOf(key: "calendar-sync"), .skipped)
     }
 
