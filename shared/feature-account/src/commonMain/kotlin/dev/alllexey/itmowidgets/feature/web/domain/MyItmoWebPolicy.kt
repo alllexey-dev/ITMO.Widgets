@@ -1,10 +1,11 @@
 package dev.alllexey.itmowidgets.feature.web.domain
 
+import dev.alllexey.itmowidgets.core.navigation.AppRoutes
 import dev.alllexey.itmowidgets.core.url.StrictUri
 
 /** Only official HTTPS origins remain inside the app; redirects never launch other apps. */
 object MyItmoWebPolicy {
-    const val HOME_URL = "https://my.itmo.ru/"
+    const val HOME_URL = "${AppRoutes.MyItmoWeb.ORIGIN}/"
     enum class Navigation { INTERNAL, EXTERNAL, BLOCKED }
 
     fun isInternal(url: String): Boolean {

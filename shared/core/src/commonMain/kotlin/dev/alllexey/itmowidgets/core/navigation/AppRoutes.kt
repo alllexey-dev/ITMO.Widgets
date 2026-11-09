@@ -120,6 +120,11 @@ object AppRoutes {
     @Serializable
     data class MyItmoWeb(val path: String = "/") : AppRoute {
         override val kind get() = RouteKind.SCREEN
+
+        companion object {
+            /** The site's origin, which the browser's start page and the `Оплатить` links of the system browser share. */
+            const val ORIGIN = "https://my.itmo.ru"
+        }
     }
 
     /** The schedule's friend picker; [selectedIsu] is [FriendSelectionContract.NO_USER_ISU] for the own schedule. */

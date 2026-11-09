@@ -73,5 +73,5 @@ object DormitoryWeb {
      * `Оплатить`: the same section in the system browser. The in-app view does not follow the redirect to the bank,
      * and its navigation policy stays as it is.
      */
-    const val PAY_URL = "https://my.itmo.ru$PATH"
+    const val PAY_URL = "${AppRoutes.MyItmoWeb.ORIGIN}$PATH"
 }
