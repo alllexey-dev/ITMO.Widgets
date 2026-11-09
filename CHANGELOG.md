@@ -9,6 +9,8 @@ publication or deployment.
 The app is rebuilt on Kotlin Multiplatform: one shared Kotlin core (data, domain, view models) under Compose screens
 on Android and native SwiftUI screens in a new iOS app. Android keeps the features and the data of 2.2.
 
+- Person profiles show My ITMO contacts, including email, telephone and social links, on Android and iOS.
+
 ### Prereleases
 
 - `2.3.0-beta.1` (20291, 2026-10-10) and `2.3.0-beta.2` (20292, 2026-10-11): an APK in the Telegram channel.

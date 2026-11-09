@@ -57,7 +57,7 @@ each `Все`, `Друзья` or `Никто`.
 - `PersonRepository` (`PersonRepositoryImpl`) calls
   `MyItmoClient.personalities.getPersonality(isu)` independently of the opt-in,
   with a memory cache by ISU. The mapper keeps name, photo, positions, rooms and
-  education, never contacts, gender or exchange status. `NotFound` is: HTTP 404,
+  education and contacts; gender and exchange status are discarded. Contacts stay on the device and are not sent to Backend. `NotFound` is: HTTP 404,
   this endpoint's HTTP 400 with numeric `error_code=100` and explicit
   `result=null`, a successful null result, or a mismatched result ISU. Other
   400s stay errors; MyItmoApi itself keeps the HTTP error unchanged.
@@ -154,6 +154,7 @@ builds it:
   user with open rows: the groups (`M3206, 2 курс` with the faculty), then `Расписание`, `Спорт` and `Друзья` as
   Backend's viewer capabilities allow (all open to self); they lead to `AppRoutes.UserSchedule`, `UserSport` and
   `UserFriends` with the ISU and name. `teachingFirst` puts `Преподавание` first when they teach the viewer.
+- `Контакты` shows nonblank My ITMO contact values and their type labels after the study and teaching blocks. Recognized email, phone, social handles and HTTPS links open externally; unknown values remain informational. An empty list has no section.
 - `Удалить из друзей` is the card's last row for a friend; `requestRemoveFriend` asks first (`ConfirmRemove`).
 - Someone else's hidden data is simply absent: no hint, no lock.
 - The entry (`UserProfileExits`) shares the profile link (only with a `Content` page), copies the ISU and opens user

@@ -115,6 +115,16 @@ private fun userProfileExits(
     onReport = { page, reviewId -> navigator.open(AppRoutes.ReportReview(page.reviewArgs(), reviewId)) },
     onOpenProfile = navigator::openUserProfile,
     onSource = onSource,
+    onContact = { url ->
+        if (url.startsWith("https://", ignoreCase = true)) onSource(url)
+        else {
+            try {
+                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+            } catch (_: android.content.ActivityNotFoundException) {
+                android.widget.Toast.makeText(context, R.string.link_open_failed, android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    },
 )
 
 /** A review's source page outside the app; without a handler a snackbar says so. */
