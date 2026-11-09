@@ -14,6 +14,23 @@ on a budget place (my.itmo says tuition is not available, or lists no agreement)
 finds no stored answer, or one older than 3 hours, asks my.itmo again once, so new agreements show up on their own; a
 failure keeps the stored answer.
 
+## Нужно сделать
+
+`TuitionTodoSource` contributes to `Нужно сделать` on Сегодня ([Home](home.md)) through `core/today/TodayTodoSource`
+(qualifier `tuition`). It reads only the stored answer, so the items show offline and Сегодня sends no tuition
+request; the answer is refreshed by the screen and the Профиль row. The items are core's `PaymentTodos`, the same as
+the [dormitory's](dormitory.md#нужно-сделать) for the Договор найма:
+
+| Item | While | Text |
+|---|---|---|
+| `Погасить долг, 60 000,50 ₽` | a Договор об обучении with a Долг, of any academic year, until it is paid off | `Договор об обучении № …` |
+| `Оплатить до 13 ноября, 100 000 ₽` | an unpaid Платёж from 7 days before its due date to that day; the amount is what is left | `Договор об обучении · через 5 дней` or `· сегодня` |
+
+An overdue Платёж is covered by its Договор's Долг item and never shown on its own. Each item's action is `Открыть`:
+`EntryRoute(AppTab.HOME, overlay = AppRoutes.Tuition)`, `Оплата обучения` over Сегодня on both platforms. Ids are
+`tuition-debt-<contract>` and `tuition-payment-<contract>-<due date>`. A budget place, the demo and a signed-out
+device show none. Amounts are in the item text only: nothing is logged.
+
 ## Screen
 
 `AppRoutes.Tuition`, a screen pushed from Профиль, over `TuitionViewModel` (Android `ui/TuitionScreen.kt` in
@@ -61,8 +78,7 @@ other Профиль row. ITMO's rubles become kopecks and its dates Moscow cale
 - **Demo.** The demo session is on a budget place (`DemoTuition`): no Договор об обучении, no row, no request
   (`FinancesDemoGateTest`).
 
-Not here yet: tuition Платежи and a Долг in `Нужно сделать` (#572), the background check, its notifications and bell
-events (#573), the scholarship.
+Not here yet: the background check, its notifications and bell events (#573), the scholarship.
 
 ## iOS
 
@@ -72,11 +88,13 @@ events (#573), the scholarship.
 
 ## Tests
 
-- `TuitionViewModelTest`, `TuitionProfileEntryTest`, `FinancesDemoGateTest` (`androidHostTest`): the real MyItmoApi
+- `TuitionViewModelTest`, `TuitionProfileEntryTest`, `TuitionTodoSourceTest`, `FinancesDemoGateTest`
+  (`androidHostTest`): the real MyItmoApi
   client over a Ktor `MockEngine` for my.itmo.ru with synthetic fixtures in
   `src/androidHostTest/resources/myitmo/finances/`, a fixed clock and a fake file system. They cover a budget
   student (no row, one request), a paid student with Платежи and a Долг, an overpayment and `Прошлые годы`, offline
   from the stored answer with its age, an ITMO error and an undecodable answer, sign-out (also while a request is on
-  its way) and another account's file.
+  its way) and another account's file; the `Нужно сделать` items: a Долг until paid off, a Платёж due within a week,
+  due today and then overdue as a Долг offline without a request, a budget place and sign-out.
 - `TuitionScreenTest` (Compose actions and touch targets), `FinancesScreenshotTest` (baselines in
   `shared/feature-finances/screenshots/`), `FinancesModuleTest`.

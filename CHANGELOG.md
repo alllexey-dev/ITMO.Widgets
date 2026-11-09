@@ -246,6 +246,11 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - For developers: new module `:shared:feature-finances` (the scholarship joins it later). The Договор sections are
   shared: `ContractList` in core (`core/text/ContractCards.kt`), the kit's `ContractSections` on Android and
   `ItmoContractList` in the iOS DesignSystem; the stored answer's age is core's `updatedAgo`.
+- `Нужно сделать` on Сегодня reminds about Платежи for the Договор найма and the Договор об обучении on both
+  platforms: `Оплатить до 13 ноября, 1 000 ₽` from 7 days before an unpaid Платёж is due to its due day, with what
+  is left of it, and `Погасить долг, 1 500 ₽` for each Договор with a Долг until it is paid off (an overdue Платёж
+  is part of that item, not one of its own). The items come from the stored answers, so they show offline and Сегодня
+  sends no request; tapping opens `Общежитие` or `Оплата обучения`. The demo shows none.
 
 ### Widgets
 

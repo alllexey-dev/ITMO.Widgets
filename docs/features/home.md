@@ -29,8 +29,10 @@ day as the timeline and `Нужно сделать` when there is something, wit
 - `Нужно сделать`: `BarsTodoSource` (recordbook) while the background mark check found the BARS session ended
   (`BarsLoginPrompt` not `NONE`); `Войти` opens the BARS sign-in.
   `DormitoryTodoSource` ([dormitory](dormitory.md#нужно-сделать)) from the stored dormitory answer: `Выберите дату
-  заселения` while `Место предоставлено` and one item per Документ для заселения ITMO has not confirmed; `Открыть`
-  opens `Общежитие` over Сегодня.
+  заселения` while `Место предоставлено` and one item per Документ для заселения ITMO has not confirmed, then the
+  Договор найма's `Погасить долг, …` and `Оплатить до …, …`; `Открыть` opens `Общежитие` over Сегодня.
+  `TuitionTodoSource` ([finances](finances.md#нужно-сделать)) gives the same Платёж and Долг items for the Договор
+  об обучении from the stored tuition answer; `Открыть` opens `Оплата обучения`. Both use core's `PaymentTodos`.
 - States: `Loading` while nothing is cached and the first refresh runs; `Failed` when it failed; after a failed
   refresh over the cache the day is dimmed under `Данные на 11:44`. The first show refreshes once (silent), a pull and
   a return of the app to the foreground (`AppForeground`) after five minutes refresh again; a tab switch or a sheet

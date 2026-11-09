@@ -88,10 +88,20 @@ request; the answer is refreshed by the screen and the Профиль row.
 |---|---|---|
 | `Выберите дату заселения` | `Место предоставлено` | `Место предоставлено (видим с 09:40), время на выбор ограничено`; `7 нояб., 09:40` before today |
 | `Документ «…»` | `Место предоставлено` or `Дата заселения выбрана`, one per document not confirmed | ITMO's status label, `— нужен для заселения` |
+| `Погасить долг, 1 500 ₽` | a Договор найма with a Долг, of any academic year, until it is paid off | `Договор найма № …` |
+| `Оплатить до 13 ноября, 1 000 ₽` | an unpaid Платёж from 7 days before its due date to that day; the amount is what is left | `Договор найма · через 5 дней` or `· сегодня` |
 
 Each item's action is `Открыть`: `EntryRoute(AppTab.HOME, overlay = AppRoutes.Dormitory)`, the `Общежитие` screen over
-Сегодня on both platforms. Ids are stable (`dormitory-date`, `dormitory-document-<name>`). An item leaves with the
-answer that changes the stage or confirms the document. The demo is `Заселён`, so it shows none.
+Сегодня on both platforms. Ids are stable (`dormitory-date`, `dormitory-document-<name>`, `dormitory-debt-<contract>`,
+`dormitory-payment-<contract>-<due date>`). An item leaves with the answer that changes the stage or confirms the
+document; a Платёж item leaves once it is paid or overdue, a Долг item once the Договор owes nothing.
+
+The Платёж and Долг items are core's `PaymentTodos` (`core/today/PaymentTodos.kt`), shared with
+[tuition](finances.md#нужно-сделать): the Долг is `Contract.debtOn`, the window is `Payment.stateOn` (`DUE_SOON` within
+`PaymentState.DUE_SOON_DAYS` = 7 days, `DUE_TODAY`). An overdue Платёж is covered by its Договор's Долг item and never
+shown on its own. Долг items come first, then Платежи by due date. Amounts are in the item text only: nothing is
+logged. The items are evaluated when Сегодня starts reading them (the app opens or returns to the foreground). The
+demo is `Заселён` with its one Платёж 12 days ahead, so it shows none.
 
 The time is when the app first saw `Место предоставлено`, not when ITMO offered the place (my.itmo gives no time):
 a refresh that brings the stage stores its wall-clock time with the answer, later answers in the same stage keep it,
@@ -127,8 +137,7 @@ ITMO's rubles become kopecks and its dates Moscow calendar dates when stored.
 - **Demo.** The demo session answers from `DemoDormitory` (`Заселён` in the fictional `Общежитие №1`, one Договор
   найма with one upcoming Платёж) and sends no request (`DormitoryDemoGateTest`).
 
-Not here yet: the `Нужно сделать` items for Платежи (#572), the background check, its notifications and bell
-events (#573).
+Not here yet: the background check, its notifications and bell events (#573).
 
 ## iOS
 
@@ -142,7 +151,9 @@ the Профиль row comes from the same `ProfileEntrySource` through `MeViewM
   `DormitoryDemoGateTest` (`androidHostTest`): the real MyItmoApi client over a Ktor `MockEngine` for my.itmo.ru with
   synthetic fixtures in `src/androidHostTest/resources/myitmo/dormitory/`, a fixed clock and a fake file system;
   `DormitoryContractTest` covers the balance, paid and unpaid Платежи, a Долг, several academic years and an
-  agreement listed in two calendar-year periods;
+  agreement listed in two calendar-year periods; `DormitoryTodoSourceTest` the Платёж window (8 days no item, 7 days
+  an item), due today, an overdue Платёж inside the Долг item, a Долг that stays until paid and one of an earlier
+  year, offline from the stored answer without a request;
   `DormitoryTodoSourceTest` covers the items appearing and leaving with the stage and the documents, and the
   first-seen time across restarts, stage changes and sign-out.
 - `DormitoryScreenTest` (Compose actions and touch targets), `DormitoryScreenshotTest` (baselines in
