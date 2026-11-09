@@ -24,9 +24,9 @@ object AppEntryIntents {
     const val ACTION_OPEN_DEVICES = "dev.alllexey.itmowidgets.action.OPEN_DEVICES"
     /** One connected client over «Устройства», its connection id in [EXTRA_CONNECTION]. */
     const val ACTION_OPEN_CONNECTION = "dev.alllexey.itmowidgets.action.OPEN_CONNECTION"
-    /** «Общежитие» over Сегодня: a notification of the check `Общежитие и оплата`. */
+    /** `Общежитие` over Сегодня: a notification of the check `Общежитие и оплата`. */
     const val ACTION_OPEN_DORMITORY = "dev.alllexey.itmowidgets.action.OPEN_DORMITORY"
-    /** «Оплата обучения» over Сегодня. */
+    /** `Оплата обучения` over Сегодня. */
     const val ACTION_OPEN_TUITION = "dev.alllexey.itmowidgets.action.OPEN_TUITION"
     /** A widget's lesson: the lesson sheet over the schedule, its [LessonDetailsArgs] as JSON in [EXTRA_LESSON]. */
     const val ACTION_OPEN_LESSON = "dev.alllexey.itmowidgets.action.OPEN_LESSON"

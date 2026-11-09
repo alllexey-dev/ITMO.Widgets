@@ -256,7 +256,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   found within a day. It notifies `Место предоставлено` once when the app first sees it, and each Платёж 3 days
   before and on its due day (`Платёж через 3 дня`, `Сегодня последний день платежа`, with what is left to pay);
   nothing about a Долг, nothing between 00:00 and 06:00. The bell records a queue place that moved, an assigned
-  dormitory and a Платёж that became paid. The new switch `Общежитие и оплата` in «Уведомления» (on by default) and
+  dormitory and a Платёж that became paid. The new switch `Общежитие и оплата` in `Уведомления` (on by default) and
   the Android channel of the same name silence only the notifications; the bell and `Нужно сделать` keep working.
   The demo sends nothing and posts nothing; the debug tools have `Проверить общежитие и оплату`.
 - For developers: the check is core's `PaymentsCheck` over each feature's `PaymentsCheckPart`; bell events of a

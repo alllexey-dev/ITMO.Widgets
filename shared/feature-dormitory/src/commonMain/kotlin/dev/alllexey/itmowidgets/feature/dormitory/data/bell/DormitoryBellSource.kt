@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.map
 
 /**
  * The dormitory in the bell: `Место в очереди на общежитие` with `было` and `стало`, `Назначено общежитие` with its
- * name and `Платёж зачислен`; each opens «Общежитие» over Сегодня.
+ * name and `Платёж зачислен`; each opens `Общежитие` over Сегодня.
  */
 class DormitoryBellSource(private val events: DormitoryBellEvents) : BellSource {
 

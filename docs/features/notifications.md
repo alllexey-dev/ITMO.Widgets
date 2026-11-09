@@ -131,7 +131,7 @@ Local: `PaymentsCheck` (`shared/core`, `core/payments/check`) runs the parts of 
   number or an amount), cleared on sign-out. The switch `Общежитие и оплата` gates the posting only; a notice found
   with it off is not spent and is posted if the switch is turned on while it still applies.
 - Nothing is shown 00:00-06:00 Moscow time; the first run after 06:00 posts what waited.
-- Taps: `ACTION_OPEN_DORMITORY` and `ACTION_OPEN_TUITION` open «Общежитие» or «Оплата обучения» over Сегодня.
+- Taps: `ACTION_OPEN_DORMITORY` and `ACTION_OPEN_TUITION` open `Общежитие` or `Оплата обучения` over Сегодня.
 - Without the permission the notices count as posted.
 
 ## iOS
