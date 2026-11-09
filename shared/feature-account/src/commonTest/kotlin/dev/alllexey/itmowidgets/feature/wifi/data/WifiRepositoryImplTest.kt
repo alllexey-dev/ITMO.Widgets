@@ -19,7 +19,6 @@ import io.ktor.http.headersOf
 import io.ktor.utils.io.errors.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -30,70 +29,74 @@ class WifiRepositoryImplTest {
     private val store = InMemorySecureStore()
     private var wifiPage: () -> String = { page("12345678") }
     private var requests = 0
+    private var wifiPageRequests = 0
 
     @Test
-    fun readsIsuAndKeepsTheCredentialsForTheOwner() = runTest(dispatcher) {
+    fun everyLoadReadsIsuAgainAndStoresNothing() = runTest(dispatcher) {
         val repository = repository()
 
-        assertEquals(AppResult.Success(WifiAccess.Ready(CREDENTIALS)), repository.refresh())
-        assertEquals(CREDENTIALS, repository.cached())
-        assertEquals("123456\n123456\n12345678", store.values[NAME])
-        assertEquals(null, repository(isu = 654321).cached(), "another account never sees them")
+        assertEquals(AppResult.Success(WifiAccess.Ready(CREDENTIALS)), repository.load())
+        wifiPage = { page("87654321") }
+        assertEquals(AppResult.Success(WifiAccess.Ready(WifiCredentials("123456", "87654321"))), repository.load())
+
+        assertEquals(2, wifiPageRequests)
+        assertTrue(store.values.isEmpty(), "the credentials never reach the secure store")
     }
 
     @Test
-    fun aPageWithoutAPasswordForgetsTheStoredOne() = runTest(dispatcher) {
-        val repository = repository()
-        repository.refresh()
-        wifiPage = { page(null) }
+    fun aLoadRemovesTheCredentialsAnOlderVersionStored() = runTest(dispatcher) {
+        store.values[NAME] = "123456\n123456\n11111111"
 
-        assertEquals(AppResult.Success(WifiAccess.NoPassword), repository.refresh())
-        assertNull(repository.cached())
+        repository().load()
+
+        assertTrue(NAME !in store.values)
     }
 
     @Test
-    fun noSsoCookiesNeedTheUserAndKeepWhatIsStored() = runTest(dispatcher) {
-        repository().refresh()
-
-        val withoutCookies = repository(cookie = null)
-
-        assertEquals(AppResult.Success(WifiAccess.SignInRequired), withoutCookies.refresh())
-        assertEquals(CREDENTIALS, withoutCookies.cached())
-    }
-
-    @Test
-    fun noNetworkIsANetworkError() = runTest(dispatcher) {
+    fun aFailedLoadIsAnErrorAndRemovesTheStoredCredentials() = runTest(dispatcher) {
+        store.values[NAME] = "123456\n123456\n11111111"
         wifiPage = { throw IOException("offline") }
 
-        assertEquals(AppResult.Failure(AppError.Network), repository().refresh())
+        assertEquals(AppResult.Failure(AppError.Network), repository().load())
+        assertTrue(NAME !in store.values)
+    }
+
+    @Test
+    fun aPageWithoutAPasswordIsNoPassword() = runTest(dispatcher) {
+        wifiPage = { page(null) }
+
+        assertEquals(AppResult.Success(WifiAccess.NoPassword), repository().load())
+    }
+
+    @Test
+    fun noSsoCookiesNeedTheUser() = runTest(dispatcher) {
+        assertEquals(AppResult.Success(WifiAccess.SignInRequired), repository(cookie = null).load())
     }
 
     @Test
     fun theDemoAnswersItsOwnAccountWithoutTheNetwork() = runTest(dispatcher) {
         val demo = repository(demo = true)
 
-        assertEquals(AppResult.Success(WifiAccess.Ready(DemoWifi.CREDENTIALS)), demo.refresh())
-        assertEquals(DemoWifi.CREDENTIALS, demo.cached())
+        assertEquals(AppResult.Success(WifiAccess.Ready(DemoWifi.CREDENTIALS)), demo.load())
+        assertEquals(AppResult.Success(WifiAccess.Ready(DemoWifi.CREDENTIALS)), demo.load())
         assertEquals(0, requests)
     }
 
     @Test
-    fun signOutDeletesTheCredentials() = runTest(dispatcher) {
-        val repository = repository()
-        repository.refresh()
+    fun signOutRemovesTheCredentialsAnOlderVersionStored() = runTest(dispatcher) {
+        store.values[NAME] = "123456\n123456\n11111111"
 
-        repository.clearSessionData()
+        repository().clearSessionData()
 
         assertTrue(NAME !in store.values)
-        assertNull(repository.cached())
     }
 
-    private fun repository(isu: Int = 123456, cookie: String? = "KEYCLOAK_IDENTITY=sso", demo: Boolean = false) =
+    private fun repository(cookie: String? = "KEYCLOAK_IDENTITY=sso", demo: Boolean = false) =
         WifiRepositoryImpl(
             IsuWebClient(engine(), Cookies(cookie)),
             store,
             object : CurrentUserProvider {
-                override suspend fun getCurrentUser() = CurrentUser(isu = isu, name = null, pictureUrl = null)
+                override suspend fun getCurrentUser() = CurrentUser(isu = 123456, name = null, pictureUrl = null)
             },
             FakeDemoMode(demo),
             AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher),
@@ -107,7 +110,7 @@ class WifiRepositoryImplTest {
             url == "$APEX/f?p=2143:1" -> respond("", HttpStatusCode.Found, headersOf(HttpHeaders.Location, AUTH))
             url.startsWith(AUTH) -> respond("", HttpStatusCode.Found, headersOf(HttpHeaders.Location, "$APEX/f?p=2143:1:777"))
             url == "$APEX/f?p=2143:1:777" -> respond("portal")
-            url == "$APEX/f?p=2156:6:777" -> respond(wifiPage())
+            url == "$APEX/f?p=2156:6:777" -> respond(wifiPage().also { wifiPageRequests++ })
             else -> error("Unexpected $url")
         }
     }

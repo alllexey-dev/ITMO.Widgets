@@ -11,6 +11,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -29,40 +30,58 @@ class WifiViewModelTest {
     fun tearDown() = main.reset()
 
     @Test
-    fun showsTheStoredCredentialsWhileIsuIsReadAgain() = runTest(main.dispatcher) {
-        repository.cached = OLD
+    fun showsLoadingUntilIsuAnswersThenTheCredentials() = runTest(main.dispatcher) {
         val viewModel = WifiViewModel(repository)
 
         viewModel.start()
         runCurrent()
-        assertEquals(WifiUiState(OLD, status = WifiStatus.Ready(refreshing = true)), viewModel.uiState.value)
+        assertEquals(WifiUiState(status = WifiStatus.Loading), viewModel.uiState.value)
 
-        repository.answer.complete(AppResult.Success(WifiAccess.Ready(NEW)))
+        repository.answer(AppResult.Success(WifiAccess.Ready(NEW)))
         advanceUntilIdle()
-        assertEquals(WifiUiState(NEW, status = WifiStatus.Ready()), viewModel.uiState.value)
+        assertEquals(WifiUiState(status = WifiStatus.Ready(NEW)), viewModel.uiState.value)
+        assertEquals(NEW, viewModel.uiState.value.credentials)
     }
 
     @Test
-    fun aFailedReadKeepsTheStoredCredentials() = runTest(main.dispatcher) {
-        repository.cached = OLD
-        repository.answer.complete(AppResult.Failure(AppError.Network))
+    fun everyStartReadsIsuAgainAndHidesTheEarlierAnswerMeanwhile() = runTest(main.dispatcher) {
         val viewModel = WifiViewModel(repository)
+        viewModel.start()
+        repository.answer(AppResult.Success(WifiAccess.Ready(OLD)))
+        advanceUntilIdle()
 
         viewModel.start()
-        advanceUntilIdle()
+        runCurrent()
 
-        assertEquals(WifiUiState(OLD, status = WifiStatus.Ready()), viewModel.uiState.value)
+        assertEquals(2, repository.loads)
+        assertEquals(WifiUiState(status = WifiStatus.Loading), viewModel.uiState.value)
+        assertNull(viewModel.uiState.value.credentials)
     }
 
     @Test
-    fun withoutStoredCredentialsTheSheetShowsWhatIsuSaid() = runTest(main.dispatcher) {
+    fun aFailedReadShowsTheErrorAndNoEarlierPassword() = runTest(main.dispatcher) {
+        val viewModel = WifiViewModel(repository)
+        viewModel.start()
+        repository.answer(AppResult.Success(WifiAccess.Ready(OLD)))
+        advanceUntilIdle()
+
+        viewModel.start()
+        repository.answer(AppResult.Failure(AppError.Network))
+        advanceUntilIdle()
+
+        assertEquals(WifiUiState(status = WifiStatus.Failed(AppError.Network)), viewModel.uiState.value)
+        assertNull(viewModel.uiState.value.credentials)
+    }
+
+    @Test
+    fun theSheetShowsWhatIsuSaid() = runTest(main.dispatcher) {
         val cases = listOf(
             AppResult.Success(WifiAccess.NoPassword) to WifiStatus.NoPassword,
             AppResult.Success(WifiAccess.SignInRequired) to WifiStatus.SignInRequired,
             AppResult.Failure(AppError.Network) to WifiStatus.Failed(AppError.Network),
         )
-        cases.forEach { (answer, status) ->
-            val repository = FakeWifiRepository().apply { this.answer.complete(answer) }
+        cases.forEach { (result, status) ->
+            val repository = FakeWifiRepository().apply { answer(result) }
             val viewModel = WifiViewModel(repository)
 
             viewModel.start()
@@ -70,18 +89,6 @@ class WifiViewModelTest {
 
             assertEquals(WifiUiState(status = status), viewModel.uiState.value)
         }
-    }
-
-    @Test
-    fun aRemovedPasswordLeavesTheScreen() = runTest(main.dispatcher) {
-        repository.cached = OLD
-        repository.answer.complete(AppResult.Success(WifiAccess.NoPassword))
-        val viewModel = WifiViewModel(repository)
-
-        viewModel.start()
-        advanceUntilIdle()
-
-        assertEquals(WifiUiState(status = WifiStatus.NoPassword), viewModel.uiState.value)
     }
 
     @Test
@@ -95,19 +102,23 @@ class WifiViewModelTest {
         viewModel.start()
         viewModel.start()
         runCurrent()
-        assertEquals(1, repository.refreshes)
+        assertEquals(1, repository.loads)
     }
 
+    /** A load waits for [answer]; an answer given before it is the next load's. */
     private class FakeWifiRepository : WifiRepository {
-        var cached: WifiCredentials? = null
-        val answer = CompletableDeferred<AppResult<WifiAccess>>()
-        var refreshes = 0
+        private val queued = ArrayDeque<AppResult<WifiAccess>>()
+        private var waiting: CompletableDeferred<AppResult<WifiAccess>>? = null
+        var loads = 0
 
-        override suspend fun cached(): WifiCredentials? = cached
+        fun answer(result: AppResult<WifiAccess>) {
+            waiting?.takeIf { it.isActive }?.complete(result) ?: queued.addLast(result)
+        }
 
-        override suspend fun refresh(): AppResult<WifiAccess> {
-            refreshes++
-            return answer.await()
+        override suspend fun load(): AppResult<WifiAccess> {
+            loads++
+            queued.removeFirstOrNull()?.let { return it }
+            return CompletableDeferred<AppResult<WifiAccess>>().also { waiting = it }.await()
         }
     }
 

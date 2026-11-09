@@ -286,7 +286,8 @@ placeholder state (`AppGroupSnapshot`, `SnapshotReaderTests`).
 
 Keychain (`KeychainSecureStore`, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, never synchronised or restored
 from a backup on another device): `myitmo_tokens` (app and
-notification service; refreshed inside the `myitmo-refresh` lock), `bars_tokens.enc`, `itmo_id_cookies` and `wifi_credentials.enc` (app).
+notification service; refreshed inside the `myitmo-refresh` lock), `bars_tokens.enc` and `itmo_id_cookies` (app);
+`wifi_credentials.enc`, which earlier builds kept, is deleted on the Wi-Fi sheet's first read and on sign-out.
 Sign-out clears the Keychain items, the App Group files (keeping `locks` and system metadata) and WebKit's data.
 
 ## Widgets
