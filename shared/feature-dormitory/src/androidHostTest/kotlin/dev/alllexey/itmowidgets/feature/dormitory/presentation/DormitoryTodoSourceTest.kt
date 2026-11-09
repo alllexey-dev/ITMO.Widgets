@@ -233,7 +233,7 @@ class DormitoryTodoSourceTest {
         assertEquals(UiText.Res(CoreStrings.payment_todo_pay_title, listOf("13 ноября", rubles("1${NBSP}000"))), todos.last().title)
     }
 
-    private fun rubles(digits: String) = UiText.Dynamic("$digits$NBSP\u20BD")
+    private fun rubles(digits: String) = UiText.Res(CoreStrings.payment_money, listOf(digits))
 
     private fun reasonSince(since: String) = UiText.Res(DormitoryStrings.dormitory_todo_date_reason, listOf(since))
 

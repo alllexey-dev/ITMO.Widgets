@@ -27,14 +27,17 @@ data class BalanceLine(val label: UiText, val amount: UiText, val tone: PaymentT
  */
 object PaymentTexts {
 
-    /** `1 500 ₽`, `1 500,50 ₽`: groups of three split by no-break spaces, kopecks only when there are any. */
+    /**
+     * `1 500 ₽`, `1 500,50 ₽`: the number with groups of three split by no-break spaces and kopecks only when there
+     * are any, the currency from the string resource.
+     */
     fun money(money: Money): UiText {
         val kopecks = abs(money.kopecks)
         val rubles = (kopecks / Money.KOPECKS_PER_RUBLE).toString().reversed().chunked(GROUP).joinToString(NBSP).reversed()
         val fraction = (kopecks % Money.KOPECKS_PER_RUBLE).toInt()
         val sign = if (money.isNegative) MINUS else ""
         val decimals = if (fraction == 0) "" else "," + fraction.toString().padStart(2, '0')
-        return UiText.Dynamic("$sign$rubles$decimals$NBSP$RUBLE")
+        return UiText.Res(CoreStrings.payment_money, listOf("$sign$rubles$decimals"))
     }
 
     /** [parts] in one line split by ` · `: `Договор найма · Ноябрь 2026 · 1 000 ₽`, `до 10 октября · оплачено 500 ₽`. */
@@ -93,5 +96,4 @@ object PaymentTexts {
     private const val GROUP = 3
     private const val NBSP = "\u00A0"
     private const val MINUS = "\u2212"
-    private const val RUBLE = "\u20BD"
 }

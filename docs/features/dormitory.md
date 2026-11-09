@@ -78,7 +78,8 @@ kit's `ContractSections` and iOS `ItmoContractList`), which the [tuition screen]
   year, are shown in full, newest year first; the other earlier years fold into `Прошлые годы`, a row that unfolds
   them (`DormitoryViewModel.togglePastYears`), each under `2025/2026 учебный год`. A screen reader hears the row as
   `развёрнуто` or `свёрнуто` (Android `stateDescription`, iOS `accessibilityValue`).
-- Amounts are kopecks (`Money`), shown as `1 500 ₽` or `1 500,50 ₽` with no-break spaces.
+- Amounts are kopecks (`Money`), shown as `1 500 ₽` or `1 500,50 ₽` with no-break spaces (`PaymentTexts.money`, the
+  currency from the string `payment_money`).
 
 ## Нужно сделать
 

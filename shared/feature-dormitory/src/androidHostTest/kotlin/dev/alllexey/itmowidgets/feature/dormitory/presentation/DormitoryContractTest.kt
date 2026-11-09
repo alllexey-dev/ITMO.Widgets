@@ -210,7 +210,7 @@ class DormitoryContractTest {
 
     private fun viewModel() = DormitoryViewModel(harness.repository(), harness.time)
 
-    private fun rubles(digits: String) = UiText.Dynamic("$digits$NBSP\u20BD")
+    private fun rubles(digits: String) = UiText.Res(CoreStrings.payment_money, listOf(digits))
 
     private fun due(day: String) = UiText.Res(CoreStrings.payment_due, listOf(day))
 

@@ -1141,6 +1141,18 @@
         }
       }
     },
+    "payment_money" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ₽"
+          }
+        }
+      }
+    },
     "payment_overdue" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

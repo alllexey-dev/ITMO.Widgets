@@ -111,7 +111,7 @@ class TuitionTodoSourceTest {
         assertEquals(emptyList(), todos())
     }
 
-    private fun rubles(digits: String) = UiText.Dynamic("$digits$NBSP\u20BD")
+    private fun rubles(digits: String) = UiText.Res(CoreStrings.payment_money, listOf(digits))
 
     /** The items a new Сегодня reads from the device, after a restart of the app. */
     private fun TestScope.todos(): List<TodayTodo> {
