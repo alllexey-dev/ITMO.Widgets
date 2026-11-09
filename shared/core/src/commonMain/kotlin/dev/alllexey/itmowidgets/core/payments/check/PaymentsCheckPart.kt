@@ -26,12 +26,13 @@ interface PaymentsCheckPart {
 }
 
 /**
- * What the check reads of a part's stored answer: when it came ([fetchedAt], wall clock), whether an Этап общежития
- * is [inProgress], the part's Договоры and its own one-time [notices] (Место предоставлено).
+ * What the check reads of a part's stored answer: when it came ([fetchedAt], wall clock), whether the part has
+ * something [pending] that keeps the short cadence besides its Договоры (the part decides what that is), the part's
+ * Договоры and its own one-time [notices].
  */
 data class PaymentsCheckState(
     val fetchedAt: Instant,
-    val inProgress: Boolean,
+    val pending: Boolean,
     val contracts: List<Contract>,
     val notices: List<PaymentsNotice> = emptyList(),
 )

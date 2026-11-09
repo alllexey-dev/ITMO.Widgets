@@ -19,7 +19,7 @@ class TuitionCheckPart(private val repository: TuitionRepository) : PaymentsChec
     override val destination: NotificationDestination = NotificationDestination.Tuition
 
     override suspend fun stored(): PaymentsCheckState? = repository.observe().first()?.let { answer ->
-        PaymentsCheckState(fetchedAt = answer.fetchedAt, inProgress = false, contracts = answer.contracts)
+        PaymentsCheckState(fetchedAt = answer.fetchedAt, pending = false, contracts = answer.contracts)
     }
 
     override suspend fun refresh(): AppResult<Unit> = when (val result = repository.refresh()) {

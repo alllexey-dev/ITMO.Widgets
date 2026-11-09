@@ -28,7 +28,8 @@ class DormitoryCheckPart(private val repository: DormitoryRepository) : Payments
         PaymentsCheckState(
             // The older part: Договоры kept from an earlier answer are due as old as they are.
             fetchedAt = answer.updatedAt,
-            inProgress = answer.status != null,
+            // Any Этап общежития, `Заселён` included, keeps the short cadence.
+            pending = answer.status != null,
             contracts = answer.contracts,
             notices = listOfNotNull(placeOffered(answer)),
         )
