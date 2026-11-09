@@ -2,7 +2,7 @@ package dev.alllexey.itmowidgets.core.payments.check
 
 import dev.alllexey.itmowidgets.core.notification.NotificationDestination
 import dev.alllexey.itmowidgets.core.payments.Contract
-import dev.alllexey.itmowidgets.core.payments.Payment
+import dev.alllexey.itmowidgets.core.payments.PaymentState
 import dev.alllexey.itmowidgets.core.text.PaymentTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CorePlurals
@@ -21,16 +21,18 @@ object PaymentReminders {
 
     fun of(contracts: List<Contract>, today: LocalDate, feature: String, destination: NotificationDestination): List<PaymentsNotice> =
         contracts.flatMap { contract ->
-            contract.payments.filterNot(Payment::isPaid).mapNotNull { payment ->
+            contract.payments.mapNotNull { payment ->
+                val state = payment.stateOn(today)
                 val days = payment.daysLeft(today)
-                val slot = "$feature-payment-${contract.id}-${payment.dueDate}"
-                val title = when (days) {
-                    0 -> UiText.Res(CoreStrings.payment_reminder_today)
-                    in 1..DAYS_BEFORE -> UiText.Plural(CorePlurals.payment_reminder_in_days, days, listOf(days))
+                val title = when {
+                    state == PaymentState.DUE_TODAY -> UiText.Res(CoreStrings.payment_reminder_today)
+                    state == PaymentState.DUE_SOON && days <= DAYS_BEFORE ->
+                        UiText.Plural(CorePlurals.payment_reminder_in_days, days, listOf(days))
                     else -> return@mapNotNull null
                 }
+                val slot = "$feature-payment-${contract.id}-${payment.dueDate}"
                 PaymentsNotice(
-                    key = "$slot-${if (days == 0) "today" else "soon"}",
+                    key = "$slot-${if (state == PaymentState.DUE_TODAY) "today" else "soon"}",
                     slot = slot,
                     title = title,
                     text = PaymentTexts.line(

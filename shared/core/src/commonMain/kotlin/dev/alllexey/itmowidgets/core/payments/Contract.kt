@@ -37,7 +37,7 @@ enum class PaymentState {
     OVERDUE;
 
     companion object {
-        /** `Нужно сделать` and the reminders look this many days ahead. */
+        /** `Нужно сделать` looks this many days ahead; the reminders only `PaymentReminders.DAYS_BEFORE`. */
         const val DUE_SOON_DAYS = 7
     }
 }
