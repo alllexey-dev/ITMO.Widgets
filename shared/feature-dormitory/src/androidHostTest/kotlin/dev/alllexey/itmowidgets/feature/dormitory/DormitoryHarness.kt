@@ -11,6 +11,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.dormitory.data.DormitoryFileStore
 import dev.alllexey.itmowidgets.feature.dormitory.data.DormitoryRepositoryImpl
+import dev.alllexey.itmowidgets.feature.dormitory.data.bell.DormitoryBellEvents
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import dev.alllexey.itmowidgets.testkit.respondJson
 import io.ktor.client.engine.mock.MockEngine
@@ -78,15 +80,21 @@ class DormitoryHarness(private val dispatcher: CoroutineDispatcher, demo: Boolea
         override suspend fun getCurrentUser(): CurrentUser? = CurrentUser(isu, null, null)
     }
 
+    val dispatchers = AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher)
+
+    /** The bell events every [repository] of the test writes. */
+    val bell = DormitoryBellEvents(AtomicTextFile("/no-backup/dormitory_bell.json".toPath(), files), clock, dispatchers)
+
     /** A new repository over the same files: a restart of the app. */
     fun repository() = DormitoryRepositoryImpl(
         client,
         demoMode,
         DormitoryFileStore("/no-backup/dormitory".toPath(), files),
+        bell,
         user,
         clock,
         time,
-        AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher),
+        dispatchers,
     )
 
     init {

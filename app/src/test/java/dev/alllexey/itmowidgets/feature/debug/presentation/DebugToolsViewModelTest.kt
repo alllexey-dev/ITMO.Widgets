@@ -14,6 +14,8 @@ import dev.alllexey.itmowidgets.core.session.SessionState
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
 import dev.alllexey.itmowidgets.core.testing.FakeSessionTokenStore
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
+import dev.alllexey.itmowidgets.core.testing.RecordingPaymentsScheduler
+import dev.alllexey.itmowidgets.core.payments.check.PaymentsTracking
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.MainDispatcherRule
 import kotlinx.coroutines.async
@@ -41,6 +43,7 @@ class DebugToolsViewModelTest {
     private val scheduleChangeTracking = FakeScheduleChangeTracking()
     private val barsSessionProbe = FakeBarsSessionProbe()
     private val markTracking = FakeMarkTracking()
+    private val paymentsScheduler = RecordingPaymentsScheduler()
 
     private fun createViewModel(): DebugToolsViewModel = DebugToolsViewModel(
         timeProvider = FixedTimeProvider,
@@ -52,7 +55,8 @@ class DebugToolsViewModelTest {
         customServicesRepository = customServicesRepository,
         scheduleChangeTracking = scheduleChangeTracking,
         barsSessionProbe = barsSessionProbe,
-        markTracking = markTracking
+        markTracking = markTracking,
+        paymentsTracking = PaymentsTracking(tokenStore, paymentsScheduler)
     )
 
     @Test
@@ -71,6 +75,15 @@ class DebugToolsViewModelTest {
         viewModel.checkMarks()
 
         assertEquals(1, markTracking.checkNowCalls)
+    }
+
+    @Test
+    fun `checking the dormitory and payments asks for one background run`() {
+        val viewModel = createViewModel()
+
+        viewModel.checkPayments()
+
+        assertEquals(1, paymentsScheduler.runs)
     }
 
     @Test

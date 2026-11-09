@@ -47,6 +47,8 @@ object EntryRouteParser {
         AppEntryIntents.ACTION_OPEN_DEVICES -> DEVICES
         AppEntryIntents.ACTION_OPEN_CONNECTION ->
             connection?.takeIf { it.isNotBlank() }?.let { EntryRoute(AppTab.ME, overlay = AppRoutes.Connection(it)) } ?: DEVICES
+        AppEntryIntents.ACTION_OPEN_DORMITORY -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Dormitory)
+        AppEntryIntents.ACTION_OPEN_TUITION -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Tuition)
         AppEntryIntents.ACTION_OPEN_QR_PASS ->
             EntryRoute(AppTab.HOME, overlay = AppRoutes.QrPass, shortcutId = EntryShortcuts.QR_PASS)
         AppEntryIntents.ACTION_OPEN_TODAY ->

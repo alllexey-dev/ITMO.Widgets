@@ -1045,6 +1045,18 @@
         }
       }
     },
+    "payment_bell_paid" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Платёж зачислен"
+          }
+        }
+      }
+    },
     "payment_due" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",
@@ -1137,6 +1149,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "оплачено %1$@"
+          }
+        }
+      }
+    },
+    "payment_reminder_in_days" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Платёж через %1$lld дня"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Платёж через %1$lld дней"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Платёж через %1$lld день"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Платёж через %1$lld дня"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "payment_reminder_today" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сегодня последний день платежа"
           }
         }
       }

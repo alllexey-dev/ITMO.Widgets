@@ -1,6 +1,30 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
+    "dormitory_bell_assigned" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назначено общежитие"
+          }
+        }
+      }
+    },
+    "dormitory_bell_queue" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место в очереди на общежитие"
+          }
+        }
+      }
+    },
     "dormitory_choose_date" : {
       "comment" : "Generated from strings_dormitory.xml",
       "extractionState" : "manual",
@@ -93,6 +117,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Заявки на общежитие нет"
+          }
+        }
+      }
+    },
+    "dormitory_notification_offered_title" : {
+      "comment" : "Generated from strings_dormitory.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место в общежитии предоставлено"
           }
         }
       }

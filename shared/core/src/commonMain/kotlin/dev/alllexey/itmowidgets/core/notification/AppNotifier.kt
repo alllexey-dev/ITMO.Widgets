@@ -16,6 +16,10 @@ sealed interface NotificationDestination {
     data object Devices : NotificationDestination
     /** One connected client of «Устройства». */
     data class Connection(val id: String) : NotificationDestination
+    /** «Общежитие» over Сегодня. */
+    data object Dormitory : NotificationDestination
+    /** «Оплата обучения» over Сегодня. */
+    data object Tuition : NotificationDestination
 }
 
 data class AppNotification(

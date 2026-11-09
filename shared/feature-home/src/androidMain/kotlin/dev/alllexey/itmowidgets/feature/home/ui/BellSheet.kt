@@ -55,11 +55,13 @@ import dev.alllexey.itmowidgets.shared.compose.strings.bell_nothing_new
 import dev.alllexey.itmowidgets.shared.compose.strings.bell_settings
 import dev.alllexey.itmowidgets.shared.compose.strings.common_close
 import dev.alllexey.itmowidgets.shared.compose.strings.today_notifications
+import dev.alllexey.itmowidgets.shared.designsystem.ic_apartment
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_calendar
 import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
 import dev.alllexey.itmowidgets.shared.designsystem.ic_key
+import dev.alllexey.itmowidgets.shared.designsystem.ic_payments
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -250,6 +252,8 @@ private fun Lead(item: BellItem) {
         BellKind.SPORT -> IconTile(painterResource(KitRes.drawable.ic_sprint), if (item.failed) Tone.Error else Tone.Success)
         BellKind.FRIEND_REQUEST -> Avatar(item.lead, item.pictureUrl, size = PersonAvatarSize, initials = item.initials)
         BellKind.CONNECTION -> IconTile(painterResource(KitRes.drawable.ic_key), if (item.failed) Tone.Error else Tone.Warning)
+        BellKind.DORMITORY -> IconTile(painterResource(KitRes.drawable.ic_apartment), Tone.Primary)
+        BellKind.PAYMENT -> IconTile(painterResource(KitRes.drawable.ic_payments), Tone.Success)
     }
 }
 

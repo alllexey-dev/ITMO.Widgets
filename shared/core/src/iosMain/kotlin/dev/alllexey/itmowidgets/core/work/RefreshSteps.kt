@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.core.work
 
+import dev.alllexey.itmowidgets.core.payments.check.PaymentsCadence
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -20,14 +21,16 @@ class RefreshStep(
 
 /**
  * The steps of the iOS background runner (`shared/ios`) by key, in the order they run: widget snapshots
- * first (the schedule timeline, then the sport widget), then the checks (schedule changes, marks with the BARS renewal, the calendar sync). Each later check adds
- * one line here and binds its [RefreshStep] under its key in its feature's iOS module.
+ * first (the schedule timeline, then the sport widget), then the checks (schedule changes, marks with the BARS renewal,
+ * the dormitory and payments, the calendar sync). Each later check adds one line here and binds its [RefreshStep]
+ * under its key in its feature's iOS module.
  */
 object RefreshStepKeys {
     const val WIDGET_SNAPSHOTS = "widget-snapshots"
     const val SPORT_WIDGET = "sport-widget"
     const val SCHEDULE_CHANGES = "schedule-changes"
     const val MARKS = "marks"
+    const val PAYMENTS = "dormitory-payments"
     const val CALENDAR_SYNC = "calendar-sync"
 
     val ORDER: List<String> = listOf(
@@ -35,6 +38,7 @@ object RefreshStepKeys {
         SPORT_WIDGET,
         SCHEDULE_CHANGES,
         MARKS,
+        PAYMENTS,
         CALENDAR_SYNC,
     )
 
@@ -49,6 +53,9 @@ object RefreshStepKeys {
 
     /** Android's `MARKS_SPEC.period`. */
     val MARKS_PERIOD: Duration = 3.hours
+
+    /** Android's `PAYMENTS_SPEC.period`; the check asks my.itmo less often when nothing is pending. */
+    val PAYMENTS_PERIOD: Duration = PaymentsCadence.PERIOD
 
     /** Android's `CALENDAR_SYNC_SPEC.period`. */
     val CALENDAR_SYNC_PERIOD: Duration = 2.hours

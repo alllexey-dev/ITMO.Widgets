@@ -52,6 +52,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeCalendarSync
 import dev.alllexey.itmowidgets.core.testing.FakeCustomServicesRepository
 import dev.alllexey.itmowidgets.core.testing.FakeDevicesOverview
 import dev.alllexey.itmowidgets.core.testing.FakeMarkTracking
+import dev.alllexey.itmowidgets.core.testing.RecordingPaymentsScheduler
+import dev.alllexey.itmowidgets.core.payments.check.PaymentsTracking
 import dev.alllexey.itmowidgets.core.testing.FakeOnboardingRepository
 import dev.alllexey.itmowidgets.core.testing.FakeScheduleChangeTracking
 import dev.alllexey.itmowidgets.core.testing.FakeSessionRepository
@@ -177,6 +179,7 @@ class AccountEntriesTest {
                             FakeScheduleChangeTracking(),
                             NoBarsProbe,
                             FakeMarkTracking(),
+                            PaymentsTracking(FakeSessionTokenStore(signedIn = false), RecordingPaymentsScheduler()),
                         )
                     }
                     viewModel { WifiViewModel(wifi) }

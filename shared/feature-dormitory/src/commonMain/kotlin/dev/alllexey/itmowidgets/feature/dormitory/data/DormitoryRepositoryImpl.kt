@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.dormitory.data.bell.DormitoryBellEvents
 import dev.alllexey.itmowidgets.feature.dormitory.data.demo.DemoDormitory
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryAnswer
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryRepository
@@ -30,14 +31,16 @@ import kotlinx.coroutines.withContext
  * One instance per process (the `dormitoryModule` single): the status from my.itmo through MyItmoApi, the Документы
  * для заселения only while the stage needs them, the Договоры найма of every period my.itmo lists, and the last successful
  * answer in [store] with its time, so the screen, Профиль and `Нужно сделать` read it offline, with the time the app
- * first saw `Место предоставлено`. The demo answers from [DemoDormitory] and sends nothing. Sign-out removes the file;
- * an answer that lands after it is dropped. Nothing here is logged: numbers and amounts are personal financial data.
+ * first saw `Место предоставлено`; what changed against the previous answer goes to the [bell], whoever asked. The
+ * demo answers from [DemoDormitory] and sends nothing. Sign-out removes the file; an answer that lands after it is
+ * dropped. Nothing here is logged: numbers and amounts are personal financial data.
  */
 @OptIn(ExperimentalAtomicApi::class)
 class DormitoryRepositoryImpl internal constructor(
     private val client: MyItmoClient,
     private val demo: DemoMode,
     private val store: DormitoryFileStore,
+    private val bell: DormitoryBellEvents,
     private val currentUser: CurrentUserProvider,
     private val clock: Clock,
     private val time: AcademicTimeProvider,
@@ -82,11 +85,12 @@ class DormitoryRepositoryImpl internal constructor(
             is AppResult.Success -> lock.withLock {
                 // Signed out while the answer was on its way: nothing of it stays.
                 if (generation.load() != started) return@withLock AppResult.Success(result.value.toAnswer())
-                val previous = state.value?.answer?.status
-                val stored = result.value.copy(status = result.value.status?.seenSince(previous, fetchedAt))
+                val previous = state.value?.answer
+                val stored = result.value.copy(status = result.value.status?.seenSince(previous?.status, fetchedAt))
                 withContext(dispatchers.io) { store.write(stored) }
                 val answer = stored.toAnswer()
                 state.value = Loaded(answer)
+                bell.record(previous, answer)
                 AppResult.Success(answer)
             }
         }

@@ -202,4 +202,13 @@
     <string name="payment_todo_debt_title">Погасить долг, %1$s</string>
     <string name="payment_todo_debt_reason">%1$s № %2$s</string>
     <string name="payment_todo_open">Открыть</string>
+    <!-- Notifications of the check «Общежитие и оплата» and the bell -->
+    <plurals name="payment_reminder_in_days">
+        <item quantity="one">Платёж через %1$d день</item>
+        <item quantity="few">Платёж через %1$d дня</item>
+        <item quantity="many">Платёж через %1$d дней</item>
+        <item quantity="other">Платёж через %1$d дня</item>
+    </plurals>
+    <string name="payment_reminder_today">Сегодня последний день платежа</string>
+    <string name="payment_bell_paid">Платёж зачислен</string>
 </resources>

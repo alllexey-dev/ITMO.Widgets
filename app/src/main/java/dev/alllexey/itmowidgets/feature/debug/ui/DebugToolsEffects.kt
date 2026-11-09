@@ -39,5 +39,6 @@ fun debugToolsActions(viewModel: DebugToolsViewModel, onBack: () -> Unit): Debug
         override fun setCustomServicesEnabled(enabled: Boolean) = viewModel.setCustomServicesEnabled(enabled)
         override fun checkScheduleChanges() = viewModel.checkScheduleChanges()
         override fun checkMarks() = viewModel.checkMarks()
+        override fun checkPayments() = viewModel.checkPayments()
         override fun probeBarsSession() = viewModel.probeBarsSession()
     }

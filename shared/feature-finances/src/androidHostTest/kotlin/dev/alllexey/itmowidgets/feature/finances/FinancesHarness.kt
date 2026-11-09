@@ -11,6 +11,8 @@ import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.finances.data.TuitionFileStore
 import dev.alllexey.itmowidgets.feature.finances.data.TuitionRepositoryImpl
+import dev.alllexey.itmowidgets.feature.finances.data.bell.TuitionBellEvents
+import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.testkit.FakeClock
 import dev.alllexey.itmowidgets.testkit.respondJson
 import io.ktor.client.engine.mock.MockEngine
@@ -83,15 +85,21 @@ class FinancesHarness(private val dispatcher: CoroutineDispatcher, demo: Boolean
         override suspend fun getCurrentUser(): CurrentUser? = CurrentUser(isu, null, null)
     }
 
+    val dispatchers = AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher)
+
+    /** The bell events every [repository] of the test writes. */
+    val bell = TuitionBellEvents(AtomicTextFile("/no-backup/tuition_bell.json".toPath(), files), clock, dispatchers)
+
     /** A new repository over the same files: a restart of the app. */
     fun repository() = TuitionRepositoryImpl(
         client,
         demoMode,
         TuitionFileStore("/no-backup/finances".toPath(), files),
+        bell,
         user,
         clock,
         time,
-        AppDispatchers(io = dispatcher, default = dispatcher, main = dispatcher),
+        dispatchers,
     )
 
     /** A student on a budget place: my.itmo says tuition is not available. */

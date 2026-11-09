@@ -36,6 +36,11 @@
     <string name="dormitory_todo_document_reason">%1$s — нужен для заселения</string>
     <string name="dormitory_todo_open">Открыть</string>
 
+    <!-- The check «Общежитие и оплата»: the notification and the bell -->
+    <string name="dormitory_notification_offered_title">Место в общежитии предоставлено</string>
+    <string name="dormitory_bell_queue">Место в очереди на общежитие</string>
+    <string name="dormitory_bell_assigned">Назначено общежитие</string>
+
     <!-- States -->
     <string name="dormitory_none_title">Заявки на общежитие нет</string>
     <string name="dormitory_none_text">Когда вы встанете в очередь в my.itmo, здесь появится ваш этап</string>

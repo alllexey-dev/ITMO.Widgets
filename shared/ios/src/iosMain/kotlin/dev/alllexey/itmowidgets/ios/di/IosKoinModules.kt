@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.ios.di
 
+import dev.alllexey.itmowidgets.core.di.paymentsCheckIosModule
 import dev.alllexey.itmowidgets.core.di.iosBackgroundModule
 import dev.alllexey.itmowidgets.core.di.iosCoreModule
 import dev.alllexey.itmowidgets.core.network.BackendOrigin
@@ -105,6 +106,8 @@ object IosKoinModules {
         dormitoryModule,
         // The Договоры об обучении from my.itmo with their stored answer and the row in Профиль.
         financesModule,
+        // The check `Общежитие и оплата` over both parts above, with its iOS notifier and refresh step.
+        paymentsCheckIosModule,
     )
 
     /** The App Store page of the bundle's `AppStoreID` once the app has a record, the build's site until then. */

@@ -123,6 +123,9 @@ private class MemorySettings : SettingsRepository {
     override suspend fun setScheduleSportAutoSignEnabled(enabled: Boolean) = Unit
     override suspend fun setBackgroundWorkHintShown() = Unit
     override suspend fun setQrTileAdded(added: Boolean) = Unit
+    override suspend fun setDormitoryPaymentsEnabled(enabled: Boolean) {
+        local.value = local.value.copy(dormitoryPaymentsEnabled = enabled)
+    }
     override suspend fun setPushEnabled(channel: String, enabled: Boolean) {
         local.value = local.value.run { copy(disabledPushes = if (enabled) disabledPushes - channel else disabledPushes + channel) }
     }

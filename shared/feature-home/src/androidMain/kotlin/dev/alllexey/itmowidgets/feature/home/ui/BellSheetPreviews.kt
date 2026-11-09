@@ -9,7 +9,8 @@ import dev.alllexey.itmowidgets.designsystem.preview.ItmoPreview
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.home.ui.preview.TodaySamples
 
-// The bell's sheet with new events, with nothing new and empty; the names are `BellSheet_<state>`.
+// The bell's sheet with new events, with nothing new, empty and with the dormitory and payments events; the names are
+// `BellSheet_<state>`.
 
 /** The sheet's colour under the body, as the shell's sheet draws it. */
 @Composable
@@ -33,4 +34,10 @@ internal class BellSheetEmptyPreview {
     @Preview(name = "empty")
     @Composable
     fun BellSheet() = BellPreview { BellSheetContent(TodaySamples.BellEmpty, BellActions()) }
+}
+
+internal class BellSheetDormitoryPaymentsPreview {
+    @Preview(name = "dormitory-payments")
+    @Composable
+    fun BellSheet() = BellPreview { BellSheetContent(TodaySamples.BellDormitoryPayments, BellActions()) }
 }

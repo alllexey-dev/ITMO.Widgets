@@ -337,6 +337,10 @@ internal class FakeSettingsRepository(
         qrTileAdded.value = added
     }
 
+    override suspend fun setDormitoryPaymentsEnabled(enabled: Boolean) {
+        local.update { it.copy(dormitoryPaymentsEnabled = enabled) }
+    }
+
     override suspend fun setPushEnabled(channel: String, enabled: Boolean) {
         local.update { it.copy(disabledPushes = if (enabled) it.disabledPushes - channel else it.disabledPushes + channel) }
     }

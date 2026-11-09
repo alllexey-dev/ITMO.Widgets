@@ -31,6 +31,7 @@ import dev.alllexey.itmowidgets.feature.settings.presentation.notifications.Push
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
+import dev.alllexey.itmowidgets.shared.designsystem.ic_apartment
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_calendar
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_notifications_off
@@ -49,6 +50,7 @@ data class NotificationSettingsActions(
     val onMarks: (Boolean) -> Unit = {},
     val onMarkSource: (MarkCheckSource, Boolean) -> Unit = { _, _ -> },
     val onScheduleChanges: (Boolean) -> Unit = {},
+    val onDormitoryPayments: (Boolean) -> Unit = {},
     val onPush: (PushKind, Boolean) -> Unit = { _, _ -> },
     val onConnection: () -> Unit = {},
     val onRequestPermission: () -> Unit = {},
@@ -66,6 +68,7 @@ object NotificationSettingsTags {
     const val CHANNELS = "notifications_channels"
     const val MARKS = "notifications_marks"
     const val CHANGES = "notifications_changes"
+    const val DORMITORY_PAYMENTS = "notifications_dormitory_payments"
     const val CONNECTION = "notifications_connection"
     const val BACKGROUND = "notifications_background"
     fun push(kind: PushKind) = "notifications_push_${kind.name.lowercase()}"
@@ -166,6 +169,18 @@ fun NotificationSettingsScreen(
                             !denied,
                             actions.onScheduleChanges,
                             Modifier.testTag(NotificationSettingsTags.CHANGES),
+                        )
+                    }
+                    item {
+                        TypeSwitch(
+                            SettingsStrings.notifications_dormitory_payments,
+                            Res.drawable.ic_apartment,
+                            Tone.Primary,
+                            state.dormitoryPayments,
+                            !denied,
+                            actions.onDormitoryPayments,
+                            Modifier.testTag(NotificationSettingsTags.DORMITORY_PAYMENTS),
+                            subtitle = SettingsStrings.notifications_dormitory_payments_text,
                         )
                     }
                     if (!state.connected) {

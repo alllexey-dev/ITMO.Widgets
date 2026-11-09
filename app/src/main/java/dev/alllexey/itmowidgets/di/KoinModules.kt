@@ -51,6 +51,7 @@ object KoinModules {
         androidSportModule,
         androidUpdateModule,
         androidMessagesModule,
+        androidPaymentsModule,
         updateActionModule,
         debugModule,
         componentBindingsModule,

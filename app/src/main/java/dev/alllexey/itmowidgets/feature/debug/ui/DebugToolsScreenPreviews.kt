@@ -33,6 +33,7 @@ internal object PreviewDebugToolsActions : DebugToolsActions {
     override fun setLessonTemplatesEnabled(enabled: Boolean) = Unit
     override fun setCustomServicesEnabled(enabled: Boolean) = Unit
     override fun checkScheduleChanges() = Unit
+    override fun checkPayments() = Unit
     override fun checkMarks() = Unit
     override fun probeBarsSession() = Unit
 }

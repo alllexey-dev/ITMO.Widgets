@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.result.appResultOf
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.feature.finances.data.bell.TuitionBellEvents
 import dev.alllexey.itmowidgets.feature.finances.data.demo.DemoTuition
 import dev.alllexey.itmowidgets.feature.finances.domain.TuitionAnswer
 import dev.alllexey.itmowidgets.feature.finances.domain.TuitionRepository
@@ -29,15 +30,16 @@ import kotlinx.coroutines.withContext
 /**
  * One instance per process (the `financesModule` single): whether my.itmo offers tuition to the student and, only
  * then, the Договоры об обучении with their Платежи, through MyItmoApi; the last successful answer in [store] with its
- * time, so the screen and Профиль read it offline. The demo answers from [DemoTuition] and sends nothing. Sign-out
- * removes the file; an answer that lands after it is dropped. Nothing here is logged: numbers and amounts are personal
- * financial data.
+ * time, so the screen and Профиль read it offline; a Платёж that became paid since the previous answer goes to the
+ * [bell]. The demo answers from [DemoTuition] and sends nothing. Sign-out removes the file; an answer that lands after
+ * it is dropped. Nothing here is logged: numbers and amounts are personal financial data.
  */
 @OptIn(ExperimentalAtomicApi::class)
 class TuitionRepositoryImpl internal constructor(
     private val client: MyItmoClient,
     private val demo: DemoMode,
     private val store: TuitionFileStore,
+    private val bell: TuitionBellEvents,
     private val currentUser: CurrentUserProvider,
     private val clock: Clock,
     private val time: AcademicTimeProvider,
@@ -73,9 +75,11 @@ class TuitionRepositoryImpl internal constructor(
             is AppResult.Success -> lock.withLock {
                 // Signed out while the answer was on its way: nothing of it stays.
                 if (generation.load() != started) return@withLock AppResult.Success(result.value.toAnswer())
+                val previous = state.value?.answer
                 withContext(dispatchers.io) { store.write(result.value) }
                 val answer = result.value.toAnswer()
                 state.value = Loaded(answer)
+                bell.record(previous, answer)
                 AppResult.Success(answer)
             }
         }

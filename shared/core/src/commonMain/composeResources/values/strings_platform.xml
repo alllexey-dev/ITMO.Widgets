@@ -69,6 +69,7 @@
     <string name="notification_channel_schedule_changes">Изменения расписания</string>
     <string name="notification_channel_marks">Оценки</string>
     <string name="notification_channel_connections">Подключения устройств</string>
+    <string name="notification_channel_dormitory_payments">Общежитие и оплата</string>
     <string name="marks_new_title">Новые оценки</string>
     <string name="marks_subjects_more">%1$s и ещё\u00A0%2$d</string>
     <string name="marks_bars_login_title">Войдите в БАРС</string>
