@@ -136,7 +136,7 @@ ITMO's rubles become kopecks and its dates Moscow calendar dates when stored.
   removed. Sign-out removes it (`SessionDataCleaner` `dormitory`); an answer that lands after sign-out is dropped.
 - **Offline and errors.** A failed refresh keeps the stored answer and the screen shows it dimmed under
   `Обновлено N мин / ч назад` or `Обновлено N дней назад`; a later successful refresh drops the line. Errors map in
-  `toDormitoryAppError` (network first, then `MyItmoException`); a file that cannot be written is
+  core's `toMyItmoAppError` (network first, then `MyItmoException`); a file that cannot be written is
   `AppError.Unknown` and changes nothing.
 - **Privacy.** Nothing goes to Backend or a widget, nothing is logged; exception messages carry no student data.
   Agreement numbers and amounts are personal financial data: they stay in the no-backup file and on the screen.

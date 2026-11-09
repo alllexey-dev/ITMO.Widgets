@@ -1,10 +1,9 @@
 package dev.alllexey.itmowidgets.feature.dormitory.data
 
-import dev.alllexey.itmowidgets.core.payments.AcademicYear
-import dev.alllexey.itmowidgets.core.payments.Contract
 import dev.alllexey.itmowidgets.core.payments.ContractKind
 import dev.alllexey.itmowidgets.core.payments.Money
-import dev.alllexey.itmowidgets.core.payments.Payment
+import dev.alllexey.itmowidgets.core.payments.StoredContract
+import dev.alllexey.itmowidgets.core.payments.StoredPayment
 import dev.alllexey.itmowidgets.core.text.SafeHtml
 import dev.alllexey.itmowidgets.feature.dormitory.domain.AssignedDormitory
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryAnswer
@@ -37,36 +36,17 @@ internal fun ApiStatus.toStored(documents: List<ApiDocument>) = StoredStatus(
     documents = documents.map { StoredDocument(it.documentTypeName, it.statusName, it.status == DOCUMENT_CONFIRMED) },
 )
 
-/**
- * A Договор найма of the academic year its start date falls in, whatever period listed it; ITMO's dates are read as
- * calendar dates in [zone].
- */
-internal fun ApiContract.toStored(zone: TimeZone): StoredContract {
-    val start = dateStart.toLocalDateTime(zone).date
-    return StoredContract(
-        id = contractId,
-        number = number,
-        start = start,
-        end = dateEnd.toLocalDateTime(zone).date,
-        academicYear = AcademicYear.of(start).startYear,
-        active = active,
-        balance = Money.ofRubles(balance).kopecks,
-        payments = payments.map {
-            StoredPayment(Money.ofRubles(it.sum).kopecks, Money.ofRubles(it.paid).kopecks, it.payUntil.toLocalDateTime(zone).date, it.period)
-        },
-    )
-}
-
-private fun StoredContract.toContract() = Contract(
-    id = id,
-    kind = ContractKind.RENT,
+/** A Договор найма; ITMO's dates are read as calendar dates in [zone]. */
+internal fun ApiContract.toStored(zone: TimeZone) = StoredContract.of(
+    id = contractId,
     number = number,
-    start = start,
-    end = end,
-    academicYear = AcademicYear(academicYear),
+    start = dateStart.toLocalDateTime(zone).date,
+    end = dateEnd.toLocalDateTime(zone).date,
     active = active,
-    balance = Money(balance),
-    payments = payments.map { Payment(Money(it.amount), Money(it.paid), it.dueDate, it.period) },
+    balance = Money.ofRubles(balance),
+    payments = payments.map {
+        StoredPayment.of(Money.ofRubles(it.sum), Money.ofRubles(it.paid), it.payUntil.toLocalDateTime(zone).date, it.period)
+    },
 )
 
 /**
@@ -90,6 +70,6 @@ internal fun StoredDormitory.toAnswer() = DormitoryAnswer(
         )
     },
     fetchedAt = Instant.fromEpochMilliseconds(fetchedAt),
-    contracts = contracts.map { it.toContract() },
+    contracts = contracts.map { it.toContract(ContractKind.RENT) },
     contractsFetchedAt = contractsFetchedAt?.let(Instant::fromEpochMilliseconds),
 )

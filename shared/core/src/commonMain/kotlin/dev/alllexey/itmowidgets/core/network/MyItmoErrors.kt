@@ -45,3 +45,19 @@ fun MyItmoException.asAppError(): AppError = when (this) {
     }
     is MyItmoException.Decode -> AppError.Unknown(this)
 }
+
+/**
+ * The app's mapping for a failure of a MyItmoApi 2.x source: a failure before any answer is [AppError.Network], then
+ * the first [MyItmoException] in the cause chain (a body MyItmoApi cannot decode is its redacted `Decode`), anything
+ * else a retriable [AppError.Unknown]. The message of no exception carries the student's data.
+ */
+fun Exception.toMyItmoAppError(): AppError {
+    if (isCausedByNetworkFailure()) return AppError.Network
+    val seen = mutableSetOf<Throwable>()
+    var current: Throwable? = this
+    while (current != null && seen.add(current)) {
+        if (current is MyItmoException) return current.asAppError()
+        current = current.cause
+    }
+    return AppError.Unknown(this)
+}

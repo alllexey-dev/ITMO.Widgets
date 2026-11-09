@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.feature.dormitory.data
 
+import dev.alllexey.itmowidgets.core.payments.StoredContract
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
-import kotlinx.datetime.LocalDate
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -45,25 +45,6 @@ internal data class StoredDormitoryPlace(val name: String, val address: String, 
 
 @Serializable
 internal data class StoredDocument(val name: String, val status: String, val confirmed: Boolean)
-
-/**
- * A Договор найма: amounts in kopecks, dates as Moscow calendar dates, [academicYear] the first year of the academic
- * year its [start] falls in.
- */
-@Serializable
-internal data class StoredContract(
-    val id: String,
-    val number: String,
-    val start: LocalDate,
-    val end: LocalDate,
-    val academicYear: Int,
-    val active: Boolean,
-    val balance: Long,
-    val payments: List<StoredPayment> = emptyList(),
-)
-
-@Serializable
-internal data class StoredPayment(val amount: Long, val paid: Long, val dueDate: LocalDate, val period: String)
 
 /**
  * `noBackup/dormitory/state.json`: never backed up, cleared with the session. Caller owns IO dispatch.

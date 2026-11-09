@@ -1,8 +1,8 @@
 package dev.alllexey.itmowidgets.feature.finances.data
 
+import dev.alllexey.itmowidgets.core.payments.StoredContract
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
-import kotlinx.datetime.LocalDate
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -23,22 +23,6 @@ internal data class StoredTuition(
     val fetchedAt: Long,
     val contracts: List<StoredContract> = emptyList(),
 )
-
-/** A Договор об обучении: amounts in kopecks, dates as Moscow calendar dates, [academicYear] its first year. */
-@Serializable
-internal data class StoredContract(
-    val id: String,
-    val number: String,
-    val start: LocalDate,
-    val end: LocalDate,
-    val academicYear: Int,
-    val active: Boolean,
-    val balance: Long,
-    val payments: List<StoredPayment> = emptyList(),
-)
-
-@Serializable
-internal data class StoredPayment(val amount: Long, val paid: Long, val dueDate: LocalDate, val period: String)
 
 /** `noBackup/finances/tuition.json`: never backed up, cleared with the session. Caller owns IO dispatch. */
 class TuitionFileStore internal constructor(private val directory: Path, private val fileSystem: FileSystem) {

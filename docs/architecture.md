@@ -98,8 +98,9 @@ busy. Repositories hand cached data to screens as `LoadState` or `AppResult`.
 Only the route obtains a view model (`koinViewModel()` or a passed instance);
 the screen takes state and lambdas, so previews and tests call it directly.
 Exceptions become `AppError` at the `data` boundary
-(`core/network/BackendErrors.kt` decodes Backend errors); server messages never
-reach the UI.
+(`core/network/BackendErrors.kt` decodes Backend errors,
+`core/network/MyItmoErrors.kt` MyItmoApi's with `toMyItmoAppError`); server
+messages never reach the UI.
 
 ## Dependency injection
 

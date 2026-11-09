@@ -1,11 +1,12 @@
 package dev.alllexey.itmowidgets.feature.finances.data
 
-import dev.alllexey.itmoapi.core.MyItmoException
-import dev.alllexey.itmoapi.core.ResultResponse
 import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.network.optionalResult
+import dev.alllexey.itmowidgets.core.network.toMyItmoAppError
+import dev.alllexey.itmowidgets.core.payments.StoredContract
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.appResultOf
@@ -61,7 +62,7 @@ class TuitionRepositoryImpl internal constructor(
         loaded()
         val started = generation.load()
         val fetchedAt = clock.now()
-        val result = appResultOf({ it.toFinancesAppError() }) {
+        val result = appResultOf({ it.toMyItmoAppError() }) {
             withContext(dispatchers.io) {
                 val available = client.finances.getTuitionAvailability().requireResult()
                 StoredTuition(
@@ -125,8 +126,3 @@ class TuitionRepositoryImpl internal constructor(
     private class Loaded(val answer: TuitionAnswer?)
 }
 
-/** A student without agreements may get a successful envelope with a null result. */
-private fun <T : Any> ResultResponse<T>.optionalResult(): T? {
-    if (errorCode != 0) throw MyItmoException.Api(200, errorCode, errorMessage)
-    return result
-}
