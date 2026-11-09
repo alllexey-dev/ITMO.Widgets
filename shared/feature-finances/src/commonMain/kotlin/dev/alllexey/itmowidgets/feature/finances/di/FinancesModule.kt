@@ -3,10 +3,12 @@ package dev.alllexey.itmowidgets.feature.finances.di
 import dev.alllexey.itmowidgets.core.profile.ProfileEntrySource
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
+import dev.alllexey.itmowidgets.core.today.TodayTodoSource
 import dev.alllexey.itmowidgets.feature.finances.data.TuitionFileStore
 import dev.alllexey.itmowidgets.feature.finances.data.TuitionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.finances.domain.TuitionRepository
 import dev.alllexey.itmowidgets.feature.finances.presentation.TuitionProfileEntrySource
+import dev.alllexey.itmowidgets.feature.finances.presentation.TuitionTodoSource
 import dev.alllexey.itmowidgets.feature.finances.presentation.TuitionViewModel
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
@@ -17,7 +19,7 @@ import org.koin.dsl.module
 /**
  * Finances: the Договоры об обучении (the scholarship joins later). The platform provides the core types
  * (`MyItmoClient`, `DemoMode`, `CurrentUserProvider`, `Clock`, `AppDirectories`, `AppDispatchers`,
- * `AcademicTimeProvider`); the module adds its row to Профиль and its file to sign-out.
+ * `AcademicTimeProvider`); the module adds its row to Профиль, its items to `Нужно сделать` and its file to sign-out.
  */
 val financesModule = module {
     singleOf<TuitionFileStore, AppDirectories>(::TuitionFileStore)
@@ -25,5 +27,6 @@ val financesModule = module {
     singleOf(::TuitionRepositoryImpl) { bind<TuitionRepository>() }
     single<SessionDataCleaner>(named("tuition")) { get<TuitionRepositoryImpl>() }
     single<ProfileEntrySource>(named("tuition")) { TuitionProfileEntrySource(get(), get()) }
+    single<TodayTodoSource>(named("tuition")) { TuitionTodoSource(get(), get()) }
     viewModelOf(::TuitionViewModel)
 }
