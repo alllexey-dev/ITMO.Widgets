@@ -111,7 +111,7 @@ private fun ContractSection(contract: ContractCard, onPay: () -> Unit) {
             item {
                 ListRow(
                     payment.period,
-                    subtitle = listOfNotNull(payment.due, payment.paid).map { it.asString() }.joinToString(SEPARATOR),
+                    subtitle = payment.details.asString(),
                     trailing = payment.amount.asString(),
                     below = payment.pill?.let { pill -> { StatusPill(pill.text.asString(), tone = pill.tone.kitTone()) } },
                 )
@@ -128,5 +128,3 @@ private fun PaymentTone.kitTone(): Tone = when (this) {
 }
 
 private val ButtonIcon = 18.dp
-
-private const val SEPARATOR = " \u00B7 "

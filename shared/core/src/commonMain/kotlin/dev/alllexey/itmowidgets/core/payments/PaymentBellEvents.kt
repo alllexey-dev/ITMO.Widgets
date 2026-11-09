@@ -44,11 +44,10 @@ object PaymentBellEvents {
             kind = BellKind.PAYMENT,
             at = event.seenAt,
             title = UiText.Res(CoreStrings.payment_bell_paid),
-            text = UiText.Joined(listOf(PaymentTexts.kind(contractKind), UiText.Dynamic(period), PaymentTexts.money(amount)), SEPARATOR),
+            text = PaymentTexts.line(listOf(PaymentTexts.kind(contractKind), UiText.Dynamic(period), PaymentTexts.money(amount))),
             target = target,
         )
     }
 
     private const val PAID_VALUES = 3
-    private const val SEPARATOR = " · "
 }

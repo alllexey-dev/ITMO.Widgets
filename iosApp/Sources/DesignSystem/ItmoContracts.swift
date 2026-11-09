@@ -81,7 +81,7 @@ private struct ItmoContractView: View {
                 ForEach(Array(contract.payments.enumerated()), id: \.offset) { _, payment in
                     ItmoRow(
                         title: payment.period,
-                        subtitle: [payment.due, payment.paid].compactMap { $0?.resolved }.joined(separator: " \u{00B7} "),
+                        subtitle: payment.details.resolved,
                         trailing: payment.amount.resolved,
                         pill: payment.pill.map { ItmoPill(text: $0.text.resolved, tone: $0.tone.itmo) }
                     )

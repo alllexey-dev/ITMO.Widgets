@@ -69,5 +69,10 @@ data class ContractCard(
     }
 }
 
-/** One Платёж: ITMO's [period] label, the [amount], `до 10 октября`, `оплачено 500 ₽` when paid in part, its state. */
-data class PaymentRow(val period: String, val amount: UiText, val due: UiText, val paid: UiText?, val pill: PaymentPill?)
+/**
+ * One Платёж: ITMO's [period] label, the [amount], `до 10 октября`, `оплачено 500 ₽` when paid in part, its state;
+ * [details] is the due date and the paid part in the one line both platforms show under the period.
+ */
+data class PaymentRow(val period: String, val amount: UiText, val due: UiText, val paid: UiText?, val pill: PaymentPill?) {
+    val details: UiText get() = PaymentTexts.line(listOfNotNull(due, paid))
+}

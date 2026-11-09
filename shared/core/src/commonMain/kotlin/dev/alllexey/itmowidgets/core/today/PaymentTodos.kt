@@ -48,9 +48,8 @@ object PaymentTodos {
                         CoreStrings.payment_todo_pay_title,
                         listOf(PaymentTexts.dueDate(payment, today), PaymentTexts.money(payment.remaining)),
                     ),
-                    reason = UiText.Joined(
+                    reason = PaymentTexts.line(
                         listOfNotNull(PaymentTexts.kind(contract.kind), PaymentTexts.pill(payment, today)?.text?.let(UiText::LowercaseFirst)),
-                        SEPARATOR,
                     ),
                     action = UiText.Res(CoreStrings.payment_todo_open),
                     target = target,
@@ -61,6 +60,4 @@ object PaymentTodos {
 
     private fun Payment.isDueOn(today: LocalDate): Boolean =
         stateOn(today).let { it == PaymentState.DUE_SOON || it == PaymentState.DUE_TODAY }
-
-    private const val SEPARATOR = " · "
 }

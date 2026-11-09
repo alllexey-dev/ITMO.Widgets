@@ -33,15 +33,12 @@ object PaymentReminders {
                     key = "$slot-${if (days == 0) "today" else "soon"}",
                     slot = slot,
                     title = title,
-                    text = UiText.Joined(
+                    text = PaymentTexts.line(
                         listOf(PaymentTexts.kind(contract.kind), UiText.Dynamic(payment.period), PaymentTexts.money(payment.remaining)),
-                        SEPARATOR,
                     ),
                     publicTitle = title,
                     destination = destination,
                 )
             }
         }
-
-    private const val SEPARATOR = " · "
 }

@@ -37,6 +37,9 @@ object PaymentTexts {
         return UiText.Dynamic("$sign$rubles$decimals$NBSP$RUBLE")
     }
 
+    /** [parts] in one line split by ` · `: `Договор найма · Ноябрь 2026 · 1 000 ₽`, `до 10 октября · оплачено 500 ₽`. */
+    fun line(parts: List<UiText>): UiText = UiText.Joined(parts, SEPARATOR)
+
     /** `Договор найма`, `Договор об обучении`. */
     fun kind(kind: ContractKind): UiText = when (kind) {
         ContractKind.RENT -> UiText.Res(CoreStrings.contract_kind_rent)
@@ -86,6 +89,7 @@ object PaymentTexts {
         PaymentState.OVERDUE -> PaymentPill(UiText.Res(CoreStrings.payment_overdue), PaymentTone.DEBT)
     }
 
+    private const val SEPARATOR = " \u00B7 "
     private const val GROUP = 3
     private const val NBSP = "\u00A0"
     private const val MINUS = "\u2212"
