@@ -119,20 +119,24 @@ an answer in another stage drops it, and sign-out removes it with the file. No d
 | `getDormitoryContractPeriods()` (`GET /api/dormitory/payments/contracts/periods`) | every refresh | `year`, `dateFrom`, `dateTo` of each period with agreements: calendar years, 1 January - 31 December |
 | `getDormitoryContracts(dateFrom, dateTo)` (`GET /api/dormitory/payments/contracts?from&to`) | once per listed period | `contractId`, `number`, `dateStart`, `dateEnd`, `active`, `balance`, `payments {sum, paid, payUntil, period}` |
 
-A refresh succeeds only when every call does, so the stored answer never mixes a new status with old agreements.
+The status (with its documents) and the agreements are asked apart. A failed status call fails the refresh and keeps
+the stored answer as it is. A failed agreements call keeps the stored agreements beside the new status, with the time
+they came (`contractsFetchedAt`), and the refresh still fails, so the screen shows `Обновлено N назад` with the age of
+the older part and the background check retries. A null list (`result: null`) of periods or agreements counts as none.
 Each period's answer has every agreement that overlaps it, so one running from September to June comes in two
 periods: it is kept once by `contractId`, as the latest period has it. Its academic year comes from its `dateStart`
 (1 September - 31 August), never from the period.
 ITMO's rubles become kopecks and its dates Moscow calendar dates when stored.
 
 - **Stored answer.** The last successful answer is kept in dormitory/state.json in the no-backup directory (`DormitoryFileStore`)
-  with its wall-clock time and the account's ISU, and while `Место предоставлено` the time the app first saw it; the
+  with its wall-clock time, the agreements' own time and the account's ISU, and while `Место предоставлено` the time the app first saw it; the
   instructions are kept as ITMO's HTML and parsed again on read.
   The screen, the Профиль row and `Нужно сделать` read it first, so they open offline. A file of another account or a corrupt one is
   removed. Sign-out removes it (`SessionDataCleaner` `dormitory`); an answer that lands after sign-out is dropped.
 - **Offline and errors.** A failed refresh keeps the stored answer and the screen shows it dimmed under
   `Обновлено N мин / ч назад` or `Обновлено N дней назад`; a later successful refresh drops the line. Errors map in
-  `toDormitoryAppError` (network first, then `MyItmoException`).
+  `toDormitoryAppError` (network first, then `MyItmoException`); a file that cannot be written is
+  `AppError.Unknown` and changes nothing.
 - **Privacy.** Nothing goes to Backend or a widget, nothing is logged; exception messages carry no student data.
   Agreement numbers and amounts are personal financial data: they stay in the no-backup file and on the screen.
 - **Demo.** The demo session answers from `DemoDormitory` (`Заселён` in the fictional `Общежитие №1`, one Договор

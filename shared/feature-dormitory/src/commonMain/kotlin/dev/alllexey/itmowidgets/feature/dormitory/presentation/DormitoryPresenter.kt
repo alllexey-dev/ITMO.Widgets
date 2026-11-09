@@ -42,7 +42,7 @@ internal object DormitoryPresenter {
                 DormitoryContent.NoApplication
             },
             refreshing = refreshing,
-            stale = failure?.let { updatedAgo(answer.fetchedAt, time.now()) },
+            stale = failure?.let { updatedAgo(answer.updatedAt, time.now()) },
         )
     }
 

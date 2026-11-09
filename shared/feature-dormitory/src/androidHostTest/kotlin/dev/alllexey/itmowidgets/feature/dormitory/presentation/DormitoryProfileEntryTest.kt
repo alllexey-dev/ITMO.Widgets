@@ -55,6 +55,15 @@ class DormitoryProfileEntryTest {
         )
     }
 
+    /** Spec story 29: a student who just joined the queue gets the row even while my.itmo fails on the Договоры. */
+    @Test
+    fun aQueuedStudentWhoseContractsFailStillGetsTheRow() = runTest(dispatcher) {
+        harness.answer("status-queue.json")
+        harness.contracts("periods-current.json", mapOf("2026-01-01" to "error.json"))
+
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_queue), entry()?.subtitle)
+    }
+
     @Test
     fun aRecentAnswerIsReadFromTheDeviceAndAnOldOneIsAskedAgain() = runTest(dispatcher) {
         harness.answer("status-queue.json")

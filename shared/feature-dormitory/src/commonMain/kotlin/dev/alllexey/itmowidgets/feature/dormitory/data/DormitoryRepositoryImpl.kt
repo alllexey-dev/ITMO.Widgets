@@ -6,8 +6,10 @@ import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.appResultOf
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
@@ -58,42 +60,48 @@ class DormitoryRepositoryImpl internal constructor(
 
     override suspend fun refresh(): AppResult<DormitoryAnswer> {
         if (demo.isActive()) {
-            return AppResult.Success(DemoDormitory.answer(clock.now(), time.today()).also { state.value = Loaded(it) })
+            return AppResult.Success(DemoDormitory.answer(clock.now(), time.today()).also { state.value = Loaded(null, it) })
         }
-        // The stored answer first: the time `Место предоставлено` was first seen carries over from it.
+        // The stored answer first: the time `Место предоставлено` was first seen and the Договоры carry over from it.
         loaded()
         val started = generation.load()
         val fetchedAt = clock.now()
-        val result = appResultOf({ it.toDormitoryAppError() }) {
-            withContext(dispatchers.io) {
-                val status = client.dormitory.getDormitoryStatus().optionalResult()
-                val documents = if (status != null && stageOf(status.statusId)?.needsDocuments == true) {
-                    client.dormitory.getDormitoryDocuments().requireResult()
-                } else {
-                    emptyList()
-                }
-                StoredDormitory(
-                    owner = currentUser.getCurrentUser()?.isu,
-                    fetchedAt = fetchedAt.toEpochMilliseconds(),
-                    status = status?.toStored(documents),
-                    contracts = contracts(),
-                )
-            }
+        val status = when (val result = appResultOf({ it.toDormitoryAppError() }) { withContext(dispatchers.io) { status() } }) {
+            is AppResult.Success -> result.value
+            is AppResult.Failure -> return result
         }
-        return when (result) {
-            is AppResult.Failure -> result
-            is AppResult.Success -> lock.withLock {
-                // Signed out while the answer was on its way: nothing of it stays.
-                if (generation.load() != started) return@withLock AppResult.Success(result.value.toAnswer())
-                val previous = state.value?.answer
-                val stored = result.value.copy(status = result.value.status?.seenSince(previous?.status, fetchedAt))
-                withContext(dispatchers.io) { store.write(stored) }
-                val answer = stored.toAnswer()
-                state.value = Loaded(answer)
-                bell.record(previous, answer)
-                AppResult.Success(answer)
-            }
+        // The Договоры are asked apart: their failure keeps the stored ones and never discards a status that loaded.
+        val contracts = appResultOf({ it.toDormitoryAppError() }) { withContext(dispatchers.io) { contracts() } }
+        return lock.withLock {
+            val previous = state.value?.stored
+            val stored = StoredDormitory(
+                owner = currentUser.getCurrentUser()?.isu,
+                fetchedAt = fetchedAt.toEpochMilliseconds(),
+                status = status?.seenSince(state.value?.answer?.status, fetchedAt),
+                contracts = contracts.valueOrNull() ?: previous?.contracts.orEmpty(),
+                contractsFetchedAt = if (contracts is AppResult.Success) fetchedAt.toEpochMilliseconds() else previous?.contractsFetchedAt,
+            )
+            // Signed out while the answer was on its way: nothing of it stays.
+            if (generation.load() != started) return@withLock AppResult.Success(stored.toAnswer())
+            val written = appResultOf({ AppError.Unknown(it) }) { withContext(dispatchers.io) { store.write(stored) } }
+            if (written is AppResult.Failure) return@withLock written
+            val answer = stored.toAnswer()
+            val before = state.value?.answer
+            state.value = Loaded(stored, answer)
+            bell.record(before, answer)
+            (contracts as? AppResult.Failure) ?: AppResult.Success(answer)
         }
+    }
+
+    /** The status, null for no application, with the Документы для заселения only while the stage needs them. */
+    private suspend fun status(): StoredStatus? {
+        val status = client.dormitory.getDormitoryStatus().optionalResult() ?: return null
+        val documents = if (stageOf(status.statusId)?.needsDocuments == true) {
+            client.dormitory.getDormitoryDocuments().requireResult()
+        } else {
+            emptyList()
+        }
+        return status.toStored(documents)
     }
 
     /**
@@ -102,15 +110,15 @@ class DormitoryRepositoryImpl internal constructor(
      * as the latest period has it.
      */
     private suspend fun contracts(): List<StoredContract> =
-        client.dormitory.getDormitoryContractPeriods().requireResult().sortedBy { it.dateFrom }
-            .flatMap { period -> client.dormitory.getDormitoryContracts(period.dateFrom, period.dateTo).requireResult() }
+        client.dormitory.getDormitoryContractPeriods().optionalResult().orEmpty().sortedBy { it.dateFrom }
+            .flatMap { period -> client.dormitory.getDormitoryContracts(period.dateFrom, period.dateTo).optionalResult().orEmpty() }
             .associateBy { it.contractId }.values
             .map { it.toStored(time.timeZone) }
 
     override suspend fun clearSessionData() = lock.withLock {
         generation.addAndFetch(1L)
         withContext(dispatchers.io) { store.clear() }
-        state.value = Loaded(null)
+        state.value = Loaded(null, null)
     }
 
     /** The stored answer once per process; a corrupt file or another account's file is removed. */
@@ -133,12 +141,12 @@ class DormitoryRepositoryImpl internal constructor(
                     read
                 }
             }
-            state.value = Loaded(stored?.toAnswer())
+            state.value = Loaded(stored, stored?.toAnswer())
         }
     }
 
-    /** The answer in memory: [answer] null before the first successful one. */
-    private class Loaded(val answer: DormitoryAnswer?)
+    /** The stored answer in memory and what it reads as: both null before the first successful one. */
+    private class Loaded(val stored: StoredDormitory?, val answer: DormitoryAnswer?)
 }
 
 /** A student without an application gets a successful envelope with a null result. */

@@ -44,12 +44,17 @@ data class DormitoryStatus(
 /**
  * The last successful answer from my.itmo and when it came: [status] is null for a student without an application,
  * [contracts] are the student's Договоры найма of every academic year, which a student may have without a status.
+ * The Договоры may be older than the status: [contractsFetchedAt] is when they came, null before they ever did.
  */
 data class DormitoryAnswer(
     val status: DormitoryStatus?,
     val fetchedAt: Instant,
     val contracts: List<Contract> = emptyList(),
+    val contractsFetchedAt: Instant? = fetchedAt,
 ) {
     /** Something to show: an application or a Договор найма. */
     val hasAnything: Boolean get() = status != null || contracts.isNotEmpty()
+
+    /** The time of the older part shown, which `Обновлено N назад` gives after a failed refresh. */
+    val updatedAt: Instant get() = contractsFetchedAt?.let { minOf(it, fetchedAt) } ?: fetchedAt
 }

@@ -13,8 +13,9 @@ import okio.Path
 private const val FORMAT = 1
 
 /**
- * The last successful dormitory answer: [status] null for no application, [contracts] the Договоры найма,
- * [fetchedAt] the wall-clock time it came, [owner] the ISU of the account it belongs to.
+ * The last successful dormitory answer: [status] null for no application, [fetchedAt] the wall-clock time it came,
+ * [owner] the ISU of the account it belongs to. [contracts] are the Договоры найма as of [contractsFetchedAt] (null
+ * before they ever loaded): a refresh whose Договоры fail keeps the earlier ones beside the new status.
  */
 @Serializable
 internal data class StoredDormitory(
@@ -23,6 +24,7 @@ internal data class StoredDormitory(
     val fetchedAt: Long,
     val status: StoredStatus? = null,
     val contracts: List<StoredContract> = emptyList(),
+    val contractsFetchedAt: Long? = null,
 )
 
 /**

@@ -21,6 +21,7 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import okio.Path.Companion.toPath
 
 class DormitoryViewModelTest {
 
@@ -114,6 +115,45 @@ class DormitoryViewModelTest {
     }
 
     @Test
+    fun aNullListOfPeriodsCountsAsNoContracts() = runTest(main.dispatcher) {
+        harness.answer("status-empty.json")
+        harness.contracts("periods-null.json", emptyMap())
+
+        val state = viewModel().also { advanceUntilIdle() }.uiState.value
+
+        assertEquals(DormitoryContent.NoApplication, state.content)
+        assertNull(state.stale)
+    }
+
+    @Test
+    fun anErrorOfThePeriodsStillKeepsAStatusThatLoaded() = runTest(main.dispatcher) {
+        harness.answer("status-empty.json")
+        harness.contracts("error.json", emptyMap())
+
+        val state = viewModel().also { advanceUntilIdle() }.uiState.value
+
+        assertEquals(DormitoryContent.NoApplication, state.content)
+        assertEquals(UiText.Res(CoreStrings.common_updated_now), state.stale)
+    }
+
+    @Test
+    fun aFailedContractsCallKeepsTheStoredContractsUnderTheirAgeBesideTheNewStatus() = runTest(main.dispatcher) {
+        harness.answer("status-queue.json")
+        harness.contracts("periods-current.json", mapOf("2026-01-01" to "contracts-debt.json"))
+        viewModel().also { advanceUntilIdle() }
+
+        harness.clock.advanceBy(3.hours)
+        harness.answer("status-settled.json")
+        harness.contracts("periods-current.json", mapOf("2026-01-01" to "error.json"))
+        val state = viewModel().also { advanceUntilIdle() }.uiState.value
+
+        val shown = state.content as DormitoryContent.Shown
+        assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_settled), shown.stage?.title)
+        assertEquals(listOf("00-00000001"), shown.contracts?.current?.map { it.id })
+        assertEquals(UiText.Res(CoreStrings.common_updated_hours, listOf(3)), state.stale)
+    }
+
+    @Test
     fun offlineAfterARestartTheStoredAnswerShowsWithItsAge() = runTest(main.dispatcher) {
         harness.answer("status-queue.json")
         viewModel().also { advanceUntilIdle() }
@@ -143,6 +183,17 @@ class DormitoryViewModelTest {
         advanceUntilIdle()
         assertNull(viewModel.uiState.value.stale)
         assertEquals(UiText.Res(DormitoryStrings.dormitory_stage_queue), (viewModel.uiState.value.content as DormitoryContent.Shown).stage?.title)
+    }
+
+    @Test
+    fun anAnswerThatCannotBeStoredIsAFailure() = runTest(main.dispatcher) {
+        harness.answer("status-settled.json")
+        // A directory where the new file goes: the write fails as a full or broken disk would.
+        harness.files.createDirectories("/no-backup/dormitory/state.json.new".toPath())
+
+        val state = viewModel().also { advanceUntilIdle() }.uiState.value
+
+        assertEquals(DormitoryContent.Failed(AppError.Unknown().toUiText()), state.content)
     }
 
     @Test

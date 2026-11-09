@@ -91,4 +91,5 @@ internal fun StoredDormitory.toAnswer() = DormitoryAnswer(
     },
     fetchedAt = Instant.fromEpochMilliseconds(fetchedAt),
     contracts = contracts.map { it.toContract() },
+    contractsFetchedAt = contractsFetchedAt?.let(Instant::fromEpochMilliseconds),
 )
