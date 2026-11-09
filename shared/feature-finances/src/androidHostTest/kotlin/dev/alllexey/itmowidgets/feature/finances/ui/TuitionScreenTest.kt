@@ -3,7 +3,10 @@ package dev.alllexey.itmowidgets.feature.finances.ui
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -11,6 +14,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import dev.alllexey.itmowidgets.designsystem.kit.ContractTestTags
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
+import dev.alllexey.itmowidgets.feature.finances.presentation.TuitionContent
 import dev.alllexey.itmowidgets.feature.finances.presentation.TuitionSamples
 import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
@@ -59,6 +63,20 @@ class TuitionScreenTest {
         onNodeWithTag(ContractTestTags.PAST_YEARS).performScrollTo().performClick()
 
         assertEquals(1, toggles)
+    }
+
+    /** Spec story 43: a screen reader hears whether `Прошлые годы` is unfolded. */
+    @Test
+    fun pastYearsSayWhetherTheyAreUnfolded() = runComposeUiTest {
+        val expanded = TuitionSamples.pastYears
+        val shown = expanded.content as TuitionContent.Shown
+        val collapsed = expanded.copy(content = shown.copy(contracts = shown.contracts.copy(pastYears = shown.contracts.pastYears?.copy(expanded = false))))
+        var state by mutableStateOf(collapsed)
+        setContent { ItmoTheme { TuitionScreen(state, TuitionActions()) } }
+
+        onNodeWithTag(ContractTestTags.PAST_YEARS).assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "свёрнуто"))
+        state = expanded
+        onNodeWithTag(ContractTestTags.PAST_YEARS).assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "развёрнуто"))
     }
 
     @Test

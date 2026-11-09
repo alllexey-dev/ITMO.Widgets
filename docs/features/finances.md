@@ -44,8 +44,8 @@ the same sections the [dormitory](dormitory.md#договор-найма) draws 
   `Оплатить` while something is left to pay, then its Платежи with ITMO's period label, the due date, what is paid
   in part and the state pill (`Оплачен`, `Сегодня`, `Через N дней`, `Просрочен`); the rules are core's
   `Payment.stateOn` and `Contract.debtOn`, shared with the dormitory.
-- Earlier academic years fold into `Прошлые годы` (`TuitionViewModel.togglePastYears`); a Долг from an earlier year
-  stays in front (`ContractsByYear`). An agreement's academic year is the one its start date falls in.
+- Earlier academic years fold into `Прошлые годы` (`TuitionViewModel.togglePastYears`), read out as `развёрнуто` or
+  `свёрнуто`; a Долг from an earlier year stays in front (`ContractsByYear`). An agreement's academic year is the one its start date falls in.
 - `Оплатить` opens `https://my.itmo.ru/finances/education` (`TuitionWeb.PAY_URL`, the tuition page of the site's
   router, where my.itmo lists the agreements and starts a payment) in the system browser through
   `PlatformActions.openLink`: the in-app view does not follow the redirect to the bank, and its policy

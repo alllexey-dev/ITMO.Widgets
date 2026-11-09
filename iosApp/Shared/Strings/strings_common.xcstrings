@@ -397,6 +397,30 @@
         }
       }
     },
+    "contract_past_years_collapsed" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "свёрнуто"
+          }
+        }
+      }
+    },
+    "contract_past_years_expanded" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "развёрнуто"
+          }
+        }
+      }
+    },
     "contract_pay" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

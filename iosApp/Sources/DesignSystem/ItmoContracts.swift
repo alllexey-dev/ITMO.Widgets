@@ -3,8 +3,8 @@ import SwiftUI
 
 /// The shared agreements (`ContractList`, core `ContractCards.kt`) as the dormitory and tuition screens draw them,
 /// like the kit's `ContractSections` on Android: the current agreements, each with its balance, `contract_pay` while
-/// something is left to pay and its payments, then `contract_past_years`, unfolded on a tap. Laid out in the caller's
-/// stack; `idPrefix` names the accessibility identifiers (`dormitory.pay`, `tuition.past_years`).
+/// something is left to pay and its payments, then `contract_past_years`, unfolded on a tap, whose accessibility value
+/// says whether it is unfolded. Laid out in the caller's stack; `idPrefix` names the accessibility identifiers (`dormitory.pay`, `tuition.past_years`).
 struct ItmoContractList: View {
     let list: ContractList
     let idPrefix: String
@@ -28,6 +28,7 @@ struct ItmoContractList: View {
                         .rotationEffect(.degrees(past.expanded ? 180 : 0))
                         .accessibilityHidden(true)
                 }
+                .accessibilityValue(Text(verbatim: AppStrings.string(past.expanded ? "contract_past_years_expanded" : "contract_past_years_collapsed")))
                 .accessibilityIdentifier("\(idPrefix).past_years")
             }
             if past.expanded {

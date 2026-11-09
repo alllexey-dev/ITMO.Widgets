@@ -184,6 +184,8 @@
     <string name="contract_balance">Баланс</string>
     <string name="contract_payments">Платежи</string>
     <string name="contract_past_years">Прошлые годы</string>
+    <string name="contract_past_years_expanded">развёрнуто</string>
+    <string name="contract_past_years_collapsed">свёрнуто</string>
     <string name="contract_pay">Оплатить</string>
     <string name="contract_pay_unavailable">Не удалось открыть браузер</string>
     <string name="payment_due">до %1$s</string>

@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.ContractCard
 import dev.alllexey.itmowidgets.core.text.ContractList
@@ -40,17 +41,19 @@ object ContractTestTags {
 
 /**
  * The current Договоры, each with its balance, `Оплатить` ([onPay]) while something is left to pay and its Платежи,
- * then `Прошлые годы`, unfolded by [onTogglePastYears]. Laid out in the caller's column.
+ * then `Прошлые годы`, unfolded by [onTogglePastYears], which tells a screen reader whether it is unfolded. Laid out in
+ * the caller's column.
  */
 @Composable
 fun ContractSections(list: ContractList, onPay: () -> Unit, onTogglePastYears: () -> Unit) {
     list.current.forEach { ContractSection(it, onPay) }
     val past = list.pastYears ?: return
+    val state = UiText.Res(if (past.expanded) CoreStrings.contract_past_years_expanded else CoreStrings.contract_past_years_collapsed).asString()
     ListGroup(Modifier.padding(top = ItmoTheme.spacing.content)) {
         item {
             ListRow(
                 UiText.Res(CoreStrings.contract_past_years).asString(),
-                Modifier.testTag(ContractTestTags.PAST_YEARS),
+                Modifier.semantics { stateDescription = state }.testTag(ContractTestTags.PAST_YEARS),
                 icon = painterResource(Res.drawable.ic_history),
                 iconTone = Tone.Neutral,
                 accessory = {
