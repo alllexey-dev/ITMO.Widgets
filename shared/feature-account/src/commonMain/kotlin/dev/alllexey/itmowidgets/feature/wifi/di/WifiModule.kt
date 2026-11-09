@@ -11,8 +11,9 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
- * The Wi-Fi sheet over ISU's Wi-Fi page; the ISU client (`IsuWebClient`), `SecureStore`, the current user, the demo
- * switch and the dispatchers come from the platform. One repository serves the sheet and sign-out.
+ * The Wi-Fi sheet over ISU's Wi-Fi page; the ISU client (`IsuWebClient`), `SecureStore` (only to delete what earlier
+ * builds stored), the current user, the demo switch and the dispatchers come from the platform. One repository serves
+ * the sheet and sign-out.
  */
 val wifiModule = module {
     singleOf(::WifiRepositoryImpl) { bind<WifiRepository>() }

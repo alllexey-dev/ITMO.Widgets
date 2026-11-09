@@ -23,16 +23,18 @@ portal) and `eduroam` (guests of other institutions) are not offered.
 - ISU is read on the device by `IsuWebClient` (`core/network`, [ADR 0037](../adr/0037-on-device-isu-client.md)):
   `f?p=2143:1` with the phone's ITMO.ID SSO cookies (`ItmoIdCookies`) through ISU's OIDC redirects, then the page in
   the same APEX session. No SSO cookies (a refresh-token sign-in) or ITMO.ID's form is `SignInRequired`.
-- `WifiRepositoryImpl` keeps `"<isu>\n<login>\n<password>"` in `SecureStore` under `wifi_credentials.enc` (a
-  Keystore-sealed file in `noBackupFilesDir` on Android, a Keychain item on iOS), bound to the owner's ISU. A read
-  password replaces it, `NoPassword` deletes it, a failure keeps it. It is the `SessionDataCleaner` `named("wifi")`.
+- `WifiRepositoryImpl.load()` reads the page on every call and keeps the credentials nowhere: no file, no Keychain
+  item, no offline copy. Earlier 2.3 builds kept them in `SecureStore` under `wifi_credentials.enc` (a Keystore-sealed
+  file in `noBackupFilesDir` on Android, a Keychain item on iOS); every non-demo `load()` and sign-out (the
+  `SessionDataCleaner` `named("wifi")`) delete that item, so it goes the first time the sheet opens or on sign-out.
 - The demo answers `DemoWifi` (the demo ISU and a password no network accepts) and never reaches ISU.
 
 ## Sheet
 
-`WifiViewModel.start()` shows the stored credentials at once and reads ISU again each time the sheet opens; a failed
-read keeps them. Without stored credentials the sheet shows loading, `Пароля Wi-Fi ещё нет` (`Открыть ИСУ`, the
-page in the browser), `ИСУ не открылась` or the error with a retry. The password is dots until the eye
+`WifiViewModel.start()` reads ISU afresh each time the sheet opens (on Android also each time it starts again, as
+after `Открыть ИСУ`) and shows loading until ISU answers; no earlier answer stays on screen. The answer is the
+credentials (`WifiStatus.Ready`), `Пароля Wi-Fi ещё нет` (`Открыть ИСУ`, the page in the browser), `ИСУ не открылась`
+or the error with a retry; a failed read never shows an old password. The password is dots until the eye
 button; the copy buttons copy the login or the password (marked sensitive on Android, local-only and expiring in two
 minutes on iOS). A note gives the manual settings.
 

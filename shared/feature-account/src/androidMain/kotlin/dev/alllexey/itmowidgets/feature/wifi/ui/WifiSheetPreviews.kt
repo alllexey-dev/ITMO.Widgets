@@ -18,14 +18,14 @@ private val Sample = WifiCredentials(login = "123456", password = "12345678")
 internal class WifiSheetHiddenPreview {
     @Preview(name = "hidden")
     @Composable
-    fun WifiSheet() = SheetSurface { WifiSheetContent(WifiUiState(Sample, status = WifiStatus.Ready()), WifiActions()) }
+    fun WifiSheet() = SheetSurface { WifiSheetContent(WifiUiState(status = WifiStatus.Ready(Sample)), WifiActions()) }
 }
 
 internal class WifiSheetShownPreview {
     @Preview(name = "shown")
     @Composable
     fun WifiSheet() = SheetSurface {
-        WifiSheetContent(WifiUiState(Sample, passwordShown = true, status = WifiStatus.Ready()), WifiActions())
+        WifiSheetContent(WifiUiState(passwordShown = true, status = WifiStatus.Ready(Sample)), WifiActions())
     }
 }
 

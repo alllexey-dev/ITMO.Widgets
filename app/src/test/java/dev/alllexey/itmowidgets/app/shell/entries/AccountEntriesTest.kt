@@ -93,7 +93,6 @@ import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
 import dev.alllexey.itmowidgets.feature.web.ui.MyItmoWebTestTags
 import dev.alllexey.itmowidgets.feature.wifi.domain.WifiAccess
-import dev.alllexey.itmowidgets.feature.wifi.domain.WifiCredentials
 import dev.alllexey.itmowidgets.feature.wifi.domain.WifiRepository
 import dev.alllexey.itmowidgets.feature.wifi.presentation.WifiViewModel
 import dev.alllexey.itmowidgets.feature.wifi.ui.WifiTestTags
@@ -453,8 +452,7 @@ class AccountEntriesTest {
     /** ISU wants the user every time: the phone has no ITMO.ID session. */
     private class NoIsuSession : WifiRepository {
         var reads = 0
-        override suspend fun cached(): WifiCredentials? = null
-        override suspend fun refresh(): AppResult<WifiAccess> {
+        override suspend fun load(): AppResult<WifiAccess> {
             reads++
             return AppResult.Success(WifiAccess.SignInRequired)
         }

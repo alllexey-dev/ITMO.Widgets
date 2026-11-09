@@ -32,9 +32,6 @@ sealed interface WifiAccess {
 }
 
 interface WifiRepository {
-    /** The credentials read last time for the signed-in user, or the demo's; null when none were read. */
-    suspend fun cached(): WifiCredentials?
-
-    /** Reads the account from ISU and keeps the credentials for [cached]. */
-    suspend fun refresh(): AppResult<WifiAccess>
+    /** Reads the account from ISU on every call; nothing is kept, so an old password is never an answer. */
+    suspend fun load(): AppResult<WifiAccess>
 }

@@ -7,14 +7,17 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.feature.wifi.domain.ItmoWifi
+import dev.alllexey.itmowidgets.feature.wifi.domain.WifiCredentials
 import dev.alllexey.itmowidgets.feature.wifi.presentation.WifiViewModel
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
@@ -22,11 +25,12 @@ import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * The Wi-Fi sheet with its Koin ViewModel, which reads ISU each time the sheet starts. `Подключиться` opens the
- * system's dialog that saves ITMO-Corp with the login and password (Android 11+); an older system, a phone without the
- * Let's Encrypt roots or a dialog that fails copies the password and opens the Wi-Fi settings instead. [onSignIn] is
- * `Войти через ITMO.ID` without an ITMO.ID session on the phone; the shell reads ISU again after it. Android hosts it
- * in the shell's `Wifi` sheet; iOS draws the same view model in SwiftUI (`WifiSheet`).
+ * The Wi-Fi sheet with its Koin ViewModel, which reads ISU afresh each time the sheet starts (also on a return from
+ * ISU's page in the browser). `Подключиться` opens the system's dialog that saves ITMO-Corp with the login and
+ * password (Android 11+); an older system, a phone without the Let's Encrypt roots or a dialog that fails copies the
+ * password and opens the Wi-Fi settings instead. [onSignIn] is `Войти через ITMO.ID` without an ITMO.ID session on the
+ * phone; the shell reads ISU again after it. Android hosts it in the shell's `Wifi` sheet; iOS draws the same view
+ * model in SwiftUI (`WifiSheet`).
  */
 @Composable
 fun WifiRoute(onClose: () -> Unit, onSignIn: () -> Unit, viewModel: WifiViewModel = koinViewModel()) {
@@ -44,10 +48,12 @@ fun WifiRoute(onClose: () -> Unit, onSignIn: () -> Unit, viewModel: WifiViewMode
         login = text(AccountStrings.wifi_login),
     )
     val show: (String) -> Unit = { message -> scope.launch { snackbars.showSnackbar(message, duration = SnackbarDuration.Long) } }
+    // The credentials the dialog was opened with: a read of ISU started meanwhile leaves the state without them.
+    var connecting by remember { mutableStateOf<WifiCredentials?>(null) }
     val addNetwork = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         when (result.networkSaved()) {
             true -> show(texts.saved)
-            false -> state.credentials?.let {
+            false -> connecting?.let {
                 context.copyToClipboard(texts.password, it.password, secret = true)
                 show(texts.saveFailed)
             }
@@ -64,6 +70,7 @@ fun WifiRoute(onClose: () -> Unit, onSignIn: () -> Unit, viewModel: WifiViewMode
         onClose = onClose,
         onConnect = { credentials ->
             val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) addItmoWifiIntent(credentials) else null
+            connecting = credentials
             val launched = intent != null && runCatching { addNetwork.launch(intent) }.isSuccess
             if (!launched) {
                 context.copyToClipboard(texts.password, credentials.password, secret = true)
