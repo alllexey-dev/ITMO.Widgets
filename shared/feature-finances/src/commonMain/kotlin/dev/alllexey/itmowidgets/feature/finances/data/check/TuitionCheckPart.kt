@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.notification.NotificationDestination
 import dev.alllexey.itmowidgets.core.payments.check.PaymentsCheckPart
 import dev.alllexey.itmowidgets.core.payments.check.PaymentsCheckState
 import dev.alllexey.itmowidgets.core.result.AppResult
+import dev.alllexey.itmowidgets.feature.finances.domain.TuitionFeature
 import dev.alllexey.itmowidgets.feature.finances.domain.TuitionRepository
 import kotlinx.coroutines.flow.first
 
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.first
  */
 class TuitionCheckPart(private val repository: TuitionRepository) : PaymentsCheckPart {
 
-    override val feature: String = "tuition"
+    override val feature: String = TuitionFeature.KEY
 
     override val destination: NotificationDestination = NotificationDestination.Tuition
 

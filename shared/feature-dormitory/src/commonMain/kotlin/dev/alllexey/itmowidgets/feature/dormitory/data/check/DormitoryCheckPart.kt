@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.payments.check.PaymentsNotice
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryAnswer
+import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryFeature
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryRepository
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryStage
 import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
@@ -19,7 +20,7 @@ import kotlinx.coroutines.flow.first
  */
 class DormitoryCheckPart(private val repository: DormitoryRepository) : PaymentsCheckPart {
 
-    override val feature: String = FEATURE
+    override val feature: String = DormitoryFeature.KEY
 
     override val destination: NotificationDestination = NotificationDestination.Dormitory
 
@@ -43,16 +44,12 @@ class DormitoryCheckPart(private val repository: DormitoryRepository) : Payments
         val seenAt = status.placeOfferedSeenAt ?: return null
         val title = UiText.Res(DormitoryStrings.dormitory_notification_offered_title)
         return PaymentsNotice(
-            key = "$FEATURE-place-offered-${seenAt.toEpochMilliseconds()}",
-            slot = "$FEATURE-place-offered",
+            key = "${DormitoryFeature.KEY}-place-offered-${seenAt.toEpochMilliseconds()}",
+            slot = "${DormitoryFeature.KEY}-place-offered",
             title = title,
             text = UiText.Res(DormitoryStrings.dormitory_place_offered_text),
             publicTitle = title,
             destination = destination,
         )
-    }
-
-    private companion object {
-        const val FEATURE = "dormitory"
     }
 }

@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.today.PaymentTodos
 import dev.alllexey.itmowidgets.core.today.TodayTodo
 import dev.alllexey.itmowidgets.core.today.TodayTodoSource
+import dev.alllexey.itmowidgets.feature.finances.domain.TuitionFeature
 import dev.alllexey.itmowidgets.feature.finances.domain.TuitionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -21,10 +22,5 @@ class TuitionTodoSource(
 ) : TodayTodoSource {
 
     override fun observe(): Flow<List<TodayTodo>> = repository.observe()
-        .map { answer -> answer?.let { PaymentTodos.of(it.contracts, time.today(), FEATURE, AppRoutes.Tuition) }.orEmpty() }
-        .distinctUntilChanged()
-
-    private companion object {
-        const val FEATURE = "tuition"
-    }
-}
+        .map { answer -> answer?.let { PaymentTodos.of(it.contracts, time.today(), TuitionFeature.KEY, AppRoutes.Tuition) }.orEmpty() }
+        .distinctUntilChanged()}

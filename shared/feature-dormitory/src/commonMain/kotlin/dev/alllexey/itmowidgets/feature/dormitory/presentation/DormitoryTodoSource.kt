@@ -9,14 +9,15 @@ import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.core.today.PaymentTodos
 import dev.alllexey.itmowidgets.core.today.TodayTodo
 import dev.alllexey.itmowidgets.core.today.TodayTodoSource
+import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryFeature
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryRepository
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryStage
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryStatus
 import dev.alllexey.itmowidgets.shared.feature.dormitory.DormitoryStrings
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlin.time.Instant
 
 /**
  * The dormitory's part of `Нужно сделать`, read from the stored answer only, so it shows offline and sends nothing:
@@ -33,7 +34,7 @@ class DormitoryTodoSource(
         .map { answer ->
             if (answer == null) return@map emptyList()
             val stage = answer.status?.let { todos(it, it.placeOfferedSeenAt ?: answer.fetchedAt) }.orEmpty()
-            stage + PaymentTodos.of(answer.contracts, time.today(), FEATURE, AppRoutes.Dormitory)
+            stage + PaymentTodos.of(answer.contracts, time.today(), DormitoryFeature.KEY, AppRoutes.Dormitory)
         }
         .distinctUntilChanged()
 
@@ -75,8 +76,7 @@ class DormitoryTodoSource(
     )
 
     private companion object {
-        const val FEATURE = "dormitory"
-        const val DATE_ID = "dormitory-date"
-        const val DOCUMENT_ID = "dormitory-document-"
+        const val DATE_ID = "${DormitoryFeature.KEY}-date"
+        const val DOCUMENT_ID = "${DormitoryFeature.KEY}-document-"
     }
 }

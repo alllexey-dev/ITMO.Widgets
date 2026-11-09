@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.payments.PaymentBellEvents
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryAnswer
+import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryFeature
 import kotlin.time.Clock
 
 /**
@@ -29,20 +30,19 @@ class DormitoryBellEvents internal constructor(file: AtomicTextFile, clock: Cloc
         val was = previous.status?.queuePlace
         val now = current.status?.queuePlace
         val queue = if (was != null && now != null && was != now) {
-            BellEvent("$FEATURE:queue:$at", QUEUE_MOVED, at, listOf(was.toString(), now.toString()))
+            BellEvent("${DormitoryFeature.KEY}:queue:$at", QUEUE_MOVED, at, listOf(was.toString(), now.toString()))
         } else {
             null
         }
         val dormitory = current.status?.dormitory?.takeIf { it.name != previous.status?.dormitory?.name }?.let {
-            BellEvent("$FEATURE:assigned:$at", ASSIGNED, at, listOf(it.name))
+            BellEvent("${DormitoryFeature.KEY}:assigned:$at", ASSIGNED, at, listOf(it.name))
         }
-        return listOfNotNull(queue, dormitory) + PaymentBellEvents.paid(FEATURE, previous.contracts, current.contracts, current.fetchedAt)
+        return listOfNotNull(queue, dormitory) + PaymentBellEvents.paid(DormitoryFeature.KEY, previous.contracts, current.contracts, current.fetchedAt)
     }
 
     companion object {
         const val FILE_NAME = "dormitory_bell.json"
         const val QUEUE_MOVED = "queue-moved"
         const val ASSIGNED = "dormitory-assigned"
-        private const val FEATURE = "dormitory"
     }
 }

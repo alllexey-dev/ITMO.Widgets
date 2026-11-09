@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.payments.PaymentBellEvents
 import dev.alllexey.itmowidgets.core.storage.AppDirectories
 import dev.alllexey.itmowidgets.core.storage.AtomicTextFile
 import dev.alllexey.itmowidgets.feature.finances.domain.TuitionAnswer
+import dev.alllexey.itmowidgets.feature.finances.domain.TuitionFeature
 import kotlin.time.Clock
 
 /**
@@ -19,11 +20,10 @@ class TuitionBellEvents internal constructor(file: AtomicTextFile, clock: Clock,
         this(AtomicTextFile(directories.noBackup / FILE_NAME), clock, dispatchers)
 
     suspend fun record(previous: TuitionAnswer?, current: TuitionAnswer) {
-        if (previous != null) add(PaymentBellEvents.paid(FEATURE, previous.contracts, current.contracts, current.fetchedAt))
+        if (previous != null) add(PaymentBellEvents.paid(TuitionFeature.KEY, previous.contracts, current.contracts, current.fetchedAt))
     }
 
     companion object {
         const val FILE_NAME = "tuition_bell.json"
-        private const val FEATURE = "tuition"
     }
 }
