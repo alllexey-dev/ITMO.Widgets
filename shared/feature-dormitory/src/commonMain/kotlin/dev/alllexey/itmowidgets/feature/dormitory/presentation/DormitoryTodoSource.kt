@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.navigation.EntryRoute
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
+import dev.alllexey.itmowidgets.core.today.PaymentTodos
 import dev.alllexey.itmowidgets.core.today.TodayTodo
 import dev.alllexey.itmowidgets.core.today.TodayTodoSource
 import dev.alllexey.itmowidgets.feature.dormitory.domain.DormitoryRepository
@@ -20,7 +21,8 @@ import kotlin.time.Instant
 /**
  * The dormitory's part of `Нужно сделать`, read from the stored answer only, so it shows offline and sends nothing:
  * `Выберите дату заселения` while `Место предоставлено`, with the time the app first saw it; one item per Документ
- * для заселения ITMO has not confirmed while the stage needs documents. Each opens `Общежитие` over Сегодня.
+ * для заселения ITMO has not confirmed while the stage needs documents; then the Договоры найма's Долг and Платежи
+ * due within a week ([PaymentTodos]). Each opens `Общежитие` over Сегодня.
  */
 class DormitoryTodoSource(
     private val repository: DormitoryRepository,
@@ -28,7 +30,11 @@ class DormitoryTodoSource(
 ) : TodayTodoSource {
 
     override fun observe(): Flow<List<TodayTodo>> = repository.observe()
-        .map { answer -> answer?.status?.let { todos(it, it.placeOfferedSeenAt ?: answer.fetchedAt) }.orEmpty() }
+        .map { answer ->
+            if (answer == null) return@map emptyList()
+            val stage = answer.status?.let { todos(it, it.placeOfferedSeenAt ?: answer.fetchedAt) }.orEmpty()
+            stage + PaymentTodos.of(answer.contracts, time.today(), FEATURE, AppRoutes.Dormitory)
+        }
         .distinctUntilChanged()
 
     /** [seenAt]: when the app first saw `Место предоставлено`, else the stored answer's time. */
@@ -69,6 +75,7 @@ class DormitoryTodoSource(
     )
 
     private companion object {
+        const val FEATURE = "dormitory"
         const val DATE_ID = "dormitory-date"
         const val DOCUMENT_ID = "dormitory-document-"
     }

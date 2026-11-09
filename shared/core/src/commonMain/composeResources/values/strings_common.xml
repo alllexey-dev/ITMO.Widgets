@@ -197,4 +197,9 @@
         <item quantity="many">Через %1$d дней</item>
         <item quantity="other">Через %1$d дня</item>
     </plurals>
+    <!-- Нужно сделать: Платежи and Долг -->
+    <string name="payment_todo_pay_title">Оплатить до %1$s, %2$s</string>
+    <string name="payment_todo_debt_title">Погасить долг, %1$s</string>
+    <string name="payment_todo_debt_reason">%1$s № %2$s</string>
+    <string name="payment_todo_open">Открыть</string>
 </resources>

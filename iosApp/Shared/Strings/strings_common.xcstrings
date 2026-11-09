@@ -1141,6 +1141,54 @@
         }
       }
     },
+    "payment_todo_debt_reason" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ № %2$@"
+          }
+        }
+      }
+    },
+    "payment_todo_debt_title" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Погасить долг, %1$@"
+          }
+        }
+      }
+    },
+    "payment_todo_open" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть"
+          }
+        }
+      }
+    },
+    "payment_todo_pay_title" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оплатить до %1$@, %2$@"
+          }
+        }
+      }
+    },
     "schedule_lesson_count" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",

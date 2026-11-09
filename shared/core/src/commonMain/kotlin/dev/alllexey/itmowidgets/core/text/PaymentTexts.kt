@@ -63,9 +63,12 @@ object PaymentTexts {
     }
 
     /** `до 10 октября`; another calendar year than [today]'s adds the year. */
-    fun due(payment: Payment, today: LocalDate): UiText {
+    fun due(payment: Payment, today: LocalDate): UiText = UiText.Res(CoreStrings.payment_due, listOf(dueDate(payment, today)))
+
+    /** `10 октября`; another calendar year than [today]'s adds the year. */
+    fun dueDate(payment: Payment, today: LocalDate): String {
         val format = if (payment.dueDate.year == today.year) DateTexts.DAY_MONTH else DateTexts.DAY_MONTH_YEAR
-        return UiText.Res(CoreStrings.payment_due, listOf(payment.dueDate.format(format)))
+        return payment.dueDate.format(format)
     }
 
     /** `оплачено 500 ₽` for a Платёж paid in part, else null. */
