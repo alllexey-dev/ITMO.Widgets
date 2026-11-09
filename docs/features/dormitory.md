@@ -151,10 +151,12 @@ the student what happened. It is core's `PaymentsCheck` (`core/payments/check`) 
 
 - **Cadence.** Android runs it every 3 hours with a network (`PaymentsWorker`, `PAYMENTS_SPEC`, unique work
   `dormitory-payments-check` and `dormitory-payments-check-now`); iOS as the step `dormitory-payments` of the one app
-  refresh task, at most every 3 hours. A run asks my.itmo while any stored answer has a Этап общежития (any status,
-  `Заселён` included) or something left to pay (an unpaid Платёж or a negative balance), and otherwise only once the
-  oldest answer is 24 hours old, so a status that appears is found within a day (`PaymentsCadence`). A run that asks
-  nothing is `SKIPPED`. It runs with any session; the demo and a signed-out device send nothing and post nothing.
+  refresh task, at most every 3 hours. A run decides part by part (`PaymentsCadence`): it asks my.itmo for a part
+  whose stored answer has a Этап общежития (any status, `Заселён` included) or something left to pay (an unpaid
+  Платёж or a negative balance), and otherwise only 24 hours after the later of its answer (the older part of it)
+  and its last attempt, so a status that appears is found within a day and a part that keeps failing, or has no
+  answer yet, is asked once a day rather than every run. The time of each part's last attempt is kept with the
+  posted notices (payments_notices.json). A run that asks nothing is `SKIPPED`. It runs with any session; the demo and a signed-out device send nothing and post nothing.
 - **Notifications** ([notifications](notifications.md#dormitory-and-payments), switch `Общежитие и оплата`,
   [settings](../settings.md#notifications)): `Место предоставлено` once per time the app first saw the stage, and
   each Платёж three days before and on its due day (`PaymentReminders`, shared with tuition); nothing for a Долг.
@@ -190,6 +192,7 @@ the Профиль row comes from the same `ProfileEntrySource` through `MeViewM
   again after the stage came back, a Платёж reminded three days before and on the due day once each (and at once two
   days ahead), no reminder for a Долг, the quiet hours on Android (held until 06:00) and iOS (scheduled for 06:00
   once), the bell's queue move, assigned dormitory and paid Платёж, the switch off (nothing posted, the bell written),
-  the 3-hour versus daily cadence, offline reminders from the stored answer, sign-out, no session and the demo.
+  the 3-hour versus daily cadence (a part that keeps failing, or whose daily refresh failed, waits a day after the
+  attempt), offline reminders from the stored answer, sign-out, no session and the demo.
 - `DormitoryScreenTest` (Compose actions and touch targets), `DormitoryScreenshotTest` (baselines in
   `shared/feature-dormitory/screenshots/`), `DormitoryModuleTest`.

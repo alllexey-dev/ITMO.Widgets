@@ -15,8 +15,8 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toInstant
 
 /**
- * One background run of `Общежитие и оплата` over every feature's [parts]: ask my.itmo when [PaymentsCadence] says
- * so (the parts store their answers and write their bell events), then post what waits from the stored answers,
+ * One background run of `Общежитие и оплата` over every feature's [parts]: ask my.itmo for each part
+ * [PaymentsCadence] finds due, recording the attempt (the parts store their answers and write their bell events), then post what waits from the stored answers,
  * even when a request failed, so reminders work offline. Each notice is posted once ([PaymentsNoticeLog]); the
  * switch gates only the posting. In the quiet hours a notice goes to the system for 06:00 where the platform can,
  * otherwise it waits for the first run after them. The demo sends nothing and posts nothing. Nothing is logged: the
@@ -34,10 +34,13 @@ class PaymentsCheck(
 ) {
     suspend fun run(): CheckOutcome {
         if (demo.isActive() || !sessionTokens.hasRefreshToken()) return CheckOutcome.SKIPPED
-        val due = PaymentsCadence.isDue(parts.map { it.stored() }, clock.now())
-        val errors = if (due) parts.mapNotNull { (it.refresh() as? AppResult.Failure)?.error } else emptyList()
+        val now = clock.now()
+        val attempts = log.lastAttempts()
+        val due = parts.filter { PaymentsCadence.isDue(it.stored(), attempts[it.feature], now) }
+        log.recordAttempts(due.map { it.feature }, now)
+        val errors = due.mapNotNull { (it.refresh() as? AppResult.Failure)?.error }
         deliver()
-        return if (due) outcomeOf(errors) else CheckOutcome.SKIPPED
+        return if (due.isEmpty()) CheckOutcome.SKIPPED else outcomeOf(errors)
     }
 
     private suspend fun deliver() {

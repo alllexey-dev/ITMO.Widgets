@@ -12,7 +12,7 @@ import kotlin.time.Instant
  * switch, so the features never import each other. A part writes its own bell events when its stored answer changes.
  */
 interface PaymentsCheckPart {
-    /** `dormitory`, `tuition`: the prefix of its Платежи reminders' keys. */
+    /** `dormitory`, `tuition`: the prefix of its Платежи reminders' keys and the name of its last attempt. */
     val feature: String
 
     /** Where a tap on a reminder of its Платежи leads. */

@@ -25,7 +25,8 @@ class DormitoryCheckPart(private val repository: DormitoryRepository) : Payments
 
     override suspend fun stored(): PaymentsCheckState? = repository.observe().first()?.let { answer ->
         PaymentsCheckState(
-            fetchedAt = answer.fetchedAt,
+            // The older part: Договоры kept from an earlier answer are due as old as they are.
+            fetchedAt = answer.updatedAt,
             inProgress = answer.status != null,
             contracts = answer.contracts,
             notices = listOfNotNull(placeOffered(answer)),

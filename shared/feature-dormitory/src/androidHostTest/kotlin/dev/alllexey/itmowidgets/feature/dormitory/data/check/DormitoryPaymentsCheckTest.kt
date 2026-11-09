@@ -259,6 +259,40 @@ class DormitoryPaymentsCheckTest {
         assertEquals(2 * first, harness.requests.size)
     }
 
+    /** Nothing stored and nothing pending: a failing answer is asked again a day after the last attempt, not every run. */
+    @Test
+    fun aStudentWhoseStatusKeepsFailingIsAskedOnceADay() = runTest(dispatcher) {
+        harness.answer("error.json")
+        assertEquals(CheckOutcome.RETRY, check.run())
+        val first = harness.requests.size
+
+        harness.clock.advanceBy(3.hours)
+        assertEquals(CheckOutcome.SKIPPED, check.run())
+        harness.clock.advanceBy(18.hours)
+        assertEquals(CheckOutcome.SKIPPED, check.run())
+        assertEquals(first, harness.requests.size)
+
+        harness.clock.advanceBy(3.hours)
+        assertEquals(CheckOutcome.RETRY, check.run())
+        assertEquals(2 * first, harness.requests.size)
+    }
+
+    /** A stored answer with nothing pending whose refresh fails waits a day after the attempt, not after the answer. */
+    @Test
+    fun aFailedDailyRefreshWaitsADayAfterTheAttempt() = runTest(dispatcher) {
+        harness.answer("status-empty.json")
+        check.run()
+        harness.clock.advanceBy(24.hours)
+        harness.offline = true
+        assertEquals(CheckOutcome.RETRY, check.run())
+        val asked = harness.requests.size
+
+        harness.clock.advanceBy(3.hours)
+
+        assertEquals(CheckOutcome.SKIPPED, check.run())
+        assertEquals(asked, harness.requests.size)
+    }
+
     @Test
     fun aPaidUpContractWithoutAnApplicationIsAlsoAskedOnceADay() = runTest(dispatcher) {
         harness.answer("status-empty.json")
