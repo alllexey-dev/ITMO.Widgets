@@ -24,8 +24,13 @@ final class SocialSnapshotTests: XCTestCase {
         assertProfile(me.state(connection: "off", requests: "no"), named: "profile-off", appearances: [.light, .dark])
     }
 
+    /// The whole tab without the tab bar, so the `Университет` group with the feature row is in the picture.
     func testProfileWithAFeatureRow() {
-        assertProfile(me.university, named: "profile-university", appearances: [.light, .dark])
+        let screen = NavigationStack {
+            MeContent(state: me.university)
+                .itmoRootHeader(title: ShellTab.profile.title, subtitle: nil) { MeShareButton {} }
+        }
+        assertScreenAppearances(of: screen, named: "profile-university", appearances: [.light, .dark], height: 1500, settle: 1)
     }
 
     func testProfileLongName() {

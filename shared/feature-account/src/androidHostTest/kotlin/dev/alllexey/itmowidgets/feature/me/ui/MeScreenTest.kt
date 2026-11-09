@@ -93,16 +93,18 @@ class MeScreenTest {
     }
 
     @Test
-    fun aFeatureRowShowsUnderUniversityAndOpensItsRoute() = runComposeUiTest {
+    fun aFeatureRowJoinsTheMapAndIsuUnderUniversityAndOpensItsRoute() = runComposeUiTest {
         val opened = mutableListOf<AppRoute>()
         val entry = ProfileEntry("dormitory", AppIcon.SCHOOL, UiText.Dynamic("Общежитие"), UiText.Dynamic("Заселён"), AppRoutes.Bell)
         var state by mutableStateOf(Connected)
         setContent { ItmoTheme { MeScreen(state, showDebugTools = false, actions = MeActions(onOpenRoute = { opened += it })) } }
 
-        onNodeWithText("Университет").assertDoesNotExist()
+        scrollTo(MeTestTags.ISU_ROW)
+        onNodeWithText("Университет").assertExists()
+        onNodeWithTag(MeTestTags.entry("dormitory")).assertDoesNotExist()
         state = Connected.copy(entries = listOf(entry))
         waitForIdle()
-        onNodeWithText("Университет").assertExists()
+        scrollTo(MeTestTags.entry("dormitory"))
         onNodeWithTag(MeTestTags.entry("dormitory")).assertExists().performClick()
         assertEquals(listOf<AppRoute>(AppRoutes.Bell), opened)
     }

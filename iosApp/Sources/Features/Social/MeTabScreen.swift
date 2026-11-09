@@ -57,7 +57,7 @@ struct MeContentActions {
     var signOut: () -> Void = {}
 }
 
-/// The tab without the ViewModel: the identity card, the people, feature, app and link groups and the sign-out.
+/// The tab without the ViewModel: the identity card, the people, app, university and link groups and the sign-out.
 struct MeContent: View {
     let state: MeUiState
     var actions = MeContentActions()
@@ -67,12 +67,10 @@ struct MeContent: View {
             MeIdentityCard(header: state.header)
             ItmoSectionHeader(title: AppStrings.string("me_group_people"))
             people
-            if !state.entries.isEmpty {
-                ItmoSectionHeader(title: AppStrings.string("me_group_university"))
-                university
-            }
             ItmoSectionHeader(title: AppStrings.string("me_group_app"))
             app
+            ItmoSectionHeader(title: AppStrings.string("me_group_university"))
+            university
             ItmoSectionHeader(title: AppStrings.string("me_group_links"))
             links
             ItmoListGroup {
@@ -115,9 +113,31 @@ struct MeContent: View {
         }
     }
 
-    /// The rows features add (the dormitory), each opening the route it names.
+    /// The campus map, ISU (messages and Wi-Fi), My ITMO, then the rows features add (the dormitory), each opening the route
+    /// it names.
     private var university: some View {
         ItmoListGroup {
+            ItmoRow(
+                title: AppStrings.string("me_map"),
+                subtitle: AppStrings.string("me_map_subtitle"),
+                symbol: .map,
+                tone: .neutral,
+                chevron: true,
+                action: { actions.open(AppRoutes.CampusMap(args: CampusMapArgs(lesson: nil, route: false))) }
+            )
+            .accessibilityIdentifier("map_row")
+            ItmoRow(
+                title: AppStrings.string("me_isu_hub"),
+                subtitle: AppStrings.string("me_isu_hub_subtitle"),
+                symbol: .accountBalance,
+                tone: .neutral,
+                chevron: true,
+                action: { actions.open(AppRoutes.Isu.shared) }
+            )
+            .accessibilityIdentifier("isu_row")
+            external("me_my_itmo", "me_my_itmo_subtitle", .language, id: "my_itmo_row") {
+                actions.open(AppRoutes.MyItmoWeb(path: "/"))
+            }
             ForEach(state.entries, id: \.id) { entry in
                 ItmoRow(
                     title: entry.title.resolved,
@@ -164,30 +184,9 @@ struct MeContent: View {
         }
     }
 
-    /// The campus map, ISU (messages and Wi-Fi), the university's site, the project's pages and the feedback site.
+    /// The project's pages and the feedback site.
     private var links: some View {
         ItmoListGroup {
-            ItmoRow(
-                title: AppStrings.string("me_map"),
-                subtitle: AppStrings.string("me_map_subtitle"),
-                symbol: .map,
-                tone: .neutral,
-                chevron: true,
-                action: { actions.open(AppRoutes.CampusMap(args: CampusMapArgs(lesson: nil, route: false))) }
-            )
-            .accessibilityIdentifier("map_row")
-            ItmoRow(
-                title: AppStrings.string("me_isu_hub"),
-                subtitle: AppStrings.string("me_isu_hub_subtitle"),
-                symbol: .accountBalance,
-                tone: .neutral,
-                chevron: true,
-                action: { actions.open(AppRoutes.Isu.shared) }
-            )
-            .accessibilityIdentifier("isu_row")
-            external("me_my_itmo", "me_my_itmo_subtitle", .language, id: "my_itmo_row") {
-                actions.open(AppRoutes.MyItmoWeb(path: "/"))
-            }
             external("me_telegram", "me_telegram_subtitle", .brandTelegram, id: "telegram_row") {
                 actions.openProjectLink(ProjectLinks.shared.TELEGRAM_URL)
             }

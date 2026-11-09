@@ -165,12 +165,10 @@ fun MeScreen(
                 item(key = "header") { Header(state, name) }
                 item(key = "people:title") { SectionHeader(text(AccountStrings.me_group_people)) }
                 item(key = "people") { People(state, actions) }
-                if (state.entries.isNotEmpty()) {
-                    item(key = "university:title") { SectionHeader(text(AccountStrings.me_group_university)) }
-                    item(key = "university") { University(state.entries, actions) }
-                }
                 item(key = "app:title") { SectionHeader(text(CoreStrings.me_group_app)) }
                 item(key = "app") { App(state.devices, showDebugTools, actions) }
+                item(key = "university:title") { SectionHeader(text(AccountStrings.me_group_university)) }
+                item(key = "university") { University(state.entries, actions) }
                 item(key = "links:title") { SectionHeader(text(AccountStrings.me_group_links)) }
                 item(key = "links") { Links(actions) }
                 item(key = "sign-out") {
@@ -262,10 +260,41 @@ private fun People(state: MeUiState, actions: MeActions) {
     }
 }
 
-/** The rows features add (`Общежитие`), each opening its own screen. */
+/** The campus map, ISU (messages and Wi-Fi), My ITMO, then the rows features add (`Общежитие`), each opening its own screen. */
 @Composable
 private fun University(entries: List<ProfileEntry>, actions: MeActions) {
     ListGroup {
+        item {
+            ListRow(
+                text(AccountStrings.me_map),
+                Modifier.testTag(MeTestTags.MAP_ROW),
+                subtitle = text(AccountStrings.me_map_subtitle),
+                icon = painterResource(Res.drawable.ic_map),
+                iconTone = Tone.Neutral,
+                chevron = true,
+                onClick = actions.onOpenMap,
+            )
+        }
+        item {
+            ListRow(
+                text(AccountStrings.me_isu_hub),
+                Modifier.testTag(MeTestTags.ISU_ROW),
+                subtitle = text(AccountStrings.me_isu_hub_subtitle),
+                icon = painterResource(Res.drawable.ic_account_balance),
+                iconTone = Tone.Neutral,
+                chevron = true,
+                onClick = actions.onOpenIsu,
+            )
+        }
+        item {
+            ExternalRow(
+                text(AccountStrings.me_my_itmo),
+                text(AccountStrings.me_my_itmo_subtitle),
+                painterResource(Res.drawable.ic_language),
+                MeTestTags.MY_ITMO_ROW,
+                actions.onOpenMyItmo,
+            )
+        }
         entries.forEach { entry ->
             item {
                 ListRow(
@@ -333,41 +362,10 @@ private fun App(devices: DevicesSummary, showDebugTools: Boolean, actions: MeAct
     }
 }
 
-/** The campus map, ISU (messages and Wi-Fi), the university's site, the project's pages and the feedback site. */
+/** The project's pages and the feedback site. */
 @Composable
 private fun Links(actions: MeActions) {
     ListGroup {
-        item {
-            ListRow(
-                text(AccountStrings.me_map),
-                Modifier.testTag(MeTestTags.MAP_ROW),
-                subtitle = text(AccountStrings.me_map_subtitle),
-                icon = painterResource(Res.drawable.ic_map),
-                iconTone = Tone.Neutral,
-                chevron = true,
-                onClick = actions.onOpenMap,
-            )
-        }
-        item {
-            ListRow(
-                text(AccountStrings.me_isu_hub),
-                Modifier.testTag(MeTestTags.ISU_ROW),
-                subtitle = text(AccountStrings.me_isu_hub_subtitle),
-                icon = painterResource(Res.drawable.ic_account_balance),
-                iconTone = Tone.Neutral,
-                chevron = true,
-                onClick = actions.onOpenIsu,
-            )
-        }
-        item {
-            ExternalRow(
-                text(AccountStrings.me_my_itmo),
-                text(AccountStrings.me_my_itmo_subtitle),
-                painterResource(Res.drawable.ic_language),
-                MeTestTags.MY_ITMO_ROW,
-                actions.onOpenMyItmo,
-            )
-        }
         item {
             ExternalRow(
                 text(AccountStrings.me_telegram),

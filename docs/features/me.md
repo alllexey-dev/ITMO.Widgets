@@ -16,18 +16,16 @@ settings: [Settings](../settings.md).
   user, else Backend's own profile; the study group line only from Backend's primary group; the ISU.
 - `Друзья` with the counts and the incoming requests as a badge. Without the connection
   (`MeFriendsSummary.Disabled`) a gate with `Подключить` stands in its place and opens «Сервер ITMO.Widgets».
-- `Университет`: the rows features add without Профиль depending on them, each a `ProfileEntry` (`core/profile`: id,
-  icon, title, subtitle, route) from a `ProfileEntrySource` the feature registers under its own qualifier;
-  `MeViewModel` reads `getAll()` and shows a row while its source has one, ordered by id. The group is drawn only with
-  a row: `Общежитие` ([Dormitory](dormitory.md)) while the student has a Этап общежития or a Договор найма, and
+- `Приложение`: `Виджеты` (the gallery), `Устройства` (installs, connected clients and ITMO.ID sessions, with the
+  count and a warning pill, [connected clients](connections.md)), `Настройки` (every setting, the connection, privacy
+  and notifications included) and developer tools only in Android debug builds ([Debug tools](debug.md)).
+- `Университет`, below `Приложение`: `Карта` (`AppRoutes.CampusMap()`, [campus map](map.md)), `ИСУ`
+  (`AppRoutes.Isu`, [below](#isu)), `My ITMO` ([My ITMO in the app](my-itmo-web.md); the demo refuses it), then the
+  rows features add without Профиль depending on them, each a `ProfileEntry` (`core/profile`: id, icon, title,
+  subtitle, route) from a `ProfileEntrySource` the feature registers under its own qualifier; `MeViewModel` reads `getAll()` and shows a row while its source has one, ordered by id:
+  `Общежитие` ([Dormitory](dormitory.md)) while the student has a Этап общежития or a Договор найма, and
   `Оплата обучения` ([Finances](finances.md)) while the student has a Договор об обучении.
-- `Виджеты` (the gallery), `Устройства` (installs, connected clients and ITMO.ID sessions, with the count and a
-  warning pill, [connected clients](connections.md)), `Настройки` (every setting, the connection, privacy and
-  notifications included)
-  and developer tools only in Android debug builds ([Debug tools](debug.md)).
-- Links: `Карта` (`AppRoutes.CampusMap()`, [campus map](map.md)), `ИСУ` (`AppRoutes.Isu`, [below](#isu)),
-  `My ITMO` ([My ITMO in the app](my-itmo-web.md); the demo refuses it), the Telegram channel, GitHub and
-  `Обратная связь`; then `Выйти`.
+- `Ссылки`: the Telegram channel, GitHub and `Обратная связь`; then `Выйти`.
 - `Обратная связь` opens the feedback site (`ProjectLinks.feedbackUrl`) with the form prefilled: `platform`, the app
   version and the device model (Android `Build.MANUFACTURER` and `MODEL`, iOS the model identifier such as
   `iPhone17,1`), never the device's own name, the account or the ISU. `kind` is left to the site's default.

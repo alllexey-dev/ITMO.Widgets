@@ -215,7 +215,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 ### Общежитие и оплата
 
-- `Общежитие` in Профиль (a new `Университет` group) on both platforms while the student has a dormitory
+- Профиль gets a `Университет` group below `Приложение`: `Карта`, `ИСУ` and `My ITMO` move there from the links, and the
+  feature rows join them.
+- `Общежитие` in Профиль (`Университет`) on both platforms while the student has a dormitory
   application: the Этап общежития (`В очереди` with the queue place, `Место предоставлено` with
   `Выбрать дату заселения`, `Дата заселения выбрана`, `Заселён`), the assigned dormitory with its address,
   `На карте` in the system map app and the settlement instructions as safe text, and the Документы для заселения
