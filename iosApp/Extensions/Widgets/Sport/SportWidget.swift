@@ -79,7 +79,7 @@ struct SportRing: View {
                 } else if visits + bonus == 0 {
                     Circle().stroke(colors.block, lineWidth: line)
                 } else {
-                    let arcs = [(CGFloat(0), visitsShare, colors.bonus), (visitsShare, bonusShare, colors.accent)].filter { $0.1 > 0 }
+                    let arcs = [(CGFloat(0), visitsShare, colors.tertiary), (visitsShare, bonusShare, colors.accent)].filter { $0.1 > 0 }
                     ForEach(arcs.indices, id: \.self) { index in
                         let (from, length, color) = arcs[index]
                         Circle()
@@ -170,7 +170,7 @@ private struct SportMedium: View {
             Text(verbatim: "\(String(localized: .widgetSportVisits(snapshot.visits))), \(String(localized: .widgetSportBonus(snapshot.bonus)))")
         } else {
             HStack(spacing: 8) {
-                dot(colors.bonus, .widgetSportVisits(snapshot.visits))
+                dot(colors.tertiary, .widgetSportVisits(snapshot.visits))
                 dot(colors.accent, .widgetSportBonus(snapshot.bonus))
             }
         }

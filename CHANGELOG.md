@@ -6,8 +6,6 @@ publication or deployment.
 
 ## Unreleased (2.3.0)
 
-- Sport points use the My ITMO colour meanings: red for visits and blue for bonuses.
-
 The app is rebuilt on Kotlin Multiplatform: one shared Kotlin core (data, domain, view models) under Compose screens
 on Android and native SwiftUI screens in a new iOS app. Android keeps the features and the data of 2.2.
 
@@ -132,6 +130,7 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   `Только мои секции`, `Доступные`) in a sheet.
 - The lesson sheet shows the places large with one main action; `Встать в очередь?` explains the steps.
 - `Откуда баллы` shows visits plus bonus up to 40 and My ITMO's awards by month.
+- The score colours follow My ITMO: pink for visits, blue for bonus points.
 - `Автозапись на спорт` (pending auto-sign in the own schedule and widgets) is on by default.
 - Lessons whose My ITMO end falls on a wrong date end on their own day.
 

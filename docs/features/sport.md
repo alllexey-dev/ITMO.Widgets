@@ -9,7 +9,7 @@ the part. `Откуда баллы` (`AppRoutes.SportPoints`) is a pushed screen
 (`iosApp/Sources/Features/Sport/`). Official data comes from MyItmoApi; queues, sections, friends' bookings and the
 queue limit come from Backend behind the custom-services gate.
 
-The score uses red for visits and blue for bonus points, following My ITMO.
+The score uses pink for visits and blue for bonus points, following My ITMO.
 
 ## Screens
 
