@@ -14,7 +14,7 @@ and keep their numbers.
 - [0006 People search via MyITMO plus lookup](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0006-people-search.md) - Backend
 - [0007 Push delivery guard by recipient ISU](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0007-push-guard.md) - Backend
 - [0008 Subject links: schedule-flow audiences, premoderation only for everybody](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0008-community-moderation.md) - Backend
-- [0009 One person profile, direct My ITMO identity and copied reviews](0009-person-profile.md) - accepted
+- [0009 One person profile, direct My ITMO identity and copied reviews](0009-person-profile.md) - amended by 0039
 - [0010 Own teacher reviews verified through ISU flows](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0010-review-verification.md) - Backend
 - [0011 AI summaries of teacher reviews through Gemini behind a proxy](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0011-ai-review-summaries.md) - Backend
 - [0012 BARS is renewed in the background by replaying ITMO.ID with cookies](0012-bars-background-renewal.md) - accepted
@@ -44,3 +44,4 @@ and keep their numbers.
 - [0036 Scope texts of connected clients come from Backend](0036-backend-scope-texts.md) - accepted
 - [0037 ISU is read on the device with the phone's ITMO.ID session](0037-on-device-isu-client.md) - accepted
 - [0038 Backend analyses a flow-shared sheet; the device computes the own total](0038-ai-sheet-formula.md) - accepted
+- [0039 Display My ITMO person contacts](0039-person-contacts.md) - accepted

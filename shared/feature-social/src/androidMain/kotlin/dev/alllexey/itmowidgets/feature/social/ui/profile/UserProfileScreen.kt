@@ -82,6 +82,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_content_copy
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_note
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
+import dev.alllexey.itmowidgets.shared.designsystem.ic_link
 import dev.alllexey.itmowidgets.shared.designsystem.ic_location_on
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
 import dev.alllexey.itmowidgets.shared.designsystem.ic_remove
@@ -110,6 +111,7 @@ class UserProfileActions(
     val onTeacherSchedule: () -> Unit = {},
     val onSport: () -> Unit = {},
     val onToggleSummary: () -> Unit = {},
+    val onContact: (String) -> Unit = {},
     val review: TeacherReviewActions = TeacherReviewActions(),
 )
 
@@ -216,6 +218,22 @@ private fun Card(state: UserProfileUiState.Content, actions: UserProfileActions,
         } else {
             study(state.study, actions)
             teaching(state, actions)
+        }
+        if (state.contacts.isNotEmpty()) {
+            item(key = "contacts:title", contentType = "title") {
+                SectionHeader(text(SocialStrings.person_section_contacts))
+            }
+            item(key = "contacts", contentType = "rows") {
+                ListGroup {
+                    state.contacts.forEach { contact ->
+                        item {
+                            ListRow(contact.value, subtitle = contact.label.takeIf { it.isNotBlank() },
+                                icon = painterResource(Res.drawable.ic_link), iconTone = Tone.Primary,
+                                onClick = contact.url?.let { url -> { actions.onContact(url) } })
+                        }
+                    }
+                }
+            }
         }
         if (state.canRemoveFriend) {
             item(key = "remove", contentType = "remove") {

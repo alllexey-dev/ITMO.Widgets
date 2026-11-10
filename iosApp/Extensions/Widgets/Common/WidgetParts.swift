@@ -14,6 +14,7 @@ struct WidgetColors {
     let primaryText: Color
     let secondaryText: Color
     let accent: Color
+    let bonus: Color
 
     init(palette: WidgetPalette?) {
         guard let palette else {
@@ -24,6 +25,7 @@ struct WidgetColors {
             primaryText = ItmoColor.onSurface
             secondaryText = ItmoColor.onSurfaceVariant
             accent = ItmoColor.primary
+            bonus = ItmoColor.tertiary
             return
         }
         func color(_ role: KeyPath<WidgetColorRoles, UInt32>) -> Color {
@@ -36,6 +38,7 @@ struct WidgetColors {
         primaryText = color(\.onSurface)
         secondaryText = color(\.onSurfaceVariant)
         accent = color(\.primary)
+        bonus = color(\.tertiary)
     }
 
     /// The colours no theme changes: a changed room and a queue, a booking, the reached credit, the now line.

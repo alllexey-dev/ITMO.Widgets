@@ -6,6 +6,7 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FakeDemoMode
 import dev.alllexey.itmowidgets.core.testing.noDemo
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
+import dev.alllexey.itmowidgets.feature.social.domain.model.PersonContact
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonRoom
@@ -33,7 +34,7 @@ class PersonRepositoryImplTest {
     private val requests = mutableListOf<HttpRequestData>()
 
     @Test
-    fun aFoundPersonIsMappedWithoutContactsAndCachedAfterOneRequestWithTheStoredToken() = runTest {
+    fun aFoundPersonIsMappedWithContactsAndCachedAfterOneRequestWithTheStoredToken() = runTest {
         val repository = repository { respondJson(PersonalityFixtures.PERSON) }
 
         val result = repository.person(PersonalityFixtures.PERSON_ISU)
@@ -42,6 +43,7 @@ class PersonRepositoryImplTest {
             PersonalityFixtures.PERSON_ISU, "Тестовый Профиль Синтетический", "https://example.invalid/photo/100001.jpg",
             listOf(PersonPosition("Инженер", "Тестовый отдел")), emptyList(),
             listOf(PersonEducation("T3100", 3, "Тестовый факультет")),
+            listOf(PersonContact("E-mail", "test@example.invalid", "mailto:test@example.invalid")),
         )
         assertEquals(AppResult.Success(expected), result)
         assertEquals(expected, repository.cachedPerson(PersonalityFixtures.PERSON_ISU))
@@ -65,7 +67,8 @@ class PersonRepositoryImplTest {
         )
         assertEquals(
             AppResult.Success(Person(PersonalityFixtures.EMPLOYEE_ISU, "Тестовый Сотрудник", "https://example.test/employee.jpg",
-                listOf(PersonPosition("Преподаватель", "Тестовое подразделение")), emptyList(), emptyList())),
+                listOf(PersonPosition("Преподаватель", "Тестовое подразделение")), emptyList(), emptyList(),
+                listOf(PersonContact("Электронная почта", "teacher@example.test", "mailto:teacher@example.test")))),
             repository.person(PersonalityFixtures.EMPLOYEE_ISU),
         )
         assertEquals(
@@ -111,6 +114,20 @@ class PersonRepositoryImplTest {
         }
 
         assertEquals(AppResult.Success(Person(100001, "", null, emptyList(), emptyList(), emptyList())), repository.person(100001))
+    }
+
+    @Test
+    fun contactsAreTrimmedDeduplicatedAndOnlySafeDestinationsAreOpened() = runTest {
+        val repository = repository { respondJson("""{"error_code":0,"result":{"isu":100001,"contacts":[
+            {"contact_alias":" E-mail ","contact":[" test@example.test ","test@example.test", " "]},
+            {"contact_alias":"Телефон","contact":["+7(812)2320316"]},
+            {"contact_alias":"LinkedIn","contact":["in/ivan-p-loginov"]},
+            {"contact_alias":"VK","contact":["ivan.p.loginov"]},
+            {"contact_alias":"Другое","contact":["javascript:alert(1)"]}]}}""") }
+        val contacts = (repository.person(100001) as AppResult.Success).value.contacts
+        assertEquals(listOf("mailto:test@example.test", "tel:+78122320316",
+            "https://www.linkedin.com/in/ivan-p-loginov", "https://vk.com/ivan.p.loginov", null), contacts.map { it.url })
+        assertEquals("Другое", contacts.last().label)
     }
 
     @Test

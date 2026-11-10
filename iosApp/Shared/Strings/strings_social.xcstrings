@@ -277,6 +277,18 @@
         }
       }
     },
+    "person_section_contacts" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контакты"
+          }
+        }
+      }
+    },
     "person_section_education" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",

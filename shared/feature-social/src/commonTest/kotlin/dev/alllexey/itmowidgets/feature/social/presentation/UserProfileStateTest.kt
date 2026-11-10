@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
+import dev.alllexey.itmowidgets.feature.social.domain.model.PersonContact
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonRoom
@@ -81,6 +82,15 @@ class UserProfileStateTest {
             listOf(ProfileLine(UiText.Res(SocialStrings.person_group_course, listOf("M3100", 1)), "ФИТиП")),
             backendOnly.study?.groups,
         )
+    }
+
+    @Test
+    fun directoryContactsAppearWithoutBackendAndAreAbsentWithoutDirectoryIdentity() {
+        val contacts = listOf(PersonContact("E-mail", "test@example.test", "mailto:test@example.test"))
+        val card = content(state(ProfilePart.Ready(person.copy(contacts = contacts)), ProfilePart.Absent))
+        assertEquals(contacts, card.contacts)
+        val backendOnly = content(state(ProfilePart.Absent, ProfilePart.Ready(social)))
+        assertTrue(backendOnly.contacts.isEmpty())
     }
 
     @Test

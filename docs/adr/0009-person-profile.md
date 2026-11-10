@@ -1,5 +1,7 @@
 # 0009 One person profile, direct My ITMO identity and copied reviews
 
+**Amended by [0039](0039-person-contacts.md):** My ITMO contacts are displayed in the person profile.
+
 **Decision (2026-09-28).** `USER_PROFILE` opens for any positive ISU, including
 people who do not use ITMO.Widgets. Teachers have the same person profile, not
 another screen. Identity and facts come from My ITMO through the existing

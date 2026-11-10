@@ -62,6 +62,8 @@ class UserProfileExits(
     val onOpenProfile: (isu: Int) -> Unit = {},
     /** The source link of a copied review. */
     val onSource: (url: String) -> Unit = {},
+    /** A contact's `mailto:`, `tel:` or https destination. */
+    val onContact: (url: String) -> Unit = {},
 )
 
 /**
@@ -126,6 +128,7 @@ fun UserProfileRoute(exits: UserProfileExits, viewModel: UserProfileViewModel = 
         onTeacherSchedule = { withPage(exits.onTeacherSchedule) },
         onSport = { withPage(exits.onSport) },
         onToggleSummary = viewModel::toggleSummaryScales,
+        onContact = exits.onContact,
         review = TeacherReviewActions(
             onVote = viewModel::vote,
             onReport = { id -> withPage { exits.onReport(it, id) } },
