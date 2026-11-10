@@ -52,8 +52,8 @@ data class ExtendedColorTokens(
             lessonTypeFree = Color(0xFF7A7A7A),
             lessonTypeDefault = Color(0xFF5C5C5C),
             recordbookPassed = Color(0xFF286B39),
-            sportScoreAttendance = Color(0xFF345BD1),
-            sportScoreBonus = Color(0xFFC93672),
+            sportScoreAttendance = Color(0xFFC93672),
+            sportScoreBonus = Color(0xFF345BD1),
             sportConditionAllowed = Color(0xFF216B3C),
             sportConditionWaiting = Color(0xFF285EA7),
             sportConditionWarning = Color(0xFF875200),
@@ -74,8 +74,8 @@ data class ExtendedColorTokens(
         /** The lesson types keep their light values in dark. */
         val Dark = Light.copy(
             recordbookPassed = Color(0xFF89D995),
-            sportScoreAttendance = Color(0xFF85A2FF),
-            sportScoreBonus = Color(0xFFFF78AE),
+            sportScoreAttendance = Color(0xFFFF78AE),
+            sportScoreBonus = Color(0xFF85A2FF),
             sportConditionAllowed = Color(0xFF86D9A3),
             sportConditionWaiting = Color(0xFF9BBEFF),
             sportConditionWarning = Color(0xFFF4C16F),

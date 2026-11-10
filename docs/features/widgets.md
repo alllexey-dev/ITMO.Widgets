@@ -96,6 +96,8 @@ least 24 pt; the countdown keeps its width first and shrinks with the line.
 
 ## Sport widget
 
+The score ring uses the widget theme's tertiary colour for visits and primary colour for bonuses.
+
 - `SportWidgetDataProvider` fetches as `Моё` does: the score from My ITMO, the bookings with their queues (the queues
   only through the custom-services gate of `SportDataRepository`; demo data in a demo session). Signed out it
   starts no request.

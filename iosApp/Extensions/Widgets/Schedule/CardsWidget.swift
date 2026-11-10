@@ -392,7 +392,7 @@ private struct CardsMoreRow: View {
                 .foregroundStyle(colors.primaryText)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 3)
-                .background(colors.bonus.opacity(0.28), in: .capsule)
+                .background(colors.tertiary.opacity(0.28), in: .capsule)
                 .fixedSize()
         }
         .lineLimit(1)
