@@ -44,5 +44,4 @@ and keep their numbers.
 - [0036 Scope texts of connected clients come from Backend](0036-backend-scope-texts.md) - accepted
 - [0037 ISU is read on the device with the phone's ITMO.ID session](0037-on-device-isu-client.md) - accepted
 - [0038 Backend analyses a flow-shared sheet; the device computes the own total](0038-ai-sheet-formula.md) - accepted
-
 - [0039 Display My ITMO person contacts](0039-person-contacts.md) - accepted

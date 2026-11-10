@@ -90,7 +90,7 @@ struct UserProfileScreen: View {
             sport: { open(AppRoutes.UserSport(isu: $0.isu, name: $0.displayName.resolved, givenName: $0.givenName)) },
             friends: { open(AppRoutes.UserFriends(isu: $0.isu, name: $0.displayName.resolved)) },
             toggleSummary: { viewModel.toggleSummaryScales() },
-            contact: { if let url = URL(string: $0) { openURL(url) } },
+            contact: { openURL.link($0) { messages.show(AppStrings.string("link_open_failed")) } },
             review: TeacherReviewActions(
                 vote: { viewModel.vote(reviewId: $0, up: $1) },
                 report: { page, id in open(AppRoutes.ReportReview(args: page.reviewArgs, reviewId: id)) },

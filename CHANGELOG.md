@@ -9,8 +9,6 @@ publication or deployment.
 The app is rebuilt on Kotlin Multiplatform: one shared Kotlin core (data, domain, view models) under Compose screens
 on Android and native SwiftUI screens in a new iOS app. Android keeps the features and the data of 2.2.
 
-- Person profiles show My ITMO contacts, including email, telephone and social links, on Android and iOS.
-
 ### Prereleases
 
 - `2.3.0-beta.1` (20291, 2026-10-10) and `2.3.0-beta.2` (20292, 2026-10-11): an APK in the Telegram channel.
@@ -149,6 +147,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - One person card for any ISU: roles, the ISU with copy, `Написать отзыв`, `Добавить в друзья` or `Пригласить в
   ITMO.Widgets`, then `Преподавание` (the lesson they give now, the subjects they teach you, the AI summary and
   reviews) and `Учёба` (groups, schedule, sport and friends you may open). Someone's hidden data is simply absent.
+- The person card lists the contacts My ITMO returns under `Контакты`: e-mail, phone and social links open in the
+  app that takes them, other values stay plain text. Contacts stay on the phone and never reach Backend.
 - Another user's sport is titled `Спорт` with their given name after it and shows lesson cards.
 - Reviews of sport coaches: the editor asks Backend for subject suggestions when it opens
   (`GET /api/teachers/{isu}/reviews/hints`), merged with the subjects of your own lessons; a new review of a coach

@@ -62,6 +62,7 @@ class UserProfileExits(
     val onOpenProfile: (isu: Int) -> Unit = {},
     /** The source link of a copied review. */
     val onSource: (url: String) -> Unit = {},
+    /** A contact's `mailto:`, `tel:` or https destination. */
     val onContact: (url: String) -> Unit = {},
 )
 
