@@ -18,6 +18,7 @@ brand_vk	-	0	custom	custom.brand_vk	Simple Icons VK mark; Material Symbols has n
 calendar_add	calendar_add_on	0	shared	calendar.badge.plus	id differs from the symbol name
 calendar_month	calendar_month	0	shared	calendar	Bottom navigation tab
 calendar_month_filled	calendar_month	1	shared	calendar	Selected bottom navigation tab; SF Symbols has no filled calendar
+call	call	0	shared	phone	A phone number in the person card
 chat	chat	0	shared	bubble.left	-
 check	check	0	shared	checkmark	-
 check_circle	check_circle	0	shared	checkmark.circle	-

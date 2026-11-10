@@ -59,8 +59,10 @@ import dev.alllexey.itmowidgets.designsystem.kit.ListRow
 import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.StatusPill
 import dev.alllexey.itmowidgets.designsystem.kit.Tone
+import dev.alllexey.itmowidgets.designsystem.icons.drawable
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.social.presentation.CardAction
+import dev.alllexey.itmowidgets.feature.social.presentation.ProfileContact
 import dev.alllexey.itmowidgets.feature.social.presentation.ProfileReviews
 import dev.alllexey.itmowidgets.feature.social.presentation.ProfileRole
 import dev.alllexey.itmowidgets.feature.social.presentation.ProfileRoleKind
@@ -82,7 +84,6 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_content_copy
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_note
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_group
-import dev.alllexey.itmowidgets.shared.designsystem.ic_link
 import dev.alllexey.itmowidgets.shared.designsystem.ic_location_on
 import dev.alllexey.itmowidgets.shared.designsystem.ic_person
 import dev.alllexey.itmowidgets.shared.designsystem.ic_remove
@@ -136,14 +137,16 @@ object UserProfileTestTags {
     const val TEACHER_SCHEDULE = "user_profile_teacher_schedule"
     const val SPORT = "user_profile_sport"
     const val REVIEWS = "user_profile_reviews"
+    const val CONTACTS = "user_profile_contacts"
 }
 
 /**
  * The person card (DECISIONS.md, Карточка человека), one for any ISU: a skeleton until the parts settle,
  * `Профиль не найден` without an action, `Не удалось загрузить` with the reason and `Повторить`, or the card. The card
  * is a lazy list with stable keys: the centred header (avatar, full name, roles, ISU with copy, up to two full-width
- * buttons, the filled one first), then `Преподавание` (teaches you, where to find, the AI summary and the reviews) and
- * `Учёба` (the groups, then what the viewer may open), in the order the state gives, and `Удалить из друзей` last.
+ * buttons, the filled one first), then `Преподавание` (teaches you, where to find, the timetable) and
+ * `Учёба` (the groups, then what the viewer may open), in the order the state gives, `Контакты`, the reviews of a
+ * teacher and `Удалить из друзей` last.
  * Someone else's hidden data is simply absent. Stateless; the route feeds it.
  */
 @Composable
@@ -219,22 +222,8 @@ private fun Card(state: UserProfileUiState.Content, actions: UserProfileActions,
             study(state.study, actions)
             teaching(state, actions)
         }
-        if (state.contacts.isNotEmpty()) {
-            item(key = "contacts:title", contentType = "title") {
-                SectionHeader(text(SocialStrings.person_section_contacts))
-            }
-            item(key = "contacts", contentType = "rows") {
-                ListGroup {
-                    state.contacts.forEach { contact ->
-                        item {
-                            ListRow(contact.value, subtitle = contact.label.takeIf { it.isNotBlank() },
-                                icon = painterResource(Res.drawable.ic_link), iconTone = Tone.Primary,
-                                onClick = contact.url?.let { url -> { actions.onContact(url) } })
-                        }
-                    }
-                }
-            }
-        }
+        contacts(state.contacts, actions)
+        if (state.teaching != null) state.reviews?.let { reviews(it, actions) }
         if (state.canRemoveFriend) {
             item(key = "remove", contentType = "remove") {
                 ListGroup(Modifier.padding(top = ItmoTheme.spacing.content)) {
@@ -373,8 +362,8 @@ private fun CardAction.icon(): DrawableResource = when (this) {
 }
 
 /**
- * `Преподавание`: the subjects they teach the viewer, where to find them and their timetable, then the reviews with
- * their summary.
+ * `Преподавание`: the subjects they teach the viewer, where to find them and their timetable; the reviews follow
+ * `Контакты`.
  */
 private fun LazyListScope.teaching(state: UserProfileUiState.Content, actions: UserProfileActions) {
     val block: TeachingBlock = state.teaching ?: return
@@ -424,7 +413,29 @@ private fun LazyListScope.teaching(state: UserProfileUiState.Content, actions: U
             }
         }
     }
-    state.reviews?.let { reviews(it, actions) }
+}
+
+/** `Контакты`: a row per My ITMO contact; one with a destination opens it, the rest are plain text. */
+private fun LazyListScope.contacts(contacts: List<ProfileContact>, actions: UserProfileActions) {
+    if (contacts.isEmpty()) return
+    item(key = "contacts:title", contentType = "title") {
+        SectionHeader(text(SocialStrings.person_section_contacts), Modifier.testTag(UserProfileTestTags.CONTACTS))
+    }
+    item(key = "contacts", contentType = "rows") {
+        ListGroup {
+            contacts.forEach { contact ->
+                item {
+                    ListRow(
+                        contact.value,
+                        subtitle = contact.label,
+                        icon = painterResource(contact.icon.drawable),
+                        iconTone = if (contact.url == null) Tone.Neutral else Tone.Primary,
+                        onClick = contact.url?.let { url -> { actions.onContact(url) } },
+                    )
+                }
+            }
+        }
+    }
 }
 
 /** The heading with the count, the AI summary, the own review, then the others' reviews as one group. */

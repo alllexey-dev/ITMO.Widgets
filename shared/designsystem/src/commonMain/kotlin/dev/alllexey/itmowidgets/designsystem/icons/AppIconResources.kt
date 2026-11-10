@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_telegram
 import dev.alllexey.itmowidgets.shared.designsystem.ic_brand_vk
 import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_month
 import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_month_filled
+import dev.alllexey.itmowidgets.shared.designsystem.ic_call
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chat
 import dev.alllexey.itmowidgets.shared.designsystem.ic_chevron_right
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_done
@@ -29,6 +30,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_info
 import dev.alllexey.itmowidgets.shared.designsystem.ic_link
 import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import dev.alllexey.itmowidgets.shared.designsystem.ic_login
+import dev.alllexey.itmowidgets.shared.designsystem.ic_mail
 import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
@@ -63,6 +65,7 @@ val AppIcon.drawable: DrawableResource
         AppIcon.BRAND_VK -> Res.drawable.ic_brand_vk
         AppIcon.CALENDAR_MONTH -> Res.drawable.ic_calendar_month
         AppIcon.CALENDAR_MONTH_FILLED -> Res.drawable.ic_calendar_month_filled
+        AppIcon.CALL -> Res.drawable.ic_call
         AppIcon.CHAT -> Res.drawable.ic_chat
         AppIcon.CHEVRON_RIGHT -> Res.drawable.ic_chevron_right
         AppIcon.CLOUD_DONE -> Res.drawable.ic_cloud_done
@@ -81,6 +84,7 @@ val AppIcon.drawable: DrawableResource
         AppIcon.LINK -> Res.drawable.ic_link
         AppIcon.LOCK -> Res.drawable.ic_lock
         AppIcon.LOGIN -> Res.drawable.ic_login
+        AppIcon.MAIL -> Res.drawable.ic_mail
         AppIcon.MENU_BOOK -> Res.drawable.ic_menu_book
         AppIcon.NOTIFICATION -> Res.drawable.ic_notification
         AppIcon.OPEN_IN_NEW -> Res.drawable.ic_open_in_new

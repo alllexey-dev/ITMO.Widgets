@@ -187,15 +187,9 @@ struct UserProfileContent: View {
             study(page)
             teaching(page)
         }
-        if !page.contacts.isEmpty {
-            ItmoSectionHeader(title: AppStrings.string("person_section_contacts"))
-            ItmoListGroup {
-                ForEach(Array(page.contacts.enumerated()), id: \.offset) { _, contact in
-                    ItmoRow(title: contact.value, subtitle: contact.label.isEmpty ? nil : contact.label,
-                            symbol: .link, tone: .primary,
-                            action: contact.url.map { url in { actions.contact(url) } })
-                }
-            }
+        contacts(page)
+        if page.teaching != nil, let reviews = page.reviews {
+            ProfileReviewsSection(page: page, reviews: reviews, actions: actions)
         }
         if page.canRemoveFriend {
             ItmoListGroup {
@@ -212,8 +206,8 @@ struct UserProfileContent: View {
         }
     }
 
-    /// Teaching: the lesson they give now, the subjects they teach the viewer, where to find them and their timetable,
-    /// then the reviews with their summary.
+    /// Teaching: the lesson they give now, the subjects they teach the viewer, where to find them and their timetable;
+    /// the reviews follow the contacts.
     @ViewBuilder
     private func teaching(_ page: UserProfileUiStateContent) -> some View {
         if let block = page.teaching {
@@ -247,8 +241,25 @@ struct UserProfileContent: View {
                     actions.teacherSchedule(page)
                 }
             }
-            if let reviews = page.reviews {
-                ProfileReviewsSection(page: page, reviews: reviews, actions: actions)
+        }
+    }
+
+    /// Contacts: a row per My ITMO contact; one with a destination opens it, the rest are plain text.
+    @ViewBuilder
+    private func contacts(_ page: UserProfileUiStateContent) -> some View {
+        if !page.contacts.isEmpty {
+            ItmoSectionHeader(title: AppStrings.string("person_section_contacts"))
+                .accessibilityIdentifier("user_profile_contacts")
+            ItmoListGroup {
+                ForEach(Array(page.contacts.enumerated()), id: \.offset) { _, contact in
+                    ItmoRow(
+                        title: contact.value,
+                        subtitle: contact.label,
+                        symbol: contact.icon.symbol,
+                        tone: contact.url == nil ? .neutral : .primary,
+                        action: contact.url.map { url in { actions.contact(url) } }
+                    )
+                }
             }
         }
     }

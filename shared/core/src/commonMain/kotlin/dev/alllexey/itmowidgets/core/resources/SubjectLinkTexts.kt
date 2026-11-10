@@ -40,11 +40,14 @@ fun LinkCategory.icon(): AppIcon = when (this) {
 /** Chats show the messenger they lead to; everything else keeps its category symbol. */
 fun linkIcon(category: LinkCategory, url: String): AppIcon {
     if (category != LinkCategory.CHAT) return category.icon()
-    return when (serverHost(url.trim())) {
-        "t.me", "telegram.me", "telegram.dog" -> AppIcon.BRAND_TELEGRAM
-        "vk.com", "vk.ru", "vk.me", "m.vk.com" -> AppIcon.BRAND_VK
-        else -> category.icon()
-    }
+    return messengerIcon(url) ?: category.icon()
+}
+
+/** The brand mark of a Telegram or VK [url]; null for any other site or no URL. */
+fun messengerIcon(url: String): AppIcon? = when (serverHost(url.trim())) {
+    "t.me", "telegram.me", "telegram.dog" -> AppIcon.BRAND_TELEGRAM
+    "vk.com", "vk.ru", "vk.me", "m.vk.com" -> AppIcon.BRAND_VK
+    else -> null
 }
 
 /** A FLOW link is named by its schedule flow ([audienceLabel], e.g. «ФИЗ ПИИКТ 3.2.1»). */
