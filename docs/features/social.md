@@ -151,13 +151,14 @@ builds it:
   the lessons and dropped with them at the deadline), the subjects they teach the viewer (`Ведёт у вас` in the current term, `Было у вас осенью 2025` or `весной 2026`
   for an earlier one, from `TeacherLessons.past`), `Где найти`
   per room, `Расписание занятий` (`AppRoutes.TeacherSchedule`, [the teacher's timetable](schedule.md#a-teachers-timetable)),
-  then the reviews. `Учёба` (`StudyBlock`) for a student or a
+  then, after `Контакты`, the reviews. `Учёба` (`StudyBlock`) for a student or a
   user with open rows: the groups (`M3206, 2 курс` with the faculty), then `Расписание`, `Спорт` and `Друзья` as
   Backend's viewer capabilities allow (all open to self); they lead to `AppRoutes.UserSchedule`, `UserSport` and
   `UserFriends` with the ISU and name. `teachingFirst` puts `Преподавание` first when they teach the viewer.
-- `Контакты` shows nonblank My ITMO contact values and their type labels after the study and teaching blocks.
-  Recognized e-mail, phone, social handles and https links open externally; unknown values stay informational.
-  An empty list has no section.
+- `Контакты` (`ProfileContact`) shows nonblank My ITMO contact values and their type labels after the study and
+  teaching blocks and before a teacher's reviews. Recognized e-mail, phone, social handles and https links open
+  externally with the icon of their kind (`mail`, `call`, the Telegram or VK mark, `link`); unknown values stay plain
+  text with the neutral `info` icon and no action. An empty list has no section.
 - `Удалить из друзей` is the card's last row for a friend; `requestRemoveFriend` asks first (`ConfirmRemove`).
 - Someone else's hidden data is simply absent: no hint, no lock.
 - The entry (`UserProfileExits`) shares the profile link (only with a `Content` page), copies the ISU and opens user

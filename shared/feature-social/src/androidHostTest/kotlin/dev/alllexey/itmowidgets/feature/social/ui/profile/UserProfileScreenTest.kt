@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -23,6 +24,7 @@ import dev.alllexey.itmowidgets.testkit.RobolectricTestRunner
 import dev.alllexey.itmowidgets.testkit.RunWith
 import dev.alllexey.itmowidgets.testkit.assertTouchTargets
 import kotlin.test.Test
+import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -176,9 +178,31 @@ class UserProfileScreenTest {
     fun aTeachersReviewsFollowTheirSummary() = runComposeUiTest {
         setContent { ItmoTheme { UserProfileScreen(SocialSamples.card("teacher"), UserProfileActions()) } }
 
+        onNodeWithTag(UserProfileTestTags.LIST).performScrollToNode(hasText("Где найти"))
+        onNodeWithText("Где найти", useUnmergedTree = true).assertExists()
         scrollTo(UserProfileTestTags.REVIEWS)
         onNodeWithTag(UserProfileTestTags.REVIEWS).assertExists()
-        onNodeWithText("Где найти", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    @Config(qualifiers = "h3000dp")
+    fun aTeachersContactsComeBeforeTheirReviews() = runComposeUiTest {
+        setContent { ItmoTheme { UserProfileScreen(SocialSamples.card("teacher"), UserProfileActions()) } }
+
+        // A screen tall enough for the whole card, so both headings are composed at once.
+        val contacts = onNodeWithTag(UserProfileTestTags.CONTACTS).getUnclippedBoundsInRoot()
+        assertTrue(contacts.top < onNodeWithTag(UserProfileTestTags.REVIEWS).getUnclippedBoundsInRoot().top)
+    }
+
+    @Test
+    fun aContactWithADestinationOpensItAndPlainTextIsNotAButton() = runComposeUiTest {
+        val opened = mutableListOf<String>()
+        setContent { ItmoTheme { UserProfileScreen(SocialSamples.card(), UserProfileActions(onContact = { opened += it })) } }
+
+        onNodeWithTag(UserProfileTestTags.LIST).performScrollToNode(hasText("Староста потока"))
+        onNodeWithText("karimov@niuitmo.ru").performClick()
+        onNodeWithText("Староста потока").assertHasNoClickAction()
+        assertEquals(listOf("mailto:karimov@niuitmo.ru"), opened)
     }
 
     private fun ComposeUiTest.scrollTo(tag: String) {

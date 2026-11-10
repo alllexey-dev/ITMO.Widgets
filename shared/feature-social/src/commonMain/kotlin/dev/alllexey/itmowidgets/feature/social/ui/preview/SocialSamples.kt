@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherNowLesson
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
+import dev.alllexey.itmowidgets.feature.social.domain.model.PersonContact
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonRoom
@@ -142,6 +143,10 @@ object SocialSamples {
                     listOf(PersonPosition("доцент", "Факультет программной инженерии и компьютерной техники (ПИиКТ)")),
                     listOf(PersonRoom("1410", "Кронверкский пр., 49")),
                     emptyList(),
+                    listOf(
+                        PersonContact("Электронная почта", "ershov@itmo.ru", "mailto:ershov@itmo.ru"),
+                        PersonContact("Телефон", "+7 (812) 480-00-00", "tel:+78124800000"),
+                    ),
                 ),
                 social = null,
                 absence = SocialAbsence.NOT_REGISTERED,
@@ -168,7 +173,15 @@ object SocialSamples {
                 now = nowLesson("Алгоритмы", 3, "2337", "M3207"),
             )
             else -> state(
-                Person(288104, "Каримов Тимур", null, emptyList(), emptyList(), listOf(PersonEducation("M3206", 2, "ФИТиП"))),
+                Person(
+                    288104, "Каримов Тимур", null, emptyList(), emptyList(), listOf(PersonEducation("M3206", 2, "ФИТиП")),
+                    listOf(
+                        PersonContact("E-mail", "karimov@niuitmo.ru", "mailto:karimov@niuitmo.ru"),
+                        PersonContact("Telegram", "@tkarimov", "https://t.me/tkarimov"),
+                        PersonContact("VK", "tkarimov", "https://vk.com/tkarimov"),
+                        PersonContact("Другое", "Староста потока", null),
+                    ),
+                ),
                 social = UserProfile(
                     user(288104, "Каримов Тимур", "M3206", sharing = if (friend) open else closed),
                     if (friend) RelationshipState.FRIENDS else RelationshipState.NONE,

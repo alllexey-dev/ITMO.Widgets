@@ -3,12 +3,14 @@ package dev.alllexey.itmowidgets.feature.social.presentation
 import dev.alllexey.itmowidgets.core.model.RelationshipState
 import dev.alllexey.itmowidgets.core.model.UserProfile
 import dev.alllexey.itmowidgets.core.model.primaryGroup
+import dev.alllexey.itmowidgets.core.resources.messengerIcon
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.reviews.TeacherReviews
 import dev.alllexey.itmowidgets.core.schedule.StudyTerm
 import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherNowLesson
 import dev.alllexey.itmowidgets.core.schedule.lessonTypeName
+import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
@@ -69,6 +71,12 @@ data class TaughtSubject(val name: String, val note: UiText)
 /** `Учёба`: the groups, then the rows Backend lets the viewer open. */
 data class StudyBlock(val groups: List<ProfileLine>, val schedule: Boolean, val sport: Boolean, val friends: Boolean)
 
+/**
+ * A `Контакты` row: the value, its My ITMO label, the destination a tap opens and the icon of its kind (mail, phone,
+ * the Telegram or VK mark, a link). Without a destination the row is plain text with the neutral `info` icon.
+ */
+data class ProfileContact(val value: String, val label: String?, val url: String?, val icon: AppIcon)
+
 sealed interface UserProfileUiState {
     data object Loading : UserProfileUiState
     data class Error(val error: AppError) : UserProfileUiState
@@ -95,7 +103,7 @@ sealed interface UserProfileUiState {
         /** ITMO.ID's name parts from Backend for the initials; null without them. */
         val familyName: String? = null,
         val givenName: String? = null,
-        val contacts: List<PersonContact> = emptyList(),
+        val contacts: List<ProfileContact> = emptyList(),
     ) : UserProfileUiState {
         /** [name] for the header, the share text and the remove confirmation; an empty one becomes the placeholder. */
         val displayName: UiText get() = userDisplayName(name, isu)
@@ -158,7 +166,7 @@ fun userProfileUiState(
         reviews = section,
         familyName = user?.familyName,
         givenName = user?.givenName,
-        contacts = personality?.contacts.orEmpty(),
+        contacts = personality?.contacts.orEmpty().map(PersonContact::toProfileContact),
     )
 }
 
@@ -248,6 +256,15 @@ internal fun teacherNowLine(lesson: TeacherNowLesson): TeacherNowLine {
         UiText.Res(SocialStrings.person_lesson_for, listOf(type, lesson.groups.joinToString(", ")))
     }
     return TeacherNowLine(heading, place, UiText.Joined(listOf(UiText.Dynamic(lesson.subject), kind), ", "), lesson.isNow)
+}
+
+private fun PersonContact.toProfileContact() = ProfileContact(value, label.takeIf(String::isNotBlank), url, contactIcon(url))
+
+private fun contactIcon(url: String?): AppIcon = when {
+    url == null -> AppIcon.INFO
+    url.startsWith("mailto:") -> AppIcon.MAIL
+    url.startsWith("tel:") -> AppIcon.CALL
+    else -> messengerIcon(url) ?: AppIcon.LINK
 }
 
 /** `9:05` as `09:05`. */
