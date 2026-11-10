@@ -96,6 +96,8 @@ least 24 pt; the countdown keeps its width first and shrinks with the line.
 
 ## Sport widget
 
+The score ring uses red for visits and blue for bonuses, as in My ITMO.
+
 - `SportWidgetDataProvider` fetches as `Моё` does: the score from My ITMO, the bookings with their queues (the queues
   only through the custom-services gate of `SportDataRepository`; demo data in a demo session). Signed out it
   starts no request.
@@ -146,7 +148,7 @@ Settings: the `Пропуск` sheet of the gallery ([settings](../settings.md#q
 - On, the next-lesson, day, sport and QR widgets draw with the scheme `Оформление` gives (accent or `Свой цвет`,
   style, contrast; with `Как обои` at the default style and contrast the wallpaper's scheme on Android 12+, the brand
   scheme elsewhere), light or dark as the system is, whatever `Тема` says (the launcher draws them). Only colours
-  change: layouts, shapes and the lesson type colours and status tones (`очередь`, `записаны`) stay the widgets' own.
+  change: layouts, shapes and the lesson type colours, sport score colours and status tones (`очередь`, `записаны`) stay the widgets' own.
 - `Чёрный фон` does not reach the widgets: a widget is a card on the home screen, so it keeps the surface tone (a black
   tile would vanish on a dark wallpaper).
 - One resolver: `ThemeSpec.widgetPalette()` (`:shared:core`, `core/settings/ThemeSeeds.kt`, built without Compose from

@@ -93,8 +93,8 @@ object SportWidgetRenderer {
             views.setImageViewBitmap(R.id.ring_visits, ring(size, stroke, 0f, visits - gap(visits)))
             views.setImageViewBitmap(R.id.ring_bonus, ring(size, stroke, visits, bonus - gap(bonus)))
             views.setViewVisibility(R.id.ring_bonus, if (snapshot.bonus > 0) View.VISIBLE else View.GONE)
-            colors.tint(views, R.id.ring_visits, R.color.widget_primary)
-            colors.tint(views, R.id.ring_bonus, R.color.widget_tertiary)
+            views.setInt(R.id.ring_visits, "setColorFilter", ContextCompat.getColor(context, R.color.widget_sport_visits_color))
+            views.setInt(R.id.ring_bonus, "setColorFilter", ContextCompat.getColor(context, R.color.widget_sport_bonus_color))
         }
         views.setViewVisibility(R.id.ring_visits, if (snapshot.visits > 0 || snapshot.done) View.VISIBLE else View.GONE)
         colors.tint(views, R.id.ring_track, R.color.widget_surface_container_high)
@@ -122,8 +122,8 @@ object SportWidgetRenderer {
         val dots = if (snapshot.done) View.GONE else View.VISIBLE
         views.setViewVisibility(R.id.sport_visits_dot, dots)
         views.setViewVisibility(R.id.sport_bonus_dot, dots)
-        colors.tint(views, R.id.sport_visits_dot, R.color.widget_primary)
-        colors.tint(views, R.id.sport_bonus_dot, R.color.widget_tertiary)
+        views.setInt(R.id.sport_visits_dot, "setColorFilter", ContextCompat.getColor(context, R.color.widget_sport_visits_color))
+        views.setInt(R.id.sport_bonus_dot, "setColorFilter", ContextCompat.getColor(context, R.color.widget_sport_bonus_color))
         views.removeAllViews(R.id.sport_items)
         val items = snapshot.items ?: return
         if (items.isEmpty()) {

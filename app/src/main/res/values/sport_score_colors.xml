@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_sport_visits_color">#C93672</color>
+    <color name="widget_sport_bonus_color">#345BD1</color>
+</resources>

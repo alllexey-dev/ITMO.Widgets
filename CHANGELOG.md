@@ -6,6 +6,8 @@ publication or deployment.
 
 ## Unreleased (2.3.0)
 
+- Sport points use the My ITMO colour meanings: red for visits and blue for bonuses.
+
 The app is rebuilt on Kotlin Multiplatform: one shared Kotlin core (data, domain, view models) under Compose screens
 on Android and native SwiftUI screens in a new iOS app. Android keeps the features and the data of 2.2.
 
