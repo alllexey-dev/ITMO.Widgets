@@ -101,7 +101,7 @@ class SheetScoresViewModel(
     fun pickRow(match: SheetRowMatch) = act {
         val book = workbook ?: return@act
         val others = book.tabs.filter { it.tab != match.tab }
-            .mapNotNull { SheetRows.locate(it, match.key, match.kind, match.keyColumn) }
+            .mapNotNull { SheetRows.locate(it, match.key, match.kind, match.keyColumn, match.occurrence) }
         choose(book, listOf(match) + others)
     }
 
@@ -246,7 +246,9 @@ class SheetScoresViewModel(
             is SheetInspection.Failed -> return fail(inspection.status)
             is SheetInspection.Ready -> inspection.workbook.also { workbook = it }
         }
-        matches = book.tabs.mapNotNull { SheetRows.locate(it, score.rowKey, score.keyKind, score.keyColumn) }
+        matches = book.tabs.mapNotNull {
+            SheetRows.locate(it, score.rowKey, score.keyKind, score.keyColumn, score.rowOccurrence)
+        }
         if (matches.isEmpty()) return fail(SheetStatus.ROW_NOT_FOUND)
         val cells = cellsOf(book, matches)
         val computed = score.formula as? SheetFormula.Computed
@@ -358,7 +360,9 @@ class SheetScoresViewModel(
     private fun reading(formula: SheetFormula, official: SheetFormula? = null): SheetReading {
         val book = workbook ?: return SheetReading(null, SheetStatus.ROW_NOT_FOUND)
         val own = matches.firstOrNull() ?: return SheetReading(null, SheetStatus.ROW_NOT_FOUND)
-        val cells = SheetScoreRules.OwnCells(book.tabs.associate { it.tab.gid to it.grid }, own.key, own.kind, own.keyColumn)
+        val cells = SheetScoreRules.OwnCells(
+            book.tabs.associate { it.tab.gid to it.grid }, own.key, own.kind, own.keyColumn, own.occurrence,
+        )
         val main = SheetFormulas.evaluate(formula, cells::read)
         return main.copy(official = official?.let { SheetFormulas.evaluate(it, cells::read).value })
     }

@@ -339,6 +339,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - Android text without its own colour is never black in the dark theme: the theme gives every screen `onSurface`,
   not only the ones inside a `Surface`.
 - Android `Новый отзыв` of a sport coach shows `Физическая культура` in `Предмет`, not only on the picked chip.
+- `Мои баллы` connects a sheet that lists a group twice in one tab (the scores, then an attendance block under
+  `PEOPLE IN CLASS`): the own ISU picks the topmost row instead of asking and then failing with `Строка не найдена`;
+  a name in several rows stays a choice, and the chosen row is found again (`rowOccurrence` in the sheet store).
 
 ### For developers
 

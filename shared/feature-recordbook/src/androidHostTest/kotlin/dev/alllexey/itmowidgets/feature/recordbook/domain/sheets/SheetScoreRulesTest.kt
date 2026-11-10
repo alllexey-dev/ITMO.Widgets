@@ -50,6 +50,18 @@ class SheetScoreRulesTest {
         assertEquals(ok(null), SheetScoreRules.read(mapOf(22L to emptied), score))
     }
 
+    @Test fun `a list repeated lower in the tab reads the topmost row of the ISU and the chosen row of a name`() {
+        val repeated = mapOf(43L to SheetFixtures.csv("repeated_block.csv"))
+        val byIsu = score.copy(tabGid = 43, formula = SheetFormula.Direct(SheetCellRef(43, SheetColumnRef("TOTAL", 2))))
+        val attendance = SheetFormula.Direct(SheetCellRef(43, SheetColumnRef("ATTENDANCE · %", 7)))
+        val byName = byIsu.copy(rowKey = "образцова мария", keyColumn = 1, keyKind = KeyKind.NAME, formula = attendance)
+
+        assertEquals(ok("4"), SheetScoreRules.read(repeated, byIsu))
+        assertEquals(ok("50"), SheetScoreRules.read(repeated, byName))
+        assertEquals(ok("40,625"), SheetScoreRules.read(repeated, byName.copy(rowOccurrence = 1)))
+        assertEquals(SheetReading(null, SheetStatus.ROW_NOT_FOUND), SheetScoreRules.read(repeated, byName.copy(rowOccurrence = 2)))
+    }
+
     @Test fun `a missing row or column is a status`() {
         assertEquals(SheetReading(null, SheetStatus.ROW_NOT_FOUND), SheetScoreRules.read(tabs, score.copy(rowKey = "999999")))
         assertEquals(

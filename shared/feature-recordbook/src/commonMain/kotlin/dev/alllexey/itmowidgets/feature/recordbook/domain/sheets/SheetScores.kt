@@ -19,7 +19,7 @@ enum class SheetStatus { OK, NETWORK, CLOSED, ROW_NOT_FOUND, COLUMN_NOT_FOUND, T
 
 /**
  * The own total of [scope] from a public Google Sheet: the own row is found by [rowKey] in [tabGid] (and in every other
- * tab [formula] reads), [formula] makes the total. [value] is the last value read (shown), [baseline] the last
+ * tab [formula] reads; [rowOccurrence] picks one of the rows a repeated name holds), [formula] makes the total. [value] is the last value read (shown), [baseline] the last
  * non-empty one (compared); [tracked] is false until a read after the marks switch was turned back on. An accepted AI
  * rule adds the teacher's [official] total (read as [officialValue], shown beside, never compared) and the rule's
  * [summary]. [linkId] is the subject link the sheet came from when it shares the sheet with a flow or everybody.
@@ -44,6 +44,7 @@ data class SheetScore(
     val officialValue: String? = null,
     val summary: String? = null,
     val linkId: String? = null,
+    val rowOccurrence: Int = 0,
 ) {
     /** Every tab a reading downloads: the row's tab first. */
     val tabs: List<Long> get() = (listOf(tabGid) + formula.cells.map { it.gid } + official?.cells.orEmpty().map { it.gid }).distinct()
@@ -75,7 +76,7 @@ object SheetScoreRules {
      * key in each tab, each column by its header path. A tab [tabs] lacks reads as [missing].
      */
     fun read(tabs: Map<Long, SheetGrid>, score: SheetScore, missing: SheetStatus = SheetStatus.COLUMN_NOT_FOUND): SheetReading {
-        val cells = OwnCells(tabs, score.rowKey, score.keyKind, score.keyColumn, missing)
+        val cells = OwnCells(tabs, score.rowKey, score.keyKind, score.keyColumn, score.rowOccurrence, missing)
         if (cells.row(score.tabGid) == null) return SheetReading(null, cells.status(score.tabGid))
         val main = SheetFormulas.evaluate(score.formula, cells::read)
         val official = score.official?.let { SheetFormulas.evaluate(it, cells::read).value }
@@ -88,6 +89,7 @@ object SheetScoreRules {
         private val key: String,
         private val kind: KeyKind,
         private val keyColumn: Int,
+        private val occurrence: Int = 0,
         private val missing: SheetStatus = SheetStatus.COLUMN_NOT_FOUND,
     ) {
         private val located = mutableMapOf<Long, Pair<SheetRowMatch, List<String>>?>()
@@ -106,7 +108,8 @@ object SheetScoreRules {
 
         private fun located(gid: Long): Pair<SheetRowMatch, List<String>>? = located.getOrPut(gid) {
             val grid = tabs[gid] ?: return@getOrPut null
-            val match = SheetRows.locate(SheetTabGrid(SheetTab(gid, ""), grid), key, kind, keyColumn) ?: return@getOrPut null
+            val match = SheetRows.locate(SheetTabGrid(SheetTab(gid, ""), grid), key, kind, keyColumn, occurrence)
+                ?: return@getOrPut null
             match to SheetHeaders.paths(grid, SheetHeaders.firstDataRow(grid, match.row, match.keyColumn, match.kind), match.keyColumn)
         }
     }
