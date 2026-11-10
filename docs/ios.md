@@ -260,6 +260,20 @@ Builds are unsigned by default, which is all the simulator and CI need. The igno
 its `.signed` entitlements, the only place for push and associated domains. No team ID is committed. The owner's copy
 also sets `ITMO_BUILD_CHANNEL = official` ([build identity](building.md#build-identity)); nobody else sets it.
 
+### App Store
+
+- Push needs the app's `aps-environment` (`ITMOWidgets.signed.entitlements`, `development`; the App Store export
+  switches it to production), the iOS app of the Firebase project `itmo-widgets` with the APNs auth key (`.p8`) of
+  the team, and its GoogleService-Info.plist in `iosApp/Resources/`, tracked like Android's `google-services.json`. A
+  build without the plist builds and runs without push.
+- `iosApp/Resources/PrivacyInfo.xcprivacy` declares the required-reason APIs of the app binary (UserDefaults
+  `CA92.1`, file timestamps `C617.1`, found with `nm -u` on a Release archive; the extensions link none) and the
+  data Backend stores with the services opt-in, as the privacy policy lists it. A new required-reason API in Swift or
+  Kotlin needs its entry, or App Store Connect rejects the upload.
+- `ITSAppUsesNonExemptEncryption = NO`: the app uses only the system's HTTPS and Keychain.
+- App Store Connect takes only `N.N.N` as the marketing version: `archive.sh --signed` drops the pre-release suffix
+  of `MARKETING_VERSION` (`2.3.0-beta.4` -> `2.3.0`); the unsigned `.ipa` keeps it.
+
 ## Data sharing
 
 Kotlin platform classes live in `shared/core/src/iosMain/` and run only in the app. App files, cache and no-backup
@@ -352,8 +366,13 @@ calendar sync), keeps Android's periods in
 
 ## Notifications
 
-- Registration. `PushDeviceRegistration` registers the device token with Backend (`platform = IOS`, `alertsAllowed`,
-  app version) only with the services opt-in, a signed-in ISU and a token. Each return to the foreground refreshes
+- Token. Backend sends through FCM, which reaches iOS as an APNs alert. At launch `PushRegistration` starts Firebase
+  (only with a GoogleService-Info.plist, never in the unit-test host) and registers with APNs, which shows no prompt;
+  the app delegate passes the APNs token to Firebase Messaging (swizzling is off, `FirebaseAppDelegateProxyEnabled`),
+  and the FCM token goes to `IosPushDevice`. Unsigned and re-signed builds get no APNs token, so no push.
+- Registration. `PushDeviceRegistration` registers the FCM token with Backend (`platform = IOS`, `alertsAllowed`,
+  app version) only with the services opt-in, a signed-in ISU and a token, on every new token and every return to
+  the foreground. Each return to the foreground refreshes
   the notification settings into session-v1.json.
 - Taps. `NotificationTaps` reads the route from `userInfo` (`NotificationTapRoutes`) and hands it to the router, so a
   cold-start tap waits for the shell.
@@ -401,7 +420,7 @@ Commands: [testing.md](testing.md#ios); `./gradlew verifyIosKlibs` compiles the 
   iOS inputs or `shared/` and on manual runs; `nightly.yml` runs every module's `kn` tests nightly and all `UITests`
   on Sundays. The macOS jobs share `.github/actions/ios-setup`.
 - Release builds: `scripts/ios/archive.sh --unsigned` (an `.ipa` for self-signing) or `--signed [--upload]` with
-  `Signing.local.xcconfig`. The build number is Android's `versionCode` from `app/build.gradle.kts`, and the build identity
+  `Signing.local.xcconfig` ([App Store](#app-store)). The build number is Android's `versionCode` from `app/build.gradle.kts`, and the build identity
   (`BuildChannel`, `BuildSource`, `BuildCommit`) is in [building](building.md#build-identity). Uploads are manual
   steps; `dist.yml` builds the unsigned `.ipa` on demand and attaches it to every published release.
 

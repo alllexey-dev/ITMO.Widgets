@@ -36,9 +36,13 @@ final class DeviceRegistrationTests: XCTestCase {
         )
 
         let token = try await device.token()
-        XCTAssertNil(token, "the app does not register with APNs or FCM yet")
+        XCTAssertNil(token, "the test host never registers with APNs or FCM")
         let registration = try await registrations.get()
         XCTAssertNil(registration)
+    }
+
+    func testWithoutGoogleServiceInfoFirebaseHasNoOptions() {
+        XCTAssertNil(PushRegistration.firebaseOptions(bundle: Bundle(for: Self.self)))
     }
 
     // MARK: Taps

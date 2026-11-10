@@ -28,9 +28,16 @@ final class ITMOWidgetsAppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        PushLaunch.prepare()
+        PushLaunch.prepare(application)
         return true
     }
+
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        PushRegistration.shared.didRegister(deviceToken: deviceToken)
+    }
+
+    /// No APNs token: an unsigned or re-signed build, or no network yet; the app works without push.
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {}
 
     func application(
         _ application: UIApplication,
