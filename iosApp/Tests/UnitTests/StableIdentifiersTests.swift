@@ -31,6 +31,23 @@ final class StableIdentifiersTests: XCTestCase {
         XCTAssertEqual(extensionPoint(info), "com.apple.usernotifications.service")
     }
 
+    /// App Store Connect reads these from every upload.
+    func testAppStoreKeys() throws {
+        let info = try XCTUnwrap(Bundle.main.infoDictionary)
+        XCTAssertEqual(info["ITSAppUsesNonExemptEncryption"] as? Bool, false)
+        XCTAssertEqual(info["FirebaseAppDelegateProxyEnabled"] as? Bool, false)
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "PrivacyInfo", withExtension: "xcprivacy"))
+        let manifest = try XCTUnwrap(
+            PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil) as? [String: Any]
+        )
+        XCTAssertEqual(manifest["NSPrivacyTracking"] as? Bool, false)
+        let apis = try XCTUnwrap(manifest["NSPrivacyAccessedAPITypes"] as? [[String: Any]])
+        XCTAssertEqual(
+            Set(apis.compactMap { $0["NSPrivacyAccessedAPIType"] as? String }),
+            ["NSPrivacyAccessedAPICategoryUserDefaults", "NSPrivacyAccessedAPICategoryFileTimestamp"]
+        )
+    }
+
     func testExtensionsShareTheAppVersion() throws {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         // A sideloaded beta carries its suffix (`2.3.0-beta.3`); App Store builds stay `2.3.0`.

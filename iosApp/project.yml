@@ -24,6 +24,10 @@ packages:
   MapLibre:
     url: https://github.com/maplibre/maplibre-gl-native-distribution
     exactVersion: 6.31.0
+  # Push: the FCM token of APNs (Sources/Push/PushRegistration.swift); Android uses com.google.firebase:firebase-messaging.
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    exactVersion: 13.1.1
 
 settingGroups:
   # Target presets set CODE_SIGN_IDENTITY at target level, above any xcconfig; route it back to Base.xcconfig.
@@ -41,6 +45,9 @@ targets:
       # The app icon (ASSETCATALOG_COMPILER_APPICON_NAME in App.xcconfig): Android's adaptive icon vectors cropped
       # to the 72 dp an Android launcher shows; the extensions do not need it.
       - path: Resources/AppIcon.xcassets
+      # The required-reason APIs of the app binary; the extensions use none (docs/ios.md, App Store).
+      - path: Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
       # The sign-in page's token interceptor: Android's asset by path, never a copy.
       - path: ../app/src/main/assets/token_refresh_interceptor.js
         buildPhase: resources
@@ -75,6 +82,8 @@ targets:
       - target: ITMOWidgetsWidgets
       - target: ITMOWidgetsNotificationService
       - package: MapLibre
+      - package: Firebase
+        product: FirebaseMessaging
     preBuildScripts:
       # Builds the Kotlin framework `Shared` before Compile Sources (direct integration).
       - name: Build Kotlin framework
@@ -85,6 +94,19 @@ targets:
           source "$SRCROOT/../scripts/ios/env.sh"
           cd "$ITMO_ROOT"
           ./gradlew :shared:ios:embedAndSignAppleFrameworkForXcode
+    postBuildScripts:
+      # The iOS app of the Firebase project, client config like Android's google-services.json, copied only when
+      # present (a resource entry fails the build without it); without it the build has no push token
+      # (PushRegistration). Runs before Xcode signs the bundle.
+      - name: Copy GoogleService-Info.plist
+        basedOnDependencyAnalysis: false
+        shell: /bin/bash
+        script: |
+          set -euo pipefail
+          plist="$SRCROOT/Resources/GoogleService-Info.plist"
+          if [ -f "$plist" ]; then
+            cp "$plist" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/"
+          fi
 
   ITMOWidgetsWidgets:
     type: app-extension

@@ -188,7 +188,10 @@ closed-test condition in [releases](product/releases.md#distribution).
 ## 9. iOS
 
 Upload the CI-built archive to TestFlight, internal first, then external
-testing or App Store review. The marketing version follows the app; the build
+testing or App Store review. Before the first upload: the App Store Connect
+record, its ID in `APP_STORE_ID` (`iosApp/Config/Base.xcconfig`), and push as
+[the iOS app](ios.md#app-store) lists it. `scripts/ios/archive.sh --signed
+--upload` drops the pre-release suffix of the marketing version. The marketing version follows the app; the build
 number is the `versionCode` of step 5, which `archive.sh` stamps. Every upload
 consumes it, as a Play upload does: a second upload needs the next
 `versionCode`. The owner's

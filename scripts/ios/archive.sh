@@ -11,7 +11,8 @@
 #   iosApp/build/DerivedData.
 # - CURRENT_PROJECT_VERSION = Android's versionCode in app/build.gradle.kts, the one build number of both platforms,
 #   bumped at release (docs/release.md) and the same in every clone, shallow or a fork's; MARKETING_VERSION comes
-#   from Base.xcconfig (2.3.0). The build
+#   from Base.xcconfig; a signed build drops its pre-release suffix (`2.3.0-beta.4` -> `2.3.0`), since App Store
+#   Connect takes only numbers there, while the unsigned .ipa keeps it. The build
 #   identity (docs/building.md): BuildSource is $GITHUB_REPOSITORY on GitHub Actions, else `local`; BuildCommit the
 #   commit; BuildChannel `custom` for --unsigned, else whatever Signing.local.xcconfig sets (`custom` by default).
 #   --signed and --upload refuse a dirty tree; an --unsigned build of a dirty tree gets `-dirty` in its file name
@@ -85,6 +86,12 @@ if [ -n "$(git status --porcelain --untracked-files=no 2> /dev/null)" ]; then
 fi
 marketing=$(sed -n 's/^MARKETING_VERSION *= *\([0-9A-Za-z.-]*\) *$/\1/p' iosApp/Config/Base.xcconfig)
 [ -n "$marketing" ] || refuse "no MARKETING_VERSION in iosApp/Config/Base.xcconfig"
+if [ "$mode" = signed ]; then
+  marketing=${marketing%%-*}
+  case "$marketing" in
+    *[!0-9.]* | .* | *. | *..*) refuse "MARKETING_VERSION $marketing is not N[.N[.N]]" ;;
+  esac
+fi
 
 out="iosApp/build/archive"
 archive="$out/ITMOWidgets.xcarchive"
@@ -111,6 +118,7 @@ xcode_archive() { # extra xcodebuild arguments
     -derivedDataPath iosApp/build/DerivedData \
     -archivePath "$archive" \
     "$@" \
+    MARKETING_VERSION="$marketing" \
     CURRENT_PROJECT_VERSION="$build" \
     ITMO_BUILD_SOURCE="$source_repo" \
     ITMO_BUILD_COMMIT="$sha$dirty" \
