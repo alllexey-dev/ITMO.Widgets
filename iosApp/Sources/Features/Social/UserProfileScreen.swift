@@ -9,6 +9,7 @@ import SwiftUI
 struct UserProfileScreen: View {
     let isu: Int32
     @Environment(AppRouter.self) private var router
+    @Environment(\.openURL) private var openURL
     @State private var model: ObservableViewModel<UserProfileViewModel, any UserProfileUiState>
     @State private var messages = SocialMessages()
     @State private var removing: String?
@@ -89,6 +90,7 @@ struct UserProfileScreen: View {
             sport: { open(AppRoutes.UserSport(isu: $0.isu, name: $0.displayName.resolved, givenName: $0.givenName)) },
             friends: { open(AppRoutes.UserFriends(isu: $0.isu, name: $0.displayName.resolved)) },
             toggleSummary: { viewModel.toggleSummaryScales() },
+            contact: { openURL.link($0) { messages.show(AppStrings.string("link_open_failed")) } },
             review: TeacherReviewActions(
                 vote: { viewModel.vote(reviewId: $0, up: $1) },
                 report: { page, id in open(AppRoutes.ReportReview(args: page.reviewArgs, reviewId: id)) },
@@ -139,6 +141,7 @@ struct UserProfileContentActions {
     var sport: (UserProfileUiStateContent) -> Void = { _ in }
     var friends: (UserProfileUiStateContent) -> Void = { _ in }
     var toggleSummary: () -> Void = {}
+    var contact: (String) -> Void = { _ in }
     var review = TeacherReviewActions()
 }
 
@@ -183,6 +186,16 @@ struct UserProfileContent: View {
         } else {
             study(page)
             teaching(page)
+        }
+        if !page.contacts.isEmpty {
+            ItmoSectionHeader(title: AppStrings.string("person_section_contacts"))
+            ItmoListGroup {
+                ForEach(Array(page.contacts.enumerated()), id: \.offset) { _, contact in
+                    ItmoRow(title: contact.value, subtitle: contact.label.isEmpty ? nil : contact.label,
+                            symbol: .link, tone: .primary,
+                            action: contact.url.map { url in { actions.contact(url) } })
+                }
+            }
         }
         if page.canRemoveFriend {
             ItmoListGroup {

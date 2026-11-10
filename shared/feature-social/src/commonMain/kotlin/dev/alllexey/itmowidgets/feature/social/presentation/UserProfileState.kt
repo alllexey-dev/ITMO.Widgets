@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.core.schedule.lessonTypeName
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
+import dev.alllexey.itmowidgets.feature.social.domain.model.PersonContact
 import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import kotlinx.datetime.LocalTime
 
@@ -94,6 +95,7 @@ sealed interface UserProfileUiState {
         /** ITMO.ID's name parts from Backend for the initials; null without them. */
         val familyName: String? = null,
         val givenName: String? = null,
+        val contacts: List<PersonContact> = emptyList(),
     ) : UserProfileUiState {
         /** [name] for the header, the share text and the remove confirmation; an empty one becomes the placeholder. */
         val displayName: UiText get() = userDisplayName(name, isu)
@@ -156,6 +158,7 @@ fun userProfileUiState(
         reviews = section,
         familyName = user?.familyName,
         givenName = user?.givenName,
+        contacts = personality?.contacts.orEmpty(),
     )
 }
 

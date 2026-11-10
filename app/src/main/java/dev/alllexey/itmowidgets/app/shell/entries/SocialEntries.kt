@@ -1,11 +1,14 @@
 package dev.alllexey.itmowidgets.app.shell.entries
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
@@ -88,7 +91,13 @@ private fun UserProfileEntry(onBack: () -> Unit, navigator: Nav3AppNavigator) {
     val view = LocalView.current
     val platform = LocalPlatformActions.current
     val exits = remember(navigator, context, view, platform, onBack) {
-        userProfileExits(navigator, context, onBack) { url -> openSource(platform, view, url) }
+        userProfileExits(
+            navigator,
+            context,
+            onBack,
+            onSource = { url -> openSource(platform, view, url) },
+            onContact = { url -> openContact(platform, view, url) },
+        )
     }
     UserProfileRoute(exits, viewModel = entryViewModel())
 }
@@ -98,6 +107,7 @@ private fun userProfileExits(
     context: Context,
     onBack: () -> Unit,
     onSource: (String) -> Unit,
+    onContact: (String) -> Unit,
 ) = UserProfileExits(
     onBack = onBack,
     onShare = { page ->
@@ -115,11 +125,27 @@ private fun userProfileExits(
     onReport = { page, reviewId -> navigator.open(AppRoutes.ReportReview(page.reviewArgs(), reviewId)) },
     onOpenProfile = navigator::openUserProfile,
     onSource = onSource,
+    onContact = onContact,
 )
 
 /** A review's source page outside the app; without a handler a snackbar says so. */
 private fun openSource(platform: PlatformActions, anchor: View, url: String) {
     if (!platform.openLink(url)) Snackbar.make(anchor, R.string.link_open_failed, Snackbar.LENGTH_SHORT).show()
+}
+
+/** A contact's `mailto:`, `tel:` or https destination in the app that takes it; without one a snackbar says so. */
+private fun openContact(platform: PlatformActions, anchor: View, url: String) {
+    val opened = if (url.startsWith("https://", ignoreCase = true)) {
+        platform.openLink(url)
+    } else {
+        try {
+            anchor.context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        }
+    }
+    if (!opened) Snackbar.make(anchor, R.string.link_open_failed, Snackbar.LENGTH_SHORT).show()
 }
 
 /**
