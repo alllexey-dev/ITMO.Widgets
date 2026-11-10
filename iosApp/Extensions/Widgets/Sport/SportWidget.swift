@@ -56,7 +56,7 @@ struct SportEntryView: View {
     }
 }
 
-/// The score ring of the sport tab at widget size: visits in red, bonuses in blue, the number
+/// The score ring of the sport tab at widget size: visits in the tertiary role, bonuses in the accent, the number
 /// and `widget_sport_of` inside; closed and green once the credit is reached.
 struct SportRing: View {
     let snapshot: SportWidgetSnapshot
@@ -79,7 +79,7 @@ struct SportRing: View {
                 } else if visits + bonus == 0 {
                     Circle().stroke(colors.block, lineWidth: line)
                 } else {
-                    let arcs = [(CGFloat(0), visitsShare, ItmoColor.sportScoreAttendance), (visitsShare, bonusShare, ItmoColor.sportScoreBonus)].filter { $0.1 > 0 }
+                    let arcs = [(CGFloat(0), visitsShare, colors.bonus), (visitsShare, bonusShare, colors.accent)].filter { $0.1 > 0 }
                     ForEach(arcs.indices, id: \.self) { index in
                         let (from, length, color) = arcs[index]
                         Circle()
@@ -170,8 +170,8 @@ private struct SportMedium: View {
             Text(verbatim: "\(String(localized: .widgetSportVisits(snapshot.visits))), \(String(localized: .widgetSportBonus(snapshot.bonus)))")
         } else {
             HStack(spacing: 8) {
-                dot(ItmoColor.sportScoreAttendance, .widgetSportVisits(snapshot.visits))
-                dot(ItmoColor.sportScoreBonus, .widgetSportBonus(snapshot.bonus))
+                dot(colors.bonus, .widgetSportVisits(snapshot.visits))
+                dot(colors.accent, .widgetSportBonus(snapshot.bonus))
             }
         }
     }
