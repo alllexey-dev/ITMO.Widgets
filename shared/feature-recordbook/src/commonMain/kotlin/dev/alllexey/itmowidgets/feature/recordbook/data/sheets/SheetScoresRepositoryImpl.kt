@@ -186,6 +186,7 @@ class SheetScoresRepositoryImpl(
             rowKey = row.key,
             keyColumn = row.keyColumn,
             keyKind = row.kind,
+            rowOccurrence = row.occurrence,
             formula = total.formula,
             choice = total.choice,
             official = total.official,
@@ -237,7 +238,7 @@ class SheetScoresRepositoryImpl(
 
     private fun SheetScore.sameTarget(other: SheetScore): Boolean =
         connectedAt == other.connectedAt && url == other.url && tabGid == other.tabGid && rowKey == other.rowKey &&
-            keyKind == other.keyKind && formula == other.formula && official == other.official
+            keyKind == other.keyKind && rowOccurrence == other.rowOccurrence && formula == other.formula && official == other.official
 
     /** Writes [next] and publishes it; a failed write leaves the state as it was. Must hold [lock]. */
     private suspend fun write(next: List<SheetScore>): AppResult<Unit> = try {

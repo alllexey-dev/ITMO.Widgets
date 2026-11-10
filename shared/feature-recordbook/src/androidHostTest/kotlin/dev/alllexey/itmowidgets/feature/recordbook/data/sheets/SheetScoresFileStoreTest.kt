@@ -126,6 +126,16 @@ class SheetScoresFileStoreTest {
         assertFalse(file.readText().contains("choice"))
     }
 
+    @Test fun `a lower row of a repeated name keeps its order, the topmost writes no field`() {
+        val lower = connection.copy(keyKind = "NAME", rowKey = "тестов т.т.", rowOccurrence = 1)
+        store.write(StoredSheetScores(connections = listOf(lower)))
+
+        assertEquals(1, store.read()!!.connections.single().toModel().rowOccurrence)
+        store.write(StoredSheetScores(connections = listOf(connection.toModel().toStored())))
+        assertEquals(0, store.read()!!.connections.single().toModel().rowOccurrence)
+        assertFalse(file.readText().contains("rowOccurrence"))
+    }
+
     @Test fun `a 2_2 temporary leftover is ignored`() {
         directory.mkdirs()
         File(directory, "state.json.tmp").writeText("{partial")

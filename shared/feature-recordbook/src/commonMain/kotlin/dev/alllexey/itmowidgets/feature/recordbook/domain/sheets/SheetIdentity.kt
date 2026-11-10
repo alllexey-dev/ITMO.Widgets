@@ -24,8 +24,8 @@ object SheetIdentity {
     private val HAS_LETTER = Regex("""\p{L}""")
     private val NOT_NAMES = setOf(
         "фио", "студент", "студента", "студенты", "фамилия", "имя", "отчество", "name", "student", "students",
-        // A summary row under the students: «Итого по группе», «Средний балл».
-        "итого", "всего", "среднее", "средний", "total", "average",
+        // A summary row under the students: «Итого по группе», «Средний балл», «PEOPLE IN CLASS».
+        "итого", "всего", "среднее", "средний", "total", "average", "people",
     )
 
     /**

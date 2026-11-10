@@ -47,6 +47,8 @@ data class StoredSheetConnection(
     val rowKey: String,
     val keyColumn: Int,
     val keyKind: String,
+    /** Which of the rows holding a repeated name is the own one, from the top; absent for the topmost. */
+    val rowOccurrence: Int? = null,
     /** Format 1's total column; format 2 has [formula] instead. */
     val headerPath: String? = null,
     val columnIndex: Int? = null,
@@ -170,6 +172,7 @@ internal fun StoredSheetConnection.toModel(): SheetScore {
         rowKey = required(rowKey),
         keyColumn = keyColumn.also { check(it >= 0) },
         keyKind = KeyKind.valueOf(required(keyKind)),
+        rowOccurrence = (rowOccurrence ?: 0).also { check(it >= 0) },
         formula = checkNotNull(formula) { "No total" }.toModel(),
         choice = choice?.let { TotalChoice.valueOf(it) } ?: TotalChoice.AUTO,
         official = official?.toModel(),
@@ -195,6 +198,7 @@ internal fun SheetScore.toStored() = StoredSheetConnection(
     rowKey = rowKey,
     keyColumn = keyColumn,
     keyKind = keyKind.name,
+    rowOccurrence = rowOccurrence.takeIf { it != 0 },
     choice = choice.takeIf { it != TotalChoice.AUTO }?.name,
     formula = formula.toStored(),
     official = official?.toStored(),

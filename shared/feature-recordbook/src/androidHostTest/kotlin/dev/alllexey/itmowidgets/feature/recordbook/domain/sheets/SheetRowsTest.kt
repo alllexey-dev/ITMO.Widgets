@@ -11,6 +11,7 @@ class SheetRowsTest {
     private val url = GoogleSheetUrl("1TestSheetIdForUnitTests_0123456789-abc", null)
     private val grades = SheetTabGrid(SheetTab(22, "P3110"), SheetFixtures.csv("grades_multiheader.csv"))
     private val roster = SheetTabGrid(SheetTab(11, "All"), SheetFixtures.csv("roster.csv"))
+    private val repeated = SheetTabGrid(SheetTab(43, "Fri 8:10 B1.1/43"), SheetFixtures.csv("repeated_block.csv"))
 
     @Test fun `the ISU in the number column finds one row with its name`() {
         val search = SheetRows.find(SheetWorkbook(url, listOf(grades)), identity)
@@ -46,7 +47,10 @@ class SheetRowsTest {
         val duplicates = SheetTabGrid(SheetTab(0, "Лист1"), SheetFixtures.csv("duplicate_rows.csv"))
 
         val search = SheetRows.find(SheetWorkbook(url, listOf(duplicates)), identity)
-        assertEquals(listOf(1, 3), (search as RowSearch.Ambiguous).candidates.map { it.row })
+        val candidates = (search as RowSearch.Ambiguous).candidates
+        assertEquals(listOf(1, 3), candidates.map { it.row })
+        val second = candidates[1]
+        assertEquals(3, SheetRows.locate(duplicates, second.key, second.kind, second.keyColumn, second.occurrence)?.row)
         assertEquals(
             RowSearch.NotFound,
             SheetRows.find(SheetWorkbook(url, listOf(grades)), OwnIdentity(999999, "Неизвестный Человек Иванович")),
@@ -77,11 +81,45 @@ class SheetRowsTest {
         assertEquals("66,3", moved.cell(6, 10))
     }
 
-    @Test fun `two rows with the key are not located`() {
+    @Test fun `an ISU in two rows is located at the topmost and a missing key nowhere`() {
         val doubled = SheetTabGrid(grades.tab, SheetGrid(grades.grid.rows + listOf(grades.grid.rows[5])))
 
-        assertNull(SheetRows.locate(doubled, "123456", KeyKind.ISU, keyColumn = 0))
+        assertEquals(5, SheetRows.locate(doubled, "123456", KeyKind.ISU, keyColumn = 0)?.row)
         assertNull(SheetRows.locate(grades, "999999", KeyKind.ISU, keyColumn = 0))
+    }
+
+    @Test fun `a list repeated lower in the tab finds the topmost row by the ISU, again and with its total`() {
+        // Issue: an English sheet lists every group twice per tab, the scores with `TOTAL` and an attendance block
+        // under `PEOPLE IN CLASS`; the own ISU in both rows was a choice that could never be read again.
+        val search = SheetRows.find(SheetWorkbook(url, listOf(repeated)), identity)
+
+        val match = (search as RowSearch.Found).matches.single()
+        assertEquals(3, match.row)
+        assertEquals(0, match.occurrence)
+        assertEquals(3, SheetRows.locate(repeated, match.key, match.kind, match.keyColumn, match.occurrence)?.row)
+        val total = SheetTotals.decide(listOf(repeated), listOf(match))?.total
+        assertEquals("TOTAL", total?.headerPath)
+        assertEquals("4", total?.value)
+    }
+
+    @Test fun `a name repeated in one tab is a choice and every choice is located again`() {
+        val search = SheetRows.find(SheetWorkbook(url, listOf(repeated)), OwnIdentity(null, "Образцова Мария"))
+
+        val candidates = (search as RowSearch.Ambiguous).candidates
+        assertEquals(listOf(5, 12), candidates.map { it.row })
+        assertEquals(listOf(0, 1), candidates.map { it.occurrence })
+        assertEquals(
+            listOf(5, 12),
+            candidates.map { SheetRows.locate(repeated, it.key, it.kind, it.keyColumn, it.occurrence)?.row },
+        )
+        assertNull(SheetRows.locate(repeated, candidates[0].key, KeyKind.NAME, 1, occurrence = 2))
+    }
+
+    @Test fun `the manual choice lists a repeated student once by the ISU and skips the class count`() {
+        val options = SheetRows.options(repeated)
+
+        assertEquals(listOf(2, 3, 4, 5, 12), options.map { it.row })
+        assertEquals(listOf(0, 0, 0, 0, 1), options.map { it.occurrence })
     }
 
     @Test fun `the manual choice lists the students without the header and the teacher`() {

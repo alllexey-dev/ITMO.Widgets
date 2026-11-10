@@ -61,9 +61,14 @@ with a flow or everybody asks Backend for a rule, never with sheet data
   `given_name` and `middle_name` come first (a patronymic of several words included, and `Имя Фамилия`),
   then those of `name` with the surname first and last (its two words come in an unknown order).
 - A person cell is an ISU or 2-8 words; titles such as `ФИО`, summary rows (`Итого по группе`,
-  `Средний балл`) and cells of initials only (`Ф.И.О.`) are not people.
-- The stored key is the ISU or the normalised name, never a row number; every reading finds the row
-  again (`SheetRows.locate`: key column first, then any column, exactly one row).
+  `Средний балл`, `PEOPLE IN CLASS`) and cells of initials only (`Ф.И.О.`) are not people.
+- A tab may list its students twice (the scores, then an attendance block below). An ISU is one student, so its
+  rows in one tab are one row: the topmost, under the header, is the own row, and the manual list shows it once. A
+  name in several rows of a tab may be namesakes, so those rows stay a choice, told apart by their order from the
+  top (`SheetRowMatch.occurrence`).
+- The stored key is the ISU or the normalised name with that order (`rowOccurrence`, 0 for the topmost), never a row
+  number; every reading finds the row again (`SheetRows.locate`: key column first, then any column; the topmost row
+  of an ISU, the `rowOccurrence`-th of a name, none when there are fewer).
 - Header (`SheetHeaders`): up to 6 rows above the first student row. A row whose only text is at or
   left of the key column is a title and skipped. Group titles span to the next title; the last
   header row does not span. Path segments join with ` · `; a column without one is
@@ -187,7 +192,8 @@ ITMO and BARS.
 ## Storage
 
 - `SheetScoresFileStore`: `filesDir/sheet_scores/state.json`, format 2, `owner` is the ISU, written
-  through `AtomicTextFile`; excluded from backup and device transfer. A connection holds `formula` (`kind` `direct`
+  through `AtomicTextFile`; excluded from backup and device transfer. A connection holds `rowOccurrence` (absent for
+  the topmost row), `formula` (`kind` `direct`
   or `computed` with `blanks`, a `node` tree of `op` `cell` (`gid`, `headerPath`, `column`), `number`, `sum`,
   `multiply`, `min`, `max`, `subtract`, `divide`, `round`), and for an AI rule `official`, `officialValue` and
   `summary`; `linkId` when known. Format 1 (2.2: `headerPath`, `columnIndex`) is read as a direct formula of
