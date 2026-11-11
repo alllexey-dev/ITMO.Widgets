@@ -128,3 +128,13 @@ scripts/ios/test.sh        # сборка и тесты iOS (Mac с Xcode)
 ## Лицензия
 
 [MIT](LICENSE). Приложение не связано с Университетом ИТМО.
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=alllexey-dev%2Fitmo.widgets&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=alllexey-dev/itmo.widgets&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=alllexey-dev/itmo.widgets&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=alllexey-dev/itmo.widgets&type=date&legend=top-left" />
+ </picture>
+</a>
