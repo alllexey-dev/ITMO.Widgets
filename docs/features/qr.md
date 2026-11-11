@@ -14,7 +14,9 @@ the tile.
   and the widgets open the same sheet: `ACTION_OPEN_QR_PASS` becomes Сегодня with the sheet above it
   (`EntryRouteParser`).
 - The sheet shows who the pass belongs to (the session's name and ISU, the group from Backend when connected), the
-  code and one status line (updated at, updating, or offline with the time of the shown code). There is no validity
+  code and one status line (updated at, updating, or offline, each with the time of the shown code). While a new code
+  loads, the shown one stays whole with nothing drawn over it, so a turnstile still reads it; only the status line
+  spins (`QrPassStatus.Refreshing`), and the new code replaces the old one in place. There is no validity
   and no countdown: the 60 minutes below are our cache rule, while ITMO's pass itself resets about a day after its
   first turnstile use, so no expiry the app could show is known.
 - `QrPassViewModel` runs only while the sheet is started (`start()`/`stop()`). It shows the last code at once whatever

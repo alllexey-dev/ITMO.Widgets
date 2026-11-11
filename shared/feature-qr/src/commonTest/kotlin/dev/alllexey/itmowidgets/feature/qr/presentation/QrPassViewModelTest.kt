@@ -66,14 +66,15 @@ class QrPassViewModelTest {
     }
 
     @Test
-    fun anOldCodeStaysDimmedWhileANewOneLoads() = runTest(main.dispatcher) {
+    fun anOldCodeStaysWithItsTimeWhileANewOneLoads() = runTest(main.dispatcher) {
         clock.advanceBy(2.hours)
         repository.pending = CompletableDeferred()
         val vm = viewModel()
         vm.start()
         runCurrent()
 
-        assertEquals(QrPassStatus.Refreshing, vm.uiState.value.status)
+        assertEquals(QrPassStatus.Refreshing("11:44"), vm.uiState.value.status)
+        assertEquals(UiText.Res(QrStrings.qr_pass_refreshing, listOf("11:44")), vm.uiState.value.status.line)
         assertEquals("ITMO-TEST", vm.uiState.value.code?.hex)
         repository.last = QrCodeSnapshot("ITMO-NEW", clock.now().toEpochMilliseconds())
         repository.pending!!.complete(AppResult.Success(Unit))

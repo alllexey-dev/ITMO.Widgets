@@ -75,8 +75,9 @@ class QrPassSheetTest {
         onNodeWithTag(QrPassTestTags.REFRESH).assertIsEnabled().performClick()
         onNodeWithContentDescription("Закрыть").performClick()
 
-        state = QrPassUiState(code = Code, status = QrPassStatus.Refreshing)
+        state = QrPassUiState(code = Code, status = QrPassStatus.Refreshing("11:44"))
         waitForIdle()
+        onNodeWithTag(QrPassTestTags.LINE).assertTextEquals("Обновляется, код от 11:44")
         onNodeWithTag(QrPassTestTags.REFRESH).assertIsNotEnabled()
 
         state = QrPassUiState(code = Code, status = QrPassStatus.Offline("11:44"))
@@ -110,14 +111,13 @@ class QrPassSheetTest {
     }
 
     @Test
-    fun aCodeThatArrivesGrowsInAndOneThereFromTheStartShowsAtOnce() = runComposeUiTest {
-        var state by mutableStateOf(QrPassUiState(code = Code, status = QrPassStatus.Ready("11:44")))
+    fun aCodeThatArrivesIntoAnEmptyAreaGrowsIn() = runComposeUiTest {
+        var state by mutableStateOf(QrPassUiState())
         mainClock.autoAdvance = false
         setContent { ItmoTheme { QrPassSheetContent(state, onRefresh = {}, onClose = {}) } }
         mainClock.advanceTimeByFrame()
-        assertImageFillsTheArea("a code on the first frame")
 
-        state = QrPassUiState(code = QrPassCode("ITMO-NEXT", false), status = QrPassStatus.Ready("11:45"))
+        state = QrPassUiState(code = Code, status = QrPassStatus.Ready("11:44"))
         Snapshot.sendApplyNotifications()
         mainClock.advanceTimeByFrame()
         mainClock.advanceTimeByFrame()
@@ -127,6 +127,27 @@ class QrPassSheetTest {
 
         mainClock.advanceTimeBy(REVEAL_SETTLE_MILLIS)
         assertImageFillsTheArea("a revealed code")
+    }
+
+    @Test
+    fun aRefreshKeepsTheCodeWholeAndSwapsTheNewOneInPlace() = runComposeUiTest {
+        var state by mutableStateOf(QrPassUiState(code = Code, status = QrPassStatus.Ready("11:44")))
+        mainClock.autoAdvance = false
+        setContent { ItmoTheme { QrPassSheetContent(state, onRefresh = {}, onClose = {}) } }
+        mainClock.advanceTimeByFrame()
+        assertImageFillsTheArea("a code on the first frame")
+
+        state = QrPassUiState(code = Code, status = QrPassStatus.Refreshing("11:44"))
+        Snapshot.sendApplyNotifications()
+        mainClock.advanceTimeByFrame()
+        assertImageFillsTheArea("the code while a new one loads")
+        onNodeWithTag(QrPassTestTags.LOADING).assertDoesNotExist()
+
+        state = QrPassUiState(code = QrPassCode("ITMO-NEXT", false), status = QrPassStatus.Ready("11:45"))
+        Snapshot.sendApplyNotifications()
+        mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeByFrame()
+        assertImageFillsTheArea("the new code at once")
     }
 
     private fun ComposeUiTest.assertImageFillsTheArea(message: String) {
@@ -144,7 +165,7 @@ class QrPassSheetTest {
         val States = listOf(
             "loading" to QrPassUiState(),
             "ready" to QrPassUiState(code = Code, status = QrPassStatus.Ready("11:44")),
-            "refreshing" to QrPassUiState(code = Code, status = QrPassStatus.Refreshing),
+            "refreshing" to QrPassUiState(code = Code, status = QrPassStatus.Refreshing("11:44")),
             "dynamic" to QrPassUiState(code = Code.copy(useDynamicColors = true), status = QrPassStatus.Ready("11:44")),
             "empty" to QrPassUiState(status = QrPassStatus.Empty),
             "error" to QrPassUiState(status = QrPassStatus.Failed(AppError.Network)),
