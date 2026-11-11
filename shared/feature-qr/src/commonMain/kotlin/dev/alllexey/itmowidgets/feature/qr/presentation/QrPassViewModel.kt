@@ -85,7 +85,7 @@ class QrPassViewModel(
                     code = last?.let { code -> QrPassCode(code.hex, dynamicColors) },
                     status = when {
                         last == null -> QrPassStatus.Loading
-                        asks -> QrPassStatus.Refreshing
+                        asks -> QrPassStatus.Refreshing(timeOf(last))
                         else -> QrPassStatus.Ready(timeOf(last))
                     },
                 )

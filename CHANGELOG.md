@@ -301,6 +301,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 ### Fixes
 
+- The QR pass stays readable while it refreshes: the shown code is no longer dimmed or covered by a spinner, the
+  line under it says `Обновляется, код от 11:44`, and the new code replaces the old one in place, on Android and iOS.
 - `Устройства`: `Отключить` ends the client's ITMO.ID session every time (MyItmoApi 2.3.1 accepts session ids with
   `_`); earlier sign-ins of the same phone no longer show as other devices; this phone is named as in its settings;
   the screen reloads a moment after a change; the pull indicator is no longer cut by the header.

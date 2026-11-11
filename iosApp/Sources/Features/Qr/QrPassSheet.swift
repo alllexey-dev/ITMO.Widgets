@@ -100,9 +100,9 @@ struct QrPassContent: View {
     private var area: some View {
         if let code = state.code, let matrix = QrPassMatrix.rows(hex: code.hex) {
             VStack(spacing: ItmoSpacing.compact) {
+                // While a new code loads, the shown one stays as it is with nothing over it, so a turnstile still
+                // reads it; the status line shows the progress and the new code replaces it in place.
                 QrPassCodeView(matrix: matrix, dynamicColors: code.useDynamicColors, dark: colorScheme == .dark)
-                    .opacity(isRefreshing ? 0.25 : 1)
-                    .overlay { if isRefreshing { ProgressView().controlSize(.large) } }
                 Text(verbatim: AppStrings.string("qr_pass_description"))
                     .font(.itmo(.bodySmall))
                     .foregroundStyle(.secondary)
@@ -133,7 +133,7 @@ struct QrPassContent: View {
         }
     }
 
-    /// When the code was loaded, with the refresh button at the end; only under a code.
+    /// When the code was loaded or that a new one is loading, with the refresh button at the end; only under a code.
     @ViewBuilder
     private var statusLine: some View {
         if let line = state.status.line {

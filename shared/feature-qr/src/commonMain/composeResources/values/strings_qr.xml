@@ -9,7 +9,7 @@
     <string name="qr_pass_image_description">QR-код пропуска</string>
     <string name="qr_pass_refresh">Обновить</string>
     <string name="qr_pass_updated_at">Обновлён в %1$s</string>
-    <string name="qr_pass_refreshing">Обновляется…</string>
+    <string name="qr_pass_refreshing">Обновляется, код от %1$s</string>
     <string name="qr_pass_offline">Нет сети, показан код от %1$s</string>
     <string name="qr_pass_isu">ИСУ %1$d</string>
     <string name="qr_pass_group_isu">%1$s, ИСУ %2$d</string>

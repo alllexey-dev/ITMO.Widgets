@@ -488,8 +488,9 @@ wrappers only; a new screen follows the rules below.
 - **At most two hero moments per flow.** Only a hero gets expressive motion,
   wavy progress, emphasized display type or a `MaterialShapes` mask (the
   profile avatar only). A list row never does. The heroes:
-  - the QR pass: a code that arrives while the screen is open grows and fades
-    in on the hero motion scheme (`QrPassSheetContent`);
+  - the QR pass: a code that arrives into an empty area while the screen is
+    open grows and fades in on the hero motion scheme (`QrPassSheetContent`); a
+    refreshed code replaces the shown one at once, which never dims;
   - the lesson in progress on home, the home flow's second hero: its elapsed
     share is `ItmoWavyProgress`; every other schedule row keeps plain type and
     no progress;

@@ -27,9 +27,12 @@ sealed interface QrPassStatus {
     /** Nothing loaded yet and no cached code. */
     data object Loading : QrPassStatus
 
-    /** A new code is on its way; the old one stays dimmed under the indicator. */
-    data object Refreshing : QrPassStatus {
-        override val line: UiText get() = UiText.Res(QrStrings.qr_pass_refreshing)
+    /**
+     * A new code is on its way while the code loaded at [time] stays on the sheet as it is, nothing over it, so a
+     * turnstile still reads it; the new one replaces it in place.
+     */
+    data class Refreshing(val time: String) : QrPassStatus {
+        override val line: UiText get() = UiText.Res(QrStrings.qr_pass_refreshing, listOf(time))
     }
 
     /** The code loaded at [time] (`11:44`, or `1 сент., 11:44` on another day). */

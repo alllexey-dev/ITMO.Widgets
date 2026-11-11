@@ -34,7 +34,7 @@ internal class QrPassSheetRefreshingPreview {
     @Preview(name = "refreshing")
     @Composable
     fun QrPassSheet() = SheetSurface {
-        QrPassSheetContent(QrPassUiState(Holder, Code, QrPassStatus.Refreshing), onRefresh = {}, onClose = {})
+        QrPassSheetContent(QrPassUiState(Holder, Code, QrPassStatus.Refreshing("11:44")), onRefresh = {}, onClose = {})
     }
 }
 

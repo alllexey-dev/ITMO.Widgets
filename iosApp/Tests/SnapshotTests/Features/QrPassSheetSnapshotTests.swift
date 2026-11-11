@@ -15,9 +15,9 @@ final class QrPassSheetSnapshotTests: XCTestCase {
         assertSheet(QrPassUiState(holder: holder, code: code, status: QrPassStatusReady(time: "11:44")), named: "ready")
     }
 
-    /// A layer render: the spinners would turn between two window renders.
+    /// A layer render: the spinner would turn between two window renders. The code stays whole, the line spins.
     func testRefreshing() {
-        let state = QrPassUiState(holder: holder, code: code, status: QrPassStatusRefreshing.shared)
+        let state = QrPassUiState(holder: holder, code: code, status: QrPassStatusRefreshing(time: "11:44"))
         let content = QrPassContent(state: state).padding(ItmoKit.margin)
         assertAppearances(of: content, named: "refreshing", appearances: [.light, .dark])
     }

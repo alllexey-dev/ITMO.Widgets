@@ -24,7 +24,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
@@ -38,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.text.toUiText
 import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
-import dev.alllexey.itmowidgets.designsystem.components.expressive.ItmoLoadingIndicator
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetScaffold
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
@@ -88,13 +86,14 @@ object QrPassTestTags {
 
 /**
  * The pass sheet: the title with a close button, who the pass belongs to, a square area of at most [AreaMaxSize] with
- * the code (dimmed under the loading indicator while a new one loads), the empty or error state, the instruction
- * under the code and one line: when the code was loaded, or that it is the last one while there is no network, with
- * `Обновить` at its end. No validity or countdown. Stateless; [QrPassRoute] feeds it.
+ * the code, the loading indicator or the empty or error state, the instruction under the code and one line: when the
+ * code was loaded, that a new one is loading, or that it is the last one while there is no network, with `Обновить`
+ * at its end. No validity or countdown. Stateless; [QrPassRoute] feeds it.
  *
- * The code is the flow's hero: one that arrives while the sheet is open grows and fades in on
- * [ItmoTheme.heroMotionScheme]; a code already there on the first frame, and every code under reduced motion, shows at
- * once.
+ * While a new code loads the shown one stays as it is, with nothing drawn over it, so a turnstile still reads it; only
+ * the line shows the progress. The code is the flow's hero: one that arrives into an empty area while the sheet is
+ * open grows and fades in on [ItmoTheme.heroMotionScheme]; a code that replaces another, one already there on the
+ * first frame and every code under reduced motion show at once.
  */
 @Composable
 fun QrPassSheetContent(
@@ -141,21 +140,24 @@ private fun Holder(state: QrPassUiState) {
 private fun PassArea(state: QrPassUiState, onRefresh: () -> Unit) {
     val code = state.code
     val matrix = rememberQrMatrix(code?.hex)
-    val firstFrame = remember { FirstFrame() }
-    SideEffect { firstFrame.passed = true }
+    val shown = remember { ShownCodes() }
+    val drawsCode = code != null && matrix != null
+    SideEffect {
+        shown.firstFramePassed = true
+        if (drawsCode) shown.any = true
+    }
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.passArea().testTag(QrPassTestTags.AREA), contentAlignment = Alignment.Center) {
             val status = state.status
             when {
                 code != null && matrix != null -> key(code.hex) {
                     val description = stringResource(Res.string.qr_pass_image_description)
-                    val reveal = rememberHeroReveal(animate = firstFrame.passed)
+                    val reveal = rememberHeroReveal(animate = shown.firstFramePassed && !shown.any)
                     QrCodeImage(
                         matrix,
                         qrColors(code.useDynamicColors),
                         Modifier
                             .fillMaxSize()
-                            .alpha(if (status == QrPassStatus.Refreshing) REFRESHING_ALPHA else 1f)
                             .heroReveal(reveal)
                             .testTag(QrPassTestTags.IMAGE)
                             .semantics {
@@ -163,7 +165,6 @@ private fun PassArea(state: QrPassUiState, onRefresh: () -> Unit) {
                                 role = Role.Image
                             },
                     )
-                    if (status == QrPassStatus.Refreshing) ItmoLoadingIndicator()
                 }
                 code != null -> PassState(
                     stringResource(Res.string.common_load_error_title),
@@ -182,7 +183,7 @@ private fun PassArea(state: QrPassUiState, onRefresh: () -> Unit) {
                 else -> ContentStateLoading(Modifier.testTag(QrPassTestTags.LOADING), ContentStateSize.Compact)
             }
         }
-        if (code != null && matrix != null) {
+        if (drawsCode) {
             Text(
                 stringResource(Res.string.qr_pass_description),
                 Modifier.fillMaxWidth().padding(top = ItmoTheme.spacing.compact),
@@ -194,7 +195,7 @@ private fun PassArea(state: QrPassUiState, onRefresh: () -> Unit) {
     }
 }
 
-/** When the code was loaded, with `Обновить` at the end; only under a code. */
+/** When the code was loaded or that a new one is loading, with `Обновить` at the end; only under a code. */
 @Composable
 private fun StatusLine(status: QrPassStatus, onRefresh: () -> Unit) {
     val line = status.line ?: return
@@ -205,7 +206,7 @@ private fun StatusLine(status: QrPassStatus, onRefresh: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
     ) {
         when (status) {
-            QrPassStatus.Refreshing -> ItmoActivityIndicator()
+            is QrPassStatus.Refreshing -> ItmoActivityIndicator()
             is QrPassStatus.Offline -> Icon(painterResource(KitRes.drawable.ic_cloud_off), null, tint = muted)
             else -> Icon(painterResource(KitRes.drawable.ic_history), null, tint = muted)
         }
@@ -218,7 +219,7 @@ private fun StatusLine(status: QrPassStatus, onRefresh: () -> Unit) {
         TextButton(
             onClick = onRefresh,
             modifier = Modifier.testTag(QrPassTestTags.REFRESH),
-            enabled = status != QrPassStatus.Refreshing,
+            enabled = status !is QrPassStatus.Refreshing,
         ) {
             Icon(painterResource(KitRes.drawable.ic_refresh), null, Modifier.size(ButtonIconSize))
             Text(
@@ -247,9 +248,13 @@ private fun PassState(title: String, description: String, action: ContentStateAc
     )
 }
 
-/** False until the sheet's first composition is applied; a code composed before that needs no reveal. */
-private class FirstFrame {
-    var passed = false
+/**
+ * What the area has drawn so far: a code composed before the first frame is applied needs no reveal, and neither does
+ * one that replaces a code already shown, so a refreshed pass never fades out of a turnstile's reach.
+ */
+private class ShownCodes {
+    var firstFramePassed = false
+    var any = false
 }
 
 /** Scale and alpha of a code's reveal, at their end values when nothing animates. */
@@ -305,9 +310,6 @@ private fun Modifier.passArea(): Modifier = layout { measurable, constraints ->
 private const val AREA_WIDTH_FRACTION = 0.8f
 private val AreaMaxSize = 240.dp
 private val ButtonIconSize = 18.dp
-
-/** The old code under the loading indicator while a new one loads. */
-private const val REFRESHING_ALPHA = 0.25f
 
 /** Where a revealed code starts growing from, as a fraction of its size. */
 private const val REVEAL_START_SCALE = 0.85f
