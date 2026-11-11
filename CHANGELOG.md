@@ -16,6 +16,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   one universal APK, and an unsigned `.ipa` with the marketing version `2.3.0-beta.3`, in the Telegram channel.
 - `2.3.0-beta.4` (20294, 2026-11-06): per-ABI APKs and an unsigned `.ipa` as a GitHub release, and the first
   `play` bundle for the Google Play closed test.
+- `2.3.0-beta.5` (20295, 2026-11-11): per-ABI APKs and an unsigned `.ipa` as a GitHub release, and the `play`
+  bundle for the Google Play closed test.
 
 ### iOS app
 

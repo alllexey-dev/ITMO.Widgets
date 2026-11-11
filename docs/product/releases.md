@@ -52,7 +52,7 @@ either updates the other:
   and the Telegram channel. A channel APK is built with
   `-Pitmo.abiSplit=true`: one APK per phone ABI (`arm64-v8a`, `armeabi-v7a`)
   instead of the universal one, which carries MapLibre for four ABIs; the
-  latest beta is `2.3.0-beta.4` (20294, 2026-11-06), with an unsigned
+  latest beta is `2.3.0-beta.5` (20295, 2026-11-11), with an unsigned
   `.ipa` beside the APKs.
 - Until the Play listing is public, GitHub is the only channel; the README and
   the site get the Google Play button only after publication.
