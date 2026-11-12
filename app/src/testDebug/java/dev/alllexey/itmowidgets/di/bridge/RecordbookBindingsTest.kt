@@ -10,6 +10,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.DataStoreSubjectBindingS
 import dev.alllexey.itmowidgets.feature.recordbook.data.RecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsRecordbookRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
+import dev.alllexey.itmowidgets.feature.recordbook.data.lms.LmsScoresRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.sheets.SheetScoresRepositoryImpl
@@ -27,7 +28,7 @@ import org.robolectric.annotation.experimental.LazyApplication.LazyLoad
 
 /**
  * The real graph's view of the recordbook data, all of which Koin constructs: the one BARS client reports to Koin's
- * `BarsMarksActivation`, and sign-out's cleaner list holds each of the feature's six cleaners once.
+ * `BarsMarksActivation`, and sign-out's cleaner list holds each of the feature's seven cleaners once.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = ItmoWidgetsApplication::class)
@@ -46,7 +47,7 @@ class RecordbookBindingsTest {
     }
 
     @Test
-    fun `sign-out reaches each of the six recordbook cleaners once`() {
+    fun `sign-out reaches each of the seven recordbook cleaners once`() {
         bootApplication()
         val koin = GlobalContext.get()
         val cleaners = koin.get<SessionDataCleaners>().current()
@@ -57,7 +58,8 @@ class RecordbookBindingsTest {
         assertEquals(1, cleaners.count { it === koin.get<DataStoreSubjectBindingStore>() })
         assertEquals(1, cleaners.count { it === koin.get<MarkTrackingRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<SheetScoresRepositoryImpl>() })
-        assertEquals(6, cleaners.count(::isRecordbookCleaner))
+        assertEquals(1, cleaners.count { it === koin.get<LmsScoresRepositoryImpl>() })
+        assertEquals(7, cleaners.count(::isRecordbookCleaner))
     }
 
     private fun isRecordbookCleaner(cleaner: SessionDataCleaner): Boolean =

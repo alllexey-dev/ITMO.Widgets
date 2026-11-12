@@ -30,12 +30,14 @@ sealed interface RecordbookSubjectUiState {
         val materials: SubjectMaterials,
         val refreshing: Boolean = false,
         val refreshError: AppError? = null,
+        val canCheckLms: Boolean = false,
     ) : RecordbookSubjectUiState
 }
 
 sealed interface RecordbookSubjectEvent {
     /** A vote on the page did not reach the server. */
     data class VoteFailed(val error: AppError) : RecordbookSubjectEvent
+    data object LmsNoControls : RecordbookSubjectEvent
 }
 
 // Баллы -------------------------------------------------------------------------------------------------------------
@@ -111,6 +113,7 @@ data class SubjectControlRow(
     val below: Boolean,
     val date: UiText?,
     val absent: Boolean,
+    val lms: Boolean = false,
 )
 
 // Пары -------------------------------------------------------------------------------------------------------------

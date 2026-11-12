@@ -8,7 +8,10 @@ import dev.alllexey.itmowidgets.core.navigation.ActivityRoute
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropContract
 import dev.alllexey.itmowidgets.core.ui.spoiler.SpoilerCropResult
 import dev.alllexey.itmowidgets.feature.auth.ui.LoginActivity
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore
 import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity
+import dev.alllexey.itmowidgets.feature.recordbook.ui.LmsLoginContract
+import dev.alllexey.itmowidgets.feature.recordbook.ui.LmsLoginInput
 
 /**
  * The three Activities the Compose shell keeps as Activities, with their FQCNs: they are never
@@ -37,4 +40,7 @@ object ActivityRoutes {
 
     /** Picks and crops a spoiler image in `SpoilerCropActivity`; settings and the first-run flow reach it. */
     fun spoilerCrop(): ActivityResultContract<Uri, SpoilerCropResult> = SpoilerCropContract()
+
+    /** Foreground LMS check for one recordbook subject; returns its fetched LMS scores without saving credentials. */
+    fun lmsLogin(): ActivityResultContract<LmsLoginInput, List<LmsScore>?> = LmsLoginContract()
 }

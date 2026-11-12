@@ -54,6 +54,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSessionListener
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
+import dev.alllexey.itmowidgets.feature.recordbook.data.lms.LmsScoresRepositoryImpl
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
@@ -154,10 +155,11 @@ class RecordbookModuleTest {
     }
 
     @Test
-    fun theSixRecordbookStoresAreTheCleaners() {
+    fun theRecordbookStoresAreTheCleaners() {
         val cleaners = koin.getAll<SessionDataCleaner>()
 
-        assertEquals(6, cleaners.size)
+        assertEquals(7, cleaners.size)
+        assertEquals(1, cleaners.count { it === koin.get<LmsScoresRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<RecordbookRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<BarsRecordbookRepositoryImpl>() })
         assertEquals(1, cleaners.count { it === koin.get<BarsPreferenceRepositoryImpl>() })

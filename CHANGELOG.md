@@ -6,6 +6,8 @@ publication or deployment.
 
 ## Unreleased (2.3.0)
 
+- Android: an experimental LMS check in subject materials signs in through ITMO.ID, saves confirmed, unambiguously matched РК scores and includes them in the displayed totals.
+
 The app is rebuilt on Kotlin Multiplatform: one shared Kotlin core (data, domain, view models) under Compose screens
 on Android and native SwiftUI screens in a new iOS app. Android keeps the features and the data of 2.2.
 
