@@ -9,10 +9,14 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsSilentLogin
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsWebSilentLogin
 import dev.alllexey.itmowidgets.core.session.ItmoIdCookies
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.WebViewItmoIdCookies
+import dev.alllexey.itmowidgets.feature.recordbook.data.lms.AndroidLmsGateway
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsGateway
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.di.barsEngineQualifier
+import dev.alllexey.itmowidgets.feature.recordbook.di.lmsEngineQualifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.LmsLoginViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.work.AndroidMarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.work.MARKS_SPEC
 import dev.alllexey.itmowidgets.feature.recordbook.work.WorkManagerBarsSessionProbe
@@ -23,6 +27,7 @@ import okhttp3.CookieJar
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -32,6 +37,20 @@ import org.koin.dsl.module
  * All recordbook data is `recordbookModule`'s.
  */
 val androidRecordbookModule = module {
+    single<HttpClientEngine>(qualifier = lmsEngineQualifier) {
+        OkHttp.create {
+            config {
+                followRedirects(false)
+                followSslRedirects(false)
+                cookieJar(CookieJar.NO_COOKIES)
+                cache(null)
+                connectTimeout(15, TimeUnit.SECONDS)
+                readTimeout(30, TimeUnit.SECONDS)
+            }
+        }
+    }
+    single<LmsGateway> { AndroidLmsGateway(get(), get(), get(), get(lmsEngineQualifier)) }
+    viewModelOf(::LmsLoginViewModel)
     // The BARS engine, apart from MyITMO's: the policy of MyItmoApi's `defaultEngine()` (no cookie jar, cache or
     // redirects) with the BARS timeouts. Neither client closes it; it lives as long as the process.
     single<HttpClientEngine>(barsEngineQualifier) {

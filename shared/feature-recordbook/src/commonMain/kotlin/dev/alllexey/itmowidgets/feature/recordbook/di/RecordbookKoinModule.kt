@@ -24,6 +24,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.data.bars.BarsTokenStore
 import dev.alllexey.itmowidgets.feature.recordbook.data.bars.OwnerBoundBarsStorage
 import dev.alllexey.itmowidgets.feature.recordbook.data.bell.MarksBellSource
 import dev.alllexey.itmowidgets.feature.recordbook.data.lesson.RecordbookLessonSubjects
+import dev.alllexey.itmowidgets.feature.recordbook.data.lms.LmsScoresRepositoryImpl
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.BarsMarksActivation
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.DefaultMarkTracking
 import dev.alllexey.itmowidgets.feature.recordbook.data.marks.MarkTrackingRepositoryImpl
@@ -67,6 +69,9 @@ import org.koin.dsl.module
  * state is shared with MyITMO.
  */
 val barsEngineQualifier: Qualifier = named("bars")
+
+/** The Ktor engine of foreground LMS requests: no cookie jar, cache or redirects, apart from MyITMO and BARS. */
+val lmsEngineQualifier: Qualifier = named("lms")
 
 /** The marks' place in the open sets of `BellSource`s and `TodayTodoSource`s (the BARS sign-in) Сегодня reads. */
 val marksQualifier: Qualifier = named("marks")
@@ -124,6 +129,9 @@ val recordbookModule = module {
     // Subject bindings in `app_preferences` (`subject_bindings`).
     singleOf(::DataStoreSubjectBindingStore) { bind<SubjectBindingStore>() }
     single<SessionDataCleaner>(named("recordbook-subject-bindings")) { get<DataStoreSubjectBindingStore>() }
+
+    singleOf(::LmsScoresRepositoryImpl) { bind<LmsScoresRepository>() }
+    single<SessionDataCleaner>(named("recordbook-lms")) { get<LmsScoresRepositoryImpl>() }
 
     // Public sheets: one Ktor client for the process, owned by the client single; `filesDir/sheet_scores`.
     singleOf<PublicSheetClient, DemoMode, AppDispatchers>(::PublicSheetClient)

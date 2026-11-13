@@ -13,13 +13,16 @@ Product behaviour: [Как это работает: оценки](../how-it-work
 - `Баллы`: a BARS notice row (`Войти` or `Повторить`), the hero (points, grade or final result, the
   next grade hint), the connected sheet with its menu ([sheet scores](sheet-scores.md#on-the-subject-page)),
   the sport points of Физкультура, then the checkpoints by group with their sums and minimums. The source
-  of the hero's number follows the list: BARS, a sheet's total while in progress, My ITMO.
+  of the hero's number follows the list: BARS, a sheet's total while in progress, My ITMO, with `+ LMS` (or
+  `LMS` when no other score exists yet) when matched LMS scores apply.
 - `Пары`: the schedule question (below), the teachers as rows that open the person (review gate or
   `Написать отзыв` when no teacher has a summary), then the three nearest lessons as the schedule's lesson
   cards (`LessonTimelines.lesson` of `core/lesson`); a tap opens the lesson sheet.
 - `Материалы`: without the connection to ITMO.Widgets only a gate with `Подключить`. With it, chats and
   links as in [subject links](resources.md#subject-page); earlier semesters behind `Все ссылки, N`. The My
-  ITMO LMS link is not shown.
+  ITMO LMS link row is not shown; on Android, in-progress non-PE subjects of the current half-year outside
+  the demo session offer `Проверить LMS`
+  ([experimental LMS check](recordbook.md#experimental-lms-check-android)).
 - If BARS is connected and the arguments carry no journal (a notification, a new sign-in), the page finds the
   subject in the period's BARS answer; a subject BARS does not have is no error.
 

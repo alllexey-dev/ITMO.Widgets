@@ -12,6 +12,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.text.resolve
 import dev.alllexey.itmowidgets.core.text.toUiText
+import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectEvent
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 
@@ -29,6 +31,7 @@ fun RecordbookSubjectRoute(actions: RecordbookSubjectActions, viewModel: Recordb
             viewModel.events.collect { event ->
                 when (event) {
                     is RecordbookSubjectEvent.VoteFailed -> snackbars.showSnackbar(event.error.toUiText().resolve())
+                    RecordbookSubjectEvent.LmsNoControls -> snackbars.showSnackbar(UiText.Res(RecordbookStrings.recordbook_lms_no_controls).resolve())
                 }
             }
         }

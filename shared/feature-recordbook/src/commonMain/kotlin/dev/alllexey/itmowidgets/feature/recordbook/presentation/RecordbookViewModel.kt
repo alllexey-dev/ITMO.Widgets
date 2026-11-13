@@ -13,6 +13,9 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookBarsMerge
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsMatching
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.BarsPlanMarks
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
@@ -44,6 +47,7 @@ class RecordbookViewModel(
     private val time: AcademicTimeProvider,
     private val marks: MarkTrackingRepository,
     private val sheets: SheetScoresRepository,
+    private val lmsRepository: LmsScoresRepository? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RecordbookUiState())
     val uiState: StateFlow<RecordbookUiState> = _uiState.asStateFlow()
@@ -63,6 +67,8 @@ class RecordbookViewModel(
     private var loadJob: Job? = null
     private var newsByHalf: Map<StudyHalf, Set<String>> = emptyMap()
     private var sheetScores: List<SheetScore> = emptyList()
+    private var savedLms: Map<String, List<LmsScore>> = emptyMap()
+    private var lmsJob: Job? = null
 
     /** The last BARS answer of a period, kept to show dimmed once the session ends. */
     private var lastBars: Pair<RecordbookSelection, RecordbookBarsData.Applied>? = null
@@ -75,6 +81,7 @@ class RecordbookViewModel(
     }
 
     init {
+        viewModelScope.launch { lmsRepository?.observeChanges()?.collect { loadLmsScores() } }
         // Unread marks come from the local store; a new one reaches the open list without a request.
         viewModelScope.launch {
             marks.observeNews().collect { news ->
@@ -108,6 +115,8 @@ class RecordbookViewModel(
         val period = program.periods.firstOrNull { it.semester == semester } ?: return
         val selected = RecordbookSelection(program, period)
         if (selection == selected) return
+        lmsJob?.cancel()
+        savedLms = emptyMap()
         selection = selected
         sourcesKey = null
         load(silent = true)
@@ -170,6 +179,7 @@ class RecordbookViewModel(
             when (val result = repository.getSubjects(selected.program.id, selected.period.semester)) {
                 is AppResult.Success -> {
                     official = result.value
+                    loadLmsScores(fetchControls = journals == null)
                     // What the list shows advances the snapshot of the current half-year; children of the load job.
                     val half = selected.period.studyHalf()?.takeIf { it == StudyHalf.of(time.today()) }
                     if (half != null) {
@@ -198,6 +208,7 @@ class RecordbookViewModel(
                         }
                     }
                     refreshing = false
+                    loadLmsScores(fetchControls = true)
                     publish()
                 }
                 is AppResult.Failure -> {
@@ -221,8 +232,10 @@ class RecordbookViewModel(
         programs = cachedPrograms
         val selected = selection?.let(::reselect) ?: defaultSelection() ?: return
         val subjects = repository.cachedSubjects(selected.program.id, selected.period.semester) ?: return
+        if (selection != selected) { lmsJob?.cancel(); savedLms = emptyMap() }
         selection = selected
         official = subjects
+        loadLmsScores(fetchControls = false)
         body = if (subjects.isEmpty()) Body.Empty else Body.Content
     }
 
@@ -247,7 +260,11 @@ class RecordbookViewModel(
             RecordbookBarsData.Pending -> lastBars?.takeIf { it.first == selected }?.second ?: RecordbookBarsData.Pending
             else -> if (barsEnabled) data else RecordbookBarsData.Off
         }
-        val journals = (shownBars as? RecordbookBarsData.Applied)?.journals
+        val journals = when (shownBars) {
+            is RecordbookBarsData.Applied -> shownBars.journals
+            is RecordbookBarsData.Expired -> shownBars.journals
+            else -> null
+        }
         val shown = journals?.let { RecordbookBarsMerge.apply(official, it) } ?: official
         val input = RecordbookInput(
             selection = selected,
@@ -259,12 +276,50 @@ class RecordbookViewModel(
             }.toMap(),
             unread = selected.period.studyHalf()?.let(newsByHalf::get).orEmpty(),
             sheets = sheetTotals(selected),
+            lms = if (selected.period.studyHalf() == StudyHalf.of(time.today())) shown.mapNotNull { subject ->
+                val controls = knownControls(subject) ?: return@mapNotNull null
+                val delta = LmsMatching.controls(controls, savedLms[subject.key].orEmpty()).values.sum()
+                if (delta > 0) subject.key to delta else null
+            }.toMap() else emptyMap(),
             offerHidden = offerHidden,
             sourcesKey = sourcesKey,
             today = time.today(),
             timeZone = time.timeZone,
         )
         return RecordbookPresenter.content(input).copy(refreshing = refreshing, refreshError = refreshError)
+    }
+
+    /** Read only stored LMS subjects; fetch missing controls only for a connected LMS result in the current period. */
+    private fun loadLmsScores(fetchControls: Boolean = true) {
+        val storage = lmsRepository ?: return
+        val selected = selection ?: return
+        if (selected.period.studyHalf() != StudyHalf.of(time.today())) {
+            lmsJob?.cancel()
+            if (savedLms.isNotEmpty()) {
+                savedLms = emptyMap()
+                publish()
+            }
+            return
+        }
+        val subjects = official.toList()
+        lmsJob?.cancel()
+        lmsJob = viewModelScope.launch {
+            val saved = mutableMapOf<String, List<LmsScore>>()
+            for (subject in subjects) {
+                val scores = storage.load(RecordbookPresenter.args(selected, subject))
+                if (scores.isNotEmpty()) {
+                    saved[subject.key] = scores
+                    if (fetchControls && knownControls(subject) == null) {
+                        val journal = subject.barsJournal.takeIf { barsEnabled && barsData !is RecordbookBarsData.Expired }
+                        val barsLoaded = journal != null && bars.getSubject(journal) is AppResult.Success
+                        if (!barsLoaded && subject.hasDetails) {
+                            repository.getControls(subject.entryId)
+                        }
+                    }
+                }
+            }
+            if (selection == selected && official == subjects) { savedLms = saved; publish() }
+        }
     }
 
     /** The connected sheets of the period by discipline, empty cells included: [RecordbookPointsRule] decides. */

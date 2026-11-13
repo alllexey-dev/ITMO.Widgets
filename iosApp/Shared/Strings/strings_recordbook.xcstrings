@@ -373,6 +373,162 @@
         }
       }
     },
+    "recordbook_lms_check" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить LMS"
+          }
+        }
+      }
+    },
+    "recordbook_lms_course_error" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить баллы курса."
+          }
+        }
+      }
+    },
+    "recordbook_lms_demo" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LMS недоступна в деморежиме."
+          }
+        }
+      }
+    },
+    "recordbook_lms_empty" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В LMS не найдено курсов."
+          }
+        }
+      }
+    },
+    "recordbook_lms_error" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось получить баллы LMS. Проверьте подключение и попробуйте снова."
+          }
+        }
+      }
+    },
+    "recordbook_lms_no_controls" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В LMS нет подтверждённых баллов для сопоставления с контрольными этого предмета."
+          }
+        }
+      }
+    },
+    "recordbook_lms_no_match" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось однозначно найти этот предмет в LMS за выбранный учебный год."
+          }
+        }
+      }
+    },
+    "recordbook_lms_source" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LMS"
+          }
+        }
+      }
+    },
+    "recordbook_lms_sources_note" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "К показанному источнику добавлено из LMS: %1$@"
+          }
+        }
+      }
+    },
+    "recordbook_lms_sources_only_note" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Других чисел нет, поэтому показаны баллы из LMS: %1$@"
+          }
+        }
+      }
+    },
+    "recordbook_lms_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Баллы LMS"
+          }
+        }
+      }
+    },
+    "recordbook_lms_total_source" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ + LMS"
+          }
+        }
+      }
+    },
+    "recordbook_lms_wrong_account" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аккаунт LMS не совпадает с аккаунтом приложения или его не удалось проверить."
+          }
+        }
+      }
+    },
     "recordbook_news_absent" : {
       "comment" : "Generated from strings_recordbook.xml",
       "extractionState" : "manual",

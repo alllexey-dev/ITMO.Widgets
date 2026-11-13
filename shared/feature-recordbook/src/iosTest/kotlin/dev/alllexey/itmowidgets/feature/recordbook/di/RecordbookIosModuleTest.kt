@@ -142,8 +142,8 @@ class RecordbookIosModuleTest {
         val koin = graph()
 
         val cleaners = koin.getAll<SessionDataCleaner>()
-        // The core's three (Keychain, App Group, WebKit) and the recordbook's six.
-        assertEquals(9, cleaners.size)
+        // The core's three (Keychain, App Group, WebKit) and the recordbook's seven.
+        assertEquals(10, cleaners.size)
         withContext(Dispatchers.Default) {
             koin.get<BarsTokenStore>().install(ISU, "Bearer synthetic-bars-header")
             cleaners.filter { it.javaClassName() != KEYCHAIN_CLEANER }.forEach { it.clearSessionData() }

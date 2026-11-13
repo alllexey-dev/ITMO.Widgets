@@ -8,6 +8,24 @@ the feature works without `Подключение к ITMO.Widgets`; only the sub
 `core/resources` ([resources](resources.md)). Related docs: [subject page](subject-page.md),
 [mark tracking](marks-tracking.md), [sheet scores](sheet-scores.md).
 
+## Experimental LMS check (Android)
+
+On Android, `Материалы` offers `Проверить LMS` (even without Backend links) only for current-half-year, non-PE,
+in-progress, non-absent subjects outside the demo session. `LmsLoginActivity` is driven by `LmsLoginViewModel`, signs in
+using the Android WebView session with strict host and `userInfo` checks, verifies callback state and account identity
+against `CurrentUserProvider`, lists enrolled programs/courses, and uniquely matches the subject name and study year
+(and explicit course semester when present) before fetching `/overall` and `/modules`. Tokens and scores never leave the
+device for Backend.
+
+Only a confirmed `РК №N` fills an ungraded `Контрольная работа №N` with the same maximum; ambiguous matches and
+existing control scores stay untouched. Matched scores are stored encrypted per account and subject in
+`SecureStore` (`noBackupFilesDir/lms_scores`, cleared on sign-out) and matched flexibly when opened from notifications
+without `disciplineId` or `controlType`. Re-checking when no controls match clears any stale saved LMS entry for that
+subject. Their sum updates the subject hero (showing `+ LMS` over numeric points or `LMS` when no base score is set,
+while leaving non-numeric text sheets unchanged), control groups (including below-minimum state) and the recordbook row.
+If a teacher later copies the score into a connected Google Sheet without updating the official control, the LMS delta can
+still be added twice. There is no iOS entry yet; see [the investigation](../agents/lms-investigation.md).
+
 ## MyITMO sources
 
 | Data | Endpoint | Identity |
