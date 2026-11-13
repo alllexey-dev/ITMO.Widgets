@@ -327,9 +327,10 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 - iOS shows pull-to-refresh on every tab root until the refresh ends.
 - iOS `Расписание` week strip and the `Моё`/`Запись` pager of `Спорт` move only sideways: they no longer follow a
   vertical or diagonal drag. Pull to refresh belongs to the feed and to each part of `Спорт` instead of the pagers.
-- iOS `Подключить устройство` for an agent or an MCP server: the ITMO.ID page after Face ID no longer stays frozen
-  (no taps, no typing). The page now opens once the app is active again; it used to come up while the Face ID UI
-  still held the app inactive, and WebKit never woke it.
+- iOS `Подключить устройство` for an agent or an MCP server: the ITMO.ID page no longer freezes the app (no taps, no
+  typing, the app killed when left). The page focuses its field and brings up the keyboard; the pairing sheet under
+  it counted the keyboard into its content height and re-laid out without end. Sheets now size to their content
+  without the keyboard (#613). The page also opens only once the app is active again after Face ID.
 - iOS widgets of an `.ipa` re-signed by SideStore (or another tool that renames the App Group without
   `ALTAppGroups`) show data instead of the signed-out state: the app and the widgets find the group in their
   provisioning profile.

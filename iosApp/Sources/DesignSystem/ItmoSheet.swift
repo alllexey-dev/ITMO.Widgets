@@ -33,9 +33,13 @@ struct ItmoSheet<Content: View>: View {
                 }
                 .padding(.horizontal, ItmoKit.margin)
                 .padding(.bottom, ItmoSpacing.group)
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { measured = $0 }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    if height != measured { measured = height }
+                }
             }
-            .onGeometryChange(for: EdgeInsets.self) { $0.safeAreaInsets } action: { insets = $0 }
+            .onGeometryChange(for: EdgeInsets.self) { $0.safeAreaInsets } action: { new in
+                if new != insets { insets = new }
+            }
             .scrollBounceBehavior(.basedOnSize)
             .navigationTitle(Text(verbatim: title))
             .navigationBarTitleDisplayMode(.inline)
@@ -49,6 +53,10 @@ struct ItmoSheet<Content: View>: View {
             .environment(\.itmoOnSheet, true)
             .background(Color(.systemGroupedBackground))
         }
+        // The detent is the content plus the bars, never the keyboard: with the keyboard inset in `insets` the sheet
+        // re-laid out for the keyboard without end, and a page over the sheet that focused a field froze the app
+        // (#613). UIKit lifts the sheet above the keyboard on its own.
+        .ignoresSafeArea(.keyboard)
         .presentationDetents(detents)
         .presentationDragIndicator(.visible)
         .presentationBackground(Color(.systemGroupedBackground))

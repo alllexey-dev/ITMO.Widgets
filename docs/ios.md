@@ -209,8 +209,8 @@ which iOS never draws; M3 Expressive stays Android's only.
   are at least `ItmoMetrics.touchTarget`. `ItmoMotion.animation(_:reduceMotion:)` respects Reduce Motion.
 - Frames: `.itmoRootHeader(title:subtitle:)` (static, never collapses), `.itmoDetailHeader(title:subtitle:)` (a pushed
   screen: the system bar keeps back and the toolbar, the title and subtitle under it wrap in full), `ItmoScreenStack`
-  (the scrolling column), `ItmoSheet` with `ItmoSheetHeight` (`.content`, never cut; `.tall` at 0.82, draggable to
-  full; `.full` below the status bar), `ItmoBellButton`. A form (an editor, a report) is a `NavigationStack` with a
+  (the scrolling column), `ItmoSheet` with `ItmoSheetHeight` (`.content`, never cut, sized without the keyboard; `.tall` at 0.82,
+  draggable to full; `.full` below the status bar), `ItmoBellButton`. A form (an editor, a report) is a `NavigationStack` with a
   `Form`, cancel and the action in the toolbar.
 - Layout: side margin `ItmoKit.margin` (16), `ItmoKit.gap` between cards, cards and groups at iOS 26's inset grouped
   corner (26 pt), separators inset 56 under icons and 68 under 40 pt avatars.
