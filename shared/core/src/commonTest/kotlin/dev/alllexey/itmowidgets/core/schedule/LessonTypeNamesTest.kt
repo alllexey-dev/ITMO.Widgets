@@ -17,7 +17,7 @@ class LessonTypeNamesTest {
             4 to CoreStrings.schedule_lesson_type_default,
             5 to CoreStrings.schedule_lesson_type_exam,
             6 to CoreStrings.schedule_lesson_type_credit,
-            9 to CoreStrings.schedule_lesson_type_default,
+            9 to CoreStrings.schedule_lesson_type_graded_credit,
             10 to CoreStrings.schedule_lesson_type_consultation,
             11 to CoreStrings.title_sport,
             0 to CoreStrings.schedule_lesson_type_default
