@@ -25,6 +25,7 @@ fun lessonTypeNameRes(typeId: Int): Int = when (typeId) {
     3 -> R.string.schedule_lesson_type_practice
     5 -> R.string.schedule_lesson_type_exam
     6 -> R.string.schedule_lesson_type_credit
+    9 -> R.string.schedule_lesson_type_graded_credit
     10 -> R.string.schedule_lesson_type_consultation
     11 -> R.string.title_sport
     else -> R.string.schedule_lesson_type_default

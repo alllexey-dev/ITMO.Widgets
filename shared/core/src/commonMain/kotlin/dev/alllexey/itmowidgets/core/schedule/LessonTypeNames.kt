@@ -4,9 +4,9 @@ import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 
 /**
- * The name of a MyITMO lesson type id: 1 лекция, 2 лаб., 3 практика, 5 экзамен, 6 зачёт, 10 консультация, 11 спорт,
- * -1 a free day, [ROOM_BOOKING_TYPE_ID] a room booking; any other id is a plain "Пара". The one common owner; `core/ui/LessonTypes.kt` keeps the same
- * mapping as Android ids for Views.
+ * The name of a MyITMO lesson type id: 1 лекция, 2 лаб., 3 практика, 5 экзамен, 6 зачёт, 9 дифференцированный зачёт,
+ * 10 консультация, 11 спорт, -1 a free day, [ROOM_BOOKING_TYPE_ID] a room booking; any other id (4, 7 and 8 never seen)
+ * is a plain "Пара". The one common owner; `core/ui/LessonTypes.kt` keeps the same mapping as Android ids for Views.
  */
 fun lessonTypeName(typeId: Int): UiText = UiText.Res(
     when (typeId) {
@@ -17,6 +17,7 @@ fun lessonTypeName(typeId: Int): UiText = UiText.Res(
         3 -> CoreStrings.schedule_lesson_type_practice
         5 -> CoreStrings.schedule_lesson_type_exam
         6 -> CoreStrings.schedule_lesson_type_credit
+        9 -> CoreStrings.schedule_lesson_type_graded_credit
         10 -> CoreStrings.schedule_lesson_type_consultation
         11 -> CoreStrings.title_sport
         else -> CoreStrings.schedule_lesson_type_default

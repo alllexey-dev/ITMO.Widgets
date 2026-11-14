@@ -99,6 +99,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   never opened), `Видео`, `Друзья на паре`, the teacher with the tone of their reviews in words, `Маршрут`.
 - A teacher's timetable from My ITMO: `Расписание занятий` in `Преподавание` on the person card opens the same feed
   with the groups in place of the teacher; lessons given to several groups at once are one lesson.
+- A differentiated credit (My ITMO type 9) reads `Диф. зачёт` in the schedule, the lesson sheet and the widgets
+  instead of a plain `Пара`.
 
 ### Зачётка and subjects
 

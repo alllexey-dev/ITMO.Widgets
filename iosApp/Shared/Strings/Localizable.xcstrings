@@ -1057,6 +1057,18 @@
         }
       }
     },
+    "schedule_lesson_type_graded_credit" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Диф. зачёт"
+          }
+        }
+      }
+    },
     "schedule_lesson_type_lab" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",
