@@ -21,6 +21,7 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus.Companion.notifiableStatuses
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportTimeSlot
 import dev.alllexey.itmowidgets.feature.sport.domain.model.UnavailableReason
+import dev.alllexey.itmowidgets.feature.sport.domain.model.forecastsRepeat
 import dev.alllexey.itmowidgets.feature.sport.domain.model.predictedEnd
 import dev.alllexey.itmowidgets.feature.sport.domain.model.predictedStart
 import dev.alllexey.itmowidgets.feature.sport.domain.model.repeats
@@ -112,6 +113,8 @@ class SportScheduleRepositoryImpl(
         val realLessonsById = realLessons.associateBy { it.lessonId }.toMutableMap()
         val realLessonsByStart = realLessons.groupBy { it.start }
         val futureLessons = realLessons
+            // only timetable lessons repeat; any other type would predict a lesson that never comes
+            .filter { it.forecastsRepeat() }
             // map prototypes to already present lessons by key parameters
             .map { prototype ->
                 prototype to realLessonsByStart[prototype.predictedStart()]?.firstOrNull { it.repeats(prototype) }

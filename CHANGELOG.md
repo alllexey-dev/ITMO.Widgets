@@ -305,6 +305,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 ### Fixes
 
+- `Запись` predicts a repeat two weeks later only for a timetable lesson (My ITMO lesson type 2). The extra lessons
+  of a term's first weeks no longer show a predicted lesson that never comes, with an auto-sign queue that could
+  only wait.
 - The QR pass stays readable while it refreshes: the shown code is no longer dimmed or covered by a spinner, the
   line under it says `Обновляется, код от 11:44`, and the new code replaces the old one in place, on Android and iOS.
 - `Устройства`: `Отключить` ends the client's ITMO.ID session every time (MyItmoApi 2.3.1 accepts session ids with
