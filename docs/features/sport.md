@@ -102,6 +102,8 @@ free slot. Semantics are in Backend's sport automation contract (Sections).
 - The sheet renders the snapshot it was opened with; its action is rechecked by the screen that opened it.
 - Auto-sign predicts the occurrence exactly two weeks after the prototype; the matching rules (frozen prototype
   fields, building `0`, online rooms) are in Backend's sport automation contract.
+- Only a timetable lesson (My ITMO lesson type 2, `forecastsRepeat`) predicts a repeat. The extra lessons of a
+  term's first weeks and one-off lessons do not come back two weeks later, and Backend refuses them as a prototype.
 
 ## Another user's sport
 

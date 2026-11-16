@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.sport.data.golden
 import dev.alllexey.itmoapi.myitmo.sport.SportSignResult
 import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
+import dev.alllexey.itmowidgets.core.result.valueOrNull
 import dev.alllexey.itmowidgets.core.sport.PendingSportBooking.QueueKind
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.sport.data.MainDispatcherRule
@@ -15,6 +16,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
@@ -53,6 +55,24 @@ class SportGoldenTest {
             "time slots" to harness.schedule.observeSportTimeSlots().first(),
             "requests" to harness.requests
         )
+    }
+
+    @Test
+    fun `only a timetable lesson predicts its repeat two weeks later`() = runTest {
+        val harness = harness().apply { myItmo["GET /api/sport/sign/schedule"] = myItmoFixture("schedule.json") }
+
+        harness.schedule.refreshSportSchedule()
+        // The merged schedule waits for the queues and the friends; without Backend fixtures each one fails and is empty.
+        harness.data.refreshSportQueueEntries()
+        harness.data.refreshSportQueues()
+        harness.data.refreshFriendsBookings()
+        val lessons = harness.schedule.observeSportSchedule().first().valueOrNull().orEmpty()
+
+        // The fixture has a timetable lesson (type 2) and a standards one (type 6), both free attendance.
+        assertEquals(setOf(TIMETABLE_LESSON, STANDARDS_LESSON), lessons.filter { it.isLessonReal }.map { it.lessonId }.toSet())
+        val predicted = lessons.filter { !it.isLessonReal }
+        assertEquals(listOf(TIMETABLE_LESSON), predicted.map { it.lessonId })
+        assertEquals(Instant.parse("2026-10-19T07:00:00Z"), predicted.single().start)
     }
 
     @Test
@@ -261,6 +281,8 @@ class SportGoldenTest {
         File("../backend-client/src/commonTest/resources/contract/$path").readText()
 
     private companion object {
+        const val TIMETABLE_LESSON = 500001L
+        const val STANDARDS_LESSON = 500003L
         const val NO_CAPACITY_MESSAGE = "нельзя записать студента: нет свободных мест на занятии"
         val WALL_CLOCK: Instant = Instant.parse("2026-10-06T00:00:00Z")
     }

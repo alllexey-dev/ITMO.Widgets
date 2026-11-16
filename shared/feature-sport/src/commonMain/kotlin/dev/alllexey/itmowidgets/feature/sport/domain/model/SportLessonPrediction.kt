@@ -6,6 +6,15 @@ import kotlin.time.Instant
 /** A catalog lesson, the prototype, repeats this many days later; until the repeat appears it is predicted. */
 const val PREDICTION_OFFSET_DAYS = 14L
 
+/**
+ * My ITMO's type of a timetable lesson, the only one that repeats: Backend takes no other type as an auto-sign
+ * prototype. The extra lessons of a term's first weeks and one-off lessons have no repeat two weeks later.
+ */
+const val REPEATING_TYPE_ID = 2
+
+/** Whether the catalog is expected to repeat this lesson, so its repeat can be predicted and queued for. */
+fun SportLesson.forecastsRepeat(): Boolean = typeId == REPEATING_TYPE_ID
+
 fun SportLesson.predictedStart(): Instant = start + PREDICTION_OFFSET_DAYS.days
 
 fun SportLesson.predictedEnd(): Instant = end + PREDICTION_OFFSET_DAYS.days
