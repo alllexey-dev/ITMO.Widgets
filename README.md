@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/readme/icon.png" width="96" alt="Иконка ITMO.Widgets" />
+</p>
+
 <h1 align="center">ITMO.Widgets</h1>
 
 <p align="center">
@@ -18,10 +22,16 @@
   <a href="#скачать"><strong>Скачать</strong></a> ·
   <a href="https://t.me/itmowidgets">Telegram</a> ·
   <a href="https://widgets.alllexey.dev">Сайт</a> ·
+  <a href="https://widgets.alllexey.dev/app/">Веб-версия</a> ·
   <a href="https://widgets.alllexey.dev/privacy.html">Конфиденциальность</a>
 </p>
 
 Неофициальное приложение для студентов ИТМО: данные My ITMO и БАРС в одном месте, на главном экране и без пароля в приложении.
+
+<table>
+  <tr><th>Сегодня</th><th>Расписание</th><th>Зачётка</th><th>Запись на спорт</th></tr>
+  <tr><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-today-dark.webp"><img src="docs/images/readme/android-today.webp" width="180" alt="Сегодня"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-schedule-dark.webp"><img src="docs/images/readme/android-schedule.webp" width="180" alt="Расписание"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-recordbook-dark.webp"><img src="docs/images/readme/android-recordbook.webp" width="180" alt="Зачётка"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-sport-dark.webp"><img src="docs/images/readme/android-sport.webp" width="180" alt="Запись на спорт"></picture></td></tr>
+</table>
 
 ## Что умеет
 
@@ -41,21 +51,25 @@
 | | Версия | Требования |
 |---|---|---|
 | **Android** | [2.3 beta 5](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.5): `arm64` для большинства телефонов, `armv7` для старых | Android 8.0+ |
-| **iPhone** | [2.3 beta 5](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.5): `.ipa` без подписи | iOS 26.1+, AltStore, SideStore или Sideloadly |
+| **iPhone** | [2.3 beta 5](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.5): `.ipa` без подписи | iOS 26.1+, [AltStore](https://altstore.io), [SideStore](https://sidestore.io) или [Sideloadly](https://sideloadly.io) |
 | **Android, стабильная** | [2.2](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.2) | Android 8.0+ |
 
 - Бета ставится поверх 2.2 с сохранением данных; вернуться на 2.2 можно только переустановкой.
-- На iPhone пока нет push-уведомлений, поэтому автозапись на спорт там работает только через [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent).
+- На iPhone пока нет push-уведомлений, поэтому автозапись на спорт там работает только через [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent) (закрытая бета, доступ по запросу в [@itmowidgets](https://t.me/itmowidgets)).
 - В Google Play приложения пока нет. Новые версии и ответы на вопросы — в [@itmowidgets](https://t.me/itmowidgets).
 
+<details>
+<summary>Не открывается страница входа ITMO.ID</summary>
+
+Войдите токеном через «Другие способы входа»:
+
+1. Откройте [my.itmo.ru](https://my.itmo.ru/) в браузере на компьютере.
+2. `F12` → **Application** → **Cookies** → `https://my.itmo.ru`.
+3. Скопируйте значение `auth.refresh_token.itmoId` и вставьте его в приложении.
+
+</details>
+
 ## Как выглядит
-
-**Android**
-
-<table>
-  <tr><th>Сегодня</th><th>Расписание</th><th>Зачётка</th><th>Запись на спорт</th></tr>
-  <tr><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-today-dark.webp"><img src="docs/images/readme/android-today.webp" width="180" alt="Сегодня"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-schedule-dark.webp"><img src="docs/images/readme/android-schedule.webp" width="180" alt="Расписание"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-recordbook-dark.webp"><img src="docs/images/readme/android-recordbook.webp" width="180" alt="Зачётка"></picture></td><td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/readme/android-sport-dark.webp"><img src="docs/images/readme/android-sport.webp" width="180" alt="Запись на спорт"></picture></td></tr>
-</table>
 
 **iPhone**
 
@@ -88,26 +102,16 @@
 
 Подробно — в [«Как это работает»](docs/how-it-works/README.md) и [политике конфиденциальности](https://widgets.alllexey.dev/privacy.html).
 
-<details>
-<summary>Не открывается страница ITMO.ID</summary>
-
-Войдите токеном через «Другие способы входа»:
-
-1. Откройте [my.itmo.ru](https://my.itmo.ru/) в браузере на компьютере.
-2. `F12` → **Application** → **Cookies** → `https://my.itmo.ru`.
-3. Скопируйте значение `auth.refresh_token.itmoId` и вставьте его в приложении.
-
-</details>
-
 ## Экосистема
 
-| Репозиторий | Что делает |
+| Репозиторий | Что это |
 |---|---|
-| [itmo-widgets-backend](https://github.com/alllexey-dev/itmo-widgets-backend) | Сервер: друзья, приватность, очереди на спорт, уведомления |
+| **ITMO.Widgets** (этот репозиторий) | Приложение для Android и iPhone |
+| [itmo-widgets-backend](https://github.com/alllexey-dev/itmo-widgets-backend) | Сервер: друзья, приватность, очереди на спорт, отзывы, уведомления |
 | [itmo-widgets-web](https://github.com/alllexey-dev/itmo-widgets-web) | Сайт и веб-версия |
 | [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent) | Агент для компьютера или сервера: автозапись на спорт без телефона |
 | [itmo-mcp](https://github.com/alllexey-dev/itmo-mcp) | MCP-сервер ИТМО для Claude, Codex, Cursor и других ассистентов |
-| [my-itmo-api](https://github.com/alllexey-dev/my-itmo-api) | Java-клиент My ITMO и БАРС |
+| [my-itmo-api](https://github.com/alllexey-dev/my-itmo-api) | Библиотека для My ITMO и БАРС: Kotlin Multiplatform и Java |
 
 ## Разработчикам
 
@@ -123,7 +127,7 @@ scripts/ios/test.sh        # сборка и тесты iOS (Mac с Xcode)
 
 ## Обратная связь
 
-Ошибки и идеи — в [Issues](https://github.com/alllexey-dev/ITMO.Widgets/issues) или [@itmowidgets](https://t.me/itmowidgets). К отчёту можно приложить «Журнал ошибок» из «Настройки → О приложении»: в нём нет токенов и личных данных.
+Ошибки и идеи: [форма обратной связи](https://fb.widgets.alllexey.dev) (её же открывает «Обратная связь» в приложении), [Issues](https://github.com/alllexey-dev/ITMO.Widgets/issues) или [@itmowidgets](https://t.me/itmowidgets). К отчёту можно приложить «Журнал ошибок» из «Настройки → О приложении»: в нём нет токенов и личных данных.
 
 ## Лицензия
 
