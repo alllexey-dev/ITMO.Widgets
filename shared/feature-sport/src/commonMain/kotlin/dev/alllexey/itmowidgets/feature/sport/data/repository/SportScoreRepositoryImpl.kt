@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -27,11 +26,11 @@ class SportScoreRepositoryImpl(
     override suspend fun getScorePeriods(): AppResult<List<SportScorePeriod>> = if (demo.isActive()) {
         AppResult.Success(DemoSport.periods(time))
     } else request {
-        val periods = myItmo.sport.getSportSemesters().requireResult()
+        val periods = myItmo.sport.getSportSemesters()
         // Without the current semester every period stays "current" with no end date,
         // so the recordbook never raises a sport alarm it cannot justify.
         val current = try {
-            myItmo.sport.getCurrentSportSemester().requireResult()
+            myItmo.sport.getCurrentSportSemester()
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (_: Exception) {
@@ -55,11 +54,11 @@ class SportScoreRepositoryImpl(
     suspend fun getSportScore(semesterId: Long? = null): AppResult<SportScore> = if (demo.isActive()) {
         AppResult.Success(DemoSport.score(time))
     } else request {
-        val score = myItmo.sport.getSportScore(semesterId).requireResult().toModel()
+        val score = myItmo.sport.getSportScore(semesterId).toModel()
         // Production's provider always returns null. Debug overrides are current-period only.
         val override = overrideProvider.getOverride() ?: return@request score
         val isCurrent = semesterId == null ||
-            myItmo.sport.getCurrentSportSemester().requireResult().id == semesterId
+            myItmo.sport.getCurrentSportSemester().id == semesterId
         if (isCurrent) score.copy(attendances = override.attendances, other = override.bonus) else score
     }
 

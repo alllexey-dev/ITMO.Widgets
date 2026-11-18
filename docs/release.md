@@ -63,11 +63,11 @@ Only when the release needs a MyItmoApi version that is not on Central yet.
 4. Verify; Central may lag about 30 minutes:
 
    ```bash
-   curl -s https://repo1.maven.org/maven2/dev/alllexey/my-itmo-api-kmp/<version>/ | head -3
+   curl -s https://repo1.maven.org/maven2/dev/alllexey/my-itmo-api/<version>/ | head -3
    gh release view <version> --repo alllexey-dev/my-itmo-api
    ```
 
-5. Bump `myItmoApiKmp` in `gradle/libs.versions.toml`; start the next
+5. Bump `myItmoApi` in `gradle/libs.versions.toml`; start the next
    snapshot version in MyItmoApi.
 
 Core 2.0 lives in this repository (`:shared:backend-client`) and is not

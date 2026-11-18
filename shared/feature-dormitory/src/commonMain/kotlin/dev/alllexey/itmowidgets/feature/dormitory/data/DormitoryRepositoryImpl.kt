@@ -1,10 +1,8 @@
 package dev.alllexey.itmowidgets.feature.dormitory.data
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.network.optionalResult
 import dev.alllexey.itmowidgets.core.network.toMyItmoAppError
 import dev.alllexey.itmowidgets.core.payments.StoredContract
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -96,9 +94,9 @@ class DormitoryRepositoryImpl internal constructor(
 
     /** The status, null for no application, with the Документы для заселения only while the stage needs them. */
     private suspend fun status(): StoredStatus? {
-        val status = client.dormitory.getDormitoryStatus().optionalResult() ?: return null
+        val status = client.dormitory.getDormitoryStatus() ?: return null
         val documents = if (stageOf(status.statusId)?.needsDocuments == true) {
-            client.dormitory.getDormitoryDocuments().requireResult()
+            client.dormitory.getDormitoryDocuments()
         } else {
             emptyList()
         }
@@ -111,8 +109,8 @@ class DormitoryRepositoryImpl internal constructor(
      * as the latest period has it.
      */
     private suspend fun contracts(): List<StoredContract> =
-        client.dormitory.getDormitoryContractPeriods().optionalResult().orEmpty().sortedBy { it.dateFrom }
-            .flatMap { period -> client.dormitory.getDormitoryContracts(period.dateFrom, period.dateTo).optionalResult().orEmpty() }
+        client.dormitory.getDormitoryContractPeriods().sortedBy { it.dateFrom }
+            .flatMap { period -> client.dormitory.getDormitoryContracts(period.dateFrom, period.dateTo) }
             .associateBy { it.contractId }.values
             .map { it.toStored(time.timeZone) }
 

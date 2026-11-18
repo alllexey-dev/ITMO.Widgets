@@ -82,6 +82,6 @@ How the engineering skills (triage, tickets, specs, domain modeling) work in thi
   friendships, privacy, sport queues, links, reviews, push delivery; its
   `docs/README.md`.
 - [MyItmoApi](https://github.com/alllexey-dev/my-itmo-api): the only client of
-  MyITMO and BARS, a KMP library on Maven Central (`dev.alllexey:my-itmo-api-kmp`).
+  MyITMO and BARS, a KMP library on Maven Central (`dev.alllexey:my-itmo-api`).
 - [Web version and landing](https://github.com/alllexey-dev/itmo-widgets-web):
   keeps its own copy of the design tokens.

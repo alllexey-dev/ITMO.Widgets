@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.calendar
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -39,7 +38,7 @@ class MyItmoOwnScheduleSource(
     }
 
     private suspend fun request(start: LocalDate, end: LocalDate): List<DaySchedule> =
-        myItmo.schedule.getPersonalSchedule(start, end).requireResult().map { it.toModel() }
+        myItmo.schedule.getPersonalSchedule(start, end).map { it.toModel() }
 
     private companion object {
         const val CHUNK_DAYS = 31

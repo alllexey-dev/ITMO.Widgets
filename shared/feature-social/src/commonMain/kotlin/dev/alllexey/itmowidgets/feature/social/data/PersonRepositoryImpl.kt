@@ -37,8 +37,8 @@ class PersonRepositoryImpl(
         }
         return try {
             withContext(dispatchers.io) {
-                val personality = client.personalities.getPersonality(isu.toLong()).result
-                    ?.takeIf { it.isu == isu.toLong() }
+                val personality = client.personalities.getPersonality(isu.toLong())
+                    .takeIf { it.isu == isu.toLong() }
                     ?: return@withContext AppResult.Failure(AppError.NotFound)
                 val person = personality.toPerson(isu)
                 remember(isu, person)
@@ -48,6 +48,9 @@ class PersonRepositoryImpl(
             throw cancellation
         } catch (missing: MyItmoException.Api) {
             AppResult.Failure(if (missing.meansMissingPerson()) AppError.NotFound else missing.toAppError())
+        } catch (_: MyItmoException.Empty) {
+            // A successful answer without a `result`.
+            AppResult.Failure(AppError.NotFound)
         } catch (error: Exception) {
             AppResult.Failure(error.toAppError())
         }

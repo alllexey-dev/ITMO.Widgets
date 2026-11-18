@@ -89,7 +89,7 @@ tests) is in [testing.md](testing.md).
 
 ## Working on MyItmoApi
 
-The app takes MyItmoApi (`dev.alllexey:my-itmo-api-kmp`) from Maven Central
+The app takes MyItmoApi (`dev.alllexey:my-itmo-api`) from Maven Central
 at the version in `gradle/libs.versions.toml`. To build the app against local
 library changes, clone [my-itmo-api](https://github.com/alllexey-dev/my-itmo-api)
 and point `MYITMOAPI_DIR` at it:

@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.client.sport.model.SportAutoSignRequest
@@ -29,7 +28,7 @@ class SportActionRepositoryImpl(
 
     override suspend fun signIn(lessonId: Long): AppResult<Unit> {
         return runAction {
-            withContext(dispatchers.io) { myItmo.sport.signInLessons(listOf(lessonId)).requireResult() }
+            withContext(dispatchers.io) { myItmo.sport.signInLessons(listOf(lessonId)) }
         }
     }
 

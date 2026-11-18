@@ -64,14 +64,15 @@ minimum Backend it needs.
 
 | Client | Backend client | Backend | MyItmoApi |
 |---|---|---|---|
-| 2.3, Android and iOS (development) | Core 2.0, built in (`:shared:backend-client`, decision 0026) | 1.8.0 (`platform` parameter, alert pushes, account deletion); new request fields are optional | `dev.alllexey:my-itmo-api-kmp`, the version in `gradle/libs.versions.toml` |
+| 2.3, Android and iOS (development) | Core 2.0, built in (`:shared:backend-client`, decision 0026) | 1.8.0 (`platform` parameter, alert pushes, account deletion); new request fields are optional | `dev.alllexey:my-itmo-api` 2.x, the version in `gradle/libs.versions.toml` |
 | 2.2 | Core 1.7.0 (Maven Central) | 1.7.0 or later | 1.8.2 |
 | 2.1, 2.1.1 | Core 1.2.0 | 1.2.0 or later | 1.8.1 |
 
 Core 1.x stays frozen at 1.7.0 on Maven Central (decision 0026). MyItmoApi 2.x
 comes from Maven Central; `MYITMOAPI_DIR=<my-itmo-api checkout>` builds against
-a local checkout instead (decision 0024); the 1.x `dev.alllexey:my-itmo-api`
-stays a separate compatible line.
+a local checkout instead (decision 0024). Up to 2.4.0 the 2.x line was published
+as `dev.alllexey:my-itmo-api-kmp`; from 2.5.0 it takes over `dev.alllexey:my-itmo-api`,
+whose 1.x versions (up to 1.8.2) stay on Maven Central.
 
 `app.minimum` stays 2.1 until 2.2 reaches Play production, may rise to 2.2
 after that and never goes above 2.2 in the 2.3 line; while it is at most 2.2

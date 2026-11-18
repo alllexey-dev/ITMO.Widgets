@@ -44,6 +44,7 @@ fun MyItmoException.asAppError(): AppError = when (this) {
         else -> AppError.Unknown(this)
     }
     is MyItmoException.Decode -> AppError.Unknown(this)
+    is MyItmoException.Empty -> AppError.Unknown(this)
 }
 
 /**

@@ -365,6 +365,8 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   `_ios-*` baselines) is gone.
 - MyItmoApi 2.x and Core 2.0 (`:shared:backend-client`) over Ktor, Koin only; Retrofit, Gson, Hilt, Dagger and KSP
   are gone. MyItmoApi comes from Maven Central (`MYITMOAPI_DIR` for a local checkout).
+- MyItmoApi 2.5.1 (`dev.alllexey:my-itmo-api`, formerly `my-itmo-api-kmp`): My ITMO calls return the
+  payload and the app no longer unwraps envelopes; `MYITMOAPI_DIR` builds the checkout root.
 - Every Backend request carries `X-App-Version` and `X-Client` (ADR 0034); every call checks the opt-in and demo.
 - Every Backend request carries `Accept-Language` with the app's UI language; Core 2 has the connections area
   (Backend's `connections.md`) instead of the alpha pairing and web login; MyItmoApi 2.3.0 lists and ends ITMO.ID

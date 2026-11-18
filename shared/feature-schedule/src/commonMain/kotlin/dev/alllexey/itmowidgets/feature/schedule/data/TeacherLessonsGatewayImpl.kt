@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -119,7 +118,7 @@ class TeacherLessonsGatewayImpl(
     }.also { finished = it }
 
     private suspend fun request(week: ClosedRange<LocalDate>): List<WeekLesson> =
-        myItmo.schedule.getPersonalSchedule(week.start, week.endInclusive).requireResult()
+        myItmo.schedule.getPersonalSchedule(week.start, week.endInclusive)
             .sortedByDescending { it.date }
             .flatMap { day ->
                 day.lessons

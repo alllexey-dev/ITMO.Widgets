@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.changes
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -202,7 +201,7 @@ class ScheduleChangesRepositoryImpl(
 
     /** `null` when My ITMO answered without data. */
     private suspend fun request(start: LocalDate, end: LocalDate): List<DaySchedule> =
-        myItmo.schedule.getPersonalSchedule(start, end).requireResult().map { it.toModel() }
+        myItmo.schedule.getPersonalSchedule(start, end).map { it.toModel() }
 
     private fun DetectedChange.toStored(id: String, detectedAt: Long): StoredChange {
         val subject = after ?: before

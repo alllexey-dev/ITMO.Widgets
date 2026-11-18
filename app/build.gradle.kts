@@ -204,7 +204,7 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.coil.network.okhttp)
     implementation(libs.android.image.cropper)
-    implementation(libs.my.itmo.api.kmp)
+    implementation(libs.my.itmo.api)
     // The BARS engine of di/RecordbookModule: OkHttp with the BARS timeouts, apart from MyITMO's engine.
     implementation(libs.ktor.client.okhttp)
     implementation(libs.androidx.datastore.preferences)

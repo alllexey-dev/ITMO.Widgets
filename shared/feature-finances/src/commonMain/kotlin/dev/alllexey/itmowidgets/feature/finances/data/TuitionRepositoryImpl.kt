@@ -1,10 +1,8 @@
 package dev.alllexey.itmowidgets.feature.finances.data
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.network.optionalResult
 import dev.alllexey.itmowidgets.core.network.toMyItmoAppError
 import dev.alllexey.itmowidgets.core.payments.StoredContract
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -64,7 +62,7 @@ class TuitionRepositoryImpl internal constructor(
         val fetchedAt = clock.now()
         val result = appResultOf({ it.toMyItmoAppError() }) {
             withContext(dispatchers.io) {
-                val available = client.finances.getTuitionAvailability().requireResult()
+                val available = client.finances.getTuitionAvailability()
                 StoredTuition(
                     owner = currentUser.getCurrentUser()?.isu,
                     fetchedAt = fetchedAt.toEpochMilliseconds(),
@@ -90,7 +88,7 @@ class TuitionRepositoryImpl internal constructor(
 
     /** Every Договор об обучении with its balance and schedule; my.itmo may answer null for none. */
     private suspend fun contracts(): List<StoredContract> =
-        client.finances.getTuitionPayments().optionalResult().orEmpty().map { it.toStored(time.timeZone) }
+        client.finances.getTuitionPayments().map { it.toStored(time.timeZone) }
 
     override suspend fun clearSessionData() = lock.withLock {
         generation.addAndFetch(1L)

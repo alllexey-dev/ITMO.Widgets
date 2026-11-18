@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.days
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -68,7 +67,7 @@ class TeacherScheduleDaysImpl(
             }
         }
         return withContext(dispatchers.io) {
-            myItmo.schedule.getTeacherSchedule(isu.toLong(), from, to).requireResult().map { it.toModel() }
+            myItmo.schedule.getTeacherSchedule(isu.toLong(), from, to).map { it.toModel() }
         }
     }
 

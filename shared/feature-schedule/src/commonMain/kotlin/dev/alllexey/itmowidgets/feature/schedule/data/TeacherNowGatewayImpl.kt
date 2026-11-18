@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule.data
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -31,7 +30,7 @@ class TeacherNowGatewayImpl(
         }
         return try {
             val days = withContext(dispatchers.io) {
-                myItmo.schedule.getTeacherSchedule(teacherIsu.toLong(), now.date, now.date).requireResult()
+                myItmo.schedule.getTeacherSchedule(teacherIsu.toLong(), now.date, now.date)
             }
             val lessons = days.filter { it.date == now.date }.flatMap { it.lessons }.map { it.toModel() }
             AppResult.Success(teacherNow(lessons, now.time))

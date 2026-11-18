@@ -1,10 +1,11 @@
 # 0024 MyItmoApi 2.x from Maven Central, a local checkout as an opt-in composite build
 
-**Decision (2026-10-03, revised 2026-10-12).** The app resolves `dev.alllexey:my-itmo-api-kmp` from Maven Central at
-the version in `gradle/libs.versions.toml` (`myItmoApiKmp`), and never through Maven Local.
+**Decision (2026-10-03, revised 2026-10-12 and 2026-11-19).** The app resolves `dev.alllexey:my-itmo-api` (named
+`my-itmo-api-kmp` up to 2.4.0) from Maven Central at the version in `gradle/libs.versions.toml` (`myItmoApi`), and never
+through Maven Local.
 - To change MyItmoApi together with the app, set `MYITMOAPI_DIR` to a my-itmo-api checkout. `settings.gradle.kts`
-  then calls `includeBuild("<dir>/kmp")` (or `includeBuild("<dir>")` when the KMP build is the root) and substitutes
-  the artifact with the included project; the catalog version is ignored. A directory without a Gradle build fails
+  then calls `includeBuild("<dir>")` (the library build is the checkout root from 2.5.0) and substitutes the
+  artifact with the included project; the catalog version is ignored. A directory without a Gradle build fails
   the configuration with a clear message.
 - `mavenLocal()` is not in `settings.gradle.kts`. No repository uses `publishToMavenLocal`, `mvn install` or `~/.m2`.
 - Core is not part of this: Core 2.0 is a module of this repository (ADR 0026).
@@ -18,7 +19,7 @@ sources in the IDE, so it stays available for library development.
 - A MyItmoApi change reaches the app as a release on Maven Central and a version bump in the catalog. Work in
   progress is tried with `MYITMOAPI_DIR`; no commit points at a local path.
 - The included build must build standalone on the app's Gradle with `group = "dev.alllexey"` and
-  `rootProject.name = "my-itmo-api-kmp"`, with no signing or credentials unless it publishes; otherwise the
+  `rootProject.name = "my-itmo-api"`, with no signing or credentials unless it publishes; otherwise the
   substitution silently does not happen.
 - `docs/product/releases.md` records the MyItmoApi version each Android release builds against.
 
