@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
@@ -106,7 +105,7 @@ class SportBookingRepositoryImpl(
         }
         try {
             val result = withContext(dispatchers.io) {
-                myItmo.sport.getChosenSportSections().requireResult().flatMap { it.toBookings() }
+                myItmo.sport.getChosenSportSections().flatMap { it.toBookings() }
             }
 
             if (sessionMutex.withLock { generation != sessionGeneration }) return

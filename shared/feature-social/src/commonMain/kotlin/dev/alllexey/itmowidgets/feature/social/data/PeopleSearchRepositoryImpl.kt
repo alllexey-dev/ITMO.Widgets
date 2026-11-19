@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.social.data
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.personalities.PersonalityMin
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
@@ -35,7 +34,7 @@ class PeopleSearchRepositoryImpl(
 
         val page = try {
             withContext(dispatchers.io) {
-                client.personalities.searchPersonalities(PAGE_SIZE, offset, normalized).requireResult()
+                client.personalities.searchPersonalities(PAGE_SIZE, offset, normalized)
             }
         } catch (cancellation: CancellationException) {
             throw cancellation

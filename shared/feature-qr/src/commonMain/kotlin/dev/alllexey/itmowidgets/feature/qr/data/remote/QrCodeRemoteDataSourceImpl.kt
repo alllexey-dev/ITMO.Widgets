@@ -28,7 +28,6 @@ class QrCodeRemoteDataSourceImpl(
         }
     }
 
-    /** The pass, or null when the answer has none; the 2.x model turns an absent `qr_hex` into an empty string. */
-    private suspend fun fetchQrHex(): String? =
-        client.qr.getQrCode().response?.qrHex?.takeIf { it.isNotBlank() }
+    /** The pass, or null when the answer has none (no `response`, or a blank `qr_hex`). */
+    private suspend fun fetchQrHex(): String? = client.qr.getQrCode()?.qrHex
 }

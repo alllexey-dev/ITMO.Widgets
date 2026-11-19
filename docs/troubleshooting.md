@@ -60,7 +60,7 @@ With `MYITMOAPI_DIR` set, Gradle prints `MyItmoApi: including <dir>` and builds
 the library from that checkout instead of Maven Central.
 
 - `MYITMOAPI_DIR=... has no Gradle build`: the path is not a my-itmo-api
-  checkout (the build uses `<checkout>/kmp` or the root). Fix the path or
+  checkout (the build is the checkout root, 2.5.0 or later). Fix the path or
   unset the variable.
 - Unexpected API errors after switching branches: the variable is still set
   in your shell or IDE run configuration, so the build uses your checkout.

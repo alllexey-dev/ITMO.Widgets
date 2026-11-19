@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.schedule.data.remote
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.schedule.LessonSyncRequest
 import dev.alllexey.itmowidgets.client.schedule.ScheduleApi
@@ -53,7 +52,7 @@ class ScheduleRemoteDataSourceImpl(
     }
 
     private suspend fun ownSchedule(start: LocalDate, end: LocalDate): List<DaySchedule> {
-        val days = myItmo.schedule.getPersonalSchedule(start, end).requireResult()
+        val days = myItmo.schedule.getPersonalSchedule(start, end)
         if (backend.mayCallBackend()) {
             try {
                 val request = LessonSyncRequest(

@@ -151,7 +151,7 @@ snapshot store. Copy the `Schedule*Test` next to the class you add.
 MyItmoApi is the only client of official ITMO endpoints. Add the call to
 [my-itmo-api](https://github.com/alllexey-dev/my-itmo-api) with fixtures and
 MockEngine tests, build the app against it with `MYITMOAPI_DIR` while it is in
-review, then bump `myItmoApiKmp` in `gradle/libs.versions.toml` after the
+review, then bump `myItmoApi` in `gradle/libs.versions.toml` after the
 release. The data source checks `DemoMode` (no `BackendGate`: MyITMO is not
 Backend) and maps `MyItmoException` to `AppError` in the repository.
 

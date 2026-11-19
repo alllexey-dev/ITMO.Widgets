@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.client.sport.SportApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
@@ -83,7 +82,7 @@ class SportDataRepositoryImpl(
             return
         }
         try {
-            val result = withContext(dispatchers.io) { myItmo.sport.getSportAttempts().requireResult().toModel() }
+            val result = withContext(dispatchers.io) { myItmo.sport.getSportAttempts().toModel() }
             emitInSession(generation, attemptsFlow, LoadState.Content(result))
         } catch (cancellation: CancellationException) {
             throw cancellation

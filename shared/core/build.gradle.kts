@@ -18,7 +18,7 @@ kotlin {
             // JsonElement is the payload type of FcmPayloadHandler.
             api(libs.kotlinx.serialization.json)
             // The MyItmoApi 2.x client, its storage and Ktor's engine type are in core's public signatures.
-            api(libs.my.itmo.api.kmp)
+            api(libs.my.itmo.api)
             api(libs.ktor.client.core)
             // asBackendTokenSource() and BackendException.asAppError() have Core 2.0's types and errors in their
             // signatures; the client never depends on core, the mapping lives here.

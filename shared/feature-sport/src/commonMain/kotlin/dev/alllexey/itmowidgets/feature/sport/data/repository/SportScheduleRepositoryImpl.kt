@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.sport.data.repository
 
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -184,7 +183,7 @@ class SportScheduleRepositoryImpl(
             val result = withContext(dispatchers.io) {
                 val from = timeProvider.today()
                 val to = from.plus(DatePeriod(days = SCHEDULE_DAYS))
-                val days = myItmo.sport.getSportSchedule(from, to).requireResult()
+                val days = myItmo.sport.getSportSchedule(from, to)
                 val now = timeProvider.now()
                 days.associate { day -> day.date to day.lessons.orEmpty().map { lesson -> lesson.toModel(now) } }
             }
@@ -202,7 +201,7 @@ class SportScheduleRepositoryImpl(
             return
         }
         try {
-            val result = withContext(dispatchers.io) { myItmo.sport.getSportFilters().requireResult().toModel() }
+            val result = withContext(dispatchers.io) { myItmo.sport.getSportFilters().toModel() }
             filtersFlow.emit(AppResult.Success(result))
         } catch (cancellation: CancellationException) {
             throw cancellation
@@ -217,7 +216,7 @@ class SportScheduleRepositoryImpl(
             return
         }
         try {
-            val result = withContext(dispatchers.io) { myItmo.sport.getSportTimeSlots().requireResult().map { it.toModel() } }
+            val result = withContext(dispatchers.io) { myItmo.sport.getSportTimeSlots().map { it.toModel() } }
             timeSlotsFlow.emit(AppResult.Success(result))
         } catch (cancellation: CancellationException) {
             throw cancellation

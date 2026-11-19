@@ -54,22 +54,23 @@ include(":konsist")
 // Generates the app's baseline and startup profiles, by hand before a release (docs/testing.md).
 include(":baselineprofile")
 
-// MyItmoApi comes from Maven Central (libs.my.itmo.api.kmp). To develop the library alongside the app, set
-// MYITMOAPI_DIR to a my-itmo-api checkout: its KMP build (<checkout>/kmp, or the root) replaces the artifact as a
-// composite build, and the catalog version is ignored.
+// MyItmoApi comes from Maven Central (libs.my.itmo.api). To develop the library alongside the app, set MYITMOAPI_DIR
+// to a my-itmo-api checkout: its build (the checkout root) replaces the artifact as a composite build, and the catalog
+// version is ignored.
 val myItmoApiDir: String? = providers.environmentVariable("MYITMOAPI_DIR").orNull?.ifBlank { null }
 
 if (myItmoApiDir != null) {
     val checkout = file(myItmoApiDir)
-    val kmpBuild = listOf(checkout.resolve("kmp"), checkout).firstOrNull { it.resolve("settings.gradle.kts").isFile }
-        ?: throw GradleException(
+    if (!checkout.resolve("settings.gradle.kts").isFile) {
+        throw GradleException(
             "MYITMOAPI_DIR=$checkout has no Gradle build; set MYITMOAPI_DIR to a my-itmo-api checkout or unset it",
         )
-    logger.lifecycle("MyItmoApi: including $kmpBuild")
-    includeBuild(kmpBuild) {
+    }
+    logger.lifecycle("MyItmoApi: including $checkout")
+    includeBuild(checkout) {
         dependencySubstitution {
-            // The KMP build's root project is the library.
-            substitute(module("dev.alllexey:my-itmo-api-kmp")).using(project(":"))
+            // The library build's root project is the library.
+            substitute(module("dev.alllexey:my-itmo-api")).using(project(":"))
         }
     }
 }

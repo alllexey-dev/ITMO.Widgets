@@ -1,8 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data
 
 import dev.alllexey.itmoapi.core.MyItmoException
-import dev.alllexey.itmoapi.core.ResultResponse
-import dev.alllexey.itmoapi.core.requireResult
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.recordbook.ControlEntry
 import dev.alllexey.itmoapi.myitmo.recordbook.RecordBookEntry
@@ -107,11 +105,11 @@ class RecordbookRepositoryImpl(
     }
 
     private suspend fun <T : Any, R> request(
-        call: suspend () -> ResultResponse<T>,
+        call: suspend () -> T,
         transform: (T) -> R
     ): AppResult<R> = appResultOf(::toAppError) {
         val result = withContext(dispatchers.io) {
-            call().requireResult()
+            call()
         }
         transform(result)
     }
