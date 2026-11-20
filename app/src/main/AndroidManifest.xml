@@ -87,6 +87,8 @@
                 android:resource="@xml/shortcuts" />
         </activity>
 
+        <activity android:name=".feature.recordbook.ui.LmsLoginActivity" android:exported="false" />
+
         <activity
             android:name=".feature.recordbook.ui.BarsLoginActivity"
             android:exported="false" />

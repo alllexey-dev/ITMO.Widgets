@@ -40,6 +40,7 @@ import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.core.ui.resolve
 import dev.alllexey.itmowidgets.designsystem.host.LocalPlatformActions
 import dev.alllexey.itmowidgets.di.KoinStarter
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookSubjectViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookTarget
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.RecordbookViewModel
@@ -48,6 +49,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScor
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresUiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetScoresViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.canGoBack
+import dev.alllexey.itmowidgets.feature.recordbook.ui.LmsLoginInput
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookActions
 import dev.alllexey.itmowidgets.feature.recordbook.ui.RecordbookRoute
 import dev.alllexey.itmowidgets.feature.recordbook.ui.sheets.SheetScoresActions
@@ -113,7 +115,10 @@ private fun RecordbookSubjectEntry(key: AppRoutes.RecordbookSubject, navigator: 
             .also { if (key.materials) it.selectTab(SubjectTab.MATERIALS) }
     }
     val barsLogin = rememberBarsLogin(onSignedIn = viewModel::barsSignedIn)
-    val actions = remember(key, navigator, view, platform, barsLogin) {
+    val lmsLauncher = rememberLauncherForActivityResult(ActivityRoutes.lmsLogin()) { scores ->
+        if (scores != null) viewModel.applyLmsScores(scores)
+    }
+    val actions = remember(key, navigator, view, platform, barsLogin, lmsLauncher) {
         RecordbookSubjectActions(
             onBack = { navigator.close(key) },
             onOpenLink = { url -> openLink(platform, view, url) },
@@ -125,6 +130,12 @@ private fun RecordbookSubjectEntry(key: AppRoutes.RecordbookSubject, navigator: 
             onConnect = { navigator.open(AppRoutes.Settings(SERVICES_PAGE)) },
             onOpenSheetScores = { navigator.open(AppRoutes.SheetScores(it)) },
             onBarsSignIn = barsLogin,
+            onCheckLms = {
+                val subject = (viewModel.uiState.value as? RecordbookSubjectUiState.Content)
+                    ?.takeIf { it.canCheckLms }
+                    ?.title
+                if (subject != null) lmsLauncher.launch(LmsLoginInput(subject, args.studyYear, args.semester))
+            },
             onOpenSport = { navigator.select(AppTab.SPORT) },
             onOpenLesson = { target ->
                 when (target) {

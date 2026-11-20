@@ -1,0 +1,3 @@
+# Generated files are compared byte-for-byte with LF output.
+iosApp/Shared/Strings/*.xcstrings text eol=lf
+iosApp/Shared/Symbols/AppSymbol.swift text eol=lf

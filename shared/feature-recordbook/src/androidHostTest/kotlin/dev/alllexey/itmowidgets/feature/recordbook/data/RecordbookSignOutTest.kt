@@ -10,6 +10,7 @@ import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.notification.AppNotifier
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 import dev.alllexey.itmowidgets.core.session.CurrentUserProvider
@@ -43,6 +44,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsPreferenceReposito
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.SubjectBindingStore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksNotifier
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarksScheduler
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
@@ -67,12 +70,25 @@ import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
 /**
- * Sign-out runs every `SessionDataCleaner`: the module's six cleaners leave no MyITMO cache, no BARS controls, no BARS
- * session, no BARS switch, no subject binding and no marks or sheet files of the previous account.
+ * Sign-out runs every `SessionDataCleaner`: the module's seven cleaners leave no MyITMO cache, no BARS controls, no BARS
+ * session, no BARS switch, no subject binding, no LMS cache and no marks or sheet files of the previous account.
  */
 class RecordbookSignOutTest {
 
     private val tokens = MemoryBarsTokens()
+    private val extraSecrets = mutableMapOf<String, String>()
+    private val secureStore = object : SecureStore {
+        override fun read(name: String): String? =
+            if (name == "bars_tokens.enc") tokens.read(name) else extraSecrets[name]
+
+        override fun write(name: String, value: String) {
+            if (name == "bars_tokens.enc") tokens.write(name, value) else extraSecrets[name] = value
+        }
+
+        override fun delete(name: String) {
+            if (name == "bars_tokens.enc") tokens.delete(name) else extraSecrets.remove(name)
+        }
+    }
     private val server = BarsTestServer()
     private val markSources = MarkSourcePreferences(InMemoryPreferencesDataStore())
 
@@ -97,6 +113,9 @@ class RecordbookSignOutTest {
         assertNotNull(bars.cachedControls(journal))
         val bindings = koin.get<SubjectBindingStore>()
         bindings.put(DISCIPLINE, SUBJECT)
+        val lms = koin.get<LmsScoresRepository>()
+        val lmsArgs = RecordbookSubjectArgs(entryId = DISCIPLINE, programId = 1L, semester = PERIOD.semester, studyYear = PERIOD.studyYear)
+        lms.save(lmsArgs, listOf(LmsScore("РК №1", 9.0, 10.0, "VERIFIED")))
         koin.get<MarksFileStore>().write(StoredMarks(owner = OWNER))
         koin.get<SheetScoresFileStore>().write(StoredSheetScores(owner = OWNER))
         val files = File(temporary.root, "files")
@@ -105,8 +124,9 @@ class RecordbookSignOutTest {
         val cleaners = koin.getAll<SessionDataCleaner>()
         cleaners.forEach { it.clearSessionData() }
 
-        assertEquals(6, cleaners.size)
+        assertEquals(7, cleaners.size)
         assertNull(bindings.get(DISCIPLINE))
+        assertEquals(emptyList<LmsScore>(), lms.load(lmsArgs))
         assertFalse(File(files, "marks").exists())
         assertFalse(File(files, "sheet_scores").exists())
         assertNull(recordbook.cachedPrograms())
@@ -132,7 +152,7 @@ class RecordbookSignOutTest {
         }
         single<DataStore<Preferences>> { InMemoryPreferencesDataStore() }
         single { markSources }
-        single<SecureStore> { tokens }
+        single<SecureStore> { secureStore }
         single<CurrentUserProvider> {
             object : CurrentUserProvider {
                 override suspend fun getCurrentUser() = CurrentUser(OWNER, null, null)

@@ -88,9 +88,11 @@ class RecordbookSubjectViewModelTest {
     private fun currentPeriodModel(
         subject: RecordbookSubject = recordbookSubject(),
         sheets: FakeSheetScoresRepository = FakeSheetScoresRepository(),
+        lms: dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository? = null,
+        demo: dev.alllexey.itmowidgets.core.demo.DemoMode? = null,
     ): RecordbookSubjectViewModel {
         repository.subjects = AppResult.Success(listOf(subject))
-        return subjectModel(args(semester = 3, year = "2026/2027"), sheets)
+        return subjectModel(args(semester = 3, year = "2026/2027"), sheets, lms, demo)
     }
 
     private fun args(semester: Int, year: String, withBars: Boolean = false) = RecordbookSubjectArgs(
@@ -98,11 +100,16 @@ class RecordbookSubjectViewModelTest {
         barsPlan = if (withBars) 8L else null, barsType = if (withBars) "flow" else null, barsIdentifier = if (withBars) "7" else null,
     )
 
-    private fun subjectModel(args: RecordbookSubjectArgs, sheets: FakeSheetScoresRepository): RecordbookSubjectViewModel {
+    private fun subjectModel(
+        args: RecordbookSubjectArgs,
+        sheets: FakeSheetScoresRepository,
+        lms: dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository? = null,
+        demo: dev.alllexey.itmowidgets.core.demo.DemoMode? = null,
+    ): RecordbookSubjectViewModel {
         val time = FixedAcademicTime(LocalDate(2026, 9, 7))
         return RecordbookSubjectViewModel(args, repository, bars, preference, RecordbookSportResolver(FakeSportScoreRepository()), time,
             marks, SubjectLessonsLoader(lessons, scheduleRefresh, bindingStore, SubjectContextResolver(), time),
-            SubjectLinksLoader(resources), SubjectSheetLoader(sheets, time), SubjectTeacherLevelsLoader(levels), gate, photos)
+            SubjectLinksLoader(resources), SubjectSheetLoader(sheets, time), SubjectTeacherLevelsLoader(levels), gate, photos, lms, demo)
     }
 
     private val RecordbookSubjectViewModel.content get() = uiState.value as RecordbookSubjectUiState.Content
@@ -608,4 +615,80 @@ class RecordbookSubjectViewModelTest {
     private fun scopeOf() = dev.alllexey.itmowidgets.core.resources.ResourceScope(1, "Тестовый предмет", "2025-2")
 
     private fun sheetUrl(id: String) = "https://docs.google.com/spreadsheets/d/1SyntheticSheet${id.padEnd(16, '0')}/edit"
+
+    @Test fun `canCheckLms is true only for current in-progress non-PE subjects outside demo mode`() = runTest {
+        val inProgress = recordbookSubject().copy(rate = null, absent = false)
+        assertTrue(currentPeriodModel(subject = inProgress).apply { advanceUntilIdle() }.content.canCheckLms)
+        assertFalse(
+            currentPeriodModel(subject = inProgress, demo = dev.alllexey.itmowidgets.core.testing.FakeDemoMode(true))
+                .apply { advanceUntilIdle() }.content.canCheckLms
+        )
+
+        repository.subjects = AppResult.Success(listOf(inProgress))
+        assertFalse(model().apply { advanceUntilIdle() }.content.canCheckLms)
+
+        val pe = inProgress.copy(name = "Физическая культура и спорт (элективная)")
+        assertFalse(currentPeriodModel(subject = pe).apply { advanceUntilIdle() }.content.canCheckLms)
+
+        val passed = recordbookSubject().copy(rate = "4/C")
+        assertFalse(currentPeriodModel(subject = passed).apply { advanceUntilIdle() }.content.canCheckLms)
+
+        val absent = inProgress.copy(absent = true)
+        assertFalse(currentPeriodModel(subject = absent).apply { advanceUntilIdle() }.content.canCheckLms)
+    }
+
+    @Test fun `applyLmsScores updates null hero, recomputes below and threshold, and clears stale scores`() = runTest {
+        var saved = emptyList<dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore>()
+        val lmsRepo = object : dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository {
+            override suspend fun load(args: RecordbookSubjectArgs) = saved
+            override suspend fun save(args: RecordbookSubjectArgs, scores: List<dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore>) {
+                saved = scores
+            }
+        }
+        val subject = recordbookSubject().copy(rate = null, score = null)
+        repository.controls = AppResult.Success(listOf(
+            RecordbookControl(1, "Контрольная работа №1", null, 6.0, 10.0, true, null, null),
+            RecordbookControl(2, "Контрольная работа №2", null, 5.0, 10.0, true, null, null),
+        ))
+        val vm = currentPeriodModel(subject = subject, lms = lmsRepo); advanceUntilIdle()
+        assertNull(vm.scores.hero.points)
+
+        val incoming = listOf(
+            dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore("РК №1", 5.0, 10.0, "VERIFIED"),
+            dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore("РК №2", 6.0, 10.0, "VERIFIED"),
+        )
+        vm.applyLmsScores(incoming); advanceUntilIdle()
+
+        assertEquals("11", vm.scores.hero.points)
+        assertEquals(UiText.Res(RecordbookStrings.recordbook_lms_source), vm.scores.hero.source)
+        val rk1Row = vm.scores.groups.single().rows.first { it.name.endsWith("№1") }
+        val rk2Row = vm.scores.groups.single().rows.first { it.name.endsWith("№2") }
+        assertTrue(rk1Row.below)
+        assertEquals(RecordbookTone.BAD, rk1Row.tone)
+        assertFalse(rk2Row.below)
+        assertEquals(RecordbookTone.OK, rk2Row.tone)
+        assertTrue(vm.scores.groups.single().below)
+        assertEquals(incoming, saved)
+
+        // Unmatched / empty follow-up clears stale LMS scores in UI and storage.
+        vm.applyLmsScores(emptyList()); advanceUntilIdle()
+        assertNull(vm.scores.hero.points)
+        assertTrue(vm.scores.groups.none { it.below })
+        assertEquals(emptyList<dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore>(), saved)
+    }
+
+    @Test fun `applyLmsScores keeps non-numeric sheet hero untouched`() = runTest {
+        val sheets = FakeSheetScoresRepository(
+            sheetScore(scope = dev.alllexey.itmowidgets.core.resources.ResourceScope(1, "Тестовый предмет", "2026-1"), value = "5A")
+        )
+        val subject = recordbookSubject().copy(rate = null, score = null)
+        repository.controls = AppResult.Success(listOf(
+            RecordbookControl(1, "Контрольная работа №1", null, 6.0, 10.0, true, null, null),
+        ))
+        val vm = currentPeriodModel(subject = subject, sheets = sheets); advanceUntilIdle()
+        vm.applyLmsScores(listOf(dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore("РК №1", 9.0, 10.0, "VERIFIED")))
+        advanceUntilIdle()
+
+        assertEquals("5A", vm.scores.hero.points)
+    }
 }

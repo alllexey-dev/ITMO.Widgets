@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
+import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.presentation.RefreshMode
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.result.AppError
@@ -17,6 +18,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.FakeSheetScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.MainDispatcherRule
 import dev.alllexey.itmowidgets.feature.recordbook.TEST_HALF
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookProgram
@@ -28,6 +31,8 @@ import dev.alllexey.itmowidgets.feature.recordbook.sheetScore
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookPlurals
 import dev.alllexey.itmowidgets.shared.feature.recordbook.RecordbookStrings
 import kotlin.time.Instant
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -55,6 +60,27 @@ class RecordbookViewModelTest {
         FixedAcademicTime(LocalDate.parse(date)), marks, sheets)
 
     private fun loaded(vm: RecordbookViewModel = model()) = vm.apply { refresh(RefreshMode.Silent) }
+
+    @Test fun `saved LMS updates the recordbook total and keeps the source visible`() = runTest {
+        val changes = MutableStateFlow(0)
+        var saved = emptyList<LmsScore>()
+        val lms = object : LmsScoresRepository {
+            override fun observeChanges() = changes.map { Unit }
+            override suspend fun load(args: RecordbookSubjectArgs) = saved
+            override suspend fun save(args: RecordbookSubjectArgs, scores: List<LmsScore>) { saved = scores; changes.value++ }
+        }
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = 35.0)))
+        repository.cachedControls = listOf(RecordbookControl(77, "Контрольная работа №1", null, 6.0, 10.0, true, null, null))
+        val vm = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), RecordbookSportResolver(sport),
+            FixedAcademicTime(LocalDate.parse("2026-09-07")), marks, FakeSheetScoresRepository(), lms)
+        vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+        assertEquals("35", (vm.uiState.value.rows.single().value as RecordbookValue.Points).text)
+        lms.save(RecordbookSubjectArgs(42, 1, 3, "2026/2027"), listOf(LmsScore("РК №1", 9.0, 10.0, "VERIFIED")))
+        advanceUntilIdle()
+        assertEquals("44", (vm.uiState.value.rows.single().value as RecordbookValue.Points).text)
+        assertEquals(UiText.Res(RecordbookStrings.recordbook_lms_total_source,
+            listOf(UiText.Res(RecordbookStrings.recordbook_source_myitmo))), vm.uiState.value.rows.single().source)
+    }
 
     @Test fun `loads current academic period without asking sport for regular subjects`() = runTest {
         val vm = loaded(); advanceUntilIdle()
@@ -392,5 +418,100 @@ class RecordbookViewModelTest {
 
         vm.closeSources()
         assertNull(vm.uiState.value.content.sources)
+    }
+
+    // --- LMS
+
+    @Test fun `saved LMS supplies the points row when My ITMO has no points and marks only LMS in sources`() = runTest {
+        val saved = listOf(dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore("РК №1", 9.0, 10.0, "VERIFIED"))
+        val lms = object : dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository {
+            override suspend fun load(args: RecordbookSubjectArgs) = saved
+            override suspend fun save(args: RecordbookSubjectArgs, scores: List<dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore>) = Unit
+        }
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = null)))
+        repository.cachedControls = listOf(RecordbookControl(77, "Контрольная работа №1", null, 6.0, 10.0, true, null, null))
+        val vm = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), RecordbookSportResolver(sport),
+            FixedAcademicTime(LocalDate.parse("2026-09-07")), marks, FakeSheetScoresRepository(), lms)
+        vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+
+        val row = vm.uiState.value.row(42)
+        assertEquals("9", row.points)
+        assertEquals(RecordbookStrings.recordbook_lms_source, row.sourceKey)
+        assertFalse(row.stale)
+
+        vm.openSources(row.key)
+        val sources = vm.uiState.value.content.sources!!
+        assertTrue(sources.rows.none { it.shown })
+        assertEquals(UiText.Res(RecordbookStrings.recordbook_lms_sources_only_note, listOf("9")), sources.note)
+    }
+
+    @Test fun `saved LMS does not replace non-numeric sheet value`() = runTest {
+        val saved = listOf(dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore("РК №1", 9.0, 10.0, "VERIFIED"))
+        val lms = object : dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository {
+            override suspend fun load(args: RecordbookSubjectArgs) = saved
+            override suspend fun save(args: RecordbookSubjectArgs, scores: List<dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore>) = Unit
+        }
+        val sheets = FakeSheetScoresRepository(sheetScore(scope = ResourceScope(1, "Тестовый предмет", "2026-1"), value = "5A"))
+        repository.subjects = AppResult.Success(listOf(recordbookSubject().copy(rate = null, score = null)))
+        repository.cachedControls = listOf(RecordbookControl(77, "Контрольная работа №1", null, 6.0, 10.0, true, null, null))
+        val vm = RecordbookViewModel(repository, FakeBarsRepository(), FakeBarsPreference(), RecordbookSportResolver(sport),
+            FixedAcademicTime(LocalDate.parse("2026-09-07")), marks, sheets, lms)
+        vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+
+        val row = vm.uiState.value.row(42)
+        assertEquals(RecordbookStrings.recordbook_source_sheet, row.sourceKey)
+        vm.openSources(row.key)
+        val sources = vm.uiState.value.content.sources!!
+        assertEquals("5A", sources.rows.first().value)
+        assertTrue(sources.rows.first().shown)
+    }
+
+    @Test fun `when BARS is enabled without cached controls LMS fetches BARS journal and falls back to My ITMO on failure`() = runTest {
+        val saved = listOf(dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore("РК №1", 9.0, 10.0, "VERIFIED"))
+        val lms = object : dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository {
+            override suspend fun load(args: RecordbookSubjectArgs) = saved
+            override suspend fun save(args: RecordbookSubjectArgs, scores: List<dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore>) = Unit
+        }
+        val control = RecordbookControl(77, "Контрольная работа №1", null, 6.0, 10.0, true, null, null)
+        val journal = dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference(8L, "flow", "7", 2026, 3)
+        val subject = recordbookSubject().copy(rate = null, score = 35.0, barsJournal = journal, hasDetails = true)
+
+        val barsBase = FakeBarsRepository().apply {
+            subjects = AppResult.Success(listOf(dev.alllexey.itmowidgets.feature.recordbook.barsSubject(score = null, rate = null).copy(barsJournal = journal)))
+            details = AppResult.Success(dev.alllexey.itmowidgets.feature.recordbook.domain.BarsSubjectDetails(dev.alllexey.itmowidgets.feature.recordbook.barsSubject(score = null, rate = null), listOf(control)))
+        }
+        val cachedBars = mutableMapOf<dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference, List<RecordbookControl>>()
+        val bars = object : dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository by barsBase {
+            override fun cachedControls(journal: dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference) =
+                cachedBars[journal] ?: barsBase.cachedControls(journal)
+            override suspend fun getSubject(journal: dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference) =
+                barsBase.getSubject(journal).also { if (it is AppResult.Success) cachedBars[journal] = it.value.controls }
+        }
+        val preference = FakeBarsPreference().apply { enabled = true }
+        repository.subjects = AppResult.Success(listOf(subject))
+
+        val vm = RecordbookViewModel(repository, bars, preference, RecordbookSportResolver(sport),
+            FixedAcademicTime(LocalDate.parse("2026-09-07")), marks, FakeSheetScoresRepository(), lms)
+        vm.refresh(RefreshMode.Silent); advanceUntilIdle()
+        assertEquals(listOf(journal), barsBase.journalRequests)
+        assertEquals("44", vm.uiState.value.row(42).points)
+
+        // When BARS journal lookup fails, My ITMO getControls supplies checkpoints for LMS matching.
+        val barsFailing = FakeBarsRepository().apply {
+            subjects = AppResult.Success(listOf(dev.alllexey.itmowidgets.feature.recordbook.barsSubject(score = null, rate = null).copy(barsJournal = journal)))
+            details = AppResult.Failure(AppError.Network)
+        }
+        val cachedMyItmo = mutableMapOf<Long, List<RecordbookControl>>()
+        val fallbackRepo = object : dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository by repository {
+            override fun cachedControls(entryId: Long) = cachedMyItmo[entryId] ?: repository.cachedControls(entryId)
+            override suspend fun getControls(entryId: Long) =
+                repository.getControls(entryId).also { if (it is AppResult.Success) cachedMyItmo[entryId] = it.value }
+        }
+        repository.controls = AppResult.Success(listOf(control))
+        val fallbackVm = RecordbookViewModel(fallbackRepo, barsFailing, preference, RecordbookSportResolver(sport),
+            FixedAcademicTime(LocalDate.parse("2026-09-07")), marks, FakeSheetScoresRepository(), lms)
+        fallbackVm.refresh(RefreshMode.Silent); advanceUntilIdle()
+        assertEquals(1, repository.controlRequests)
+        assertEquals("44", fallbackVm.uiState.value.row(42).points)
     }
 }

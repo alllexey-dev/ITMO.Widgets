@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
 import dev.alllexey.itmowidgets.core.presentation.BusyKeys
 import dev.alllexey.itmowidgets.core.presentation.EventQueue
@@ -22,12 +23,17 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookBarsMerge
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportResolver
 import dev.alllexey.itmowidgets.feature.recordbook.domain.RecordbookSportState
+import dev.alllexey.itmowidgets.feature.recordbook.domain.formatRecordbookNumber
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsMatching
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScore
+import dev.alllexey.itmowidgets.feature.recordbook.domain.lms.LmsScoresRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.MarkTrackingRepository
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.StudyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.marks.studyHalf
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.BarsJournalReference
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookControl
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookPeriod
+import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookRate
 import dev.alllexey.itmowidgets.feature.recordbook.domain.model.RecordbookSubject
 import dev.alllexey.itmowidgets.feature.recordbook.domain.subjectNameKey
 import dev.alllexey.itmowidgets.feature.recordbook.domain.withBars
@@ -61,6 +67,8 @@ class RecordbookSubjectViewModel(
     private val levelsLoader: SubjectTeacherLevelsLoader,
     private val backendGate: BackendGate,
     private val photos: PersonPhotosRepository,
+    private val lmsRepository: LmsScoresRepository? = null,
+    private val demo: DemoMode? = null,
 ) : ViewModel() {
     private val period = RecordbookPeriod(studyYear = args.studyYear, semester = args.semester, course = 0, actual = false)
     private var journal: BarsJournalReference? = args.barsPlan?.let { plan ->
@@ -75,6 +83,9 @@ class RecordbookSubjectViewModel(
     private var official: RecordbookSubject? = null
     private var shown: RecordbookSubject? = null
     private var controls: List<RecordbookControl> = emptyList()
+    private var lmsScores: List<LmsScore> = emptyList()
+    private var lmsApplied = false
+    private var isDemo = false
     private var controlsError: AppError? = null
     private var barsError: AppError? = null
     private var barsEnabled = false
@@ -107,6 +118,16 @@ class RecordbookSubjectViewModel(
 
     init {
         viewModelScope.launch {
+            val saved = lmsRepository?.load(args).orEmpty()
+            if (!lmsApplied && lmsScores.isEmpty()) { lmsScores = saved; publish() }
+        }
+        viewModelScope.launch {
+            demo?.observeActive()?.collect { active ->
+                isDemo = active
+                publish()
+            }
+        }
+        viewModelScope.launch {
             backendGate.observeConnected().collect {
                 connected = it
                 publish()
@@ -128,6 +149,7 @@ class RecordbookSubjectViewModel(
         refreshError = null
         publish()
         loadJob = viewModelScope.launch {
+            isDemo = demo?.isActive() == true
             barsEnabled = barsPreference.isEnabled()
             val subjects = repository.getSubjects(args.programId, period.semester)
             val subject = (subjects as? AppResult.Success)?.value?.findRequestedSubject()
@@ -165,6 +187,68 @@ class RecordbookSubjectViewModel(
             if (first) markRead(subject)
             loadHub(subject)
         }
+    }
+
+    /** The result is scoped to this page and never changes the official controls or the sheet total. */
+    fun applyLmsScores(scores: List<LmsScore>) {
+        lmsApplied = true
+        if (!canCheckLms() || LmsMatching.controls(controls, scores).isEmpty()) {
+            lmsScores = emptyList()
+            publish()
+            viewModelScope.launch {
+                lmsRepository?.save(args, emptyList())
+                eventQueue.send(RecordbookSubjectEvent.LmsNoControls)
+            }
+            return
+        }
+        lmsScores = scores
+        tab = SubjectTab.SCORES
+        publish()
+        viewModelScope.launch { lmsRepository?.save(args, scores) }
+    }
+
+    private fun canCheckLms(subject: RecordbookSubject? = shown): Boolean =
+        !isDemo &&
+            period.isCurrent() &&
+            subject != null &&
+            !subject.isPhysicalEducation &&
+            subject.normalizedRate == RecordbookRate.InProgress &&
+            !subject.absent
+
+    private fun SubjectScores.withLms(): SubjectScores {
+        if (!canCheckLms()) return this
+        val values = LmsMatching.controls(controls, lmsScores)
+        if (values.isEmpty()) return this
+        val adjustedGroups = groups.map { group ->
+            val groupedControls = group.rows.mapNotNull { row -> controls.singleOrNull { it.id == row.id } }
+            val maximum = groupedControls.mapNotNull { it.maximum }.takeIf { it.isNotEmpty() }?.sum()
+            val total = groupedControls.mapNotNull { control -> values[control.id] ?: control.score }.takeIf { it.isNotEmpty() }?.sum()
+            val rows = group.rows.map { row ->
+                val score = values[row.id] ?: return@map row
+                val control = controls.singleOrNull { it.id == row.id } ?: return@map row
+                val maximum = control.maximum ?: return@map row
+                val below = control.minimum?.let { it > 0 && score < it } ?: false
+                val share = (score / maximum).coerceIn(0.0, 1.0).toFloat()
+                row.copy(
+                    score = UiText.Res(RecordbookStrings.recordbook_control_score,
+                        listOf(UiText.Dynamic(formatRecordbookNumber(score)), formatRecordbookNumber(maximum))),
+                    graded = true,
+                    share = share,
+                    tone = SubjectPresenter.controlTone(below = below, share = share),
+                    below = below,
+                    lms = true,
+                )
+            }
+            group.copy(
+                sum = if (group.title != null && maximum != null && total != null)
+                    UiText.Res(RecordbookStrings.subject_group_sum,
+                        listOf(UiText.Dynamic(formatRecordbookNumber(total)), formatRecordbookNumber(maximum))) else group.sum,
+                below = rows.any { it.below },
+                rows = rows,
+            )
+        }
+        val subject = shown ?: return copy(groups = adjustedGroups)
+        return SubjectPresenter.addLms(copy(groups = adjustedGroups), subject, values.values.sum())
     }
 
     fun selectTab(selected: SubjectTab) {
@@ -362,7 +446,7 @@ class RecordbookSubjectViewModel(
                     today = time.today(),
                     timeZone = time.timeZone,
                 ),
-            ),
+            ).withLms(),
             lessons = SubjectLessons(
                 teachers = SubjectPresenter.teachers(teachers, levels, connected, teacherPhotos),
                 reviews = SubjectPresenter.reviews(teachers, levels, connected),
@@ -376,6 +460,7 @@ class RecordbookSubjectViewModel(
             materials = SubjectPresenter.materials(links, connected, canVote, scope, linksLoader::arrange),
             refreshing = refreshing,
             refreshError = refreshError,
+            canCheckLms = canCheckLms(subject),
         )
     }
 

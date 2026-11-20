@@ -44,7 +44,7 @@ strings from `:shared:compose-strings` only, so its iOS klib has no Compose
 | `:shared:feature-finances` | Finances from my.itmo: the Договоры об обучении and their Платежи (over `core/payments`), the stored answer, the Профиль row; later the scholarship |
 | `:shared:feature-home` | Сегодня and the bell over every feature's `DayLessonsGateway`, `TodayTodoSource`s and `BellSource`s |
 | `:shared:feature-qr` | QR pass, its cache and widget state |
-| `:shared:feature-recordbook` | Record book, BARS overlay, subject page, marks tracking, sheet scores |
+| `:shared:feature-recordbook` | Record book, BARS overlay, subject page, marks tracking, sheet scores, experimental LMS reader |
 | `:shared:feature-resources` | Subject links |
 | `:shared:feature-reviews` | Teacher reviews and AI summary tones |
 | `:shared:feature-schedule` | Schedule, schedule changes, calendar sync, widget timeline |
@@ -155,7 +155,7 @@ allow it.
   revalidation waits for `AppForeground` (`core/platform`). The bar and the demo
   banner lie under `NavDisplay`: tab roots end above them, pushed screens cover
   them. Transitions and the predictive Back are the shell's (`ShellMotion.kt`,
-  `ShellBack.kt`). Only `LoginActivity`, `BarsLoginActivity` and
+  `ShellBack.kt`). Only `LoginActivity`, `BarsLoginActivity`, `LmsLoginActivity` and
   `SpoilerCropActivity` are separate activities (`app/shell/ActivityRoutes.kt`).
 - **iOS.** `iosApp/Sources/App/Router/AppRouter.swift` keeps a SwiftUI
   `NavigationStack` per tab and the sheets; `Routes+<Area>.swift` map each
@@ -200,7 +200,7 @@ never enforces privacy on its behalf.
 | Data | Where |
 |---|---|
 | Settings and flags | One DataStore file, `app_preferences`, read through per-concern stores in `core/storage` (`AppearancePreferences`, `WidgetSettingsPreferences`, ...) built on `DataStorePreferences` |
-| Tokens, the BARS session and the Wi-Fi password | `SecureStore`: `FileSecureStore` on Android (files in `noBackupFilesDir` sealed with an Android Keystore key), `KeychainSecureStore` on iOS |
+| Tokens, the BARS session, encrypted LMS scores and the Wi-Fi password | `SecureStore`: `FileSecureStore` on Android (files in `noBackupFilesDir`, such as `myitmo_tokens.enc`, `bars_tokens.enc`, `lms_scores`, `wifi_credentials.enc`, sealed with an Android Keystore key), `KeychainSecureStore` on iOS |
 | Caches and feature state (schedule cache, QR cache, found changes, marks, queue results, sheet scores, calendar sync, links) | JSON files under `AppDirectories` written with `AtomicTextFile`; device-only state is excluded from backup |
 | Dormitory and tuition answers, their bell events, the payments check's notices | No-backup JSON files written with `AtomicTextFile`: dormitory/state.json, finances/tuition.json, dormitory_bell.json, tuition_bell.json, payments_notices.json (the handled notice keys and each part's last request); all cleared on sign-out |
 | Widget snapshots | Android: `widgets/schedule_snapshot.json` and the QR state; iOS: JSON files in the App Group container that the widget extension reads |
