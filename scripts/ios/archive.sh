@@ -19,9 +19,9 @@
 #   and its BuildCommit.
 # - --unsigned: `CODE_SIGNING_ALLOWED=NO`, which leaves the bundles without entitlements. The NSE is
 #   removed (a free team has no push, and it would cost a third App ID), the expanded unsigned entitlements of the
-#   widget and the app are applied with an ad-hoc `codesign -s -` (widget first, then the app), so AltStore and
-#   SideStore find the App Group and Keychain group to re-sign with, and `Payload/` is zipped into
-#   ITMOWidgets-<version>-<build>-unsigned.ipa for self-signing. Prints whether the widgets get real data or the
+#   widget and the app are applied with an ad-hoc `codesign -s -` (widget first, then the app), so AltStore
+#   finds the App Group and Keychain group to re-sign with (SideStore installs keep signed-out widgets), and
+#   `Payload/` is zipped into ITMOWidgets-<version>-<build>-unsigned.ipa for self-signing. Prints whether the widgets get real data or the
 #   signed-out state.
 # - --signed: needs iosApp/Config/Signing.local.xcconfig (local, ignored); archives with the
 #   team's automatic signing (`-allowProvisioningUpdates`) and exports with method app-store-connect, the NSE kept.
@@ -251,12 +251,11 @@ package_unsigned() {
 
   printf 'IPA: %s (%s bytes)\n' "$ipa" "$(stat -f %z "$ipa")"
   if [ -n "$app_groups" ] && [ "$app_groups" = "$widget_groups" ]; then
-    printf 'Widgets: real data. App and widget request the App Group %s; AltStore and SideStore re-sign it\n' \
+    printf 'Widgets: real data with AltStore. App and widget request the App Group %s; AltStore re-signs it\n' \
       "$app_groups"
-    printf '  into <group>.<TEAMID>; AppGroupDirectory and AppGroupSnapshot try ALTAppGroups (AltStore) and the\n'
-    printf '  groups of embedded.mobileprovision (SideStore writes no ALTAppGroups) after AppGroupID. Confirm on a\n'
-    printf '  device in a free-team session before an unsigned prerelease;\n'
-    printf '  if no container resolves there, the widgets stay in the signed-out state.\n'
+    printf '  into <group>.<TEAMID> and lists it in ALTAppGroups, which AppGroupDirectory and AppGroupSnapshot try\n'
+    printf '  after AppGroupID. SideStore and Sideloadly installs keep the widgets in the signed-out state.\n'
+    printf '  Confirm on a device in a free-team session before an unsigned prerelease.\n'
   else
     printf 'Widgets: demo data. App and widget do not request one App Group (%s / %s), so no container resolves\n' \
       "${app_groups:-none}" "${widget_groups:-none}"

@@ -65,7 +65,7 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   (`Features/Onboarding/`) until it is closed once, a `UserDefaults` flag (`BetaNotice.shownKey`) that outlives
   sign-out: no notifications yet, sport auto-booking only through
   [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent), widgets asking to sign in after some
-  sideloading tools (AltStore and SideStore keep them working), questions in the Telegram channel. `О приложении`
+  sideloading tools (AltStore keeps them working, SideStore and Sideloadly do not), questions in the Telegram channel. `О приложении`
   opens it again from an iOS-only row above the shared section.
 - Tabs. `ShellTabs` is the glass `TabView` of iOS 26 in the bar order of the shared `AppTab` (recordbook, schedule,
   today, sport, profile), with its names and icons; a tab shows only while `PlatformCapabilities` offers its
@@ -283,7 +283,9 @@ App Group files (`AppGroupDirectory`; an unsigned build without the group falls 
 extensions see nothing). Each process looks the container up by its own `AppGroupID`, then `ALTAppGroups`, then the
 groups of its own `embedded.mobileprovision`: AltStore and SideStore re-sign the group into `<group>.<TEAMID>`, and
 SideStore (since its 2026-09-15 builds) no longer lists it in `ALTAppGroups` (`BundleIdentifiers`,
-`AppGroupSnapshot.groupCandidates`). Snapshots are `{"version": N, ...}`, written to a temporary file and renamed, then the
+`AppGroupSnapshot.groupCandidates`). Only AltStore is confirmed: on a SideStore install of 2.3.0-beta.5 the widgets
+stay signed out (owner, 2026-11-11), so the profile lookup is not known to help; it is not investigated further,
+since iOS moves to the App Store. Snapshots are `{"version": N, ...}`, written to a temporary file and renamed, then the
 writer reloads the widget kinds through `WidgetReloader`. A reader treats a missing, corrupt or newer file as its
 placeholder state (`AppGroupSnapshot`, `SnapshotReaderTests`).
 

@@ -9,7 +9,7 @@
     <string name="ios_beta_agent_title">Автозапись на спорт</string>
     <string name="ios_beta_agent_text">Без уведомлений работает только через itmo-widgets-agent на компьютере или сервере</string>
     <string name="ios_beta_widgets_title">Виджеты просят войти</string>
-    <string name="ios_beta_widgets_text">Так бывает после некоторых программ для установки. Надёжнее ставить через AltStore или SideStore</string>
+    <string name="ios_beta_widgets_text">Так бывает после установки не через AltStore: с SideStore и Sideloadly виджеты не работают</string>
     <string name="ios_beta_feedback_title">Вопросы и баги</string>
     <string name="ios_beta_feedback_text">В Telegram-канале ITMO.Widgets</string>
     <string name="ios_beta_notice_done">Понятно</string>

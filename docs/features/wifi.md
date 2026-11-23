@@ -52,7 +52,7 @@ to the Keychain before it returns); a completed sign-in calls `start()` again. T
 - **Android 8-10, no ISRG root, or no dialog.** The password is copied and the Wi-Fi settings open with
   `Пароль скопирован: выберите ITMO-Corp и введите логин`.
 - **iOS.** No quick connect and no `Подключиться`: `NEHotspotConfiguration` needs the Hotspot Configuration
-  capability, which the app does not take because its builds are re-signed by the user (AltStore, SideStore). The
+  capability, which the app does not take because its builds are re-signed by the user (AltStore). The
   password is copied and pasted in the Wi-Fi settings with the manual settings from the note
   ([degradations](../ios.md#degradations)).
 
