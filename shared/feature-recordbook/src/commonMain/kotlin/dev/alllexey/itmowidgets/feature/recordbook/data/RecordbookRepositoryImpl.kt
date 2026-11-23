@@ -1,6 +1,5 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data
 
-import dev.alllexey.itmoapi.core.MyItmoException
 import dev.alllexey.itmoapi.myitmo.MyItmoClient
 import dev.alllexey.itmoapi.myitmo.recordbook.ControlEntry
 import dev.alllexey.itmoapi.myitmo.recordbook.RecordBookEntry
@@ -9,8 +8,7 @@ import dev.alllexey.itmoapi.myitmo.recordbook.Semester
 import dev.alllexey.itmoapi.myitmo.recordbook.Specialization
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
-import dev.alllexey.itmowidgets.core.network.asAppError
-import dev.alllexey.itmowidgets.core.network.isCausedByNetworkFailure
+import dev.alllexey.itmowidgets.core.network.toMyItmoAppError
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.result.appResultOf
@@ -30,7 +28,7 @@ import kotlinx.coroutines.withContext
 /**
  * One instance per process (the `recordbookModule` single): the memory cache is what the study screens render first.
  * Requests go through the MyItmoApi 2.x recordbook area; the client's auth plugin owns the single 401 refresh,
- * failures map in [toAppError].
+ * failures map through the core `toMyItmoAppError`.
  */
 class RecordbookRepositoryImpl(
     private val client: MyItmoClient,
@@ -107,26 +105,11 @@ class RecordbookRepositoryImpl(
     private suspend fun <T : Any, R> request(
         call: suspend () -> T,
         transform: (T) -> R
-    ): AppResult<R> = appResultOf(::toAppError) {
+    ): AppResult<R> = appResultOf(Exception::toMyItmoAppError) {
         val result = withContext(dispatchers.io) {
             call()
         }
         transform(result)
-    }
-
-    /**
-     * The app's released mapping for a MyItmoApi 2.x source: a failure before any answer is [AppError.Network], then
-     * the first [MyItmoException] in the cause chain maps in common code, anything else is a retriable unknown.
-     */
-    private fun toAppError(error: Exception): AppError {
-        if (error.isCausedByNetworkFailure()) return AppError.Network
-        val seen = mutableSetOf<Throwable>()
-        var current: Throwable? = error
-        while (current != null && seen.add(current)) {
-            if (current is MyItmoException) return current.asAppError()
-            current = current.cause
-        }
-        return AppError.Unknown(error)
     }
 
     private fun Specialization.toModel() = RecordbookProgram(
