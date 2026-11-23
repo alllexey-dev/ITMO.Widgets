@@ -13,7 +13,8 @@ extension LessonUi {
             end: Self.minutes(end),
             subject: subject,
             type: ItmoLessonType(typeId: Int(typeId)),
-            kind: byline.resolved,
+            kind: type.resolved,
+            teacher: people?.resolved,
             room: place?.resolved,
             was: previousPlace?.resolved,
             note: note,
@@ -25,7 +26,7 @@ extension LessonUi {
     }
 
     /// "08:20" as minutes since midnight.
-    private static func minutes(_ text: String) -> Int {
+    static func minutes(_ text: String) -> Int {
         let parts = text.split(separator: ":").compactMap { Int($0) }
         return parts.count == 2 ? parts[0] * 60 + parts[1] : 0
     }
@@ -55,9 +56,13 @@ extension Array where Element == TimelineItem {
                 var lesson = row.lesson.kitLesson(id: "\(index)")
                 lesson.changeNote = row.changeNote?.resolved
                 lesson.overlapNote = row.overlapNote?.resolved
+                lesson.remaining = row.remaining?.resolved
+                lesson.elapsed = row.elapsed.map { CGFloat($0.floatValue) }
                 return .lesson(lesson, progress: CGFloat(row.progress), reached: row.reached)
             case let .gap(gap):
                 return .gap(id: "gap-\(index)", label: gap.label.resolved, progress: CGFloat(gap.progress))
+            case let .end(end):
+                return .end(time: LessonUi.minutes(end.time), reached: end.reached, label: end.label?.resolved)
             }
         }
     }

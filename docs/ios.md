@@ -222,7 +222,8 @@ which iOS never draws; M3 Expressive stays Android's only.
 - Tones (`ItmoTone`: `neutral`, `primary`, `tertiary`, `ok`, `warn`, `bad`) colour cards, pills and tiles from the
   shared roles.
 - Lessons: `ItmoLesson` is what a lesson says, resolved by the caller; a day's list is `ItmoLessonTimeline` (rail,
-  now marker, gap rows, change and overlap notes), a single lesson `ItmoLessonCard`.
+  now marker, the time left on the current lesson, gap rows, change and overlap notes, the end mark with the time
+  the day ends), a single lesson `ItmoLessonCard`; the kind is in its type's colour, the room beside a pin.
 - Filters (`ItmoFilters.swift`): `ItmoSearchField`, `ItmoChips`, `ItmoWeekStrip` (pages by weeks; its indicator
   slides with `matchedGeometryEffect`, off under Reduce Motion), `ItmoSwitchRow`, `ItmoOccupancy`.
 - Numbers (`ItmoScores.swift`): `ItmoValueWithSource`, `ItmoProgressBar` (a 4 pt capsule, one element for

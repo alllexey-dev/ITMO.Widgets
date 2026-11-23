@@ -145,6 +145,9 @@
     <string name="lesson_with_you">Вы</string>
     <string name="lesson_overlap">одновременно с «%1$s»</string>
     <string name="lesson_gap">Окно %1$s</string>
+    <string name="lesson_remaining">ещё %1$s</string>
+    <string name="lesson_day_end">Конец пар</string>
+    <string name="lesson_day_over">Пары закончились</string>
     <string name="lesson_changed_today">Изменено сегодня в %1$s</string>
     <string name="lesson_changed_yesterday">Изменено вчера в %1$s</string>
     <string name="lesson_changed_on">Изменено %1$s в %2$s</string>

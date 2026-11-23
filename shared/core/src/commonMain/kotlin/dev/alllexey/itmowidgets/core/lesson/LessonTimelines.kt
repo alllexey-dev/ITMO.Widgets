@@ -17,7 +17,8 @@ import kotlinx.datetime.minus
 
 /**
  * The rules of every lesson list (docs/design.md "Lessons"): a day's lessons become a timeline with the elapsed part,
- * `идёт` and `далее`, `Окно 2 ч 10 мин` rows for gaps of [GAP_MINUTES] or more and change notes; a single lesson
+ * `ещё 41 мин` and `далее`, `Окно 2 ч 10 мин` rows for gaps of [GAP_MINUTES] or more, change notes and the end mark; a
+ * single lesson
  * becomes a [LessonUi]. Pure: the caller supplies the moment and today's date.
  */
 object LessonTimelines {
@@ -28,7 +29,8 @@ object LessonTimelines {
      * covers a stretch of the day that starts where the row above ended (a lesson from its start, or from the end of an
      * overlapping one above; a short break belongs to the lesson before it), so the elapsed part grows monotonically
      * and only the stretch with the moment in it is part-way, which puts the one `сейчас` marker there. Overlapping
-     * lessons stay in start order without a window between them; the later one says `одновременно с …`.
+     * lessons stay in start order without a window between them; the later one says `одновременно с …`. The rail ends
+     * in a [TimelineItem.End] at the latest end of the day.
      */
     fun build(lessons: List<DayLesson>, moment: DayMoment, today: LocalDate): List<TimelineItem> {
         val sorted = lessons.sortedBy { it.start }
@@ -51,14 +53,32 @@ object LessonTimelines {
                 val next = sorted.getOrNull(index + 1)?.start?.minutes()
                 val until = if (next != null && next > latestEnd && next - latestEnd < GAP_MINUTES) next else latestEnd
                 railEnd = maxOf(until, from)
+                val running = now?.takeIf { states[index] == LessonState.NOW }
                 add(
                     TimelineItem.Lesson(
-                        lesson = lesson(lesson, states[index]),
+                        // The time left says that the lesson runs.
+                        lesson = lesson(lesson, states[index]).let { ui ->
+                            if (running == null) ui else ui.copy(pills = ui.pills.filterNot { it.kind == LessonPillKind.NOW })
+                        },
                         progress = elapsed(from, railEnd),
                         reached = now?.let { it >= from } ?: (past || states[index] == LessonState.DONE),
                         changeNote = lesson.change?.let { changeNote(it.detectedAt, today) },
                         overlapNote = sorted.take(index).firstOrNull { it.overlaps(lesson) }
                             ?.let { UiText.Res(CoreStrings.lesson_overlap, listOf(it.subject.trim())) },
+                        remaining = running?.let {
+                            UiText.Res(CoreStrings.lesson_remaining, listOf(durationText(lesson.end.minutes() - it)))
+                        },
+                        elapsed = running?.let { share(it, start, lesson.end.minutes()) },
+                    ),
+                )
+            }
+            if (sorted.isNotEmpty()) {
+                val reached = now?.let { it >= latestEnd } ?: past
+                add(
+                    TimelineItem.End(
+                        time = sorted.maxOf { it.end }.format(DateTexts.TIME),
+                        reached = reached,
+                        label = now?.let { UiText.Res(if (reached) CoreStrings.lesson_day_over else CoreStrings.lesson_day_end) },
                     ),
                 )
             }
@@ -77,7 +97,8 @@ object LessonTimelines {
             start = lesson.start.format(DateTexts.TIME),
             end = lesson.end.format(DateTexts.TIME),
             subject = lesson.subject.trim(),
-            byline = byline(lesson),
+            type = lessonTypeName(lesson.typeId),
+            people = people(lesson),
             place = place,
             typeId = lesson.typeId,
             state = state,
@@ -92,13 +113,16 @@ object LessonTimelines {
     }
 
     /** `Лекция, Белов П. И.`, in a teacher's timetable `Лекция, M3206, M3207`; the type alone without either. */
-    fun byline(lesson: DayLesson): UiText = UiText.Joined(
-        listOfNotNull(
-            lessonTypeName(lesson.typeId),
-            lesson.teacher?.trim()?.takeIf(String::isNotEmpty)?.let { UiText.Dynamic(shortPersonName(it)) },
-            lesson.groups.takeIf { it.isNotEmpty() }?.let { UiText.Dynamic(it.joinToString(BYLINE_SEPARATOR)) },
-        ),
-        BYLINE_SEPARATOR,
+    fun byline(lesson: DayLesson): UiText =
+        UiText.Joined(listOf(lessonTypeName(lesson.typeId)) + peopleParts(lesson), BYLINE_SEPARATOR)
+
+    /** `Белов П. И.`, in a teacher's timetable `M3206, M3207`; null without either. */
+    fun people(lesson: DayLesson): UiText? =
+        peopleParts(lesson).takeIf { it.isNotEmpty() }?.let { UiText.Joined(it, BYLINE_SEPARATOR) }
+
+    private fun peopleParts(lesson: DayLesson): List<UiText> = listOfNotNull(
+        lesson.teacher?.trim()?.takeIf(String::isNotEmpty)?.let { UiText.Dynamic(shortPersonName(it)) },
+        lesson.groups.takeIf { it.isNotEmpty() }?.let { UiText.Dynamic(it.joinToString(BYLINE_SEPARATOR)) },
     )
 
     /** `1506, Кронва`; null online or without a room and a building. */

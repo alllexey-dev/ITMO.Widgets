@@ -25,7 +25,8 @@ fun LessonUi.toLessonView(): LessonView = LessonView(
     start = start,
     end = end,
     subject = subject,
-    byline = byline.asString(),
+    type = type.asString(),
+    people = people?.asString(),
     place = place?.asString(),
     accent = lessonTypeAccent(typeId),
     state = when (state) {
@@ -52,8 +53,11 @@ fun List<TimelineItem>.toTimelineRows(): List<TimelineRow> = map { item ->
                 item.reached,
                 item.changeNote?.asString(),
                 item.overlapNote?.asString(),
+                item.remaining?.asString(),
+                item.elapsed,
             )
         is TimelineItem.Gap -> TimelineRow.Gap(item.label.asString(), item.progress)
+        is TimelineItem.End -> TimelineRow.End(item.time, item.reached, item.label?.asString())
     }
 }
 

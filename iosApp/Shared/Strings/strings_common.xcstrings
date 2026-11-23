@@ -661,6 +661,30 @@
         }
       }
     },
+    "lesson_day_end" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конец пар"
+          }
+        }
+      }
+    },
+    "lesson_day_over" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пары закончились"
+          }
+        }
+      }
+    },
     "lesson_gap" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",
@@ -777,6 +801,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "очередь %1$lld из %2$lld"
+          }
+        }
+      }
+    },
+    "lesson_remaining" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ещё %1$@"
           }
         }
       }

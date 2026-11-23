@@ -1,6 +1,8 @@
 package dev.alllexey.itmowidgets.designsystem.kit
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +46,7 @@ sealed interface TimelineRow {
      * A lesson and the rail under its dot, which spans the lesson and the short break after it: [progress] 0..1 of it
      * is elapsed; [reached] colours the rail above the dot. [changeNote] is the quiet line about a change under the
      * lesson (`Изменено вчера в 20:14`), [overlapNote] the one about a lesson at the same time (`одновременно с …`).
+     * The lesson that runs says [remaining] `ещё 41 мин` beside a bar filled to [elapsed], 0..1 of the lesson itself.
      */
     @Immutable
     data class Lesson(
@@ -52,17 +55,28 @@ sealed interface TimelineRow {
         val reached: Boolean,
         val changeNote: String? = null,
         val overlapNote: String? = null,
+        val remaining: String? = null,
+        val elapsed: Float? = null,
     ) : TimelineRow
 
     /** A gap of an hour or more: [label] `Окно 2 ч 10 мин`, [progress] 0..1 of it elapsed. */
     @Immutable
     data class Gap(val label: String, val progress: Float) : TimelineRow
+
+    /**
+     * Where the day's lessons end, the last row: [time] `18:30` beside a hollow mark the rail runs into, in `primary`
+     * once [reached]; [label] `Пары закончились` on today.
+     */
+    @Immutable
+    data class End(val time: String, val reached: Boolean, val label: String? = null) : TimelineRow
 }
 
 /**
  * The lessons of one day on a time rail, the app's one day list: the time column, a rail with a dot per lesson in
- * its type's colour, the elapsed part of the day in `primary`, and the lesson's lines without a card around them;
- * done lessons are dimmed, the current one sits on `primaryContainer`. With [showNow] the `сейчас` marker stands where
+ * its type's colour, the elapsed part of the day in `primary`, and the lesson's lines without a card around them; a
+ * [TimelineRow.End] closes the rail with the time the day ends, which the lesson above it then leaves out;
+ * done lessons are dimmed, the current one sits on a `primary` tint with the time left. With [showNow] the `сейчас`
+ * marker stands where
  * the elapsed part ends inside the current lesson or gap (today); without it another day shows no marker. With
  * [onLessonClick] each lesson is a target that reports its index in [rows] (the lesson sheet); [lessonTag] names it
  * for tests.
@@ -77,18 +91,22 @@ fun LessonTimeline(
 ) {
     val firstLesson = rows.indexOfFirst { it is TimelineRow.Lesson }
     val lastLesson = rows.indexOfLast { it is TimelineRow.Lesson }
+    val end = rows.lastOrNull() as? TimelineRow.End
     Column(modifier.fillMaxWidth()) {
         rows.forEachIndexed { index, row ->
             when (row) {
                 is TimelineRow.Lesson -> LessonRow(
                     row,
                     index == firstLesson,
-                    index == lastLesson,
+                    last = index == lastLesson && end == null,
+                    // The mark right under the last lesson says this time.
+                    showEnd = !(index == lastLesson && row.lesson.end == end?.time),
                     showNow,
                     onLessonClick?.let { click -> { click(index) } },
                     lessonTag?.invoke(index),
                 )
                 is TimelineRow.Gap -> GapRow(row, showNow)
+                is TimelineRow.End -> EndRow(row)
             }
         }
     }
@@ -99,6 +117,7 @@ private fun LessonRow(
     row: TimelineRow.Lesson,
     first: Boolean,
     last: Boolean,
+    showEnd: Boolean,
     showNow: Boolean,
     onClick: (() -> Unit)?,
     tag: String?,
@@ -120,12 +139,14 @@ private fun LessonRow(
                 fontWeight = FontWeight.SemiBold,
                 softWrap = false,
             )
-            Text(
-                lesson.end,
-                color = ItmoTheme.colorScheme.onSurfaceVariant,
-                style = ItmoTheme.typography.bodySmall,
-                softWrap = false,
-            )
+            if (showEnd) {
+                Text(
+                    lesson.end,
+                    color = ItmoTheme.colorScheme.onSurfaceVariant,
+                    style = ItmoTheme.typography.bodySmall,
+                    softWrap = false,
+                )
+            }
         }
         Box(
             Modifier.width(RailWidth).fillMaxHeight().drawBehind {
@@ -161,16 +182,39 @@ private fun LessonRow(
                 .then(if (onClick != null) Modifier.clip(ItmoTheme.shapes.cardContent).clickable(onClick = onClick) else Modifier)
                 .then(if (tag != null) Modifier.testTag(tag) else Modifier),
             shape = ItmoTheme.shapes.cardContent,
-            color = if (now) ItmoTheme.colorScheme.primaryContainer else Color.Transparent,
-            contentColor = if (now) ItmoTheme.colorScheme.onPrimaryContainer else ItmoTheme.colorScheme.onSurface,
+            color = if (now) ItmoTheme.colorScheme.primary.copy(alpha = NOW_TINT_ALPHA) else Color.Transparent,
+            contentColor = ItmoTheme.colorScheme.onSurface,
         ) {
             Column(
                 Modifier.padding(horizontal = ItmoTheme.spacing.content, vertical = ItmoTheme.spacing.compact),
                 verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related),
             ) {
-                LessonLines(lesson)
+                LessonLines(lesson, onContainer = false)
+                if (row.remaining != null) {
+                    Row(
+                        Modifier.padding(top = ItmoTheme.spacing.related),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+                    ) {
+                        Box(
+                            Modifier.weight(1f).height(BarHeight)
+                                .background(ItmoTheme.colorScheme.primary.copy(alpha = TRACK_ALPHA), CircleShape),
+                        ) {
+                            Box(
+                                Modifier.fillMaxWidth((row.elapsed ?: 0f).coerceIn(0f, 1f)).fillMaxHeight()
+                                    .background(ItmoTheme.colorScheme.primary, CircleShape),
+                            )
+                        }
+                        Text(
+                            row.remaining,
+                            color = ItmoTheme.colorScheme.primary,
+                            style = ItmoTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
                 if (row.overlapNote != null) {
-                    Text(row.overlapNote, color = secondary(now), style = ItmoTheme.typography.bodySmall)
+                    Text(row.overlapNote, color = secondary(false), style = ItmoTheme.typography.bodySmall)
                 }
                 if (row.changeNote != null) {
                     Row(
@@ -183,7 +227,7 @@ private fun LessonRow(
                             Modifier.size(NoteIconSize),
                             tint = ItmoTheme.extendedColors.warning,
                         )
-                        Text(row.changeNote, color = secondary(now), style = ItmoTheme.typography.bodySmall)
+                        Text(row.changeNote, color = secondary(false), style = ItmoTheme.typography.bodySmall)
                     }
                 }
             }
@@ -207,6 +251,36 @@ private fun GapRow(row: TimelineRow.Gap, showNow: Boolean) {
             color = ItmoTheme.colorScheme.onSurfaceVariant,
             style = ItmoTheme.typography.labelMedium,
         )
+    }
+}
+
+@Composable
+private fun EndRow(row: TimelineRow.End) {
+    val rail = railColors()
+    val color = if (row.reached) rail.passed else rail.ahead
+    Row(Modifier.fillMaxWidth().height(EndHeight), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            row.time,
+            Modifier.widthIn(min = TimeColumn),
+            color = ItmoTheme.colorScheme.onSurfaceVariant,
+            style = ItmoTheme.typography.bodySmall,
+            softWrap = false,
+        )
+        Box(
+            Modifier.width(RailWidth).fillMaxHeight().drawBehind {
+                val ring = EndRingRadius.toPx()
+                drawLine(color, Offset(center.x, 0f), Offset(center.x, center.y - ring), RailStroke.toPx())
+                drawCircle(color, ring, center, style = Stroke(RailStroke.toPx()))
+            },
+        )
+        if (row.label != null) {
+            Text(
+                row.label,
+                Modifier.padding(start = ItmoTheme.spacing.group),
+                color = ItmoTheme.colorScheme.onSurfaceVariant,
+                style = ItmoTheme.typography.labelMedium,
+            )
+        }
     }
 }
 
@@ -237,6 +311,9 @@ private fun DrawScope.rail(
 }
 
 private const val DONE_DOT_ALPHA = 0.5f
+private const val NOW_TINT_ALPHA = 0.12f
+private const val TRACK_ALPHA = 0.2f
+private val BarHeight = 4.dp
 
 private val TimeColumn = 48.dp
 private val RailWidth = 24.dp
@@ -251,6 +328,8 @@ private val MarkerRadius = 5.dp
 private val MarkerHole = 2.dp
 private val DashOn = 3.dp
 private val GapHeight = 32.dp
+private val EndHeight = 28.dp
+private val EndRingRadius = 4.dp
 private val LessonTopGap = 2.dp
 private val LessonBottomGap = 6.dp
 private val NoteIconSize = 16.dp
