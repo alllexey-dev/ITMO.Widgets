@@ -307,8 +307,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 ### Fixes
 
-- People search finds names with `ё` typed with `е`: `семен головин` finds `Семён Головин`. A query that finds
-  nobody in My ITMO is asked again with `ё` in place of an `е`, at most 6 more times.
+- People search finds names with `ё` typed with `е` and the other way round: `семен головин` finds `Семён Головин`,
+  `федоров` lists the Фёдоровы after the Федоровы. Each page asks My ITMO for every spelling at once (at most 6
+  more) and shows each person once.
 - `Запись` predicts a repeat two weeks later only for a timetable lesson (My ITMO lesson type 2). The extra lessons
   of a term's first weeks no longer show a predicted lesson that never comes, with an auto-sign queue that could
   only wait.

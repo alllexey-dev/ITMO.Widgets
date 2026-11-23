@@ -11,14 +11,17 @@ import dev.alllexey.itmowidgets.core.social.PersonSearchResult
 import dev.alllexey.itmowidgets.core.social.SocialRepository
 import dev.alllexey.itmowidgets.feature.social.data.demo.DemoSocial
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
 /**
  * MyITMO owns the name search; Backend only says who is registered. Phone and
  * e-mail fields of the directory response are dropped at this boundary.
- * MyITMO tells `е` from `ё`, so a query that finds nobody is asked again with `ё` in place of an `е`
- * ([yoVariants]); the first variant with hits answers. The choice depends only on the hit count, so every page of
- * one query lands on the same variant.
+ * MyITMO tells `е` from `ё`, so every page asks the query as typed and its [yoVariants] at the same offset, in
+ * parallel, and joins the hits: the typed spelling first, a person once. The next page follows while any spelling
+ * has more.
  */
 class PeopleSearchRepositoryImpl(
     private val client: MyItmoClient,
@@ -35,14 +38,13 @@ class PeopleSearchRepositoryImpl(
             return AppResult.Success(PeopleSearchPage(found.drop(offset), found.size, null))
         }
 
-        val page = try {
+        val pages = try {
             withContext(dispatchers.io) {
-                var page = client.personalities.searchPersonalities(PAGE_SIZE, offset, normalized)
-                for (variant in yoVariants(normalized)) {
-                    if (page.count > 0) break
-                    page = client.personalities.searchPersonalities(PAGE_SIZE, offset, variant)
+                coroutineScope {
+                    (listOf(normalized) + yoVariants(normalized))
+                        .map { spelling -> async { client.personalities.searchPersonalities(PAGE_SIZE, offset, spelling) } }
+                        .awaitAll()
                 }
-                page
             }
         } catch (cancellation: CancellationException) {
             throw cancellation
@@ -50,15 +52,15 @@ class PeopleSearchRepositoryImpl(
             return AppResult.Failure(error.toAppError())
         }
 
-        val people = page.data.mapNotNull(PersonalityMin::toPerson)
+        val people = pages.flatMap { it.data }.mapNotNull(PersonalityMin::toPerson).distinctBy { it.isu }
         val registered = when (val lookup = social.lookup(people.map { it.isu })) {
             is AppResult.Success -> lookup.value.associateBy { it.isu }
             is AppResult.Failure -> return lookup
         }
         val results = people.map { person -> person.copy(registered = registered[person.isu]) }
-        val loaded = offset + page.data.size
-        val nextOffset = loaded.takeIf { page.data.isNotEmpty() && it < page.count }
-        return AppResult.Success(PeopleSearchPage(results, page.count, nextOffset))
+        val loaded = offset + pages.maxOf { it.data.size }
+        val nextOffset = loaded.takeIf { pages.any { it.data.isNotEmpty() && offset + it.data.size < it.count } }
+        return AppResult.Success(PeopleSearchPage(results, pages.sumOf { it.count }, nextOffset))
     }
 
     private companion object {
@@ -78,9 +80,9 @@ private fun PersonalityMin.toPerson(): PersonSearchResult? {
 }
 
 /**
- * The spellings of [query] to try when it finds nobody: a typed `ё` read as `е` first, then `ё` in place of an `е`,
+ * The other spellings of [query]: a typed `ё` read as `е` first, then `ё` in place of an `е`,
  * fewest first and at most one per word (`ё` is always stressed), left to right. The query itself is left out; at
- * most [MAX_YO_VARIANTS], so a query costs at most that many extra requests.
+ * most [MAX_YO_VARIANTS], so a page costs at most that many extra requests.
  */
 internal fun yoVariants(query: String): List<String> {
     val base = query.replace('ё', 'е').replace('Ё', 'Е')
