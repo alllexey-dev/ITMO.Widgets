@@ -1,7 +1,7 @@
 # Installable builds outside the official signing (docs/building.md), with no secrets, in this repository or a fork:
 # - apk: the githubRelease APK against production, signed with the runner's debug key (`-Pitmo.selfSigned=true`);
 #   on demand only, a release's APK is the owner's signed upload (docs/release.md).
-# - ipa: `scripts/ios/archive.sh --unsigned`, an .ipa to re-sign with AltStore, SideStore or an own Apple ID; on
+# - ipa: `scripts/ios/archive.sh --unsigned`, an .ipa to re-sign with AltStore (widgets work only with it) or an own Apple ID; on
 #   demand, and attached to every published release (prereleases included).
 # Both are `custom` builds (BuildChannel) with this repository as BuildSource.
 name: dist

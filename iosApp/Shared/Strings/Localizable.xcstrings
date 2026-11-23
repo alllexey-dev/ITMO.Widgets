@@ -176,7 +176,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Так бывает после некоторых программ для установки. Надёжнее ставить через AltStore или SideStore"
+            "value" : "Так бывает после установки не через AltStore: с SideStore и Sideloadly виджеты не работают"
           }
         }
       }

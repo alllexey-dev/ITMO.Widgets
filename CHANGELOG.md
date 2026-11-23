@@ -341,9 +341,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   typing, the app killed when left). The page focuses its field and brings up the keyboard; the pairing sheet under
   it counted the keyboard into its content height and re-laid out without end. Sheets now size to their content
   without the keyboard (#613). The page also opens only once the app is active again after Face ID.
-- iOS widgets of an `.ipa` re-signed by SideStore (or another tool that renames the App Group without
-  `ALTAppGroups`) show data instead of the signed-out state: the app and the widgets find the group in their
-  provisioning profile.
+- iOS sideloading: the `Бета для iPhone` notice, README and docs recommend AltStore only. The widgets of an `.ipa`
+  re-signed by SideStore stay in the signed-out state (2.3.0-beta.5), although the app and the widgets also look the
+  App Group up in their provisioning profile; not investigated further, iOS moves to the App Store.
 - iOS widgets draw one background edge to edge: the content no longer paints its own darker rectangle inside the
   system's tile (Home Screen, StandBy, tinted and clear styles, with `Виджеты в цвет темы` on or off).
 - iOS widgets turn off WidgetKit's content margins like the pass widget: their content keeps its own inset instead of

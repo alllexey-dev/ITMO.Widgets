@@ -11,8 +11,8 @@ in a fork. It needs no secrets and uploads two artifacts:
 
 - `itmo-widgets-custom-apk`: the `github` release APK against production,
   signed with the runner's debug key;
-- `itmo-widgets-unsigned-ipa`: an unsigned `.ipa` to re-sign with AltStore,
-  SideStore or your own Apple ID.
+- `itmo-widgets-unsigned-ipa`: an unsigned `.ipa` to re-sign with AltStore
+  (the only sideloading tool the widgets work with) or your own Apple ID.
 
 Every published release also gets the unsigned `.ipa` attached by the same
 workflow.
@@ -43,15 +43,17 @@ scripts/ios/archive.sh --unsigned
 # iosApp/build/archive/ITMOWidgets-<version>-<build>-unsigned.ipa
 ```
 
-Re-sign the `.ipa` with AltStore, SideStore or your own team. It has no
+Re-sign the `.ipa` with AltStore or your own team. It has no
 notification service extension: push needs the official Apple account
 ([ios](ios.md#degradations)).
 
 The widgets need the App Group the re-signing tool registers for the app and
 the widget extension. The app finds a renamed group in `ALTAppGroups` or in
-the bundle's `embedded.mobileprovision` ([ios](ios.md#data-sharing)); a tool
-that signs without any App Group (reported for Sideloadly with a free Apple
-ID) leaves the widgets in the signed-out state while the app works.
+the bundle's `embedded.mobileprovision` ([ios](ios.md#data-sharing)). Only
+AltStore is known to work: with SideStore (2.3.0-beta.5) the widgets stay in
+the signed-out state although the profile lookup should find its renamed group,
+and a tool that signs without any App Group (reported for Sideloadly with a
+free Apple ID) does the same while the app works.
 
 ## Build identity
 

@@ -51,7 +51,7 @@
 | | Версия | Требования |
 |---|---|---|
 | **Android** | [2.3 beta 5](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.5): `arm64` для большинства телефонов, `armv7` для старых | Android 8.0+ |
-| **iPhone** | [2.3 beta 5](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.5): `.ipa` без подписи | iOS 26.1+, [AltStore](https://altstore.io), [SideStore](https://sidestore.io) или [Sideloadly](https://sideloadly.io) |
+| **iPhone** | [2.3 beta 5](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0-beta.5): `.ipa` без подписи | iOS 26.1+, ставить через [AltStore](https://altstore.io): с SideStore и Sideloadly виджеты не работают |
 | **Android, стабильная** | [2.2](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.2) | Android 8.0+ |
 
 - Бета ставится поверх 2.2 с сохранением данных; вернуться на 2.2 можно только переустановкой.
