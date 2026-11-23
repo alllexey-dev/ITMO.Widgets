@@ -90,6 +90,7 @@ import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.navigation.UpdateRoutes
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateArgs
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateViewModel
+import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateCopy
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateTestTags
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import dev.alllexey.itmowidgets.feature.web.domain.MyItmoWebPolicy
@@ -186,6 +187,7 @@ class AccountEntriesTest {
                     single<WidgetPreviewFactory> { NoPreviews }
                     single { ShareLinkFactory("https://widgets.alllexey.dev") }
                     single<UpdateAction> { NoUpdateAction }
+                    single { AppUpdateCopy.Download }
                 },
                 socialTestModule(),
             )

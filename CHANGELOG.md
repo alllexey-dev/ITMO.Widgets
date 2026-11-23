@@ -312,6 +312,12 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 ### Fixes
 
+- The Google Play build offers an update only when Google Play has it for this phone: Backend's latest version moves
+  with a GitHub release, and during a review, a staged rollout or a GitHub-only beta the offer led to a Play card
+  without `Обновить`, every day. A build below the minimum version waits for Play the same way instead of showing a
+  forced screen that cannot update. The offer there reads `Обновить` and `Обновление уже доступно в Google Play`,
+  without Backend's note, and `Не удалось открыть Google Play` when nothing opens. The GitHub build and iOS are
+  unchanged.
 - People search finds names with `ё` typed with `е` and the other way round: `семен головин` finds `Семён Головин`,
   `федоров` lists the Фёдоровы after the Федоровы. Each page asks My ITMO for every spelling at once (at most 6
   more) and shows each person once.

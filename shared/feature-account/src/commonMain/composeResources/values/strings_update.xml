@@ -8,4 +8,7 @@
     <string name="app_update_later">Напомнить позже</string>
     <string name="app_update_skip">Пропустить версию</string>
     <string name="app_update_open_failed">Не удалось открыть страницу с релизом</string>
+    <string name="app_update_play_description">Обновление уже доступно в Google Play. В нём новые возможности и исправления.</string>
+    <string name="app_update_play_action">Обновить</string>
+    <string name="app_update_play_open_failed">Не удалось открыть Google Play</string>
 </resources>

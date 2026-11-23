@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.feature.update
 
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
+import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateAvailability
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateReminder
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
@@ -31,5 +32,17 @@ internal class FakeAppUpdateRepository(
 
     override suspend fun skip(version: AppVersionName) {
         skippedVersion = version
+    }
+}
+
+/** A store that has the update or not ([available]); the updates it was asked about are recorded. */
+internal class FakeAppUpdateAvailability(
+    var available: Boolean = true,
+) : AppUpdateAvailability {
+    val asked = mutableListOf<AppUpdate>()
+
+    override suspend fun isAvailable(update: AppUpdate): Boolean {
+        asked += update
+        return available
     }
 }

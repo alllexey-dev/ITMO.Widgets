@@ -8,6 +8,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.core.storage.UtilityStorage
+import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateAvailability
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import kotlin.test.Test
 import kotlin.time.Clock
@@ -18,7 +19,7 @@ class UpdateModuleTest {
 
     /**
      * The installed version, its platform and Core 2.0's app area come from the platform (`androidUpdateModule` on
-     * Android), the gate, the demo switch, the reminder store, the wall clock, diagnostics and dispatchers from the
+     * Android), the store's availability from the distribution variant (`updateActionModule`), the gate, the demo switch, the reminder store, the wall clock, diagnostics and dispatchers from the
      * core bindings; the repository resolves inside the module.
      */
     @OptIn(KoinExperimentalAPI::class)
@@ -29,6 +30,7 @@ class UpdateModuleTest {
                 AppApi::class,
                 AppVersionName::class,
                 DevicePlatform::class,
+                AppUpdateAvailability::class,
                 BackendGate::class,
                 DemoMode::class,
                 UtilityStorage::class,

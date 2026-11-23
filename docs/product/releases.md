@@ -21,7 +21,7 @@ either updates the other:
 | Variant | Release build | Output | «Обновить» |
 |---|---|---|---|
 | `github` | `./gradlew :app:assembleGithubRelease` | `app/build/outputs/apk/github/release/app-github-release.apk`, published as `itmo-widgets-v<version>.apk` on GitHub releases | opens `releases/latest` |
-| `play` | `./gradlew :app:bundlePlayRelease` | `app/build/outputs/bundle/playRelease/app-play-release.aab`, uploaded to Google Play | Play In-App Updates, otherwise the Play card |
+| `play` | `./gradlew :app:bundlePlayRelease` | `app/build/outputs/bundle/playRelease/app-play-release.aab`, uploaded to Google Play | Play In-App Updates; the offer opens only once Play has the update for the device |
 
 - Both are signed with `app-keystore.jks` (alias `key0`, the certificate of
   2.0.1, SHA-256 `939e9bd5...f071`) through the ignored `keystore.properties`;
@@ -56,6 +56,10 @@ either updates the other:
   `.ipa` beside the APKs.
 - Until the Play listing is public, GitHub is the only channel; the README and
   the site get the Google Play button only after publication.
+- Backend's `app.latest` is one value for both variants and follows the GitHub
+  release. A `play` install ignores it until Google Play serves that device an
+  update ([update offer](../features/update.md#google-play-decides-for-the-play-variant)),
+  so a review, a staged rollout or a GitHub-only beta shows nothing in `play`.
 
 ## Version compatibility
 

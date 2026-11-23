@@ -14,8 +14,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateEvent
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateViewModel
-import dev.alllexey.itmowidgets.shared.compose.strings.Res
-import dev.alllexey.itmowidgets.shared.compose.strings.app_update_open_failed
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
@@ -23,13 +21,15 @@ import org.koin.compose.viewmodel.koinViewModel
 /**
  * The update offer with its Koin ViewModel. [onUpdate] is the host's distribution-specific update (`UpdateAction` on
  * Android): it gets whether the build is unsupported and a callback for when nothing could be opened, which shows
- * `app_update_open_failed`. The reminder and the close button both call [onClose]; a skipped release closes the
- * screen once the choice is stored. Android hosts it in the Compose shell's entry.
+ * [copy]'s failure text. The reminder and the close button both call [onClose]; a skipped release closes the
+ * screen once the choice is stored. Android hosts it in the Compose shell's entry, with the [copy] of its
+ * distribution variant.
  */
 @Composable
 fun AppUpdateRoute(
     onUpdate: (unsupported: Boolean, onFailed: () -> Unit) -> Unit,
     onClose: () -> Unit,
+    copy: AppUpdateCopy = AppUpdateCopy.Download,
     viewModel: AppUpdateViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -53,7 +53,7 @@ fun AppUpdateRoute(
         onUpdate = {
             onUpdate(state.unsupported) {
                 scope.launch {
-                    snackbars.showSnackbar(getString(Res.string.app_update_open_failed), duration = SnackbarDuration.Long)
+                    snackbars.showSnackbar(getString(copy.openFailed), duration = SnackbarDuration.Long)
                 }
             }
         },
@@ -61,5 +61,6 @@ fun AppUpdateRoute(
         onClose = onClose,
         onSkip = viewModel::skipVersion,
         snackbarHostState = snackbars,
+        copy = copy,
     )
 }

@@ -74,6 +74,31 @@ class AppUpdateScreenTest {
     }
 
     @Test
+    fun theGooglePlayOfferNamesGooglePlayAndLeavesBackendsNoteOut() = runComposeUiTest {
+        setContent { Screen(Supported, AppUpdateCopy.GooglePlay) }
+
+        // The note is one text for both Android variants; it may describe a release Play does not serve.
+        onNodeWithTag(AppUpdateTestTags.DESCRIPTION).assertTextEquals(
+            "Обновление уже доступно в Google Play. В нём новые возможности и исправления."
+        )
+        onNodeWithTag(AppUpdateTestTags.UPDATE).assertTextEquals("Обновить")
+        onNodeWithTag(AppUpdateTestTags.VERSIONS).assertTextEquals("2.1 → 2.2")
+        assertTouchTargets()
+    }
+
+    @Test
+    fun anUnsupportedGooglePlayBuildKeepsTheSharedReason() = runComposeUiTest {
+        setContent { Screen(Unsupported.copy(note = NOTE), AppUpdateCopy.GooglePlay) }
+
+        onNodeWithTag(AppUpdateTestTags.TITLE).assertTextEquals("Эта версия устарела")
+        onNodeWithTag(AppUpdateTestTags.DESCRIPTION).assertTextEquals(
+            "ITMO.Widgets больше не поддерживает установленную версию — часть возможностей может не работать. " +
+                "Обновитесь, и всё снова заработает."
+        )
+        onNodeWithTag(AppUpdateTestTags.SKIP).assertDoesNotExist()
+    }
+
+    @Test
     fun eachActionCallsItsOwnCallback() = runComposeUiTest {
         val calls = mutableListOf<String>()
         setContent {
@@ -162,9 +187,28 @@ class AppUpdateScreenTest {
         snackbar.assertExists()
     }
 
+    @Test
+    fun theGooglePlayRouteSaysThatGooglePlayDidNotOpen() = runComposeUiTest {
+        setContent {
+            ItmoTheme {
+                AppUpdateRoute(
+                    onUpdate = { _, onFailed -> onFailed() },
+                    onClose = {},
+                    copy = AppUpdateCopy.GooglePlay,
+                    viewModel = viewModel(FakeAppUpdateRepository()),
+                )
+            }
+        }
+
+        onNodeWithTag(AppUpdateTestTags.UPDATE).performScrollTo().performClick()
+
+        awaitText(PLAY_OPEN_FAILED).assertExists()
+    }
+
     private companion object {
         const val NOTE = "Виджет расписания обновляется быстрее, зачётка помнит выбранный семестр."
         const val OPEN_FAILED = "Не удалось открыть страницу с релизом"
+        const val PLAY_OPEN_FAILED = "Не удалось открыть Google Play"
 
         val Supported = AppUpdateUiState(installed = "2.1", latest = "2.2", note = NOTE, unsupported = false)
         val Unsupported = AppUpdateUiState(installed = "2.1", latest = "2.2", note = "", unsupported = true)
@@ -176,8 +220,8 @@ class AppUpdateScreenTest {
 }
 
 @Composable
-private fun Screen(state: AppUpdateUiState) = ItmoTheme {
-    AppUpdateScreen(state, onUpdate = {}, onLater = {}, onClose = {}, onSkip = {})
+private fun Screen(state: AppUpdateUiState, copy: AppUpdateCopy = AppUpdateCopy.Download) = ItmoTheme {
+    AppUpdateScreen(state, onUpdate = {}, onLater = {}, onClose = {}, onSkip = {}, copy = copy)
 }
 
 private fun viewModel(repository: FakeAppUpdateRepository, unsupported: Boolean = false) = AppUpdateViewModel(

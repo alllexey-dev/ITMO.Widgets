@@ -175,15 +175,24 @@ release within about 30 minutes; check that it is there.
 
 Set `app.latest` (and `app.note`; `app.minimum` only as a separate decision)
 in the web admin «Система»; these rows win over the server environment.
-Verify `version-info` and the update offer: a phone on the previous release
-with the connection on offers the new version at most once a day, and
-«Обновить» opens the right page.
+Verify `version-info` and the update offer: a phone on the previous `github`
+release with the connection on offers the new version at most once a day, and
+`Скачать` opens the release page. A `play` install shows nothing at this
+step: its offer waits for Google Play (step 8).
 
 ## 8. Google Play
 
 Upload `app-play-release.aab` from the same commit to the chosen track in the
 Play Console; the upload consumes its `versionCode`. Production needs the
 closed-test condition in [releases](product/releases.md#distribution).
+
+A `play` install offers the update only after Google Play serves it to that
+device: after the review, and at the pace of a staged rollout. `app.latest`
+needs no second change for Play. `app.minimum` may name this release only
+after its Play rollout is at 100% (ADR 0030): until Play has the update a
+`play` build below the minimum shows nothing instead of a forced screen. A
+change to the update flow is checked on a phone first
+([the real flow](features/update.md#checking-the-real-flow)).
 
 ## 9. iOS
 
