@@ -427,7 +427,7 @@ private fun LazyListScope.contacts(contacts: List<ProfileContact>, actions: User
                 item {
                     ListRow(
                         contact.value,
-                        subtitle = contact.label,
+                        subtitle = contact.label?.asString(),
                         icon = painterResource(contact.icon.drawable),
                         iconTone = if (contact.url == null) Tone.Neutral else Tone.Primary,
                         onClick = contact.url?.let { url -> { actions.onContact(url) } },

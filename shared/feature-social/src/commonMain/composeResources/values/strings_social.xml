@@ -64,6 +64,16 @@
     <string name="person_lesson_online">Онлайн</string>
     <string name="person_lesson_for">%1$s у %2$s</string>
     <string name="person_section_contacts">Контакты</string>
+    <string name="person_contact_email">Почта</string>
+    <string name="person_contact_phone">Телефон</string>
+    <string name="person_contact_web">Сайт</string>
+    <string name="person_contact_vk">ВКонтакте</string>
+    <string name="person_contact_telegram">Telegram</string>
+    <string name="person_contact_linkedin">LinkedIn</string>
+    <string name="person_contact_skype">Skype</string>
+    <string name="person_contact_twitter">X (Twitter)</string>
+    <string name="person_contact_facebook">Facebook</string>
+    <string name="person_contact_livejournal">LiveJournal</string>
     <string name="person_section_rooms">Где найти</string>
     <string name="person_teacher_schedule">Расписание занятий</string>
     <string name="person_section_education">Учёба</string>

@@ -254,7 +254,7 @@ struct UserProfileContent: View {
                 ForEach(Array(page.contacts.enumerated()), id: \.offset) { _, contact in
                     ItmoRow(
                         title: contact.value,
-                        subtitle: contact.label,
+                        subtitle: contact.label?.resolved,
                         symbol: contact.icon.symbol,
                         tone: contact.url == nil ? .neutral : .primary,
                         action: contact.url.map { url in { actions.contact(url) } }

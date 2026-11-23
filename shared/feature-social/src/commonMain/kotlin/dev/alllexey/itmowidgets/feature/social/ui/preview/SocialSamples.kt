@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.schedule.TeacherLessons
 import dev.alllexey.itmowidgets.core.schedule.TeacherNowLesson
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
+import dev.alllexey.itmowidgets.feature.social.domain.model.ContactKind
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonContact
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonPosition
@@ -144,8 +145,8 @@ object SocialSamples {
                     listOf(PersonRoom("1410", "Кронверкский пр., 49")),
                     emptyList(),
                     listOf(
-                        PersonContact("Электронная почта", "ershov@itmo.ru", "mailto:ershov@itmo.ru"),
-                        PersonContact("Телефон", "+7 (812) 480-00-00", "tel:+78124800000"),
+                        PersonContact(ContactKind.EMAIL, "email", "ershov@itmo.ru", "mailto:ershov@itmo.ru"),
+                        PersonContact(ContactKind.PHONE, "phone", "+7 (812) 480-00-00", "tel:+78124800000"),
                     ),
                 ),
                 social = null,
@@ -176,10 +177,10 @@ object SocialSamples {
                 Person(
                     288104, "Каримов Тимур", null, emptyList(), emptyList(), listOf(PersonEducation("M3206", 2, "ФИТиП")),
                     listOf(
-                        PersonContact("E-mail", "karimov@niuitmo.ru", "mailto:karimov@niuitmo.ru"),
-                        PersonContact("Telegram", "@tkarimov", "https://t.me/tkarimov"),
-                        PersonContact("VK", "tkarimov", "https://vk.com/tkarimov"),
-                        PersonContact("Другое", "Староста потока", null),
+                        PersonContact(ContactKind.EMAIL, "email", "karimov@niuitmo.ru", "mailto:karimov@niuitmo.ru"),
+                        PersonContact(ContactKind.TELEGRAM, "telegram", "@tkarimov", "https://t.me/tkarimov"),
+                        PersonContact(ContactKind.VK, "vkontakte", "@tkarimov", "https://vk.com/tkarimov"),
+                        PersonContact(ContactKind.OTHER, "Другое", "Староста потока", null),
                     ),
                 ),
                 social = UserProfile(
