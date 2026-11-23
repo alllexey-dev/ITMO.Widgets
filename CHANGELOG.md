@@ -101,6 +101,11 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
   with the groups in place of the teacher; lessons given to several groups at once are one lesson.
 - A differentiated credit (My ITMO type 9) reads `Диф. зачёт` in the schedule, the lesson sheet and the widgets
   instead of a plain `Пара`.
+- A day's timeline ends in a mark with the time the lessons end instead of a rail cut off under the last lesson;
+  today it says `Конец пар`, then `Пары закончились` (also on Сегодня).
+- The current lesson of a timeline sits on a light tint and says `ещё 41 мин` beside a bar instead of `идёт`.
+- Every lesson row and card names the type in its colour (`Лекция · Белов П. И.`) and shows the room in the text
+  colour beside a pin.
 
 ### Зачётка and subjects
 

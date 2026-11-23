@@ -17,10 +17,14 @@ enum ItmoLessonType: Hashable, Sendable {
         case .other: ItmoColor.lessonTypeDefault
         }
     }
+
+    /// The type's colour pulled towards the text colour until it reads as text: the lesson kind in a lesson's lines.
+    var textColor: Color { color.mix(with: .primary, by: 0.4) }
 }
 
-/// One lesson as every lesson view shows it, texts resolved by the caller: subject; "kind, teacher";
-/// "room, building" (no line when online, an "online" pill says it); the lesson's note; pills.
+/// One lesson as every lesson view shows it, texts resolved by the caller: subject; "kind · teacher" with the kind in
+/// its type's colour; "room, building" beside a pin (no line when online, an "online" pill says it); the lesson's
+/// note; pills.
 struct ItmoLesson: Hashable, Identifiable {
     /// Where the lesson stands at the shown moment: done lessons are dimmed, the current one is tinted.
     enum Phase: Hashable, Sendable { case done, now, next, upcoming }
@@ -45,6 +49,10 @@ struct ItmoLesson: Hashable, Identifiable {
     var changeNote: String?
     /// A quiet line under the later of two lessons at the same time ("at the same time as ...").
     var overlapNote: String?
+    /// "41 min left" on the lesson that runs in a day's timeline, in place of the "now" pill.
+    var remaining: String?
+    /// The elapsed share 0...1 of the lesson that runs, the bar beside `remaining`.
+    var elapsed: CGFloat?
     var cancelled = false
     var phase: Phase = .upcoming
     /// Status pills in display order: now or next, changed or cancelled, the queue, booked, online.
@@ -98,15 +106,19 @@ struct ItmoLessonTimes: View {
     static let column: CGFloat = 48
 
     let lesson: ItmoLesson
+    /// Off for the last lesson of a timeline whose end mark says the time.
+    var showsEnd = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(verbatim: itmoClockTime(lesson.start))
                 .font(.itmo(.bodyMedium, emphasized: true))
                 .foregroundStyle(lesson.phase == .now ? ItmoColor.primary : Color.primary)
-            Text(verbatim: itmoClockTime(lesson.end))
-                .font(.itmo(.labelMedium))
-                .foregroundStyle(.secondary)
+            if showsEnd {
+                Text(verbatim: itmoClockTime(lesson.end))
+                    .font(.itmo(.labelMedium))
+                    .foregroundStyle(.secondary)
+            }
         }
         .monospacedDigit()
     }
@@ -122,19 +134,23 @@ struct ItmoLessonDetails: View {
                 .font(.itmo(.bodyLarge, emphasized: true))
                 .strikethrough(lesson.cancelled)
                 .lineLimit(2)
-            Text(verbatim: [lesson.kind, lesson.teacher].compactMap { $0 }.joined(separator: ", "))
+            Text(byline)
                 .font(.itmo(.bodyMedium))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
             // Online lessons have no place: the line is skipped and the online pill says it.
             if !lesson.place.isEmpty {
                 HStack(spacing: 6) {
+                    AppSymbol.locationOn.image
+                        .imageScale(.small)
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
                     if let was = lesson.was {
                         Text(verbatim: was).strikethrough().foregroundStyle(.secondary)
                     }
                     Text(verbatim: lesson.place)
-                        .foregroundStyle(lesson.was == nil ? Color.secondary : ItmoTone.warn.color)
-                        .fontWeight(lesson.was == nil ? nil : .semibold)
+                        .foregroundStyle(lesson.was == nil ? Color.primary : ItmoTone.warn.color)
+                        .fontWeight(lesson.was == nil ? .medium : .semibold)
                 }
                 .font(.itmo(.bodyMedium))
                 .lineLimit(1)
@@ -157,6 +173,17 @@ struct ItmoLessonDetails: View {
                 .padding(.top, ItmoSpacing.related)
             }
         }
+    }
+}
+
+extension ItmoLessonDetails {
+    /// "Lecture · Surname I. O.", the kind in its type's colour.
+    fileprivate var byline: AttributedString {
+        var kind = AttributedString(lesson.kind)
+        kind.foregroundColor = lesson.type.textColor
+        kind.font = .itmo(.bodyMedium, emphasized: true)
+        guard let teacher = lesson.teacher else { return kind }
+        return kind + AttributedString(" · \(teacher)")
     }
 }
 

@@ -182,18 +182,25 @@ private fun LessonCardPreview() = KitColumn {
     LessonCard(Lessons.online)
 }
 
-/** Today at 12:22: a done lesson, the current one with the marker, a window, the rest of the day. */
+/** Today at 12:22: a done lesson, the current one with the marker, a window, the rest of the day, the end mark. */
 @Preview
 @Composable
 private fun LessonTimelinePreview() = KitColumn {
     LessonTimeline(
         listOf(
             TimelineRow.Lesson(Lessons.done, progress = 1f, reached = true),
-            TimelineRow.Lesson(Lessons.now, progress = 0.4f, reached = true),
+            TimelineRow.Lesson(
+                Lessons.now.copy(pills = emptyList()),
+                progress = 0.4f,
+                reached = true,
+                remaining = "ещё 54 мин",
+                elapsed = 0.4f,
+            ),
             TimelineRow.Gap("Окно 2 ч 10 мин", progress = 0f),
             TimelineRow.Lesson(Lessons.changed, progress = 0f, reached = false, changeNote = "Изменено вчера в 20:14"),
             TimelineRow.Lesson(Lessons.cancelled, progress = 0f, reached = false),
             TimelineRow.Lesson(Lessons.online, progress = 0f, reached = false),
+            TimelineRow.End("20:10", reached = false, label = "Конец пар"),
         ),
         showNow = true,
     )
@@ -207,6 +214,7 @@ private fun LessonTimelineOtherDayPreview() = KitColumn {
         listOf(
             TimelineRow.Lesson(Lessons.next.copy(state = LessonState.Upcoming, pills = emptyList()), 0f, reached = false),
             TimelineRow.Lesson(Lessons.online, progress = 0f, reached = false),
+            TimelineRow.End("20:10", reached = false),
         ),
     )
 }
@@ -289,26 +297,26 @@ private object Lessons {
     private val lab = Color(0xFF8A5BE1)
     private val sport = Color(0xFF44C614)
 
-    val done = LessonView("08:20", "09:50", "Физика", "Лекция, Смирнова Е. А.", "331, Ломо", lecture, LessonState.Done)
+    val done = LessonView("08:20", "09:50", "Физика", "Лекция", "Смирнова Е. А.", "331, Ломо", lecture, LessonState.Done)
     val now = LessonView(
-        "10:00", "11:30", PreviewFixtures.LongSubjectName, "Практика, Лебедев А. С.", "1506, Кронва", practice,
+        "10:00", "11:30", PreviewFixtures.LongSubjectName, "Практика", "Лебедев А. С.", "1506, Кронва", practice,
         LessonState.Now, pills = listOf(PillSpec("идёт", Tone.Primary, solid = true)),
         friends = listOf("ИП", "АС"),
     )
     val next = LessonView(
-        "11:40", "13:10", "Базы данных", "Лабораторная, Орлова Н. В.", "2304, Кронва", lab,
+        "11:40", "13:10", "Базы данных", "Лабораторная", "Орлова Н. В.", "2304, Кронва", lab,
         LessonState.Next, pills = listOf(PillSpec("далее")),
     )
     val changed = LessonView(
-        "15:20", "16:50", "Дискретная математика", "Лекция, Иванов П. П.", "1404, Кронва", lecture,
+        "15:20", "16:50", "Дискретная математика", "Лекция", "Иванов П. П.", "1404, Кронва", lecture,
         previousPlace = "1216", pills = listOf(PillSpec("изменена", Tone.Warning)),
     )
     val cancelled = LessonView(
-        "17:00", "18:30", "История", "Лекция, Кузнецов В. В.", "100, Ломо", lecture,
+        "17:00", "18:30", "История", "Лекция", "Кузнецов В. В.", "100, Ломо", lecture,
         cancelled = true, pills = listOf(PillSpec("отменена", Tone.Error)),
     )
     val online = LessonView(
-        "18:40", "20:10", "Физкультура", "Плавание, Соколов Д. И.", null, sport,
+        "18:40", "20:10", "Физкультура", "Плавание", "Соколов Д. И.", null, sport,
         note = "Взять шапочку", pills = listOf(PillSpec("записаны", Tone.Success), PillSpec("онлайн")),
     )
 }

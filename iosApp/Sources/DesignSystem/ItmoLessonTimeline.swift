@@ -2,22 +2,26 @@ import SwiftUI
 
 /// One row of an `ItmoLessonTimeline`, computed by the shared presentation (`core/lesson/LessonTimelines`): a lesson
 /// with the elapsed share of the rail under its dot (the lesson and the short break after it) and whether the rail
-/// above it is reached, or a gap of an hour or more with its label ("a 2 h 10 min window") and its elapsed share.
+/// above it is reached, a gap of an hour or more with its label ("a 2 h 10 min window") and its elapsed share, or the
+/// last row, where the day's lessons end: the time in minutes, whether the day got there, a label on today.
 enum ItmoTimelineRow: Identifiable {
     case lesson(ItmoLesson, progress: CGFloat, reached: Bool)
     case gap(id: String, label: String, progress: CGFloat)
+    case end(time: Int, reached: Bool, label: String?)
 
     var id: String {
         switch self {
         case let .lesson(lesson, _, _): lesson.id
         case let .gap(id, _, _): id
+        case .end: "end"
         }
     }
 }
 
 /// The lessons of one day on a time rail, the app's only day list (a single lesson is an `ItmoLessonCard`): the time
 /// column, a rail with a dot per lesson in its type colour and the lesson's details without a card; done lessons are
-/// dimmed, the current one tinted. The rows arrive computed (`ItmoTimelineRow`); `showsNow` puts the now marker where
+/// dimmed, the current one tinted, with the time left beside a bar; an end row closes the rail with the time the day ends, which the lesson above it
+/// then leaves out. The rows arrive computed (`ItmoTimelineRow`); `showsNow` puts the now marker where
 /// the elapsed part ends inside the current lesson or gap (today), another day shows none. With `onLesson` every
 /// lesson is a button that reports its index in `rows` (the lesson sheet).
 struct ItmoLessonTimeline: View {
@@ -27,14 +31,19 @@ struct ItmoLessonTimeline: View {
 
     var body: some View {
         let lessons = rows.indices.filter { if case .lesson = rows[$0] { true } else { false } }
+        let end: Int? = if case let .end(time, _, _) = rows.last { time } else { nil }
         VStack(alignment: .leading, spacing: 0) {
             ForEach(rows.indices, id: \.self) { index in
                 switch rows[index] {
                 case let .gap(_, label, progress):
                     TimelineGap(text: label, progress: progress, marker: showsNow)
+                case let .end(time, reached, label):
+                    TimelineEnd(time: time, reached: reached, label: label)
                 case let .lesson(lesson, progress, reached):
                     let row = TimelineLessonRow(
-                        lesson: lesson, first: index == lessons.first, last: index == lessons.last, reached: reached,
+                        lesson: lesson, first: index == lessons.first, last: index == lessons.last && end == nil,
+                        // The mark right under the last lesson says this time.
+                        showsEnd: !(index == lessons.last && lesson.end == end), reached: reached,
                         progress: progress, marker: showsNow
                     )
                     if let onLesson {
@@ -90,6 +99,7 @@ private struct TimelineLessonRow: View {
     let lesson: ItmoLesson
     let first: Bool
     let last: Bool
+    let showsEnd: Bool
     let reached: Bool
     let progress: CGFloat
     let marker: Bool
@@ -103,7 +113,7 @@ private struct TimelineLessonRow: View {
         let dotY = dotY
         let done = lesson.phase == .done
         HStack(alignment: .top, spacing: 0) {
-            ItmoLessonTimes(lesson: lesson)
+            ItmoLessonTimes(lesson: lesson, showsEnd: showsEnd)
                 .frame(width: timeColumn, alignment: .leading)
                 .padding(.top, 10)
                 .opacity(done ? 0.6 : 1)
@@ -123,6 +133,17 @@ private struct TimelineLessonRow: View {
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: ItmoSpacing.related) {
                 ItmoLessonDetails(lesson: lesson)
+                if let remaining = lesson.remaining {
+                    HStack(spacing: ItmoSpacing.content) {
+                        ProgressView(value: Double(lesson.elapsed ?? 0))
+                            .tint(ItmoColor.primary)
+                            .accessibilityHidden(true)
+                        Text(verbatim: remaining)
+                            .font(.itmo(.labelMedium, emphasized: true))
+                            .foregroundStyle(ItmoColor.primary)
+                            .monospacedDigit()
+                    }
+                }
                 if let overlapNote = lesson.overlapNote {
                     Text(verbatim: overlapNote).font(.itmo(.labelMedium)).foregroundStyle(.secondary)
                 }
@@ -169,5 +190,43 @@ private struct TimelineGap: View {
             Spacer()
         }
         .frame(minHeight: 30)
+    }
+}
+
+private struct TimelineEnd: View {
+    let time: Int
+    let reached: Bool
+    let label: String?
+
+    @ScaledMetric(relativeTo: .subheadline) private var timeColumn = ItmoLessonTimes.column
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(verbatim: itmoClockTime(time))
+                .font(.itmo(.labelMedium))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .frame(width: timeColumn, alignment: .leading)
+            Canvas { context, size in
+                let color = reached ? Rail.passed : Rail.ahead
+                let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                var path = Path()
+                path.move(to: CGPoint(x: center.x, y: 0))
+                path.addLine(to: CGPoint(x: center.x, y: center.y - 4))
+                path.addEllipse(in: CGRect(x: center.x - 4, y: center.y - 4, width: 8, height: 8))
+                context.stroke(path, with: .color(color), lineWidth: 2)
+            }
+            .frame(width: Rail.width)
+            .accessibilityHidden(true)
+            if let label {
+                Text(verbatim: label)
+                    .font(.itmo(.labelMedium))
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, ItmoSpacing.group)
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(minHeight: 28)
+        .accessibilityElement(children: .combine)
     }
 }

@@ -323,7 +323,7 @@ description and optional action: the kit's `ContentState` and
 - Сегодня is the hero, the day's timeline and `Нужно сделать` only when there is
   something ([Сегодня](features/home.md#сегодня)); the lesson in progress is
   the hero with the wavy bar ([Expressive components](#expressive-components))
-  and sits on `primaryContainer` in the timeline. A list under the `Пропуск` button ends with
+  and sits on a light `primary` tint in the timeline, with `ещё 41 мин` beside a bar in place of the `идёт` pill. A list under the `Пропуск` button ends with
   `ItmoTheme.spacing.fabClearance` of bottom content padding, one under a stack
   of FABs (the schedule) with `fabStackClearance`, so its last item scrolls
   clear of them. `My ITMO` is a row of Профиль.
@@ -450,7 +450,9 @@ The Android shell (`app/shell/`, [architecture](architecture.md#navigation)) is 
 `designsystem.kit` (`shared/designsystem/.../kit/`) is the kit of the redesigned Android screens, ported from the
 design lab: Material 3 Expressive; iOS draws the same screens in SwiftUI ([ADR 0031](adr/0031-swiftui-ios-screens.md)). Its components take formatted text, icons and colours;
 what a lesson says and which pills it gets is decided by shared presentation: `core/lesson/LessonTimelines` builds
-`LessonUi` and `TimelineItem` (states, pills, gaps of an hour or more, progress, change notes) for every lesson list;
+`LessonUi` and `TimelineItem` (states, pills, gaps of an hour or more, progress, the time left, change notes, the end
+mark) for every
+lesson list;
 a lesson is online by MyITMO's remote format or by a placeholder room (`дистант`, `онлайн`, `DayLesson.isOnline`),
 and the kit's `LessonMapping.kt` draws them. Both kits are current: a screen takes a part from `kit` where it has
 one, otherwise from [Shared components](#shared-components).
@@ -469,8 +471,8 @@ one, otherwise from [Shared components](#shared-components).
 | `SegmentedChoice` | The one choice pattern for two to four options and in-screen tabs: connected toggle buttons, a check on the chosen one up to three options |
 | `ListGroup`, `ListRow`, `SwitchListRow`, `PersonListRow`, `ListGroupNote` | Connected groups of rows: icon tile or avatar, title, subtitle, lines below it, count, value, accessory, chevron, destructive; a switch row; a person with a 40 dp avatar, the one row for people in every list; a caption |
 | `GateCard`, `ActionCard`, `LockNote`, `StaleContent` | Gated (what, why, one fix), worth doing, locked without a fix, old data dimmed under its date; empty and error stay `ContentState` |
-| `LessonView`, `LessonCard` | One lesson outside a day list: subject; `тип, преподаватель`; `аудитория, корпус` (none online); note; pills; friends; with `onClick` the card opens the lesson |
-| `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary` (one clock: it grows monotonically, so overlapping lessons get one `сейчас` marker), `Окно 2 ч 10 мин` rows, a change note and an `одновременно с «…»` note under a lesson; with `onLessonClick` each lesson is a target |
+| `LessonView`, `LessonCard` | One lesson outside a day list: subject; `тип · преподаватель` with the type in its colour (the dot's, pulled towards the text colour); `аудитория, корпус` in the text colour beside a pin (none online); note; pills; friends; with `onClick` the card opens the lesson |
+| `TimelineRow`, `LessonTimeline` | A day's lessons on the rail: a dot per lesson in its type's colour, the elapsed part in `primary` (one clock: it grows monotonically, so overlapping lessons get one `сейчас` marker), `Окно 2 ч 10 мин` rows, a change note and an `одновременно с «…»` note under a lesson; the lesson that runs sits on a light `primary` tint and says `ещё 41 мин` beside a bar of its elapsed share instead of the `идёт` pill (a `LessonCard` keeps the pill); the rail ends in a hollow mark with the time of the day's latest end (the last lesson then leaves its end time out), in `primary` once reached, on today with `Конец пар` and then `Пары закончились`; with `onLessonClick` each lesson is a target |
 | `toLessonView`, `toTimelineRows`, `lessonTypeAccent` | The shared lesson presentation (`core/lesson`) drawn by the kit: texts resolved, pills toned (`идёт` solid `Primary`, `далее` `Neutral`, `изменена` and `очередь` `Warning`, `отменена` `Error`, `записаны` `Success`, `онлайн` `Neutral` with the camera), lesson types coloured |
 | `SectionHeader`, `TextTile` | A section's title with a neutral count at the end; a short text (`+9`) in a tone's tile, the size of an `IconTile` |
 | `ValueWithSource`, `PointsMeter`, `SportRing`, `Tone.ink()` | A row's number over its quiet source (`БАРС`, `My ITMO`, `таблица`; a warning colour when stale, tappable to its sources); points over a 0-100 bar in a tone; the sport points in a small ring of visits and bonus; text in a tone on a plain surface |

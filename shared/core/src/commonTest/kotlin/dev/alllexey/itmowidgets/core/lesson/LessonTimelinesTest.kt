@@ -56,10 +56,8 @@ class LessonTimelinesTest {
             UiText.Joined(listOf(UiText.Dynamic("2202"), UiText.Res(CoreStrings.schedule_building_kronva)), ", "),
             changed.lesson.place,
         )
-        assertEquals(
-            UiText.Joined(listOf(UiText.Res(CoreStrings.schedule_lesson_type_lecture), UiText.Dynamic("Белов П. И.")), ", "),
-            changed.lesson.byline,
-        )
+        assertEquals(UiText.Res(CoreStrings.schedule_lesson_type_lecture), changed.lesson.type)
+        assertEquals(UiText.Joined(listOf(UiText.Dynamic("Белов П. И.")), ", "), changed.lesson.people)
 
         val online = lessons[3].lesson
         assertNull(online.place)
@@ -69,7 +67,8 @@ class LessonTimelinesTest {
     @Test
     fun anotherDayHasNoNowAndOnlyTheFirstLessonOfTomorrowIsNext() {
         val past = LessonTimelines.build(day, DayMoment.Past, today)
-        assertEquals(setOf(1f), past.map { if (it is TimelineItem.Lesson) it.progress else (it as TimelineItem.Gap).progress }.toSet())
+        val progress = past.mapNotNull { (it as? TimelineItem.Lesson)?.progress ?: (it as? TimelineItem.Gap)?.progress }
+        assertEquals(setOf(1f), progress.toSet())
 
         val tomorrow = LessonTimelines.build(day, DayMoment.Future(firstIsNext = true), today).filterIsInstance<TimelineItem.Lesson>()
         assertEquals(LessonState.NEXT, tomorrow.first().lesson.state)
@@ -140,7 +139,7 @@ class LessonTimelinesTest {
             today,
         )
 
-        val lessons = items.map { assertIs<TimelineItem.Lesson>(it) }
+        val lessons = items.dropLast(1).map { assertIs<TimelineItem.Lesson>(it) }
         assertEquals(listOf("Веб", "Бронь"), lessons.map { it.lesson.subject })
         assertEquals(listOf(LessonState.NOW, LessonState.NOW), lessons.map { it.lesson.state })
         // The earlier lesson's rail runs to its end: the moment is on it, the later one has not started its stretch.
@@ -152,7 +151,7 @@ class LessonTimelinesTest {
         assertEquals(UiText.Res(CoreStrings.lesson_overlap, listOf("Веб")), lessons[1].overlapNote)
 
         val later = LessonTimelines.build(lessons.map { it.lesson.toDay() }, DayMoment.Today(LocalTime(18, 0)), today)
-            .map { it as TimelineItem.Lesson }
+            .filterIsInstance<TimelineItem.Lesson>()
         assertEquals(listOf(1f, 60f / 210f), later.map { it.progress })
     }
 
@@ -162,7 +161,7 @@ class LessonTimelinesTest {
             listOf(lesson("10:00", "14:00", subject = "Длинная"), lesson("11:00", "12:00", subject = "Внутри")),
             DayMoment.Today(LocalTime(11, 30)),
             today,
-        ).map { it as TimelineItem.Lesson }
+        ).filterIsInstance<TimelineItem.Lesson>()
         assertEquals(listOf(90f / 240f, 0f), nested.map { it.progress })
         assertEquals(UiText.Res(CoreStrings.lesson_overlap, listOf("Длинная")), nested[1].overlapNote)
 
@@ -170,7 +169,7 @@ class LessonTimelinesTest {
             listOf(lesson("10:00", "11:30", subject = "А"), lesson("10:00", "11:30", subject = "Б")),
             DayMoment.Today(LocalTime(10, 45)),
             today,
-        ).map { it as TimelineItem.Lesson }
+        ).filterIsInstance<TimelineItem.Lesson>()
         assertEquals(listOf(0.5f, 0f), same.map { it.progress })
         assertEquals(listOf(LessonState.NOW, LessonState.NOW), same.map { it.lesson.state })
         assertEquals(UiText.Res(CoreStrings.lesson_overlap, listOf("А")), same[1].overlapNote)
@@ -184,7 +183,7 @@ class LessonTimelinesTest {
             today,
         )
 
-        assertEquals(listOf(true, true, false, true), items.map { it is TimelineItem.Lesson })
+        assertEquals(listOf(true, true, false, true, false), items.map { it is TimelineItem.Lesson })
         val gap = items[2] as TimelineItem.Gap
         assertEquals(
             UiText.Res(CoreStrings.lesson_gap, listOf(UiText.Res(CoreStrings.duration_hours_minutes, listOf(1, 10)))),
@@ -192,6 +191,45 @@ class LessonTimelinesTest {
         )
         assertEquals(30f / 70f, gap.progress, 0.001f)
         assertEquals(listOf(1f, 1f, 0f), items.filterIsInstance<TimelineItem.Lesson>().map { it.progress })
+    }
+
+    @Test
+    fun theLessonThatRunsSaysTheTimeLeftInPlaceOfThePill() {
+        val lessons = LessonTimelines.build(day, DayMoment.Today(LocalTime(12, 22)), today).filterIsInstance<TimelineItem.Lesson>()
+
+        val running = lessons[2]
+        assertEquals(
+            UiText.Res(CoreStrings.lesson_remaining, listOf(UiText.Res(CoreStrings.duration_minutes, listOf(48)))),
+            running.remaining,
+        )
+        assertEquals(42f / 90f, running.elapsed!!, 0.001f)
+        assertEquals(emptyList(), running.lesson.pills.map { it.kind })
+        // A lesson outside a day list keeps the pill.
+        assertEquals(listOf(LessonPillKind.NOW), LessonTimelines.lesson(day[2], LessonState.NOW).pills.map { it.kind })
+        assertEquals(listOf(null, null, null), (lessons - running).map { it.remaining })
+        assertEquals(listOf(null, null, null), (lessons - running).map { it.elapsed })
+    }
+
+    @Test
+    fun theRailEndsInAMarkAtTheLatestEndOfTheDay() {
+        fun end(moment: DayMoment, lessons: List<DayLesson> = day) =
+            assertIs<TimelineItem.End>(LessonTimelines.build(lessons, moment, today).last())
+
+        assertEquals(
+            TimelineItem.End("16:50", reached = false, label = UiText.Res(CoreStrings.lesson_day_end)),
+            end(DayMoment.Today(LocalTime(16, 49))),
+        )
+        assertEquals(
+            TimelineItem.End("16:50", reached = true, label = UiText.Res(CoreStrings.lesson_day_over)),
+            end(DayMoment.Today(LocalTime(16, 50))),
+        )
+        // Another day has the mark without words.
+        assertEquals(TimelineItem.End("16:50", reached = true), end(DayMoment.Past))
+        assertEquals(TimelineItem.End("16:50", reached = false), end(DayMoment.Future()))
+        // The latest end, not the end of the lesson that starts last.
+        val nested = listOf(lesson("10:00", "13:10"), lesson("11:40", "12:20"))
+        assertEquals("13:10", end(DayMoment.Future(), nested).time)
+        assertEquals(emptyList(), LessonTimelines.build(emptyList(), DayMoment.Past, today))
     }
 
     private fun LessonUi.toDay() = lesson(start, end, subject = subject)

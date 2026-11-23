@@ -153,7 +153,8 @@ enum KitFixtures {
 
     /// The timeline rows of `lessons` at `now` (minutes since midnight), as `LessonTimelines` computes them in the
     /// app: the rail under a dot spans the lesson and the short break after it; without `now` done lessons count as
-    /// elapsed. Gaps of an hour or more get a row.
+    /// elapsed. Gaps of an hour or more get a row; the lesson that runs says the time left in place of its pill; the
+    /// end mark closes the rail.
     static func rows(_ lessons: [ItmoLesson], now: Int?) -> [ItmoTimelineRow] {
         func share(_ time: Int, _ from: Int, _ to: Int) -> CGFloat {
             guard to > from else { return time >= to ? 1 : 0 }
@@ -172,7 +173,17 @@ enum KitFixtures {
             let next = index + 1 < lessons.count ? lessons[index + 1].start : nil
             let until = next.map { $0 - lesson.end < 60 ? $0 : lesson.end } ?? lesson.end
             let progress = now.map { share($0, lesson.start, until) } ?? (lesson.phase == .done ? 1 : 0)
+            var lesson = lesson
+            if let now, lesson.phase == .now {
+                lesson.remaining = "ещё \(lesson.end - now) мин"
+                lesson.elapsed = share(now, lesson.start, lesson.end)
+                lesson.pills.removeAll { $0.tone == .primary }
+            }
             rows.append(.lesson(lesson, progress: progress, reached: now.map { $0 >= lesson.start } ?? elapsed(lesson)))
+        }
+        if let end = lessons.map(\.end).max() {
+            let over = now.map { $0 >= end } ?? lessons.allSatisfy { $0.phase == .done }
+            rows.append(.end(time: end, reached: over, label: now.map { _ in over ? "Пары закончились" : "Конец пар" }))
         }
         return rows
     }
