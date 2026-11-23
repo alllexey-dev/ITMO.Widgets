@@ -133,17 +133,22 @@ published; Core 1.x stays at 1.7.0.
 2. Build and check:
 
    ```bash
-   ./gradlew clean :app:assembleGithubRelease :app:bundlePlayRelease
+   ./gradlew clean :app:assembleGithubRelease :app:bundlePlayRelease -Pitmo.abiSplit=true
    scripts/check-play-policy.sh
    ```
+
+   `-Pitmo.abiSplit=true` gives one APK per phone ABI (`arm64-v8a`, `armeabi-v7a`) instead of the universal one
+   ([releases](product/releases.md#distribution)); the bundle is the same either way. The flag is sometimes ignored
+   (configuration cache, a running daemon): check `native-code` of each APK before publishing.
 
 3. Sign with the release key (`keystore.properties`, never committed). Verify
    the APK:
 
    ```bash
-   APK=app/build/outputs/apk/github/release/app-github-release.apk
-   "$(ls -d $HOME/Library/Android/sdk/build-tools/*/apksigner | tail -1)" verify --print-certs "$APK" | grep SHA-256
-   "$(ls -d $HOME/Library/Android/sdk/build-tools/*/aapt2 | tail -1)" dump badging "$APK" | head -1
+   for APK in app/build/outputs/apk/github/release/app-github-*-release.apk; do
+     "$(ls -d $HOME/Library/Android/sdk/build-tools/*/apksigner | tail -1)" verify --print-certs "$APK" | grep SHA-256
+     "$(ls -d $HOME/Library/Android/sdk/build-tools/*/aapt2 | tail -1)" dump badging "$APK" | grep -E "^package|native-code"
+   done
    ```
 
    The certificate is `939e9bd5…f071`, the package `dev.alllexey.itmowidgets`
@@ -160,9 +165,11 @@ published; Core 1.x stays at 1.7.0.
 ## 6. GitHub release
 
 ```bash
-cp app/build/outputs/apk/github/release/app-github-release.apk /tmp/itmo-widgets-v<version>.apk
-gh release create v<version> /tmp/itmo-widgets-v<version>.apk --repo alllexey-dev/ITMO.Widgets \
-  --target master --title "<version>" --notes-file <notes>
+OUT=app/build/outputs/apk/github/release
+cp $OUT/app-github-arm64-v8a-release.apk /tmp/itmo-widgets-v<version>-arm64.apk
+cp $OUT/app-github-armeabi-v7a-release.apk /tmp/itmo-widgets-v<version>-armv7.apk
+gh release create v<version> /tmp/itmo-widgets-v<version>-arm64.apk /tmp/itmo-widgets-v<version>-armv7.apk \
+  --repo alllexey-dev/ITMO.Widgets --target master --title "<version>" --notes-file <notes>
 curl -sIL https://github.com/alllexey-dev/ITMO.Widgets/releases/latest | grep -i '^location' | tail -1
 ```
 

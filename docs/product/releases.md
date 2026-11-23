@@ -4,10 +4,10 @@ The current line is 2.3: Android moves onto Kotlin Multiplatform with the
 Material 3 Expressive look (a 2.2 install upgrades in place), and iOS 2.3 is
 the first iOS client, native SwiftUI screens over the shared Kotlin code
 (decisions 0023, 0031, 0035): minimum iOS 26.1, marketing version 2.3.0,
-bundle ID `dev.alllexey.itmowidgets`. Development happens on `master`
-(`2.3-SNAPSHOT`); released versions are the `v*` tags and GitHub releases, the
-history is in [CHANGELOG](../../CHANGELOG.md), the steps of a release are in
-[release](../release.md).
+bundle ID `dev.alllexey.itmowidgets`. Development happens on `master`; the
+latest release is `2.3.0` (version code 20300); released versions are the `v*`
+tags and GitHub releases, the history is in [CHANGELOG](../../CHANGELOG.md),
+the steps of a release are in [release](../release.md).
 
 Achievements, messaging, posts, followers and free-window discovery are out of
 scope. Do not add them opportunistically.
@@ -52,7 +52,7 @@ either updates the other:
   and the Telegram channel. A channel APK is built with
   `-Pitmo.abiSplit=true`: one APK per phone ABI (`arm64-v8a`, `armeabi-v7a`)
   instead of the universal one, which carries MapLibre for four ABIs; the
-  latest beta is `2.3.0-beta.5` (20295, 2026-11-11), with an unsigned
+  last beta was `2.3.0-beta.5` (20295, 2026-11-11), with an unsigned
   `.ipa` beside the APKs.
 - Until the Play listing is public, GitHub is the only channel; the README and
   the site get the Google Play button only after publication.
@@ -68,7 +68,7 @@ minimum Backend it needs.
 
 | Client | Backend client | Backend | MyItmoApi |
 |---|---|---|---|
-| 2.3, Android and iOS (development) | Core 2.0, built in (`:shared:backend-client`, decision 0026) | 1.8.0 (`platform` parameter, alert pushes, account deletion); new request fields are optional | `dev.alllexey:my-itmo-api` 2.x, the version in `gradle/libs.versions.toml` |
+| 2.3.0, Android and iOS | Core 2.0, built in (`:shared:backend-client`, decision 0026) | 1.8.0 (`platform` parameter, alert pushes, account deletion); new request fields are optional | `dev.alllexey:my-itmo-api` 2.x, the version in `gradle/libs.versions.toml` |
 | 2.2 | Core 1.7.0 (Maven Central) | 1.7.0 or later | 1.8.2 |
 | 2.1, 2.1.1 | Core 1.2.0 | 1.2.0 or later | 1.8.1 |
 

@@ -4,7 +4,7 @@ Reference documents in `docs/` describe the current state; this file records
 what changed and when. Unreleased entries describe local development, not a
 publication or deployment.
 
-## Unreleased (2.3.0)
+## 2.3.0 — 2026-11-23
 
 The app is rebuilt on Kotlin Multiplatform: one shared Kotlin core (data, domain, view models) under Compose screens
 on Android and native SwiftUI screens in a new iOS app. Android keeps the features and the data of 2.2.
