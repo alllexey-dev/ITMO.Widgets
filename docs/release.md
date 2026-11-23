@@ -133,13 +133,16 @@ published; Core 1.x stays at 1.7.0.
 2. Build and check:
 
    ```bash
-   ./gradlew clean :app:assembleGithubRelease :app:bundlePlayRelease -Pitmo.abiSplit=true
+   ./gradlew clean :app:assembleGithubRelease -Pitmo.abiSplit=true
+   ./gradlew :app:bundlePlayRelease
    scripts/check-play-policy.sh
    ```
 
    `-Pitmo.abiSplit=true` gives one APK per phone ABI (`arm64-v8a`, `armeabi-v7a`) instead of the universal one
-   ([releases](product/releases.md#distribution)); the bundle is the same either way. The flag is sometimes ignored
-   (configuration cache, a running daemon): check `native-code` of each APK before publishing.
+   ([releases](product/releases.md#distribution)). The bundle is built without it, in its own call: with the flag
+   `:app:buildPlayReleasePreBundle` fails on `Multiple shrunk-resources files`. The flag is sometimes ignored
+   (configuration cache, a running daemon): check `native-code` of each APK before publishing. Nothing in the working
+   tree may change between the two calls, or the bundle gets the `-dirty` build identity.
 
 3. Sign with the release key (`keystore.properties`, never committed). Verify
    the APK:
