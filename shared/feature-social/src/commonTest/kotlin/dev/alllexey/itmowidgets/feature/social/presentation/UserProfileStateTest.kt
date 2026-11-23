@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.core.testing.profile
 import dev.alllexey.itmowidgets.core.testing.teacherReviews
 import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.social.domain.model.ContactKind
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonContact
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonEducation
@@ -87,9 +88,12 @@ class UserProfileStateTest {
 
     @Test
     fun directoryContactsAppearWithoutBackendAndAreAbsentWithoutDirectoryIdentity() {
-        val contacts = listOf(PersonContact("E-mail", "test@example.test", "mailto:test@example.test"))
+        val contacts = listOf(PersonContact(ContactKind.EMAIL, "E-mail", "test@example.test", "mailto:test@example.test"))
         val card = content(state(ProfilePart.Ready(person.copy(contacts = contacts)), ProfilePart.Absent))
-        assertEquals(listOf(ProfileContact("test@example.test", "E-mail", "mailto:test@example.test", AppIcon.MAIL)), card.contacts)
+        assertEquals(
+            listOf(ProfileContact("test@example.test", UiText.Res(SocialStrings.person_contact_email), "mailto:test@example.test", AppIcon.MAIL)),
+            card.contacts,
+        )
         val backendOnly = content(state(ProfilePart.Absent, ProfilePart.Ready(social)))
         assertTrue(backendOnly.contacts.isEmpty())
     }
@@ -97,18 +101,39 @@ class UserProfileStateTest {
     @Test
     fun eachContactShowsTheIconOfWhereItLeadsAndPlainTextHasNoDestination() {
         val contacts = listOf(
-            PersonContact("Телефон", "+7 812 000-00-00", "tel:+78120000000"),
-            PersonContact("Telegram", "@test", "https://t.me/test"),
-            PersonContact("VK", "test", "https://vk.com/test"),
-            PersonContact("LinkedIn", "in/test", "https://www.linkedin.com/in/test"),
-            PersonContact(" ", "Только текст", null),
+            PersonContact(ContactKind.PHONE, "phone", "+7 812 000-00-00", "tel:+78120000000"),
+            PersonContact(ContactKind.TELEGRAM, "telegram", "@test", "https://t.me/test"),
+            PersonContact(ContactKind.VK, "vkontakte", "@test", "https://vk.com/test"),
+            PersonContact(ContactKind.LINKEDIN, "linkedin", "test", "https://www.linkedin.com/in/test"),
+            PersonContact(ContactKind.WEB, "web", "t.me/test", "https://t.me/test"),
+            PersonContact(ContactKind.WEB, "web", "vk.com/test", "https://vk.com/test"),
+            PersonContact(ContactKind.SKYPE, "skype", "test", null),
+            PersonContact(ContactKind.OTHER, " ", "Только текст", null),
         )
         val card = content(state(ProfilePart.Ready(person.copy(contacts = contacts)), ProfilePart.Absent))
         assertEquals(
-            listOf(AppIcon.CALL, AppIcon.BRAND_TELEGRAM, AppIcon.BRAND_VK, AppIcon.LINK, AppIcon.INFO),
+            listOf(AppIcon.CALL, AppIcon.BRAND_TELEGRAM, AppIcon.BRAND_VK, AppIcon.LINK, AppIcon.BRAND_TELEGRAM,
+                AppIcon.BRAND_VK, AppIcon.INFO, AppIcon.INFO),
             card.contacts.map { it.icon },
         )
         assertEquals(null, card.contacts.last().label)
+    }
+
+    @Test
+    fun contactSubtitlesNameTheKindAndKeepAnUnknownAlias() {
+        val kinds = ContactKind.entries.filter { it != ContactKind.OTHER }
+        val contacts = kinds.map { PersonContact(it, it.name.lowercase(), "test", null) } +
+            PersonContact(ContactKind.OTHER, "icq", "test", null)
+        val card = content(state(ProfilePart.Ready(person.copy(contacts = contacts)), ProfilePart.Absent))
+        assertEquals(
+            listOf(
+                SocialStrings.person_contact_email, SocialStrings.person_contact_phone, SocialStrings.person_contact_web,
+                SocialStrings.person_contact_vk, SocialStrings.person_contact_telegram, SocialStrings.person_contact_linkedin,
+                SocialStrings.person_contact_skype, SocialStrings.person_contact_twitter, SocialStrings.person_contact_facebook,
+                SocialStrings.person_contact_livejournal,
+            ).map { UiText.Res(it) } + UiText.Dynamic("icq"),
+            card.contacts.map { it.label },
+        )
     }
 
     @Test

@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.core.text.AppIcon
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.personInitials
 import dev.alllexey.itmowidgets.feature.social.domain.model.Person
+import dev.alllexey.itmowidgets.feature.social.domain.model.ContactKind
 import dev.alllexey.itmowidgets.feature.social.domain.model.PersonContact
 import dev.alllexey.itmowidgets.shared.feature.social.SocialStrings
 import kotlinx.datetime.LocalTime
@@ -72,10 +73,10 @@ data class TaughtSubject(val name: String, val note: UiText)
 data class StudyBlock(val groups: List<ProfileLine>, val schedule: Boolean, val sport: Boolean, val friends: Boolean)
 
 /**
- * A `Контакты` row: the value, its My ITMO label, the destination a tap opens and the icon of its kind (mail, phone,
+ * A `Контакты` row: the value, the name of its kind (the My ITMO alias for an unknown one), the destination a tap opens and the icon of its kind (mail, phone,
  * the Telegram or VK mark, a link). Without a destination the row is plain text with the neutral `info` icon.
  */
-data class ProfileContact(val value: String, val label: String?, val url: String?, val icon: AppIcon)
+data class ProfileContact(val value: String, val label: UiText?, val url: String?, val icon: AppIcon)
 
 sealed interface UserProfileUiState {
     data object Loading : UserProfileUiState
@@ -258,7 +259,22 @@ internal fun teacherNowLine(lesson: TeacherNowLesson): TeacherNowLine {
     return TeacherNowLine(heading, place, UiText.Joined(listOf(UiText.Dynamic(lesson.subject), kind), ", "), lesson.isNow)
 }
 
-private fun PersonContact.toProfileContact() = ProfileContact(value, label.takeIf(String::isNotBlank), url, contactIcon(url))
+private fun PersonContact.toProfileContact() = ProfileContact(value, contactLabel(), url, contactIcon(url))
+
+/** The human name of the contact's kind; an unknown My ITMO alias stays as it is. */
+private fun PersonContact.contactLabel(): UiText? = when (kind) {
+    ContactKind.EMAIL -> UiText.Res(SocialStrings.person_contact_email)
+    ContactKind.PHONE -> UiText.Res(SocialStrings.person_contact_phone)
+    ContactKind.WEB -> UiText.Res(SocialStrings.person_contact_web)
+    ContactKind.VK -> UiText.Res(SocialStrings.person_contact_vk)
+    ContactKind.TELEGRAM -> UiText.Res(SocialStrings.person_contact_telegram)
+    ContactKind.LINKEDIN -> UiText.Res(SocialStrings.person_contact_linkedin)
+    ContactKind.SKYPE -> UiText.Res(SocialStrings.person_contact_skype)
+    ContactKind.TWITTER -> UiText.Res(SocialStrings.person_contact_twitter)
+    ContactKind.FACEBOOK -> UiText.Res(SocialStrings.person_contact_facebook)
+    ContactKind.LIVEJOURNAL -> UiText.Res(SocialStrings.person_contact_livejournal)
+    ContactKind.OTHER -> label.takeIf(String::isNotBlank)?.let(UiText::Dynamic)
+}
 
 private fun contactIcon(url: String?): AppIcon = when {
     url == null -> AppIcon.INFO

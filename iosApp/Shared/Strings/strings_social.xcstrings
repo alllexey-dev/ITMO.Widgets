@@ -157,6 +157,126 @@
         }
       }
     },
+    "person_contact_email" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Почта"
+          }
+        }
+      }
+    },
+    "person_contact_facebook" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Facebook"
+          }
+        }
+      }
+    },
+    "person_contact_linkedin" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LinkedIn"
+          }
+        }
+      }
+    },
+    "person_contact_livejournal" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LiveJournal"
+          }
+        }
+      }
+    },
+    "person_contact_phone" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телефон"
+          }
+        }
+      }
+    },
+    "person_contact_skype" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skype"
+          }
+        }
+      }
+    },
+    "person_contact_telegram" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telegram"
+          }
+        }
+      }
+    },
+    "person_contact_twitter" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "X (Twitter)"
+          }
+        }
+      }
+    },
+    "person_contact_vk" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ВКонтакте"
+          }
+        }
+      }
+    },
+    "person_contact_web" : {
+      "comment" : "Generated from strings_social.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сайт"
+          }
+        }
+      }
+    },
     "person_group_course" : {
       "comment" : "Generated from strings_social.xml",
       "extractionState" : "manual",
