@@ -277,7 +277,9 @@ notifications, the tile), with frozen keys in `scripts/strings-frozen-keys.txt`.
 The Android flavor dimension `distribution` has `github` (APK on GitHub
 Releases) and `play` (AAB for Google Play), with one `applicationId` and one
 signing key; they differ only in `BuildConfig.DOWNLOAD_URL` and the update
-action (`app/src/{github,play}/.../UpdateActionModule.kt`). Debug and
+offer: who decides that it opens, its wording and its action
+(`app/src/{github,play}/.../UpdateActionModule.kt`,
+[update offer](features/update.md#per-distribution)). Debug and
 `minifiedSmoke` builds call `https://dev.widgets.alllexey.dev`, release builds
 `https://widgets.alllexey.dev`; on iOS the origin is `BACKEND_BASE_URL` in
 `iosApp/Config/Base.xcconfig`. Both apps send `X-App-Version` and `X-Client`

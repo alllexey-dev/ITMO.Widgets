@@ -40,6 +40,7 @@ import dev.alllexey.itmowidgets.di.bridge.StopKoinRule
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingGateViewModel
 import dev.alllexey.itmowidgets.feature.recordbook.ui.BarsLoginActivity
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
+import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateAvailability
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateReminder
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
@@ -93,7 +94,7 @@ class ShellHostTest {
                     single<SessionRepository> { sessions }
                     single<OnboardingRepository> { onboarding }
                     single<InstallStateWatcher> { NoInstallState }
-                    factory { PendingAppUpdate(updates, Clock.System) }
+                    factory { PendingAppUpdate(updates, AppUpdateAvailability.Always, Clock.System) }
                     viewModelOf(::OnboardingGateViewModel)
                 },
             )

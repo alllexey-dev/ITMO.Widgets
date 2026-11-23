@@ -16,8 +16,11 @@ import dev.alllexey.itmowidgets.feature.connections.domain.PairingRepository
 import dev.alllexey.itmowidgets.feature.auth.data.SessionRepositoryImpl
 import dev.alllexey.itmowidgets.feature.onboarding.data.OnboardingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.update.data.AppUpdateRepositoryImpl
+import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateAvailability
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
+import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
+import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateCopy
 import dev.alllexey.itmowidgets.feature.update.ui.InstallStateWatcher
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import org.junit.Assert.assertEquals
@@ -72,10 +75,13 @@ class AccountKoinGraphTest {
 
     /** Each distribution flavor's unit tests run this against its own `updateActionModule`. */
     @Test
-    fun `the flavor's update action and install watcher resolve`() {
+    fun `the flavor's update check, wording, action and install watcher resolve`() {
         bootApplication()
         val koin = GlobalContext.get()
 
+        assertNotNull(koin.get<AppUpdateAvailability>())
+        assertNotNull(koin.get<PendingAppUpdate>())
+        assertNotNull(koin.get<AppUpdateCopy>())
         assertNotNull(koin.get<UpdateAction>())
         assertNotNull(koin.get<InstallStateWatcher>())
     }

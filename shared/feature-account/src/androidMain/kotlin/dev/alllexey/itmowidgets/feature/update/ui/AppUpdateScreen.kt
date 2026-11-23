@@ -29,8 +29,6 @@ import dev.alllexey.itmowidgets.designsystem.kit.ItmoSnackbarHost
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateUiState
 import dev.alllexey.itmowidgets.shared.compose.strings.Res
-import dev.alllexey.itmowidgets.shared.compose.strings.app_update_action
-import dev.alllexey.itmowidgets.shared.compose.strings.app_update_description
 import dev.alllexey.itmowidgets.shared.compose.strings.app_update_later
 import dev.alllexey.itmowidgets.shared.compose.strings.app_update_skip
 import dev.alllexey.itmowidgets.shared.compose.strings.app_update_title
@@ -59,6 +57,7 @@ object AppUpdateTestTags {
  * The offer of the release Backend reported: a close button, then a scrolling content-state column with the icon,
  * the title (outdated when [AppUpdateUiState.unsupported]), the versions, the reason followed by the release notes,
  * and three stacked actions. An unsupported build has nowhere to skip to, so it only offers the reminder.
+ * [copy] words the reason and the update button for the place the build is updated from.
  */
 @Composable
 fun AppUpdateScreen(
@@ -69,6 +68,7 @@ fun AppUpdateScreen(
     onSkip: () -> Unit,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    copy: AppUpdateCopy = AppUpdateCopy.Download,
 ) {
     Box(modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxSize()) {
@@ -90,7 +90,7 @@ fun AppUpdateScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                AppUpdateOffer(state, onUpdate, onLater, onSkip)
+                AppUpdateOffer(state, copy, onUpdate, onLater, onSkip)
             }
         }
         ItmoSnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter))
@@ -100,6 +100,7 @@ fun AppUpdateScreen(
 @Composable
 private fun AppUpdateOffer(
     state: AppUpdateUiState,
+    copy: AppUpdateCopy,
     onUpdate: () -> Unit,
     onLater: () -> Unit,
     onSkip: () -> Unit,
@@ -128,7 +129,7 @@ private fun AppUpdateOffer(
     )
     Spacer(Modifier.height(ItmoTheme.spacing.compact))
     Text(
-        description(state),
+        description(state, copy),
         Modifier.testTag(AppUpdateTestTags.DESCRIPTION),
         color = ItmoTheme.colorScheme.onSurfaceVariant,
         style = ItmoTheme.typography.bodyMedium,
@@ -136,7 +137,7 @@ private fun AppUpdateOffer(
     )
     Spacer(Modifier.height(ActionGap))
     ProgressButton(
-        stringResource(Res.string.app_update_action),
+        stringResource(copy.action),
         onUpdate,
         Modifier.testTag(AppUpdateTestTags.UPDATE),
         style = ProgressButtonStyle.Filled,
@@ -161,14 +162,14 @@ private fun AppUpdateOffer(
 
 /**
  * Release notes come from Backend and explain the release; they do not explain why this screen is open, so they
- * follow the reason after a blank line instead of replacing it.
+ * follow the reason after a blank line instead of replacing it. A [copy] without notes shows the reason alone.
  */
 @Composable
-private fun description(state: AppUpdateUiState): String {
+private fun description(state: AppUpdateUiState, copy: AppUpdateCopy): String {
     val reason = stringResource(
-        if (state.unsupported) Res.string.app_update_unsupported_description else Res.string.app_update_description
+        if (state.unsupported) Res.string.app_update_unsupported_description else copy.description
     )
-    return if (state.note.isEmpty()) reason else "$reason\n\n${state.note}"
+    return if (state.note.isEmpty() || !copy.showsNote) reason else "$reason\n\n${state.note}"
 }
 
 /** `Widget.ItmoWidgets.ContentState.PrimaryAction`'s 20 dp top margin, off the spacing scale. */

@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.update.domain
 
+import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateAvailability
 import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,7 +19,7 @@ class PendingAppUpdateTest {
     fun offersAnUpdateTheUserHasNotSeenYet() = runTest {
         val repository = FakeAppUpdateRepository(update = update())
 
-        val pending = PendingAppUpdate(repository, clock())()
+        val pending = pending(repository)
 
         assertEquals(update(), pending)
         assertEquals(1, repository.notifications)
@@ -28,7 +29,7 @@ class PendingAppUpdateTest {
     fun staysSilentWithoutAnUpdate() = runTest {
         val repository = FakeAppUpdateRepository(update = null)
 
-        assertNull(PendingAppUpdate(repository, clock())())
+        assertNull(pending(repository))
         assertEquals(0, repository.notifications)
     }
 
@@ -39,10 +40,10 @@ class PendingAppUpdateTest {
             reminderState = reminder(notifiedAt = now - 23.hours)
         )
 
-        assertNull(PendingAppUpdate(repository, clock())())
+        assertNull(pending(repository))
 
         repository.reminderState = reminder(notifiedAt = now - 25.hours)
-        assertNotNull(PendingAppUpdate(repository, clock())())
+        assertNotNull(pending(repository))
     }
 
     @Test
@@ -52,10 +53,10 @@ class PendingAppUpdateTest {
             reminderState = reminder(skipped = "2.2")
         )
 
-        assertNull(PendingAppUpdate(repository, clock())())
+        assertNull(pending(repository))
 
         repository.update = update(latest = "2.3")
-        assertNotNull(PendingAppUpdate(repository, clock())())
+        assertNotNull(pending(repository))
     }
 
     @Test
@@ -65,9 +66,54 @@ class PendingAppUpdateTest {
             reminderState = reminder(skipped = "2.2", notifiedAt = now)
         )
 
-        assertNotNull(PendingAppUpdate(repository, clock())())
+        assertNotNull(pending(repository))
         assertEquals(1, repository.notifications)
     }
+
+    @Test
+    fun anUpdateTheStoreDoesNotHaveYetIsNotOfferedAndDoesNotStartTheInterval() = runTest {
+        val repository = FakeAppUpdateRepository(update = update())
+        val store = FakeAppUpdateAvailability(available = false)
+
+        assertNull(pending(repository, store))
+        assertEquals(0, repository.notifications)
+
+        // The store got the release: the next check offers it, not a day later.
+        store.available = true
+        assertEquals(update(), pending(repository, store))
+        assertEquals(1, repository.notifications)
+        assertEquals(listOf(update(), update()), store.asked)
+    }
+
+    @Test
+    fun anUnsupportedBuildAlsoWaitsForTheStore() = runTest {
+        val repository = FakeAppUpdateRepository(update = update(unsupported = true))
+        val store = FakeAppUpdateAvailability(available = false)
+
+        // A forced screen with nothing to update to would be a dead end.
+        assertNull(pending(repository, store))
+        assertEquals(0, repository.notifications)
+
+        store.available = true
+        assertEquals(update(unsupported = true), pending(repository, store))
+        assertEquals(listOf(update(unsupported = true), update(unsupported = true)), store.asked)
+    }
+
+    @Test
+    fun theStoreIsNotAskedAboutAnOfferTheReminderHoldsBack() = runTest {
+        val store = FakeAppUpdateAvailability()
+
+        assertNull(pending(FakeAppUpdateRepository(update = null), store))
+        assertNull(pending(FakeAppUpdateRepository(update(), reminder(skipped = "2.2")), store))
+        assertNull(pending(FakeAppUpdateRepository(update(), reminder(notifiedAt = now - 23.hours)), store))
+
+        assertEquals(emptyList(), store.asked)
+    }
+
+    private suspend fun pending(
+        repository: FakeAppUpdateRepository,
+        store: FakeAppUpdateAvailability = FakeAppUpdateAvailability()
+    ) = PendingAppUpdate(repository, store, clock())()
 
     private fun clock(): Clock = object : Clock {
         override fun now(): Instant = now

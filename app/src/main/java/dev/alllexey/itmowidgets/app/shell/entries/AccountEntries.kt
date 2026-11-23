@@ -69,6 +69,7 @@ import dev.alllexey.itmowidgets.feature.onboarding.ui.onboardingActions
 import dev.alllexey.itmowidgets.feature.settings.presentation.SettingsPage
 import dev.alllexey.itmowidgets.feature.settings.ui.CALENDAR_PERMISSIONS
 import dev.alllexey.itmowidgets.feature.update.navigation.UpdateRoutes
+import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateCopy
 import dev.alllexey.itmowidgets.feature.update.ui.AppUpdateRoute
 import dev.alllexey.itmowidgets.feature.update.ui.UpdateAction
 import dev.alllexey.itmowidgets.feature.update.ui.toBundle
@@ -316,17 +317,19 @@ private fun WifiEntry(onClose: () -> Unit) {
     WifiRoute(onClose = onClose, onSignIn = signIn, viewModel = viewModel)
 }
 
-/** The update offer: its update button runs the distribution's `UpdateAction` on this activity. */
+/** The update offer in the distribution's wording: its update button runs the `UpdateAction` on this activity. */
 @Composable
 private fun AppUpdateEntry(onClose: () -> Unit) {
     val context = LocalContext.current
     val activity = LocalActivity.current
-    val updateAction = remember(context) { KoinStarter.ensureStarted(context).get<UpdateAction>() }
+    val koin = remember(context) { KoinStarter.ensureStarted(context) }
+    val updateAction = remember(koin) { koin.get<UpdateAction>() }
     AppUpdateRoute(
         onUpdate = { unsupported, onFailed ->
             if (activity != null) updateAction.start(activity, unsupported, onFailed) else onFailed()
         },
         onClose = onClose,
+        copy = remember(koin) { koin.get<AppUpdateCopy>() },
     )
 }
 

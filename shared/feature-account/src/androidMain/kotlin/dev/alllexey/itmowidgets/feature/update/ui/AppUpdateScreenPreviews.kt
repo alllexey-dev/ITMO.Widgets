@@ -13,8 +13,8 @@ import dev.alllexey.itmowidgets.feature.update.ui.preview.AppUpdatePreviewData
  */
 
 @Composable
-private fun AppUpdatePreview(state: AppUpdateUiState) = ItmoPreview {
-    AppUpdateScreen(state, onUpdate = {}, onLater = {}, onClose = {}, onSkip = {})
+private fun AppUpdatePreview(state: AppUpdateUiState, copy: AppUpdateCopy = AppUpdateCopy.Download) = ItmoPreview {
+    AppUpdateScreen(state, onUpdate = {}, onLater = {}, onClose = {}, onSkip = {}, copy = copy)
 }
 
 internal class AppUpdateScreenSupportedPreview {
@@ -33,4 +33,11 @@ internal class AppUpdateScreenLongNotePreview {
     @Preview(name = "long-note")
     @Composable
     fun AppUpdateScreen() = AppUpdatePreview(AppUpdatePreviewData.LongNote)
+}
+
+/** The Google Play wording: the same offer with a note that stays off the screen. */
+internal class AppUpdateScreenPlayPreview {
+    @Preview(name = "play")
+    @Composable
+    fun AppUpdateScreen() = AppUpdatePreview(AppUpdatePreviewData.Supported, AppUpdateCopy.GooglePlay)
 }

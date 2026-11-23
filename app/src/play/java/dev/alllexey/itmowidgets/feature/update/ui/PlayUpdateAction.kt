@@ -4,15 +4,14 @@ import android.app.Activity
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateOptions
-import com.google.android.play.core.install.model.AppUpdateType
-import com.google.android.play.core.install.model.UpdateAvailability
 import dev.alllexey.itmowidgets.BuildConfig
+import dev.alllexey.itmowidgets.feature.update.startableUpdateType
 import java.util.concurrent.Executor
 
 /**
  * The Google Play build updates only through Play: a flexible update in the background, an immediate one when
- * the installed build is unsupported. When Play offers no update (not rolled out yet, installed elsewhere) the
- * app's card in Play opens instead.
+ * the installed build is unsupported. The offer opens only when Play has such an update (`PlayUpdateAvailability`);
+ * if it is gone by the time the button is pressed, the app's card in Play opens instead.
  *
  * @param callbacks runs the Play task callbacks; the main thread in the app.
  */
@@ -31,14 +30,7 @@ class PlayUpdateAction(
     }
 
     private fun startFlow(info: AppUpdateInfo, activity: Activity, unsupported: Boolean): Boolean {
-        val type = if (unsupported) AppUpdateType.IMMEDIATE else AppUpdateType.FLEXIBLE
-        val available = when (info.updateAvailability()) {
-            UpdateAvailability.UPDATE_AVAILABLE -> true
-            // An immediate update left halfway resumes where it stopped.
-            UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS -> type == AppUpdateType.IMMEDIATE
-            else -> false
-        }
-        if (!available || !info.isUpdateTypeAllowed(type)) return false
+        val type = info.startableUpdateType(unsupported) ?: return false
         return runCatching {
             manager.startUpdateFlowForResult(info, activity, AppUpdateOptions.defaultOptions(type), REQUEST_CODE)
         }.getOrDefault(false)

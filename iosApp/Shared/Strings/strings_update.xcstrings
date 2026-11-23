@@ -49,6 +49,42 @@
         }
       }
     },
+    "app_update_play_action" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить"
+          }
+        }
+      }
+    },
+    "app_update_play_description" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновление уже доступно в Google Play. В нём новые возможности и исправления."
+          }
+        }
+      }
+    },
+    "app_update_play_open_failed" : {
+      "comment" : "Generated from strings_update.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось открыть Google Play"
+          }
+        }
+      }
+    },
     "app_update_skip" : {
       "comment" : "Generated from strings_update.xml",
       "extractionState" : "manual",

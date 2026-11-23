@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.app.AppApi
 import dev.alllexey.itmowidgets.client.device.DevicePlatform
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
+import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateAvailability
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.presentation.AppUpdateArgs
 import org.koin.dsl.module
@@ -13,12 +14,14 @@ import platform.Foundation.NSBundle
 /**
  * The iOS side of [updateModule], what `androidUpdateModule` gives Android: the installed version is the bundle's
  * `CFBundleShortVersionString` (`MARKETING_VERSION`), Core 2.0's app area comes from the one `BackendClient`, and the
- * check asks Backend for the iOS release (`version-info?platform=IOS`). Load it with [updateModule].
+ * check asks Backend for the iOS release (`version-info?platform=IOS`). The App Store is not asked whether it has
+ * the release: the offer follows Backend alone. Load it with [updateModule].
  */
 val updateIosModule = module {
     single { AppVersionName(installedVersion()) }
     single<AppApi> { get<BackendClient>().app }
     single { DevicePlatform.IOS }
+    single<AppUpdateAvailability> { AppUpdateAvailability.Always }
 }
 
 /**

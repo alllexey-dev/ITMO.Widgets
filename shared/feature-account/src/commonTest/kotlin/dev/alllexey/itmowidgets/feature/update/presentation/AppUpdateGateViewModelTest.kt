@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.update.presentation
 
 import dev.alllexey.itmowidgets.feature.update.FakeAppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdate
+import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateAvailability
 import dev.alllexey.itmowidgets.feature.update.domain.AppUpdateRepository
 import dev.alllexey.itmowidgets.feature.update.domain.AppVersionName
 import dev.alllexey.itmowidgets.feature.update.domain.PendingAppUpdate
@@ -41,7 +42,7 @@ class AppUpdateGateViewModelTest {
     }
 
     private fun createViewModel(repository: AppUpdateRepository) = AppUpdateGateViewModel(
-        PendingAppUpdate(repository, object : Clock {
+        PendingAppUpdate(repository, AppUpdateAvailability.Always, object : Clock {
             override fun now(): Instant = Instant.parse("2026-09-15T10:00:00Z")
         })
     )
