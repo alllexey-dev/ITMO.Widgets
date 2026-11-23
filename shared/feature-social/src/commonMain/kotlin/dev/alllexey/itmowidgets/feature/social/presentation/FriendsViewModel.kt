@@ -109,7 +109,8 @@ class FriendsViewModel(
         pageJob = pages.launch(RefreshMode.Pull) {
             when (val page = search.search(current, offset)) {
                 is AppResult.Success -> {
-                    results.update { it + page.value.results }
+                    // A person found under two spellings may come again on a later page.
+                    results.update { (it + page.value.results).distinctBy(PersonSearchResult::isu) }
                     nextOffset.value = page.value.nextOffset
                 }
                 is AppResult.Failure -> eventQueue.send(FriendsEvent.ActionFailed(page.error))

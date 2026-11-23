@@ -54,6 +54,11 @@ each `Все`, `Друзья` or `Никто`.
   registered users through Backend lookup in chunks of 50. Phone and e-mail from
   the directory never leave the data layer. See decision
   [0006](https://github.com/alllexey-dev/itmo-widgets-backend/blob/dev/docs/decisions/0006-people-search.md).
+  My ITMO tells `е` from `ё` and takes every word but the last as a whole word, so `семен головин` finds nobody
+  named `Семён` and `федоров` misses `Фёдоров`. Every page therefore asks the query as typed and its other
+  spellings (`yoVariants`: a typed `ё` read as `е` first, then at most one `ё` per word, fewest first, at most 6)
+  at the same offset in parallel and joins the hits: the typed spelling first, each person once; the next page
+  follows while any spelling has more. `Друзья` also keeps a person once across pages.
 - `PersonRepository` (`PersonRepositoryImpl`) calls
   `MyItmoClient.personalities.getPersonality(isu)` independently of the opt-in,
   with a memory cache by ISU. The mapper keeps name, photo, positions, rooms and

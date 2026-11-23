@@ -282,7 +282,12 @@ class FriendsViewModelTest {
                     total = 3,
                     nextOffset = 2,
                 ),
-                2 to PeopleSearchPage(listOf(PersonSearchResult(3, "Третий", null, null)), 3, null),
+                // The second page repeats a person found under another spelling; the list shows them once.
+                2 to PeopleSearchPage(
+                    listOf(PersonSearchResult(2, "Посторонний", null, null), PersonSearchResult(3, "Третий", null, null)),
+                    3,
+                    null,
+                ),
             ),
         )
         val viewModel = FriendsViewModel(FakeSocialRepository(), search, time)

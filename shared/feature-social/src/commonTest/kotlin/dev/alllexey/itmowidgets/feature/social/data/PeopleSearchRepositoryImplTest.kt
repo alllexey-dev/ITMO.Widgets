@@ -38,11 +38,14 @@ class PeopleSearchRepositoryImplTest {
     @Test
     fun theFixturePageIsAskedBy20AndKeepsOnlyNamePhotoAndRegistration() = runTest {
         val social = FakeSocial(registered = listOf(123456))
-        val repository = repository(social) { respondJson(PersonalityFixtures.SEARCH) }
+        val repository = repository(social) { request ->
+            respondJson(if (request.url.parameters["q"] == "студент") PersonalityFixtures.SEARCH else PersonalityFixtures.SEARCH_EMPTY)
+        }
 
         val page = (repository.search("  студент ") as AppResult.Success).value
 
-        val url = requests.single().url
+        assertEquals(setOf("студент", "студёнт"), requests.map { it.url.parameters["q"] }.toSet())
+        val url = requests.first { it.url.parameters["q"] == "студент" }.url
         assertEquals("/api/personalities/persons", url.encodedPath)
         assertEquals("студент", url.parameters["q"])
         assertEquals("20", url.parameters["limit"])
@@ -99,6 +102,62 @@ class PeopleSearchRepositoryImplTest {
         assertEquals("20", requests.first().url.parameters["offset"])
         assertNull(last.nextOffset)
         assertEquals(PeopleSearchPage(emptyList(), 0, null), empty)
+    }
+
+    @Test
+    fun everySpellingIsAskedAndTheHitsJoinTypedFirstAndOnce() = runTest {
+        val answers = mapOf(
+            "семен" to """{"error_code":0,"result":{"count":21,"data":[{"id":100011,"fio":"Семенов Семён"},{"id":100012,"fio":"Семенов Иван"}]}}""",
+            "семён" to """{"error_code":0,"result":{"count":2,"data":[{"id":100013,"fio":"Семёнов Пётр"},{"id":100011,"fio":"Семенов Семён"}]}}""",
+        )
+        val repository = repository(FakeSocial()) { request ->
+            respondJson(answers[request.url.parameters["q"]] ?: PersonalityFixtures.SEARCH_EMPTY)
+        }
+
+        val page = (repository.search("семен", offset = 20) as AppResult.Success).value
+
+        assertEquals(setOf("семен", "сёмен", "семён"), requests.map { it.url.parameters["q"] }.toSet())
+        assertEquals(listOf("20", "20", "20"), requests.map { it.url.parameters["offset"] })
+        assertEquals(listOf(100011, 100012, 100013), page.results.map { it.isu })
+        assertEquals(23, page.total)
+        assertNull(page.nextOffset)
+    }
+
+    @Test
+    fun theNextPageFollowsWhileAnySpellingHasMore() = runTest {
+        val repository = repository(FakeSocial()) { request ->
+            respondJson(
+                if (request.url.parameters["q"] == "фёдоров") """{"error_code":0,"result":{"count":30,"data":[{"id":100014,"fio":"Фёдоров Иван"}]}}"""
+                else PersonalityFixtures.SEARCH_EMPTY
+            )
+        }
+
+        val page = (repository.search("федоров") as AppResult.Success).value
+
+        assertEquals(listOf(100014), page.results.map { it.isu })
+        assertEquals(1, page.nextOffset)
+    }
+
+    @Test
+    fun aQueryWithoutEIsAskedOnce() = runTest {
+        val repository = repository(FakeSocial()) { respondJson(PersonalityFixtures.SEARCH_EMPTY) }
+
+        repository.search("иванов")
+
+        assertEquals(listOf("иванов"), requests.map { it.url.parameters["q"] })
+    }
+
+    @Test
+    fun yoVariantsPutOneYoPerWordFewestFirstAndReadATypedYoAsE() {
+        assertEquals(listOf("сёмен", "семён"), yoVariants("семен"))
+        assertEquals(
+            listOf("Сёмен Федоров", "Семён Федоров", "Семен Фёдоров", "Сёмен Фёдоров", "Семён Фёдоров"),
+            yoVariants("Семен Федоров"),
+        )
+        assertEquals(listOf("семенов", "сёменов"), yoVariants("семёнов"))
+        assertEquals(emptyList(), yoVariants("иванов"))
+        assertEquals(6, yoVariants("елена ерема федотова").size)
+        assertEquals(listOf("еж"), yoVariants("ёж"))
     }
 
     @Test
