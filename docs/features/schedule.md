@@ -149,6 +149,8 @@ queue; plain `очередь` while the place is unknown or the lesson is only p
 
 - `PendingSportBookingsRepository` (`core/sport`) excludes cancelled, terminal, started and already-signed entries;
   queues on the same lesson collapse into one row; unpublished predictions use prototype dates plus two weeks.
+  Its observers share one projection kept current in the application scope from the first observer on, so a screen
+  that subscribes again starts from the known queues, not from an empty list.
 - Observed only when the preference is on and only for the own schedule; never for friends or the official cache.
   The Backend opt-in stays an independent gate in the data layer.
 - A queue is never `идёт` or `далее` and does not count as a lesson (the day's count, the strip's and the month's

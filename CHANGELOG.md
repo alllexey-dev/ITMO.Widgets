@@ -312,6 +312,9 @@ on Android and native SwiftUI screens in a new iOS app. Android keeps the featur
 
 ### Fixes
 
+- A lesson from an own sport queue no longer leaves its day for a moment when Сегодня or the schedule comes back
+  after another screen; in the evening that also threw away the scroll of Сегодня. Every new observer of the queues
+  started from an empty list; now they share one projection that stays current.
 - The Google Play build offers an update only when Google Play has it for this phone: Backend's latest version moves
   with a GitHub release, and during a review, a staged rollout or a GitHub-only beta the offer led to a Play card
   without `Обновить`, every day. A build below the minimum version waits for Play the same way instead of showing a

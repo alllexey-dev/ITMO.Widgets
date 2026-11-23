@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
@@ -39,9 +40,11 @@ class PendingSportBookingsRepositoryImplTest {
     private val bookings = Bookings()
     private val data = SportData()
     private val services = FakeCustomServicesRepository(enabled = true)
-    private val repository = PendingSportBookingsRepositoryImpl(bookings, data, services, FixedTime)
+    // The shared projection runs in the test's background scope, on the scheduler every test below runs on.
+    private val scope = TestScope()
+    private val repository = PendingSportBookingsRepositoryImpl(bookings, data, services, FixedTime, scope.backgroundScope)
 
-    @Test fun `disabled services emit empty and make no requests`() = runTest {
+    @Test fun `disabled services emit empty and make no requests`() = scope.runTest {
         services.enabled.value = false
         data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry()))
 
@@ -51,7 +54,7 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(0, data.refreshes)
     }
 
-    @Test fun `future prediction shifts once while bound real and free lessons use actual dates`() = runTest {
+    @Test fun `future prediction shifts once while bound real and free lessons use actual dates`() = scope.runTest {
         val prototype = SportCardFixtures.entry().targetLesson.copy(
             id = 20, start = SportCardFixtures.start - 14.days, end = SportCardFixtures.start - 14.days + 90.minutes,
             sectionName = "  Секция  ", teacherFio = " Преподаватель ", roomName = " Зал ", teacherIsu = 300001
@@ -85,7 +88,7 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(free.teacherIsu, free.toDetailsArgs(MOSCOW).teacherIsu)
     }
 
-    @Test fun `only active future unsigned queues remain and multiple queues for real lesson do not duplicate`() = runTest {
+    @Test fun `only active future unsigned queues remain and multiple queues for real lesson do not duplicate`() = scope.runTest {
         val base = SportCardFixtures.entry()
         val signed = base.copy(id = 8, targetLesson = base.targetLesson.copy(id = 88))
         bookings.confirmed.value = AppResult.Success(listOf(SportCardFixtures.booking(88)))
@@ -105,7 +108,7 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(listOf(10L, 11L), pending.value.map { it.lessonId })
     }
 
-    @Test fun `queue updates confirmation and opt out update observers without requiring friends data`() = runTest {
+    @Test fun `queue updates confirmation and opt out update observers without requiring friends data`() = scope.runTest {
         val states = mutableListOf<AppResult<List<PendingSportBooking>>>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repository.observePendingBookings().toList(states) }
         data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry()))
@@ -129,22 +132,42 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(AppResult.Success(emptyList<PendingSportBooking>()), states.last())
     }
 
-    @Test fun `source failures are not interpreted as no confirmed bookings`() = runTest {
+    @Test fun `a later observer starts from the queue the sources have, not from an empty one`() = scope.runTest {
+        data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry()))
+        val known = repository.observePendingBookings().first { it is AppResult.Success && it.value.isNotEmpty() }
+
+        // Сегодня subscribes again after a pushed screen: the queued lesson must not leave its day for a moment.
+        assertEquals(known, repository.observePendingBookings().first())
+    }
+
+    @Test fun `a queue left while nobody observes is gone for the next observer`() = scope.runTest {
+        data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry()))
+        repository.observePendingBookings().first { it is AppResult.Success && it.value.isNotEmpty() }
+
+        data.entries.value = LoadState.Content(emptyList())
+        runCurrent()
+
+        assertEquals(AppResult.Success(emptyList<PendingSportBooking>()), repository.observePendingBookings().first())
+    }
+
+    @Test fun `source failures are not interpreted as no confirmed bookings`() = scope.runTest {
         data.entries.value = LoadState.Content(listOf(SportCardFixtures.entry()))
         bookings.confirmed.value = AppResult.Failure(AppError.Unauthorized)
         assertEquals(AppResult.Failure(AppError.Unauthorized), repository.observePendingBookings().first { it is AppResult.Failure })
         bookings.confirmed.value = AppResult.Success(emptyList())
         data.entries.value = LoadState.Error(AppError.Network)
+        // The shared projection follows the sources on its own, with or without an observer.
+        runCurrent()
         assertEquals(AppResult.Failure(AppError.Network), repository.observePendingBookings().first { it is AppResult.Failure })
     }
 
-    @Test fun `refresh requests official bookings and own queues only`() = runTest {
+    @Test fun `refresh requests official bookings and own queues only`() = scope.runTest {
         repository.refresh()
         assertEquals(1, bookings.refreshes)
         assertEquals(1, data.refreshes)
     }
 
-    @Test fun `refresh cancellation is propagated`() = runTest {
+    @Test fun `refresh cancellation is propagated`() = scope.runTest {
         bookings.cancelRefresh = true
         try {
             repository.refresh()
@@ -154,7 +177,7 @@ class PendingSportBookingsRepositoryImplTest {
         }
     }
 
-    @Test fun `first snapshot after cold refresh reads actual replay without an active observer`() = runTest {
+    @Test fun `first snapshot after cold refresh reads actual replay without an active observer`() = scope.runTest {
         val sources = useColdSources()
         val entry = SportCardFixtures.entry()
         bookings.refreshAction = { sources.confirmed.emit(AppResult.Success(emptyList())) }
@@ -176,7 +199,7 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(1, data.refreshes)
     }
 
-    @Test fun `snapshot preserves source errors instead of returning synthetic empty data`() = runTest {
+    @Test fun `snapshot preserves source errors instead of returning synthetic empty data`() = scope.runTest {
         val sources = useColdSources()
         sources.confirmed.emit(AppResult.Failure(AppError.Unauthorized))
         sources.queues.emit(LoadState.Content(listOf(SportCardFixtures.entry())))
@@ -191,7 +214,7 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(0, data.refreshes)
     }
 
-    @Test fun `disabled snapshot returns immediately without subscribing to unseeded sources or requesting data`() = runTest {
+    @Test fun `disabled snapshot returns immediately without subscribing to unseeded sources or requesting data`() = scope.runTest {
         val sources = useColdSources()
         services.enabled.value = false
         val startedAt = currentTime
@@ -205,7 +228,7 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(0, data.refreshes)
     }
 
-    @Test fun `snapshot before source replay times out after one second without making requests`() = runTest {
+    @Test fun `snapshot before source replay times out after one second without making requests`() = scope.runTest {
         useColdSources()
         val snapshot = async { repository.getPendingBookings() }
         runCurrent()
@@ -224,7 +247,7 @@ class PendingSportBookingsRepositoryImplTest {
         assertEquals(0, data.refreshes)
     }
 
-    @Test fun `snapshot propagates caller cancellation rather than returning an error snapshot`() = runTest {
+    @Test fun `snapshot propagates caller cancellation rather than returning an error snapshot`() = scope.runTest {
         useColdSources()
         var returnedSnapshot = false
         var propagatedCancellation: CancellationException? = null
