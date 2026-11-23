@@ -14,28 +14,47 @@ import dev.alllexey.itmowidgets.feature.sport.domain.model.SportAutoSignEntry
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportQueueEntryStatus
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportBookingRepository
 import dev.alllexey.itmowidgets.feature.sport.domain.repository.SportDataRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** Uses the same queue updates as Sport, without requiring friend data or modifying academic caches. */
+/**
+ * Uses the same queue updates as Sport, without requiring friend data or modifying academic caches.
+ *
+ * Observers share one projection that stays current in [scope] (the application's) from the first observer on. A new
+ * observer therefore starts from what the sources say now, and from an empty queue only before they answer for the
+ * first time. Starting every observer from an empty queue made a queued lesson leave its day and come back each
+ * time a screen subscribed again, which also moved the screen's scroll.
+ */
 class PendingSportBookingsRepositoryImpl(
     private val bookings: SportBookingRepository,
     private val sportData: SportDataRepository,
     private val customServices: CustomServicesRepository,
-    private val timeProvider: AcademicTimeProvider
+    private val timeProvider: AcademicTimeProvider,
+    scope: CoroutineScope,
 ) : PendingSportBookingsRepository {
 
-    override fun observePendingBookings() = pendingProjection()
-        .onStart { emit(AppResult.Success(emptyList())) }
+    private val current: StateFlow<AppResult<List<PendingSportBooking>>> =
+        pendingProjection().stateIn(scope, SharingStarted.Lazily, AppResult.Success(emptyList()))
+
+    // The shared value is as old as the sources' last answer: a queue whose lesson has started since leaves here.
+    override fun observePendingBookings(): Flow<AppResult<List<PendingSportBooking>>> = current
+        .map { result ->
+            if (result is AppResult.Success) AppResult.Success(result.value.filter { it.start > timeProvider.now() }) else result
+        }
         .distinctUntilChanged()
 
     override suspend fun getPendingBookings(): AppResult<List<PendingSportBooking>> {
