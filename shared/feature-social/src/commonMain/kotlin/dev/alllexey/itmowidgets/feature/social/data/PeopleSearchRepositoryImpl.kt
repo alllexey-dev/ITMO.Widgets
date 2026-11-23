@@ -16,6 +16,9 @@ import kotlinx.coroutines.withContext
 /**
  * MyITMO owns the name search; Backend only says who is registered. Phone and
  * e-mail fields of the directory response are dropped at this boundary.
+ * MyITMO tells `е` from `ё`, so a query that finds nobody is asked again with `ё` in place of an `е`
+ * ([yoVariants]); the first variant with hits answers. The choice depends only on the hit count, so every page of
+ * one query lands on the same variant.
  */
 class PeopleSearchRepositoryImpl(
     private val client: MyItmoClient,
@@ -34,7 +37,12 @@ class PeopleSearchRepositoryImpl(
 
         val page = try {
             withContext(dispatchers.io) {
-                client.personalities.searchPersonalities(PAGE_SIZE, offset, normalized)
+                var page = client.personalities.searchPersonalities(PAGE_SIZE, offset, normalized)
+                for (variant in yoVariants(normalized)) {
+                    if (page.count > 0) break
+                    page = client.personalities.searchPersonalities(PAGE_SIZE, offset, variant)
+                }
+                page
             }
         } catch (cancellation: CancellationException) {
             throw cancellation
@@ -68,3 +76,43 @@ private fun PersonalityMin.toPerson(): PersonSearchResult? {
         registered = null
     )
 }
+
+/**
+ * The spellings of [query] to try when it finds nobody: a typed `ё` read as `е` first, then `ё` in place of an `е`,
+ * fewest first and at most one per word (`ё` is always stressed), left to right. The query itself is left out; at
+ * most [MAX_YO_VARIANTS], so a query costs at most that many extra requests.
+ */
+internal fun yoVariants(query: String): List<String> {
+    val base = query.replace('ё', 'е').replace('Ё', 'Е')
+    val words = mutableListOf<MutableList<Int>>()
+    var start = true
+    base.forEachIndexed { index, char ->
+        if (char.isWhitespace()) start = true else {
+            if (start) words += mutableListOf<Int>()
+            start = false
+            if (char == 'е' || char == 'Е') words.last() += index
+        }
+    }
+    val spots = words.filter(List<Int>::isNotEmpty)
+    val found = linkedSetOf(base)
+    val chars = base.toCharArray()
+    for (count in 1..spots.size) placeYo(chars, spots, 0, count, found)
+    return (found - query).take(MAX_YO_VARIANTS)
+}
+
+/** Adds [chars] with `ё` at [left] more spots, each in its own word from [from] on, until [found] is full. */
+private fun placeYo(chars: CharArray, spots: List<List<Int>>, from: Int, left: Int, found: MutableSet<String>) {
+    if (left == 0) {
+        found += chars.concatToString()
+        return
+    }
+    for (word in from until spots.size) for (index in spots[word]) {
+        if (found.size > MAX_YO_VARIANTS) return
+        val char = chars[index]
+        chars[index] = if (char == 'Е') 'Ё' else 'ё'
+        placeYo(chars, spots, word + 1, left - 1, found)
+        chars[index] = char
+    }
+}
+
+private const val MAX_YO_VARIANTS = 6

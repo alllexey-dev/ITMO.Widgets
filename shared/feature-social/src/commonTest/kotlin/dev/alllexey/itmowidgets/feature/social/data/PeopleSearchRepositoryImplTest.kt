@@ -102,6 +102,50 @@ class PeopleSearchRepositoryImplTest {
     }
 
     @Test
+    fun aQueryThatFindsNobodyIsAskedAgainWithYoAndPagesStayOnThatSpelling() = runTest {
+        val hit = """{"error_code":0,"result":{"count":21,"data":[{"id":100010,"fio":"Тестов Семён"}]}}"""
+        val repository = repository(FakeSocial()) { request ->
+            respondJson(if (request.url.parameters["q"] == "семён тестов") hit else PersonalityFixtures.SEARCH_EMPTY)
+        }
+
+        val first = (repository.search("семен тестов") as AppResult.Success).value
+        val next = (repository.search("семен тестов", offset = 20) as AppResult.Success).value
+
+        assertEquals(listOf("семен тестов", "сёмен тестов", "семён тестов"), requests.take(3).map { it.url.parameters["q"] })
+        assertEquals(listOf("0", "0", "0", "20", "20", "20"), requests.map { it.url.parameters["offset"] })
+        assertEquals(listOf(100010), first.results.map { it.isu })
+        assertEquals(21, first.total)
+        assertEquals(1, first.nextOffset)
+        assertEquals("семён тестов", requests.last().url.parameters["q"])
+        assertEquals(listOf(100010), next.results.map { it.isu })
+    }
+
+    @Test
+    fun aQueryWithHitsOrWithoutEIsAskedOnce() = runTest {
+        val repository = repository(FakeSocial()) { request ->
+            respondJson(if (request.url.parameters["q"] == "семенов") PersonalityFixtures.SEARCH else PersonalityFixtures.SEARCH_EMPTY)
+        }
+
+        repository.search("семенов")
+        repository.search("иванов")
+
+        assertEquals(listOf("семенов", "иванов"), requests.map { it.url.parameters["q"] })
+    }
+
+    @Test
+    fun yoVariantsPutOneYoPerWordFewestFirstAndReadATypedYoAsE() {
+        assertEquals(listOf("сёмен", "семён"), yoVariants("семен"))
+        assertEquals(
+            listOf("Сёмен Федоров", "Семён Федоров", "Семен Фёдоров", "Сёмен Фёдоров", "Семён Фёдоров"),
+            yoVariants("Семен Федоров"),
+        )
+        assertEquals(listOf("семенов", "сёменов"), yoVariants("семёнов"))
+        assertEquals(emptyList(), yoVariants("иванов"))
+        assertEquals(6, yoVariants("елена ерема федотова").size)
+        assertEquals(listOf("еж"), yoVariants("ёж"))
+    }
+
+    @Test
     fun aBlankQueryDoesNotReachTheNetwork() = runTest {
         val social = FakeSocial()
         val repository = repository(social) { throw AssertionError("A blank query was sent") }
