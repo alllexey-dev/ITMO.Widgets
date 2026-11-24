@@ -55,7 +55,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The Google Play frames `01-home` ... `10-me` (and `11-qr` for the landing) of the Compose shell. It enters the demo
+ * The Google Play frames `01-home` ... `10-me` (and `11-qr`, `12-friend-picker`, `13-widgets` for the landing) of the
+ * Compose shell. It enters the demo
  * through the real MainActivity (five taps on the logo), walks every frame and checks each for content, no error or
  * empty state and no word «Тест»; with `captureScreenshots=true` it also saves them to
  * `externalCacheDir/store-screenshots`, so without the argument it is a smoke test of the demo's main screens. The
@@ -144,6 +145,25 @@ class StoreScreenshotCapture {
             settle()
             eventually { assertEquals(AppRoutes.QrPass, ShellProbe.current().floating) }
             frame(activity, "11-qr", sheet = true, minTexts = QR_MIN_TEXTS)
+            pressBack()
+            settle()
+            awaitShown(AppTab.HOME)
+
+            // The landing's «Друзья» and «Сегодня и виджеты» tiles.
+            open(scenario, AppTab.SCHEDULE) { it.select(AppTab.SCHEDULE) }
+            val picker = AppRoutes.FriendSelector()
+            scenario.onActivity { it.navigator().open(picker) }
+            settle()
+            eventually { assertEquals(picker, ShellProbe.current().floating) }
+            frame(activity, "12-friend-picker", sheet = true)
+            pressBack()
+            settle()
+            awaitShown(AppTab.SCHEDULE)
+
+            val widgets = AppRoutes.Settings(WIDGETS_PAGE)
+            open(scenario, AppTab.ME) { it.select(AppTab.ME) }
+            open(scenario, AppTab.ME, widgets) { it.open(widgets) }
+            frame(activity, "13-widgets")
         }
     }
 
@@ -325,6 +345,7 @@ class StoreScreenshotCapture {
         const val MIN_TEXTS = 6
         const val QR_MIN_TEXTS = 1
         const val REVIEWS_SCROLL_DP = 420
+        const val WIDGETS_PAGE = "WIDGETS"
         const val FEED_END_PX = 10_000f
         const val LESSON_SCROLLS = 16
         const val LESSON_SCROLL_SHARE = 0.6f

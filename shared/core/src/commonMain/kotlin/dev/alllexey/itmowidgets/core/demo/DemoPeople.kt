@@ -5,11 +5,15 @@ import dev.alllexey.itmowidgets.core.model.UserSharing
 import dev.alllexey.itmowidgets.core.model.UserSummary
 import dev.alllexey.itmowidgets.core.session.CurrentUser
 
-/** A fictional person of the demo set; ISUs live in the 999xxx range no real student has. Students have a [group]. */
+/**
+ * A fictional person of the demo set; ISUs live in the 999xxx range no real student has. Students have a [group] and
+ * a [pictureUrl] from [DemoAvatars]; teachers keep their initials.
+ */
 data class DemoPerson(
     val isu: Int,
     val name: String,
-    val group: String? = null
+    val group: String? = null,
+    val pictureUrl: String? = null
 ) {
     /** The faculty a group letter belongs to: K — ФИКТ, M — ФИТиП. */
     val faculty: String? get() = group?.let { if (it.startsWith("K")) "ФИКТ" else "ФИТиП" }
@@ -18,7 +22,7 @@ data class DemoPerson(
     fun summary(sharing: UserSharing = UserSharing(sport = true, schedule = true, friends = true)) = UserSummary(
         isu = isu,
         name = name,
-        pictureUrl = null,
+        pictureUrl = pictureUrl,
         groups = listOfNotNull(group?.let { UserGroup(it, DemoPeople.ME_COURSE, faculty.orEmpty()) }),
         sharing = sharing
     )
@@ -32,19 +36,19 @@ object DemoPeople {
     const val ME_GROUP = "K3221"
     const val ME_COURSE = 2
 
-    val ME = CurrentUser(isu = ME_ISU, name = ME_NAME, pictureUrl = null)
-    val ME_PERSON = DemoPerson(ME_ISU, ME_NAME, ME_GROUP)
+    val ME = CurrentUser(isu = ME_ISU, name = ME_NAME, pictureUrl = DemoAvatars.ANNA)
+    val ME_PERSON = DemoPerson(ME_ISU, ME_NAME, ME_GROUP, DemoAvatars.ANNA)
 
-    val IVAN = DemoPerson(999002, "Кузнецов Иван", ME_GROUP)
-    val MARIA = DemoPerson(999003, "Волкова Мария", ME_GROUP)
-    val DMITRY = DemoPerson(999004, "Орлов Дмитрий", "M3205")
-    val POLINA = DemoPerson(999005, "Егорова Полина", "K3220")
+    val IVAN = DemoPerson(999002, "Кузнецов Иван", ME_GROUP, DemoAvatars.IVAN)
+    val MARIA = DemoPerson(999003, "Волкова Мария", ME_GROUP, DemoAvatars.MARIA)
+    val DMITRY = DemoPerson(999004, "Орлов Дмитрий", "M3205", DemoAvatars.DMITRY)
+    val POLINA = DemoPerson(999005, "Егорова Полина", "K3220", DemoAvatars.POLINA)
 
     /** Sent Anna a friend request. */
-    val SOFIA = DemoPerson(999006, "Лебедева София", "K3222")
+    val SOFIA = DemoPerson(999006, "Лебедева София", "K3222", DemoAvatars.SOFIA)
 
     /** Anna sent him a friend request. */
-    val ARTEM = DemoPerson(999007, "Новиков Артём", "M3205")
+    val ARTEM = DemoPerson(999007, "Новиков Артём", "M3205", DemoAvatars.ARTEM)
 
     val FRIENDS = listOf(IVAN, MARIA, DMITRY, POLINA)
 

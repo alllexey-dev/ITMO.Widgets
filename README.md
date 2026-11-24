@@ -50,12 +50,13 @@
 
 | | Версия | Требования |
 |---|---|---|
-| **Android** | [2.3](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0): `arm64` для большинства телефонов, `armv7` для старых | Android 8.0+ |
+| **Android** | [Google Play](https://play.google.com/store/apps/details?id=dev.alllexey.itmowidgets) или APK [2.3](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0): `arm64` для большинства телефонов, `armv7` для старых | Android 8.0+ |
 | **iPhone** | [2.3](https://github.com/alllexey-dev/ITMO.Widgets/releases/tag/v2.3.0): `.ipa` без подписи | iOS 26.1+, ставить через [AltStore](https://altstore.io): с SideStore и Sideloadly виджеты не работают |
 
 - 2.3 ставится поверх 2.2 с сохранением данных; вернуться на 2.2 можно только переустановкой.
 - На iPhone пока нет push-уведомлений, поэтому автозапись на спорт там работает только через [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent) (закрытая бета, доступ по запросу в [@itmowidgets](https://t.me/itmowidgets)).
-- В Google Play приложения пока нет. Новые версии и ответы на вопросы — в [@itmowidgets](https://t.me/itmowidgets).
+- Версии из Google Play и с GitHub ставятся друг поверх друга с сохранением данных: первая обновляется через Play, вторая сама предлагает новую версию.
+- Новые версии и ответы на вопросы — в [@itmowidgets](https://t.me/itmowidgets).
 
 <details>
 <summary>Не открывается страница входа ITMO.ID</summary>

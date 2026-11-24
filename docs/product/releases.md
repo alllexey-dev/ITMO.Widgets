@@ -54,8 +54,9 @@ either updates the other:
   instead of the universal one, which carries MapLibre for four ABIs; the
   last beta was `2.3.0-beta.5` (20295, 2026-11-11), with an unsigned
   `.ipa` beside the APKs.
-- Until the Play listing is public, GitHub is the only channel; the README and
-  the site get the Google Play button only after publication.
+- The Play listing is public since 2.3.0 (production, 2026-11-24, after the
+  closed test): the README and the site link to Google Play next to the GitHub
+  release.
 - Backend's `app.latest` is one value for both variants and follows the GitHub
   release. A `play` install ignores it until Google Play serves that device an
   update ([update offer](../features/update.md#google-play-decides-for-the-play-variant)),
