@@ -79,8 +79,9 @@ object IosClientVersion {
     private fun osMajorVersion(): String =
         NSProcessInfo.processInfo.operatingSystemVersion.useContents { majorVersion.toString() }
 
+    /** The [distribution] of the running app; the app's beta notice reads it too. */
     @OptIn(ExperimentalNativeApi::class)
-    private fun mainBundleDistribution(): String {
+    fun mainBundleDistribution(): String {
         val bundle = NSBundle.mainBundle
         // The only synchronous TestFlight signal: StoreKit's AppTransaction is async and Swift-only.
         @Suppress("DEPRECATION")

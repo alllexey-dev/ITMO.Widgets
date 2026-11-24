@@ -42,4 +42,14 @@ final class OnboardingTests: XCTestCase {
         let first = await iterator.next()
         XCTAssertNotNil(first)
     }
+
+    /// The beta notice describes sideloaded builds: TestFlight and the App Store never show it; the test host is a
+    /// debug build, which does.
+    func testBetaNoticeOnlyForSideloadedAndDebugBuilds() {
+        XCTAssertTrue(BetaNotice.describes(distribution: "sideload"))
+        XCTAssertTrue(BetaNotice.describes(distribution: "dev"))
+        XCTAssertFalse(BetaNotice.describes(distribution: "testflight"))
+        XCTAssertFalse(BetaNotice.describes(distribution: "appstore"))
+        XCTAssertTrue(BetaNotice.applies)
+    }
 }

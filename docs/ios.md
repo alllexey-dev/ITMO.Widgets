@@ -66,7 +66,8 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
   sign-out: no notifications yet, sport auto-booking only through
   [itmo-widgets-agent](https://github.com/alllexey-dev/itmo-widgets-agent), widgets asking to sign in after some
   sideloading tools (AltStore keeps them working, SideStore and Sideloadly do not), questions in the Telegram channel. `О приложении`
-  opens it again from an iOS-only row above the shared section.
+  opens it again from an iOS-only row above the shared section. Only sideloaded and debug builds have the notice and
+  the row (`BetaNotice.applies` by the build's distribution): TestFlight and the App Store have push.
 - Tabs. `ShellTabs` is the glass `TabView` of iOS 26 in the bar order of the shared `AppTab` (recordbook, schedule,
   today, sport, profile), with its names and icons; a tab shows only while `PlatformCapabilities` offers its
   feature. `ShellTab`'s raw values are the frozen route ids, so today is `home` and profile is `me`. Tabs switch by
