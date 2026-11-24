@@ -69,6 +69,9 @@ Non-obvious per-area rules:
 - `core/demo` holds the people (`DemoPeople`, ISUs in the 999xxx range no real student has), subjects
   (`DemoStudy`) and sport slots (`DemoSportSlots`); each feature's `data/demo` builds on them, so all
   screens name the same subjects and people.
+- The seven students have picture avatars (`DemoAvatars`): small JPEGs as `data:` URIs in `pictureUrl`, so an
+  avatar loads through the same path as a real one (Coil, `AsyncImage`) and no host is asked. None shows a person;
+  teachers keep initials.
 - Dates come from `AcademicTimeProvider` (no direct `now()`); when today has no sport lesson left,
   `DemoSportSlots.extraSlots` adds two from the next ten-minute mark. `StoreScreenshotCapture` walks the set
   through the real `MainActivity` for the Play and landing screenshots; `DemoContentTest` guards it.

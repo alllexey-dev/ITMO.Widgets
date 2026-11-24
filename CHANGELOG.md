@@ -4,7 +4,13 @@ Reference documents in `docs/` describe the current state; this file records
 what changed and when. Unreleased entries describe local development, not a
 publication or deployment.
 
-## 2.3.0 — 2026-11-23
+## Unreleased
+
+- Demo: the seven students have picture avatars (`DemoAvatars`, `data:` URIs, no request to any host) instead of
+  initials; teachers keep initials. `StoreScreenshotCapture` also saves the landing's `12-friend-picker` and
+  `13-widgets` frames.
+
+## 2.3.0 — 2026-11-24
 
 The app is rebuilt on Kotlin Multiplatform: one shared Kotlin core (data, domain, view models) under Compose screens
 on Android and native SwiftUI screens in a new iOS app. Android keeps the features and the data of 2.2.

@@ -47,7 +47,7 @@ object DemoSocial {
             Person(
                 isu = isu,
                 name = person.name,
-                photoUrl = null,
+                photoUrl = person.pictureUrl,
                 positions = emptyList(),
                 rooms = emptyList(),
                 education = listOf(PersonEducation(group, DemoPeople.ME_COURSE, FACULTIES.getValue(group.first())))
@@ -57,7 +57,7 @@ object DemoSocial {
             Person(
                 isu = isu,
                 name = person.name,
-                photoUrl = null,
+                photoUrl = person.pictureUrl,
                 positions = listOf(PersonPosition(title, department)),
                 rooms = listOfNotNull(room),
                 education = emptyList()
