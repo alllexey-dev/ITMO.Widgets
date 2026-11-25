@@ -95,10 +95,11 @@ extension ShellView {
             && ShellGate.shared.checksForUpdate(session: session.state.sessionState, onboarding: session.onboarding)
     }
 
-    /// The beta notice until it is closed, on a real session only: never the demo or a fixture session.
+    /// The beta notice until it is closed, on a real session of a build it describes only: never the demo, a fixture
+    /// session, TestFlight or the App Store (`BetaNotice.applies`).
     private func betaNotice(demo: Bool) -> Binding<Bool> {
         Binding(
-            get: { session.gateway != nil && !demo && !betaNoticeShown },
+            get: { BetaNotice.applies && session.gateway != nil && !demo && !betaNoticeShown },
             set: { if !$0 { betaNoticeShown = true } }
         )
     }

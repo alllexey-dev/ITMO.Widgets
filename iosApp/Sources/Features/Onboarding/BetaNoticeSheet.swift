@@ -2,7 +2,8 @@ import Shared
 import SwiftUI
 
 /// The iPhone beta notice (`ios_beta_notice_title`): what the sideloaded iOS build lacks next to Android. The shell
-/// shows it once on the tabs of the first real session (`BetaNotice.shownKey`); the about page opens it again.
+/// shows it once on the tabs of the first real session (`BetaNotice.shownKey`); the about page opens it again. Only
+/// sideloaded and debug builds have it (`BetaNotice.applies`).
 struct BetaNoticeSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
@@ -67,4 +68,13 @@ struct BetaNoticeSheet: View {
 enum BetaNotice {
     /// The `UserDefaults` flag set once the notice was closed; it outlives sign-out, so the notice shows once per install.
     static let shownKey = "iosBetaNoticeShown"
+
+    /// Whether this build is one the notice describes: a sideloaded or a debug build. TestFlight and the App Store
+    /// have push and the system's widgets, so they never show it, neither in the shell nor on the about page.
+    static let applies = describes(distribution: IosClientVersion.shared.mainBundleDistribution())
+
+    /// `IosClientVersion.distribution`: everything but `testflight` and `appstore`.
+    static func describes(distribution: String) -> Bool {
+        distribution != "testflight" && distribution != "appstore"
+    }
 }

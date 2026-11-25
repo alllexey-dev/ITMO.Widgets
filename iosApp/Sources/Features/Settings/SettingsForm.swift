@@ -17,8 +17,8 @@ struct SettingsForm: View {
     var body: some View {
         if state.loaded {
             ItmoScreenStack {
-                if state.page == .about {
-                    // iOS only: the beta notice the shell shows once (`BetaNoticeSheet`).
+                if state.page == .about && BetaNotice.applies {
+                    // iOS only: the beta notice the shell shows once (`BetaNoticeSheet`), in the builds it describes.
                     ItmoListGroup {
                         ItmoRow(
                             title: AppStrings.string("ios_beta_notice_title"),

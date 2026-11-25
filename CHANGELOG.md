@@ -6,6 +6,10 @@ publication or deployment.
 
 ## Unreleased
 
+- iOS: a tap on a notification that brought the app back from the background no longer closes it; the notification
+  delegate finishes on the main thread.
+- iOS: the iPhone beta notice and its `О приложении` row show only in sideloaded and debug builds; TestFlight and
+  App Store builds have push and never show them.
 - Demo: the seven students have picture avatars (`DemoAvatars`, `data:` URIs, no request to any host) instead of
   initials; teachers keep initials. `StoreScreenshotCapture` also saves the landing's `12-friend-picker` and
   `13-widgets` frames.
