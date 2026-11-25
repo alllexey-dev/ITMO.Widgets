@@ -74,6 +74,31 @@ final class WidgetSnapshotTests: XCTestCase {
         assertDay(try await schedule(at: .lesson), named: "now", appearances: SnapshotAppearance.all)
     }
 
+    /// A host may measure a widget without a width or a height (the Mac does): no view may lay out an infinite size,
+    /// which SwiftUI aborts on ("view origin is invalid").
+    func testScheduleWidgetsMeasuredWithoutABound() async throws {
+        let entry = try await schedule(at: .lesson)
+        let views: [AnyView] = [
+            AnyView(CardsEntryView(entry: entry)), AnyView(DayEntryView(entry: entry)),
+            AnyView(NextLessonEntryView(entry: entry, family: .systemMedium)),
+            AnyView(ClassicListEntryView(entry: entry, family: .systemLarge)),
+        ]
+        for view in views {
+            measure(view)
+        }
+    }
+
+    private func measure(_ view: AnyView) {
+        for proposal in [
+            ProposedViewSize(width: .infinity, height: 382), ProposedViewSize(width: 364, height: .infinity),
+            ProposedViewSize(width: .infinity, height: .infinity), ProposedViewSize(width: nil, height: nil),
+        ] {
+            let renderer = ImageRenderer(content: view.environment(\.paintsWidgetTile, true))
+            renderer.proposedSize = proposal
+            _ = renderer.cgImage
+        }
+    }
+
     func testDayMorning() async throws {
         assertDay(try await schedule(at: .morning), named: "morning")
     }

@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -427,8 +429,8 @@ private fun WeekPager(state: SportSignUiState, actions: SportSignActions) {
 }
 
 /**
- * One catalog lesson: the time, the section, its kind and place, the places, friends, a clash and one action; on a
- * narrow row the action moves under the lines, so the section keeps its width.
+ * One catalog lesson: the time, the section, the `Нормативы` pill, its kind, teacher and place, the places, friends, a
+ * clash and one action; on a narrow row the action moves under the lines, so the section keeps its width.
  */
 @Composable
 private fun CatalogRow(row: SportCatalogRow, actions: SportSignActions) {
@@ -444,7 +446,7 @@ private fun CatalogRow(row: SportCatalogRow, actions: SportSignActions) {
                 }
             },
             below = {
-                KindTag(row.kind.asString(), row.kindTone, row.place?.asString())
+                StandardsAndKind(row)
                 if (row.occupancy != null || row.friends.isNotEmpty()) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
                         // Weighted, so the bar gives way first and the friends' avatars keep their size.
@@ -465,6 +467,32 @@ private fun CatalogRow(row: SportCatalogRow, actions: SportSignActions) {
         )
     }
 }
+
+/**
+ * The `Нормативы` pill of a standards lesson, then the line of the kind, the teacher and the place; a narrow row wraps
+ * the line once rather than cut the teacher, and moves it under the pill when it does not fit beside it.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun StandardsAndKind(row: SportCatalogRow) {
+    val kind = row.kind?.asString()
+    val place = row.place?.asString()
+    val standards = row.standards
+    if (standards == null) {
+        KindTag(kind, row.kindTone, place, teacher = row.teacher, maxLines = KIND_LINES)
+        return
+    }
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact),
+        verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        StatusPill(standards.asString(), tone = Tone.Tertiary)
+        KindTag(kind, row.kindTone, place, teacher = row.teacher, maxLines = KIND_LINES)
+    }
+}
+
+private const val KIND_LINES = 2
 
 /** `Записаться`, `В очередь`, a status pill or the lock with the reason. */
 @Composable

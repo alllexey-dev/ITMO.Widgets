@@ -6,6 +6,15 @@ publication or deployment.
 
 ## Unreleased
 
+- Sport: the `Запись` rows name the teacher (`Иванов И. И., Кронва`) instead of `Свободное`; other kinds keep their
+  label and dot before the teacher, and standards lessons get a `Нормативы` pill. The lesson sheet is unchanged.
+- iOS: the QR pass and the QR widget show no light seams in the concave corners between modules; every fillet of
+  `QrModulesShape` now runs in the same direction as the modules.
+- Recordbook: one BARS journal that does not map (a course project, an unknown shape) no longer fails BARS for the
+  whole semester with `Причина неизвестна`; only its subject stays on My ITMO, with a warning in the error journal.
+- iOS: the schedule widgets no longer crash on a Mac. Its widget host measures them with an infinite size, which
+  the day timeline and the cards' progress took through `GeometryReader`; every entry view now gets infinite
+  dimensions as unspecified (`FiniteProposal`).
 - iOS: a tap on a notification that brought the app back from the background no longer closes it; the notification
   delegate finishes on the main thread.
 - iOS: the iPhone beta notice and its `О приложении` row show only in sideloaded and debug builds; TestFlight and

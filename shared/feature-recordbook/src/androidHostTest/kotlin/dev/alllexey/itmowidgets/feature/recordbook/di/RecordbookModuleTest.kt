@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.di
 
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.SavedStateHandle
@@ -128,6 +130,7 @@ class RecordbookModuleTest {
                 HttpClientEngine::class,
                 MarksScheduler::class,
                 MarksNotifier::class,
+                AppDiagnostics::class,
             )
         )
     }
@@ -228,6 +231,7 @@ class RecordbookModuleTest {
             }
         }
         single<AppNotifier> { RecordingAppNotifier() }
+        single<AppDiagnostics> { RecordingDiagnostics() }
         single<SessionTokenStore> { FakeSessionTokenStore() }
         single<Clock> { Clock.System }
         single<MarksScheduler> { FakeMarksScheduler() }

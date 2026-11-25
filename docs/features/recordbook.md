@@ -115,7 +115,9 @@ overlays score, grade, attempt and control tree; periods, identities, teachers, 
 - Tokens and cookies are never editable settings or bundled credentials.
 - Mapper (`BarsRecordbookMapper`): server `marks.total`; the last unambiguous active approval
   (`Approval.gradeCode`, `Удвл., E` -> `3/E`); works by `checkpoint_id`; extra points as a separate
-  row; absence is not a pass; plans with `has_course_project` are rejected.
+  row; absence is not a pass; plans with `has_course_project` are rejected. A journal the mapper rejects drops
+  only its own subject from the period's BARS answer (a `BarsRecordbook` warning in the error journal, with the
+  plan id); that subject keeps My ITMO and the rest of the period keeps BARS.
 
 Session:
 

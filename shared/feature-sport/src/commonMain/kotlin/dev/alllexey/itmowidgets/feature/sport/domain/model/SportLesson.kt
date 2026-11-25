@@ -37,6 +37,9 @@ data class SportLesson(
 
     fun isFreeAttendance() = lessonLevel == 1
 
+    /** A lesson for passing the standards (`Нормативы`): My ITMO's lesson type 6, whatever its level. */
+    val isStandards: Boolean get() = typeId == STANDARDS_TYPE_ID
+
     val kind: SportLessonKind
         get() = when (lessonLevel) {
             2 -> SportLessonKind.TRAINING_SECTION
@@ -46,13 +49,16 @@ data class SportLesson(
                 1 -> SportLessonKind.OPEN
                 2 -> SportLessonKind.FREE_ATTENDANCE
                 5 -> SportLessonKind.DEBT
-                6 -> SportLessonKind.STANDARDS
+                STANDARDS_TYPE_ID -> SportLessonKind.STANDARDS
                 7 -> SportLessonKind.EXTERNAL
                 8 -> SportLessonKind.ADDITIONAL
                 else -> SportLessonKind.UNKNOWN
             }
         }
 }
+
+/** My ITMO's lesson type of the standards (`Нормативы`). */
+private const val STANDARDS_TYPE_ID = 6
 
 enum class SportLessonKind {
     TRAINING_SECTION,

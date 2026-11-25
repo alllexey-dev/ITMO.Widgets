@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data.bars
 
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.session.SessionDataCleaner
 import dev.alllexey.itmowidgets.feature.recordbook.domain.BarsRecordbookRepository
@@ -17,7 +18,8 @@ import kotlinx.coroutines.sync.withLock
 
 /** One instance per process (the `recordbookModule` single), so the screens and sign-out share the controls cache. */
 class BarsRecordbookRepositoryImpl(
-    private val client: BarsClient
+    private val client: BarsClient,
+    private val diagnostics: AppDiagnostics
 ) : BarsRecordbookRepository, SessionDataCleaner {
     private val mapper = BarsRecordbookMapper()
 
@@ -36,14 +38,32 @@ class BarsRecordbookRepositoryImpl(
             references.map { reference ->
                 async {
                     val journal = execute { getStudentJournal(reference.planId, reference.type, reference.identifier) }
-                    val subject = mapper.subject(journal, reference, owner.toString())
+                    // A journal the mapper rejects (a course project, a shape it does not know) leaves only its own
+                    // subject without BARS; the rest of the period still loads.
+                    val subject = mapped(reference) { mapper.subject(journal, reference, owner.toString()) }
                     // A journal whose controls do not map still lists its subject.
-                    runCatching { mapper.controls(journal, reference, owner.toString()) }.getOrNull()
-                        ?.let { keepControls(reference, it) }
+                    if (subject != null) {
+                        runCatching { mapper.controls(journal, reference, owner.toString()) }.getOrNull()
+                            ?.let { keepControls(reference, it) }
+                    }
                     subject
                 }
-            }.awaitAll()
+            }.awaitAll().filterNotNull()
         }
+    }
+
+    private fun <T> mapped(reference: BarsJournalReference, map: () -> T): T? = try {
+        map()
+    } catch (rejected: IllegalArgumentException) {
+        skipped(reference)
+    } catch (rejected: IllegalStateException) {
+        skipped(reference)
+    }
+
+    // The plan id only: the journal and the exception may hold grades and names.
+    private fun skipped(reference: BarsJournalReference): Nothing? {
+        diagnostics.warn(TAG, "BARS journal of plan ${reference.planId} does not map; its subject keeps My ITMO")
+        return null
     }
 
     override suspend fun getSubject(journal: BarsJournalReference): AppResult<BarsSubjectDetails> = client.account {
@@ -59,4 +79,8 @@ class BarsRecordbookRepositoryImpl(
 
     private suspend fun keepControls(journal: BarsJournalReference, value: List<RecordbookControl>) =
         controlsLock.withLock { controls = controls + (journal to value) }
+
+    private companion object {
+        const val TAG = "BarsRecordbook"
+    }
 }

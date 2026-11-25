@@ -75,6 +75,10 @@ object SportSamples {
     private val zone = TimeZone.of("Europe/Moscow")
     private val today = LocalDate(2026, 9, 7)
     private const val ONLINE = -1L
+
+    /** My ITMO's lesson type of the standards (`Нормативы`). */
+    private const val STANDARDS = 6
+
     private val now: Instant = LocalDateTime(today, LocalTime(12, 0)).toInstant(zone)
 
     /** The tab's name in the header. */
@@ -130,6 +134,7 @@ object SportSamples {
         reasons: List<UnavailableReason> = emptyList(),
         comment: String? = null,
         real: Boolean = true,
+        type: Int = 2,
     ): SportLesson {
         val id = nextId++
         val startAt = at(date, start)
@@ -139,7 +144,7 @@ object SportSamples {
         val roomName = address?.let { "$it, $room" } ?: room
         return SportLesson(
             isLessonReal = real, lessonId = id, start = startAt, end = endAt, sectionId = section.hashCode().toLong(),
-            sectionName = SectionName(section), sectionLevel = 1, lessonGroupId = 1, lessonLevel = level, typeId = 2,
+            sectionName = SectionName(section), sectionLevel = 1, lessonGroupId = 1, lessonLevel = level, typeId = type,
             buildingId = building, roomId = if (building == ONLINE) ONLINE else id, roomName = roomName, limit = limit, available = limit - taken,
             comment = comment, timeSlotId = 1, timeSlotStart = start, timeSlotEnd = end, intersection = clash,
             canSignIn = reasons.isEmpty() && taken < limit, unavailableReasons = reasons, signed = signed,
@@ -159,7 +164,7 @@ object SportSamples {
             forceSign = false,
         )
 
-    private val ofp = lesson(tuesday, "08:20", "09:50", "Общая физическая подготовка", "Васильева Анастасия Романовна", 13, "спортивный зал", 20, 6, clash = true)
+    private val ofp = lesson(tuesday, "08:20", "09:50", "Общая физическая подготовка", "Васильева Анастасия Романовна", 13, "спортивный зал", 20, 6, clash = true, type = STANDARDS)
     private val yoga = lesson(tuesday, "10:00", "11:30", "Йога", "Белова Ирина Сергеевна", 7, "зал", 16, 11)
     private val badminton = lesson(tuesday, "13:30", "15:00", "Бадминтон", "Орлов Денис Викторович", 5, "зал", 14, 12, level = 2, friends = listOf(ivan))
     private val swimming = lesson(tuesday, "15:20", "16:50", "Плавание", "Захаров Николай Иванович", 273, "бассейн", 16, 16, level = 2, queued = 2 to 5, friends = listOf(polina))
