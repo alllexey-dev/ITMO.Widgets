@@ -93,18 +93,26 @@ sealed interface SportEmptyAction {
 }
 
 /**
- * One catalog lesson as a dense row: [start] over [end], the [section], its [kind] and short [place] (`Свободное,
+ * One catalog lesson as a dense row: [start] over [end], the [section], the `Нормативы` pill of a standards lesson
+ * ([standards]), the line of its [kind], [teacher] and short [place] (`Иванов И. И., Кронва`, `Секция, Иванов И. И.,
  * Кронва`), the [occupancy] (`22 из 24`), the friends who go ([friends], names and photos), a [clash] with a lesson
  * (`Пара: Алгоритмы`) and one [action].
+ *
+ * [kind] is null for a free lesson, almost every one, so the line leads with the teacher; the kind's dot in
+ * [kindTone] goes only with a [kind].
  */
 data class SportCatalogRow(
     val lessonId: Long,
     val start: String,
     val end: String,
     val section: String,
-    val kind: UiText,
+    val kind: UiText?,
     val kindTone: SportKindTone,
+    /** `Иванов И. И.`; null when My ITMO names no teacher. */
+    val teacher: String?,
     val place: UiText?,
+    /** `Нормативы` for a standards lesson, null for every other. */
+    val standards: UiText?,
     val occupancy: SportOccupancyUi?,
     val friends: List<UserSummary>,
     val clash: UiText?,

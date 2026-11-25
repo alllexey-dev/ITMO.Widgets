@@ -5,6 +5,7 @@ import dev.alllexey.itmowidgets.core.lesson.LessonDay
 import dev.alllexey.itmowidgets.core.text.DateTexts
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.buildingShortTitle
+import dev.alllexey.itmowidgets.core.text.shortPersonName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SectionName
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportFilterCatalog
 import dev.alllexey.itmowidgets.feature.sport.domain.model.SportLesson
@@ -13,7 +14,7 @@ import dev.alllexey.itmowidgets.feature.sport.presentation.common.SportOccupancy
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.bookingConditions
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.queueText
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.restrictionText
-import dev.alllexey.itmowidgets.feature.sport.presentation.common.shortText
+import dev.alllexey.itmowidgets.feature.sport.presentation.common.rowText
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.sportDayTitle
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.tone
 import dev.alllexey.itmowidgets.feature.sport.presentation.common.waiting
@@ -178,8 +179,10 @@ object SportSignPresenter {
             start = start.time.format(DateTexts.TIME),
             end = end.time.format(DateTexts.TIME),
             section = lesson.sectionName.shorten(),
-            kind = lesson.kind.shortText(),
+            kind = lesson.kind.rowText(),
             kindTone = lesson.kind.tone(),
+            teacher = lesson.teacherFio.trim().takeIf(String::isNotEmpty)?.let(::shortPersonName),
+            standards = UiText.Res(SportStrings.sport_lesson_standards).takeIf { lesson.isStandards },
             place = buildingName(lesson, input.catalog)?.let { buildingShortTitle(it) }
                 ?: lesson.roomName.takeIf { lesson.roomId == ONLINE_ROOM }?.let { UiText.Res(SportStrings.sport_place_online) },
             occupancy = occupancy?.toUi(),

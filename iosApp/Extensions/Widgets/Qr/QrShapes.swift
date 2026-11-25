@@ -59,14 +59,16 @@ struct QrModulesShape: Shape {
     }
 
     /// The area between a cell's `corner` and a quarter circle of `radius` inside the cell; `dx`, `dy` point from the
-    /// corner into the cell.
+    /// corner into the cell. Every fillet runs clockwise, as the rounded rects do: a mirrored one in the other
+    /// direction cancelled the antialiased edge it shares with its dark neighbours and left a light seam there.
     private func addFillet(to path: inout Path, corner: CGPoint, dx: CGFloat, dy: CGFloat, radius: CGFloat) {
         let alongX = CGPoint(x: corner.x + dx * radius, y: corner.y)
         let alongY = CGPoint(x: corner.x, y: corner.y + dy * radius)
-        path.move(to: alongY)
+        let (start, end) = dx * dy > 0 ? (alongY, alongX) : (alongX, alongY)
+        path.move(to: start)
         path.addLine(to: corner)
-        path.addLine(to: alongX)
-        path.addArc(tangent1End: corner, tangent2End: alongY, radius: radius)
+        path.addLine(to: end)
+        path.addArc(tangent1End: corner, tangent2End: start, radius: radius)
         path.closeSubpath()
     }
 }

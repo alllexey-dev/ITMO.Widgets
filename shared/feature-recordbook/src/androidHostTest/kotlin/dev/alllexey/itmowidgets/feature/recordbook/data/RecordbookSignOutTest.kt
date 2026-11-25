@@ -1,5 +1,7 @@
 package dev.alllexey.itmowidgets.feature.recordbook.data
 
+import dev.alllexey.itmowidgets.core.testing.RecordingDiagnostics
+import dev.alllexey.itmowidgets.core.diagnostics.AppDiagnostics
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import dev.alllexey.itmoapi.bars.auth.BarsLogin
@@ -156,6 +158,7 @@ class RecordbookSignOutTest {
         single<Clock> { Clock.System }
         single<SessionTokenStore> { FakeSessionTokenStore() }
         single<AppNotifier> { RecordingAppNotifier() }
+        single<AppDiagnostics> { RecordingDiagnostics() }
         single<MarksScheduler> { FakeMarksScheduler() }
         single<MarksNotifier> { RecordingMarksNotifier() }
         single<HttpClientEngine>(barsEngineQualifier) { server.engine }

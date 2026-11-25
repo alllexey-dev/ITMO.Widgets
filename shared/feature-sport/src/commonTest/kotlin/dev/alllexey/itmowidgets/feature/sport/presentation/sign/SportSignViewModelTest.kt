@@ -125,6 +125,43 @@ class SportSignViewModelTest {
     }
 
     @Test
+    fun aRowNamesTheTeacherAndTheKindOnlyWhenItIsNotAFreeLesson() = runTest(main.dispatcher) {
+        val teacher = "Иванов Иван Иванович"
+        emitCatalog(
+            lessonOn(1, day = 8, hour = 13).copy(teacherFio = teacher),
+            lessonOn(2, day = 8, hour = 14).copy(teacherFio = teacher, lessonLevel = 3),
+            lessonOn(3, day = 8, hour = 15).copy(teacherFio = teacher, lessonLevel = 4),
+            lessonOn(4, day = 8, hour = 16).copy(teacherFio = teacher, typeId = 6),
+            lessonOn(5, day = 8, hour = 17).copy(teacherFio = " "),
+            lessonOn(6, day = 8, hour = 18).copy(teacherFio = teacher, typeId = 5),
+        )
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        val rows = viewModel.day().rows.associateBy { it.lessonId }
+        val standards = UiText.Res(SportStrings.sport_lesson_standards)
+        assertEquals(listOf(1L, 2L, 3L, 4L, 5L, 6L), rows.keys.toList())
+        // A free lesson: the teacher instead of `Свободное`.
+        assertNull(rows.getValue(1).kind)
+        assertEquals("Иванов И. И.", rows.getValue(1).teacher)
+        assertNull(rows.getValue(1).standards)
+        // A section and the national team keep their kind before the teacher.
+        assertEquals(UiText.Res(SportStrings.sport_kind_intermediate_short), rows.getValue(2).kind)
+        assertEquals("Иванов И. И.", rows.getValue(2).teacher)
+        assertEquals(UiText.Res(SportStrings.sport_kind_team_short), rows.getValue(3).kind)
+        assertNull(rows.getValue(3).standards)
+        // The standards: their pill, no kind twice.
+        assertEquals(standards, rows.getValue(4).standards)
+        assertNull(rows.getValue(4).kind)
+        assertEquals("Иванов И. И.", rows.getValue(4).teacher)
+        // No teacher, no kind: the place alone.
+        assertNull(rows.getValue(5).teacher)
+        assertNull(rows.getValue(5).kind)
+        assertEquals(UiText.Res(SportStrings.sport_lesson_debt), rows.getValue(6).kind)
+        assertNull(rows.getValue(6).standards)
+    }
+
+    @Test
     fun catalogRowsKeepTheFriendsIdentityAndPhoto() = runTest(main.dispatcher) {
         val friend = UserSummary(900001, "Тестовый Друг", "https://example.invalid/photo.jpg", emptyList(), UserSharing(true, true))
         emitCatalog(SportCardFixtures.lesson(1).copy(friendsBookings = listOf(FriendSportBooking(friend, 1, null))))

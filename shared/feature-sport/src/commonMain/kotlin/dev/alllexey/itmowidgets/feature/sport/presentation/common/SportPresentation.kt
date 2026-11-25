@@ -47,6 +47,16 @@ fun SportLessonKind.shortText(): UiText = UiText.Res(
     },
 )
 
+/**
+ * The kind as a catalog row names it, only when it says something: `Тренировка`, `Секция`, `Сборная` or a rarer kind
+ * (`Задолженность`). Null for a free lesson, almost every lesson, for the standards, which their own pill names, and
+ * for an unknown kind.
+ */
+fun SportLessonKind.rowText(): UiText? = when (this) {
+    SportLessonKind.FREE_ATTENDANCE, SportLessonKind.STANDARDS, SportLessonKind.UNKNOWN -> null
+    else -> shortText()
+}
+
 /** The colour family of a kind: free lessons, sections, the national team, the rest. */
 enum class SportKindTone { FREE, SECTION, TEAM, OTHER }
 

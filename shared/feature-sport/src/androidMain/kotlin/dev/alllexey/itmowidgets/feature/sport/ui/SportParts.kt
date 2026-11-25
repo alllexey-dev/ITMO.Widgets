@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -13,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.alllexey.itmowidgets.core.text.UiText
@@ -47,18 +50,35 @@ internal fun SportSeatsTone.tone(): Tone = when (this) {
     SportSeatsTone.FULL -> Tone.Error
 }
 
-/** `• Свободное, Кронва`: the kind's dot and the kind with the place. */
+/**
+ * `• Секция, Иванов И. И., Кронва`: the kind's dot and the kind, the [teacher] and the place, each when there is one;
+ * the dot goes only with a [kind] and stays on the first line when a narrow row wraps the text ([maxLines]).
+ */
 @Composable
-internal fun KindTag(kind: String?, tone: SportKindTone, place: String?, modifier: Modifier = Modifier) {
-    val label = listOfNotNull(kind, place).joinToString(", ")
+internal fun KindTag(
+    kind: String?,
+    tone: SportKindTone,
+    place: String?,
+    modifier: Modifier = Modifier,
+    teacher: String? = null,
+    maxLines: Int = 1,
+) {
+    val label = listOfNotNull(kind, teacher, place).joinToString(", ")
     if (label.isEmpty()) return
-    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
-        Box(Modifier.size(ItmoTheme.spacing.compact).background(tone.color(), CircleShape))
+    val style = ItmoTheme.typography.labelMedium
+    Row(modifier, verticalAlignment = Alignment.Top) {
+        if (kind != null) {
+            val line = with(LocalDensity.current) { style.lineHeight.toDp() }
+            Box(Modifier.height(line), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(ItmoTheme.spacing.compact).background(tone.color(), CircleShape))
+            }
+            Spacer(Modifier.width(ItmoTheme.spacing.compact))
+        }
         Text(
             label,
             color = ItmoTheme.colorScheme.onSurfaceVariant,
-            style = ItmoTheme.typography.labelMedium,
-            maxLines = 1,
+            style = style,
+            maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
         )
     }
