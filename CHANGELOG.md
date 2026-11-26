@@ -6,6 +6,9 @@ publication or deployment.
 
 ## Unreleased
 
+- iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
+  reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
+  content reports, around the countdown, the progress and the widgets' `GeometryReader`s.
 - Sport: the `Запись` rows name the teacher (`Иванов И. И., Кронва`) instead of `Свободное`; other kinds keep their
   label and dot before the teacher, and standards lessons get a `Нормативы` pill. The lesson sheet is unchanged.
 - iOS: the QR pass and the QR widget show no light seams in the concave corners between modules; every fillet of
