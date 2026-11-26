@@ -74,9 +74,9 @@ final class AccountTests: XCTestCase {
 
     // MARK: Update offer
 
-    func testThisBuildHasNoAppStoreIdSoItNeverOffers() {
-        XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "AppStoreID") as? String, "")
-        XCTAssertNil(AppUpdateOffer.storeURL(bundle: .main))
+    func testThisBuildOffersItsAppStorePage() {
+        XCTAssertEqual(Bundle.main.object(forInfoDictionaryKey: "AppStoreID") as? String, "6838850366")
+        XCTAssertEqual(AppUpdateOffer.storeURL(bundle: .main), URL(string: "https://apps.apple.com/app/id6838850366"))
     }
 
     func testAnAppStoreIdIsItsAppStorePage() {

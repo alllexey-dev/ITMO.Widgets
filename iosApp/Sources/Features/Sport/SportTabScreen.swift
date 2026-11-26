@@ -567,8 +567,8 @@ extension SportWeekDay {
     }
 }
 
-/// One catalog lesson: the time, the section, its kind and place, the places, friends, a clash and one action; at
-/// the accessibility sizes the action moves under the lines.
+/// One catalog lesson: the time, the section, the standards pill, its kind, teacher and place, the places, friends, a
+/// clash and one action; at the accessibility sizes the action moves under the lines.
 struct SportCatalogRowView: View {
     let row: SportCatalogRow
     let open: () -> Void
@@ -596,7 +596,7 @@ struct SportCatalogRowView: View {
             .frame(minWidth: 44, alignment: .leading)
             VStack(alignment: .leading, spacing: 3) {
                 Text(verbatim: row.section).font(.itmo(.bodyLarge, emphasized: true)).lineLimit(2)
-                SportKindTag(kind: row.kind.resolved, tone: row.kindTone, place: row.place?.resolved)
+                SportRowKindLine(row: row)
                 if row.occupancy != nil || !row.friends.isEmpty {
                     HStack(spacing: ItmoSpacing.compact) {
                         if let occupancy = row.occupancy {
@@ -660,22 +660,57 @@ struct SportRowActionView: View {
     }
 }
 
-/// "• Free, Kronva": the kind's dot and the kind with the place.
+/// "• Section, Ivanov I. I., Kronva": the kind's dot and the kind, the teacher and the place, each when there is one;
+/// the dot goes only with a kind and stays on the first line when a narrow row wraps the text (`lines`).
 struct SportKindTag: View {
     let kind: String?
     let tone: SportKindTone
     var place: String?
+    var teacher: String?
+    var lines = 1
 
     var body: some View {
-        let label = [kind, place].compactMap { $0 }.joined(separator: ", ")
+        let label = [kind, teacher, place].compactMap { $0 }.joined(separator: ", ")
         if !label.isEmpty {
-            HStack(spacing: 5) {
-                Circle().fill(tone.color).frame(width: 7, height: 7).accessibilityHidden(true)
-                Text(verbatim: label).lineLimit(1)
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                if kind != nil {
+                    Circle().fill(tone.color).frame(width: 7, height: 7)
+                        .alignmentGuide(.firstTextBaseline) { $0[.bottom] }
+                        .accessibilityHidden(true)
+                }
+                Text(verbatim: label).lineLimit(lines)
             }
             .font(.itmo(.labelMedium))
             .foregroundStyle(.secondary)
         }
+    }
+}
+
+/// The standards pill, then the line of the kind, the teacher and the place; the line moves under the pill when it
+/// does not fit beside it and wraps once rather than cut the teacher.
+struct SportRowKindLine: View {
+    let row: SportCatalogRow
+
+    var body: some View {
+        if let standards = row.standards {
+            let pill = ItmoStatusPill(pill: ItmoPill(text: standards.resolved, tone: .tertiary)).fixedSize()
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: ItmoSpacing.compact) {
+                    pill
+                    tag(lines: 1).fixedSize()
+                }
+                VStack(alignment: .leading, spacing: ItmoSpacing.related) {
+                    pill
+                    tag(lines: 2)
+                }
+            }
+        } else {
+            tag(lines: 2)
+        }
+    }
+
+    private func tag(lines: Int) -> SportKindTag {
+        SportKindTag(kind: row.kind?.resolved, tone: row.kindTone, place: row.place?.resolved, teacher: row.teacher, lines: lines)
     }
 }
 

@@ -15,7 +15,11 @@ The score uses pink for visits and blue for bonus points, following My ITMO.
 
 - `Моё` (`SportMyViewModel`): the score ring, bookings and queues as lesson cards by day, then `Секции`. Ended
   bookings and finished queues are not listed; queue results live in the bell.
-- `Запись` (`SportSignViewModel`): search, quick chips, the week strip, the day's rows with one action. `Доступные`
+- `Запись` (`SportSignViewModel`): search, quick chips, the week strip, the day's rows with one action. A row's
+  second line is the teacher (`Иванов И. И.`, `shortPersonName`) and the building; a free lesson, almost every one,
+  names no kind, other kinds lead with the kind and its dot (`• Секция, Иванов И. И., Кронва`), and a standards
+  lesson (My ITMO's type 6, `SportLesson.isStandards`) has a `Нормативы` pill instead. A narrow row wraps the line
+  rather than cut the teacher. The lesson sheet still names every kind. `Доступные`
   hides the lessons the viewer can neither sign up for nor queue for and keeps the own ones; `Есть места` keeps those
   bookable now and the own ones. Every filter starts off. A clash with an own lesson (MyITMO's `intersection`) names
   the lesson from the timetable cache (`DayLessonsGateway`); it only warns, never blocks.

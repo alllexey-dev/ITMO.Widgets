@@ -17,7 +17,7 @@ CAMPUS_MAP_URL = https:/$()/map.alllexey.dev/app/v1/
 // https://apps.apple.com/app/id$(APP_STORE_ID) and offers nothing while it is empty.
 APP_STORE_ID = 6838850366
 
-MARKETING_VERSION = 2.3.1
+MARKETING_VERSION = 2.3.2
 CURRENT_PROJECT_VERSION = 1
 // Build identity, BuildChannel, BuildSource and BuildCommit in the app's and the notification service's Info.plist
 // (docs/building.md). `custom` unless the owner's Signing.local.xcconfig sets ITMO_BUILD_CHANNEL = official;
