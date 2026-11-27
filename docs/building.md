@@ -76,8 +76,9 @@ they only label.
   by `app/build.gradle.kts` at build time; on iOS when the owner's ignored
   `Signing.local.xcconfig` sets `ITMO_BUILD_CHANNEL = official`. Everything
   else is `custom`, including the unsigned `.ipa` of the `dist` workflow
-  (`archive.sh --unsigned` always sets `custom`) and CI builds of this
-  repository.
+  (`archive.sh --unsigned` always sets `custom`), CI builds of this
+  repository and every build of `scripts/ios/test.sh`, which sets `custom`
+  itself so that the snapshots do not depend on the local signing file.
 - **Commit.** Android stamps it in release-type builds only, so debug builds
   keep their compile cache (empty in debug). iOS stamps it in `archive.sh`
   builds, with `-dirty` for uncommitted changes; Xcode builds leave it empty.

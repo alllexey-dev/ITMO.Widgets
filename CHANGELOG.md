@@ -6,6 +6,9 @@ publication or deployment.
 
 ## Unreleased
 
+- iOS tests: `scripts/ios/test.sh` builds a `custom` build whatever `Signing.local.xcconfig` sets, so the about page's
+  version row (`2.3.3 (1) · своя сборка`) is the same in a worktree, in CI and in the owner's checkout. Its snapshot
+  was recorded as an official build since 2.3.1 and failed everywhere else, on `master` too.
 - Connections: pairing protocol 2 (ADR 0040, needs the Backend change). The app opens every code with `?protocol=2`; a
   client that asks for grants gets a card of switches grouped «ITMO.Widgets» and «ИТМО»: required grants on and locked
   («Нужно для работы»), `itmo:sso` («Полный доступ к ITMO.ID») off every time with its warning and a confirmation,
