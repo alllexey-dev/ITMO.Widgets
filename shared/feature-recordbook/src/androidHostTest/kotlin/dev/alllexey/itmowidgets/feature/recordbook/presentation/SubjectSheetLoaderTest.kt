@@ -54,6 +54,17 @@ class SubjectSheetLoaderTest {
         assertEquals(listOf(sheetUrl("sheet")), hint.links.map { it.url })
     }
 
+    @Test fun `a Google Drive file is offered only under scores`() {
+        val drive = "https://drive.google.com/file/d/1SyntheticDriveXlsx0000000000/view?usp=sharing"
+        val pdf = "https://drive.google.com/file/d/1SyntheticDrivePdf00000000000/view"
+        val links = SubjectLinksState.Content(linksSnapshot(shared = listOf(
+            subjectLink("xlsx", LinkCategory.SCORES, isMine = false).copy(url = drive),
+            subjectLink("pdf", LinkCategory.MATERIALS, isMine = false).copy(url = pdf),
+        )))
+        val hint = loader.state(scope, links, emptyList()) as SubjectSheetState.Hint
+        assertEquals(listOf(drive), hint.links.map { it.url })
+    }
+
     @Test fun `no connection and no sheet link offer nothing`() {
         assertNull(loader.state(scope, SubjectLinksState.Content(linksSnapshot()), emptyList()))
         assertNull(loader.state(scope, SubjectLinksState.Loading, emptyList()))

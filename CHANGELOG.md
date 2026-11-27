@@ -6,6 +6,9 @@ publication or deployment.
 
 ## Unreleased
 
+- Recordbook: a Google Drive link to an uploaded spreadsheet (`drive.google.com/file/d/<id>`, an `.xlsx`) under
+  `Баллы` now offers `Мои баллы`; the file is read by its id at the Sheets address. `Посчитать с ИИ` takes such a
+  link too, Backend normalizes it to the sheet of its id (itmo-widgets-backend#76).
 - iOS: shared links `https://widgets.alllexey.dev/u/<isu>`, `/sport/<id>`, `/sport/p/<id>` and `/pair` (and the dev
   host) open the app as Universal Links, as on Android: the signed entitlements get associated domains for both hosts.
   Needs the Associated Domains capability on the App ID, a new profile and the site's `apple-app-site-association`.

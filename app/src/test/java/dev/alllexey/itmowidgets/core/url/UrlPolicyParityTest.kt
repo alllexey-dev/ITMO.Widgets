@@ -38,7 +38,7 @@ class UrlPolicyParityTest {
 
     @Test fun `Telegram deep links`() = assertParity(Released::deepLink, TelegramLinks::deepLink)
 
-    @Test fun `Google Sheet addresses`() = assertParity(Released::googleSheet, GoogleSheetUrl::parse)
+    @Test fun `Google Sheet addresses`() = assertParity(Released::googleSheet, GoogleSheetUrl::parseSheets)
 
     @Test fun `link category guesses`() = assertParity(Released::guessCategory, ::guessCategory)
 

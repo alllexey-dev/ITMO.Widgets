@@ -1,9 +1,9 @@
 package dev.alllexey.itmowidgets.feature.resources.ui
 
-import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkStatus
+import dev.alllexey.itmowidgets.core.resources.offersSheetScores
 import dev.alllexey.itmowidgets.feature.resources.presentation.SubjectLinksUiState
 
 /** The rows of the link actions sheet, in display order. */
@@ -48,7 +48,7 @@ fun SubjectLinksUiState.linkActions(linkId: String): LinkActionsModel? {
             LinkAction.OPEN,
             LinkAction.AUTHOR.takeIf { author != null },
             LinkAction.COPY,
-            LinkAction.SCORES.takeIf { GoogleSheetUrl.parse(link.url) != null },
+            LinkAction.SCORES.takeIf { link.offersSheetScores },
             LinkAction.PIN.takeIf { link.isMine || snapshot.servicesEnabled },
             LinkAction.EDIT.takeIf { link.isMine },
             LinkAction.DELETE.takeIf { link.isMine },
