@@ -1,11 +1,11 @@
 package dev.alllexey.itmowidgets.feature.recordbook.presentation
 
-import dev.alllexey.itmowidgets.core.resources.GoogleSheetUrl
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.ResourceScope
 import dev.alllexey.itmowidgets.core.resources.SubjectLink
 import dev.alllexey.itmowidgets.core.resources.SubjectLinkRanking
 import dev.alllexey.itmowidgets.core.resources.SubjectLinksState
+import dev.alllexey.itmowidgets.core.resources.offersSheetScores
 import dev.alllexey.itmowidgets.core.time.AcademicTimeProvider
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScore
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetScoresRepository
@@ -33,7 +33,7 @@ class SubjectSheetLoader(
         }
         val snapshot = (links as? SubjectLinksState.Content)?.snapshot ?: return null
         val options = (snapshot.mine + snapshot.shared + snapshot.previous)
-            .filter { GoogleSheetUrl.parse(it.url) != null }
+            .filter { it.offersSheetScores }
             .sortedWith(compareBy<SubjectLink> { link ->
                 when {
                     link.isMine -> 0

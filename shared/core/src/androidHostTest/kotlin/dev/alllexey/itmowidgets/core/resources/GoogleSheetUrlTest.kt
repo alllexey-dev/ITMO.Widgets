@@ -25,6 +25,27 @@ class GoogleSheetUrlTest {
         assertEquals(GoogleSheetUrl(id, null), GoogleSheetUrl.parse("  $base  "))
     }
 
+    @Test fun `a Google Drive file is read by its id`() {
+        listOf(
+            "https://drive.google.com/file/d/$id/view?usp=sharing",
+            "https://drive.google.com/file/d/$id",
+            "https://drive.google.com/file/u/1/d/$id/edit",
+            "https://drive.google.com/open?id=$id&authuser=0",
+        ).forEach { assertEquals(it, GoogleSheetUrl(id, null), GoogleSheetUrl.parse(it)) }
+        assertNull(GoogleSheetUrl.parseSheets("https://drive.google.com/file/d/$id/view"))
+    }
+
+    @Test fun `other Drive addresses are not sheets`() {
+        listOf(
+            "http://drive.google.com/file/d/$id/view",
+            "https://drive.google.com.evil.com/file/d/$id/view",
+            "https://drive.google.com/drive/folders/$id",
+            "https://drive.google.com/file/d/short/view",
+            "https://drive.google.com/uc?id=$id",
+            "https://drive.google.com/open?id=short",
+        ).forEach { assertNull(it, GoogleSheetUrl.parse(it)) }
+    }
+
     @Test fun `other addresses are not sheets`() {
         listOf(
             "http://docs.google.com/spreadsheets/d/$id/edit",
