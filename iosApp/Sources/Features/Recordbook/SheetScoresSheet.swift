@@ -193,8 +193,9 @@ private struct SheetRowChoice: View {
     }
 }
 
-/// The total: the chosen one on top (or why there is none), then under `sheet_total_other` the other ready totals
-/// with their values and the ways to another one; `sheet_scores_save` or `sheet_total_done` in the bar.
+/// The total: the chosen one on top (or why there is none), the AI's explained offer under it for a shared sheet whose
+/// rule is not known yet, then under `sheet_total_other` the other ready totals with their values and the ways to
+/// another one; `sheet_scores_save` or `sheet_total_done` in the bar.
 private struct SheetTotalOverview: View {
     let state: SheetScoresUiStatePickTotal
     let actions: SheetScoresContentActions
@@ -208,7 +209,9 @@ private struct SheetTotalOverview: View {
                     note: hero.note?.resolved,
                     warning: hero.warning,
                     official: hero.official?.resolved,
-                    details: hero.details
+                    details: hero.details,
+                    ai: hero.ai,
+                    recompute: actions.analyze
                 )
             } else {
                 ItmoCard {
@@ -217,6 +220,16 @@ private struct SheetTotalOverview: View {
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("sheetScores.hero")
+            }
+            if let entry = state.aiEntry {
+                ItmoActionCard(
+                    title: AppStrings.string("sheet_ai_offer_title"),
+                    reason: aiReason(entry),
+                    action: (AppStrings.string("sheet_ai_analyze"), actions.analyze),
+                    symbol: .autoAwesome,
+                    isInProgress: entry is SheetAiStateRunning
+                )
+                .accessibilityIdentifier("sheetScores.ai")
             }
             ItmoSectionHeader(title: AppStrings.string(state.hero == nil ? "sheet_total_find" : "sheet_total_other"))
             let variants = state.variants
@@ -241,20 +254,6 @@ private struct SheetTotalOverview: View {
                     action: actions.openSum
                 )
                 .accessibilityIdentifier("sheetScores.sum")
-                if let subtitle = aiSubtitle {
-                    let running = state.ai is SheetAiStateRunning
-                    ItmoRow(
-                        title: AppStrings.string("sheet_ai_analyze"),
-                        subtitle: subtitle,
-                        symbol: .autoAwesome,
-                        tone: .neutral,
-                        action: running ? nil : actions.analyze
-                    )
-                    .accessory {
-                        if running { ProgressView().itmoTint() }
-                    }
-                    .accessibilityIdentifier("sheetScores.ai")
-                }
             }
         }
         .toolbar {
@@ -267,20 +266,18 @@ private struct SheetTotalOverview: View {
         }
     }
 
-    /// The AI row's line while it can be asked, runs or failed; nil hides the row (not offered, or its result is a
-    /// variant).
-    private var aiSubtitle: String? {
-        switch onEnum(of: state.ai) {
-        case .offer: AppStrings.string("sheet_ai_offer_note")
+    /// The AI card's line: what the AI does and never sees, that it runs, or why the last ask gave nothing.
+    private func aiReason(_ ai: SheetAiState) -> String {
+        switch onEnum(of: ai) {
         case .running: AppStrings.string("sheet_ai_running")
         case let .failed(failed): failed.text.resolved
-        case .hidden, .proposal: nil
+        case .offer, .hidden: AppStrings.string("sheet_ai_offer_note")
         }
     }
 }
 
-/// The chosen total: `sheet_total_label`, the number, where it comes from, one note, the teacher's total and the
-/// AI's details on demand.
+/// The chosen total: `sheet_total_label`, the number, where it comes from, one note, the teacher's total; an AI total
+/// adds its details on demand and `sheet_ai_recompute` with its line.
 private struct SheetTotalCard: View {
     let value: String?
     let source: String
@@ -288,6 +285,8 @@ private struct SheetTotalCard: View {
     var warning = false
     var official: String?
     var details: [String] = []
+    var ai: SheetHeroAi?
+    var recompute: () -> Void = {}
     @State private var showsDetails = false
 
     var body: some View {
@@ -306,20 +305,45 @@ private struct SheetTotalCard: View {
             if let official {
                 Text(verbatim: official).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
             }
-            if !details.isEmpty {
-                if showsDetails {
-                    ForEach(details, id: \.self) { line in
-                        Text(verbatim: line).font(.itmo(.bodySmall)).foregroundStyle(.secondary)
-                    }
+            if showsDetails {
+                ForEach(details, id: \.self) { line in
+                    Text(verbatim: line).font(.itmo(.bodySmall)).foregroundStyle(.secondary)
                 }
-                Button(AppStrings.string(showsDetails ? "sheet_ai_less" : "sheet_ai_more")) { showsDetails.toggle() }
-                    .buttonStyle(.borderless)
-                    .itmoTint()
-                    .frame(minHeight: ItmoMetrics.touchTarget)
-                    .accessibilityIdentifier("sheetScores.ai.details")
+            }
+            if let line = ai?.line {
+                Text(verbatim: line.resolved).font(.itmo(.bodySmall)).foregroundStyle(.secondary)
+            }
+            if !details.isEmpty || ai != nil {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: ItmoSpacing.content) { aiButtons }
+                    VStack(alignment: .leading, spacing: 0) { aiButtons }
+                }
             }
         }
         .accessibilityIdentifier("sheetScores.hero")
+    }
+
+    @ViewBuilder private var aiButtons: some View {
+        if !details.isEmpty {
+            Button(AppStrings.string(showsDetails ? "sheet_ai_less" : "sheet_ai_more")) { showsDetails.toggle() }
+                .buttonStyle(.borderless)
+                .itmoTint()
+                .frame(minHeight: ItmoMetrics.touchTarget)
+                .accessibilityIdentifier("sheetScores.ai.details")
+        }
+        if let ai {
+            Button(action: recompute) {
+                Label { Text(verbatim: AppStrings.string("sheet_ai_recompute")) } icon: { AppSymbol.autoAwesome.image }
+                    .opacity(ai.running ? 0 : 1)
+                    .overlay { if ai.running { ProgressView().controlSize(.small) } }
+            }
+            .buttonStyle(.borderless)
+            .itmoTint()
+            .frame(minHeight: ItmoMetrics.touchTarget)
+            .allowsHitTesting(!ai.running)
+            .accessibilityLabel(Text(verbatim: AppStrings.string("sheet_ai_recompute")))
+            .accessibilityIdentifier("sheetScores.ai.recompute")
+        }
     }
 }
 

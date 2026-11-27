@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.recordbook.ui.sheets
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,7 +36,6 @@ import dev.alllexey.itmowidgets.core.presentation.GroupPosition
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButtonStyle
-import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
 import dev.alllexey.itmowidgets.designsystem.components.groups.GroupSurface
 import dev.alllexey.itmowidgets.designsystem.components.groups.connectedGroupItem
 import dev.alllexey.itmowidgets.designsystem.components.sheets.SheetClose
@@ -45,6 +45,7 @@ import dev.alllexey.itmowidgets.designsystem.components.state.ContentState
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateAction
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateLoading
 import dev.alllexey.itmowidgets.designsystem.components.state.ContentStateSize
+import dev.alllexey.itmowidgets.designsystem.kit.ActionCard
 import dev.alllexey.itmowidgets.designsystem.kit.ChipSpec
 import dev.alllexey.itmowidgets.designsystem.kit.FilterChips
 import dev.alllexey.itmowidgets.designsystem.kit.ItmoCard
@@ -79,6 +80,8 @@ import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_analyze
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_less
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_more
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_offer_note
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_offer_title
+import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_recompute
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_ai_running
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_empty_cell
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_empty_columns
@@ -140,6 +143,7 @@ object SheetScoresSheetTestTags {
     const val COLUMNS = "sheet_scores_columns"
     const val SUM = "sheet_scores_sum"
     const val AI = "sheet_scores_ai"
+    const val AI_RECOMPUTE = "sheet_scores_ai_recompute"
     const val AI_DETAILS = "sheet_scores_ai_details"
     const val EMPTY_COLUMNS = "sheet_scores_empty_columns"
 }
@@ -267,22 +271,24 @@ private fun ColumnScope.Tabs(tabs: List<SheetTab>, onPick: (SheetTab) -> Unit) {
 }
 
 /**
- * The total: the chosen one on top (or why there is none), then under «Другой итог» the other ready totals with their
- * values and the ways to another one: a column, a sum, the AI for a shared sheet.
+ * The total: the chosen one on top (or why there is none), the AI's explained offer under it for a shared sheet whose
+ * rule is not known yet, then under «Другой итог» the other ready totals with their values and the ways to another
+ * one: a column or a sum.
  */
 @Composable
 private fun ColumnScope.Overview(state: SheetScoresUiState.PickTotal, actions: SheetScoresActions) {
     val hero = state.hero
     val variants = state.variants
-    val ways = buildList {
-        add(Way.COLUMN)
-        add(Way.SUM)
-        if (state.ai is SheetAiState.Offer || state.ai is SheetAiState.Running || state.ai is SheetAiState.Failed) add(Way.AI)
-    }
+    val ways = listOf(Way.COLUMN, Way.SUM)
     val heading = stringResource(if (hero == null) Res.string.sheet_total_find else Res.string.sheet_total_other)
     val missing = state.missing.asString()
+    val entry = state.aiEntry
     Body {
-        item(key = "hero") { if (hero != null) Hero(hero) else Missing(missing) }
+        item(key = "hero") { if (hero != null) Hero(hero, actions.onAnalyze) else Missing(missing) }
+        if (entry != null) {
+            gap("ai")
+            item(key = "ai") { AiEntry(entry, actions.onAnalyze) }
+        }
         gap("heading") { ItmoTheme.spacing.group }
         item(key = "heading") { SectionHeader(heading) }
         gap("variants") { ItmoTheme.spacing.compact }
@@ -296,14 +302,14 @@ private fun ColumnScope.Overview(state: SheetScoresUiState.PickTotal, actions: S
             )
         }
         if (variants.isNotEmpty()) gap("ways")
-        group(ways, key = { it.name }) { way, position -> WayRow(way, state.ai, actions, position) }
+        group(ways, key = { it.name }) { way, position -> WayRow(way, actions, position) }
     }
 }
 
-private enum class Way { COLUMN, SUM, AI }
+private enum class Way { COLUMN, SUM }
 
 @Composable
-private fun WayRow(way: Way, ai: SheetAiState, actions: SheetScoresActions, modifier: Modifier) {
+private fun WayRow(way: Way, actions: SheetScoresActions, modifier: Modifier) {
     when (way) {
         Way.COLUMN -> ListRow(
             stringResource(Res.string.sheet_total_pick_column),
@@ -321,28 +327,36 @@ private fun WayRow(way: Way, ai: SheetAiState, actions: SheetScoresActions, modi
             chevron = true,
             onClick = actions.onOpenSum,
         )
-        Way.AI -> {
-            val running = ai == SheetAiState.Running
-            ListRow(
-                stringResource(Res.string.sheet_ai_analyze),
-                modifier.testTag(SheetScoresSheetTestTags.AI),
-                subtitle = when (ai) {
-                    SheetAiState.Running -> stringResource(Res.string.sheet_ai_running)
-                    is SheetAiState.Failed -> ai.text.asString()
-                    else -> stringResource(Res.string.sheet_ai_offer_note)
-                },
-                icon = painterResource(KitRes.drawable.ic_auto_awesome),
-                iconTone = Tone.Neutral,
-                accessory = if (running) ({ ItmoActivityIndicator() }) else null,
-                onClick = if (running) null else actions.onAnalyze,
-            )
-        }
     }
 }
 
-/** The chosen total: `Ваш итог`, the number, where it comes from, one note, the teacher's total, the AI's details on demand. */
+/**
+ * `Посчитать с ИИ` as an action card under the total: what the AI does and what it never sees, one tonal button with
+ * its own progress; while it runs or after a failure the line says so.
+ */
 @Composable
-private fun Hero(hero: SheetTotalHero) {
+private fun AiEntry(ai: SheetAiState, onAnalyze: () -> Unit) {
+    ActionCard(
+        title = stringResource(Res.string.sheet_ai_offer_title),
+        reason = when (ai) {
+            SheetAiState.Running -> stringResource(Res.string.sheet_ai_running)
+            is SheetAiState.Failed -> ai.text.asString()
+            else -> stringResource(Res.string.sheet_ai_offer_note)
+        },
+        action = stringResource(Res.string.sheet_ai_analyze),
+        onAction = onAnalyze,
+        icon = painterResource(KitRes.drawable.ic_auto_awesome),
+        modifier = Modifier.testTag(SheetScoresSheetTestTags.AI),
+        inProgress = ai == SheetAiState.Running,
+    )
+}
+
+/**
+ * The chosen total: `Ваш итог`, the number, where it comes from, one note, the teacher's total; an AI total adds its
+ * details on demand and `Пересчитать с ИИ` with its line.
+ */
+@Composable
+private fun Hero(hero: SheetTotalHero, onAnalyze: () -> Unit) {
     var details by rememberSaveable { mutableStateOf(false) }
     ItmoCard(Modifier.testTag(SheetScoresSheetTestTags.HERO)) {
         Column(Modifier.semantics(mergeDescendants = true) {}) {
@@ -362,16 +376,31 @@ private fun Hero(hero: SheetTotalHero) {
             )
         }
         hero.official?.let { Text(it.asString(), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium) }
-        if (hero.details.isNotEmpty()) {
-            if (details) {
-                hero.details.forEach { Text(it, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodySmall) }
+        if (details) {
+            hero.details.forEach { Text(it, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodySmall) }
+        }
+        hero.ai?.line?.let { Text(it.asString(), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodySmall) }
+        if (hero.details.isNotEmpty() || hero.ai != null) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related)) {
+                if (hero.details.isNotEmpty()) {
+                    ProgressButton(
+                        label = stringResource(if (details) Res.string.sheet_ai_less else Res.string.sheet_ai_more),
+                        onClick = { details = !details },
+                        style = ProgressButtonStyle.Text,
+                        modifier = Modifier.testTag(SheetScoresSheetTestTags.AI_DETAILS),
+                    )
+                }
+                hero.ai?.let { ai ->
+                    ProgressButton(
+                        label = stringResource(Res.string.sheet_ai_recompute),
+                        onClick = onAnalyze,
+                        style = ProgressButtonStyle.Text,
+                        inProgress = ai.running,
+                        icon = painterResource(KitRes.drawable.ic_auto_awesome),
+                        modifier = Modifier.testTag(SheetScoresSheetTestTags.AI_RECOMPUTE),
+                    )
+                }
             }
-            ProgressButton(
-                label = stringResource(if (details) Res.string.sheet_ai_less else Res.string.sheet_ai_more),
-                onClick = { details = !details },
-                style = ProgressButtonStyle.Text,
-                modifier = Modifier.testTag(SheetScoresSheetTestTags.AI_DETAILS),
-            )
         }
     }
 }
