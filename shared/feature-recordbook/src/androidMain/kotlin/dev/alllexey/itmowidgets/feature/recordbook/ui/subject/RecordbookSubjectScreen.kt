@@ -90,6 +90,7 @@ data class RecordbookSubjectActions(
     val onConnect: () -> Unit = {},
     val onOpenSheetScores: (SheetScoresArgs) -> Unit = {},
     val onBarsSignIn: () -> Unit = {},
+    val onCheckLms: (() -> Unit)? = null,
     val onOpenSport: () -> Unit = {},
     val onOpenLesson: (LessonTarget) -> Unit = {},
     val onRefresh: () -> Unit = {},
@@ -217,6 +218,6 @@ private fun LazyListScope.tab(tab: SubjectTab, state: RecordbookSubjectUiState.C
     when (tab) {
         SubjectTab.SCORES -> scoresTab(state.scores, actions)
         SubjectTab.LESSONS -> lessonsTab(state.lessons, actions)
-        SubjectTab.MATERIALS -> materialsTab(state.materials, actions)
+        SubjectTab.MATERIALS -> materialsTab(state.materials, state.canCheckLms, actions)
     }
 }

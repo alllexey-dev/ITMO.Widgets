@@ -53,6 +53,7 @@ internal data class RecordbookInput(
     val sourcesKey: String?,
     val today: LocalDate,
     val timeZone: TimeZone,
+    val lms: Map<String, Double> = emptyMap(),
 )
 
 /** The recordbook list in words: pure, so the rules are tested without a ViewModel. */
@@ -91,7 +92,25 @@ internal object RecordbookPresenter {
         }
         val shown = journals?.let { RecordbookBarsMerge.apply(input.official, it) } ?: input.official
         val entries = input.official.zip(shown) { official, merged ->
-            Entry(official, merged, RecordbookPointsRule.pick(official, merged, input.sheets[official.disciplineId]))
+            val base = RecordbookPointsRule.pick(official, merged, input.sheets[official.disciplineId])
+            val extra = input.lms[official.key]?.takeIf { it > 0 && it.isFinite() &&
+                merged.normalizedRate == RecordbookRate.InProgress && !merged.absent && !merged.isPhysicalEducation }
+            val hasBasePoints = base.text != null
+            val combined = when {
+                extra == null -> null
+                !hasBasePoints -> extra
+                else -> base.points?.let { it + extra }
+            }?.takeIf(Double::isFinite)
+            Entry(
+                official = official,
+                shown = merged,
+                points = if (combined == null) base else base.copy(
+                    text = formatRecordbookNumber(combined),
+                    points = combined,
+                ),
+                lms = if (combined == null) null else extra,
+                hasBasePoints = hasBasePoints,
+            )
         }
         val sections = listOfNotNull(
             section(RecordbookStrings.recordbook_attention_section, entries.filter { it.official.key in input.attention }, input),
@@ -114,7 +133,13 @@ internal object RecordbookPresenter {
     }
 
     /** A subject as My ITMO lists it, as the list shows it (BARS laid over when it has a journal) and its [points]. */
-    private data class Entry(val official: RecordbookSubject, val shown: RecordbookSubject, val points: RecordbookPoints) {
+    private data class Entry(
+        val official: RecordbookSubject,
+        val shown: RecordbookSubject,
+        val points: RecordbookPoints,
+        val lms: Double? = null,
+        val hasBasePoints: Boolean = true,
+    ) {
         val fromBars: Boolean get() = shown.barsJournal != null
     }
 
@@ -130,8 +155,10 @@ internal object RecordbookPresenter {
             is RecordbookAttentionReason.SportShort -> RecordbookTone.WARN
             else -> RecordbookTone.BAD
         }
-        val stale = source(entry) == RecordbookSource.BARS && input.bars is RecordbookBarsData.Expired
+        val expiredAt = (input.bars as? RecordbookBarsData.Expired)?.at
+        val hasLmsOnly = entry.lms != null && !entry.hasBasePoints
         val source = source(entry)
+        val stale = !hasLmsOnly && source == RecordbookSource.BARS && input.bars is RecordbookBarsData.Expired
         return RecordbookRow(
             id = subject.entryId,
             key = entry.official.key,
@@ -139,7 +166,13 @@ internal object RecordbookPresenter {
             meta = reason?.let(::reasonText) ?: meta(subject, input),
             metaTone = metaTone,
             value = value(entry, input, if (reason == null) RecordbookTone.PRIMARY else metaTone),
-            source = sourceLabel(source, if (stale) (input.bars as RecordbookBarsData.Expired).at else null, input),
+            source = if (hasLmsOnly) {
+                UiText.Res(RecordbookStrings.recordbook_lms_source)
+            } else {
+                sourceLabel(source, if (stale) expiredAt else null, input).let { base ->
+                    if (entry.lms != null) UiText.Res(RecordbookStrings.recordbook_lms_total_source, listOf(base)) else base
+                }
+            },
             stale = stale,
             unread = subjectNameKey(subject.name) in input.unread,
             target = if (subject.isPhysicalEducation) RecordbookTarget.Sport else RecordbookTarget.Subject(args(input.selection, subject)),
@@ -271,26 +304,39 @@ internal object RecordbookPresenter {
             value = sheet?.value,
             shown = shown == RecordbookSource.SHEET,
         )
+        val rows = listOf(bars, myItmo, table)
+            .let { list -> if (entry.lms != null && !entry.hasBasePoints) list.map { it.copy(shown = false) } else list }
+            .sortedByDescending { it.shown }
         return RecordbookSources(
             id = entry.official.key,
             caption = UiText.Joined(
                 listOf(UiText.Dynamic(entry.official.name), UiText.LowercaseFirst(UiText.Dynamic(entry.official.controlType.trim()))),
                 ", ",
             ),
-            rows = listOf(bars, myItmo, table).sortedByDescending { it.shown },
-            note = UiText.Res(
-                when {
-                    entry.points.text == null -> RecordbookStrings.recordbook_sources_why_none
-                    shown == RecordbookSource.BARS -> RecordbookStrings.recordbook_sources_why_bars
-                    shown == RecordbookSource.SHEET -> RecordbookStrings.recordbook_sources_why_sheet
-                    else -> RecordbookStrings.recordbook_sources_why_myitmo
-                },
-            ),
+            rows = rows,
+            note = when {
+                entry.lms != null && entry.hasBasePoints -> UiText.Res(
+                    RecordbookStrings.recordbook_lms_sources_note,
+                    listOf(formatRecordbookNumber(entry.lms)),
+                )
+                entry.lms != null -> UiText.Res(
+                    RecordbookStrings.recordbook_lms_sources_only_note,
+                    listOf(formatRecordbookNumber(entry.lms)),
+                )
+                else -> UiText.Res(
+                    when {
+                        entry.points.text == null -> RecordbookStrings.recordbook_sources_why_none
+                        shown == RecordbookSource.BARS -> RecordbookStrings.recordbook_sources_why_bars
+                        shown == RecordbookSource.SHEET -> RecordbookStrings.recordbook_sources_why_sheet
+                        else -> RecordbookStrings.recordbook_sources_why_myitmo
+                    },
+                )
+            },
             target = RecordbookTarget.Subject(args(input.selection, entry.shown)),
         )
     }
 
-    private fun args(selection: RecordbookSelection, subject: RecordbookSubject) = RecordbookSubjectArgs(
+    internal fun args(selection: RecordbookSelection, subject: RecordbookSubject) = RecordbookSubjectArgs(
         entryId = subject.entryId,
         programId = selection.program.id,
         semester = selection.period.semester,

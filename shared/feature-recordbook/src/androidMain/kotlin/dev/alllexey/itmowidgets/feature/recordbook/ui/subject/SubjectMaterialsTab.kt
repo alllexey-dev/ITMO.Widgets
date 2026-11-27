@@ -42,6 +42,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.ui.kit
 import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_lms_check
 import dev.alllexey.itmowidgets.shared.compose.strings.links_all_count
 import dev.alllexey.itmowidgets.shared.compose.strings.links_score
 import dev.alllexey.itmowidgets.shared.compose.strings.links_vote_down
@@ -62,7 +63,11 @@ import org.jetbrains.compose.resources.stringResource
 import dev.alllexey.itmowidgets.shared.designsystem.Res as KitRes
 
 /** `Материалы`: chats, links by category with their votes, own links with their review state; a gate without the connection. */
-internal fun LazyListScope.materialsTab(materials: SubjectMaterials, actions: RecordbookSubjectActions) {
+internal fun LazyListScope.materialsTab(
+    materials: SubjectMaterials,
+    canCheckLms: Boolean,
+    actions: RecordbookSubjectActions,
+) {
     when (materials) {
         SubjectMaterials.Gate -> item(key = "materials-gate") {
             GateCard(
@@ -113,6 +118,13 @@ internal fun LazyListScope.materialsTab(materials: SubjectMaterials, actions: Re
                         }
                     }
                 }
+            }
+        }
+    }
+    if (canCheckLms) {
+        actions.onCheckLms?.let { check ->
+            item(key = "lms-check") {
+                ListGroup { item { ListRow(title = stringResource(Res.string.recordbook_lms_check), chevron = true, onClick = check) } }
             }
         }
     }

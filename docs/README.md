@@ -74,6 +74,7 @@ How the engineering skills (triage, tickets, specs, domain modeling) work in thi
 - [Issue tracker](agents/issue-tracker.md) - GitHub Issues through `gh`.
 - [Triage labels](agents/triage-labels.md) - the five triage roles and their labels.
 - [Domain docs](agents/domain.md) - the glossary and the ADRs the skills read first.
+- [Tuxedo LMS investigation](agents/lms-investigation.md) - private Tuxedo LMS API notes and remaining checks.
 
 
 ## Related repositories

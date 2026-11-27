@@ -237,4 +237,17 @@
     <string name="recordbook_todo_bars_reason">Сессия закончилась, баллы БАРС не обновляются</string>
     <string name="recordbook_todo_bars_reason_since">Сессия закончилась, баллы БАРС не обновляются с %1$s</string>
     <string name="recordbook_todo_bars_action">Войти</string>
+    <string name="recordbook_lms_check">Проверить LMS</string>
+    <string name="recordbook_lms_title">Баллы LMS</string>
+    <string name="recordbook_lms_error">Не удалось получить баллы LMS. Проверьте подключение и попробуйте снова.</string>
+    <string name="recordbook_lms_wrong_account">Аккаунт LMS не совпадает с аккаунтом приложения или его не удалось проверить.</string>
+    <string name="recordbook_lms_empty">В LMS не найдено курсов.</string>
+    <string name="recordbook_lms_demo">LMS недоступна в деморежиме.</string>
+    <string name="recordbook_lms_course_error">Не удалось загрузить баллы курса.</string>
+    <string name="recordbook_lms_no_match">Не удалось однозначно найти этот предмет в LMS за выбранный учебный год.</string>
+    <string name="recordbook_lms_source">LMS</string>
+    <string name="recordbook_lms_no_controls">В LMS нет подтверждённых баллов для сопоставления с контрольными этого предмета.</string>
+    <string name="recordbook_lms_total_source">%1$s + LMS</string>
+    <string name="recordbook_lms_sources_note">К показанному источнику добавлено из LMS: %1$s</string>
+    <string name="recordbook_lms_sources_only_note">Других чисел нет, поэтому показаны баллы из LMS: %1$s</string>
 </resources>

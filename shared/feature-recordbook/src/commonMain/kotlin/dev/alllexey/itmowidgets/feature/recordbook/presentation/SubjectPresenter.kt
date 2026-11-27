@@ -103,6 +103,41 @@ internal object SubjectPresenter {
         )
     }
 
+    /** Add the separate LMS overlay only to an in-progress non-sport subject with numeric or empty total. */
+    fun addLms(scores: SubjectScores, subject: RecordbookSubject, added: Double): SubjectScores {
+        if (subject.normalizedRate != RecordbookRate.InProgress ||
+            subject.absent ||
+            subject.isPhysicalEducation ||
+            !added.isFinite() ||
+            added <= 0
+        ) return scores
+        val currentPoints = scores.hero.points
+        val base = if (currentPoints == null) 0.0 else {
+            currentPoints.replace(',', '.').filterNot(Char::isWhitespace).toDoubleOrNull()
+                ?.takeIf { it.isFinite() && it >= 0 } ?: return scores
+        }
+        val combined = base + added
+        if (!combined.isFinite()) return scores
+        val grade = if (subject.assessmentKind == RecordbookAssessmentKind.CREDIT) null
+        else RecordbookGradeScale.gradeFor(combined)?.let(UiText::Dynamic)
+        val source = if (currentPoints == null) UiText.Res(RecordbookStrings.recordbook_lms_source)
+        else UiText.Res(RecordbookStrings.recordbook_lms_total_source, listOf(scores.hero.source))
+        return scores.copy(hero = scores.hero.copy(
+            points = formatRecordbookNumber(combined),
+            share = (combined / MAX_POINTS).coerceIn(0.0, 1.0).toFloat(),
+            grade = grade,
+            source = source,
+            next = next(combined, subject.assessmentKind),
+        ))
+    }
+
+    /** Score tint shared between official controls and LMS overlays. */
+    fun controlTone(below: Boolean, share: Float?): RecordbookTone = when {
+        below -> RecordbookTone.BAD
+        share != null && share >= GOOD_SHARE -> RecordbookTone.OK
+        else -> RecordbookTone.PRIMARY
+    }
+
     /** The number [RecordbookPointsRule] picks, as on the list. */
     private fun hero(input: SubjectScoresInput, sheet: SubjectSheetState.Connected?): SubjectHero {
         val subject = input.subject
@@ -244,11 +279,7 @@ internal object SubjectPresenter {
                 ?: scoreText,
             graded = score != null,
             share = share,
-            tone = when {
-                control.isBelowMinimum -> RecordbookTone.BAD
-                share != null && share >= GOOD_SHARE -> RecordbookTone.OK
-                else -> RecordbookTone.PRIMARY
-            },
+            tone = controlTone(below = control.isBelowMinimum, share = share),
             minimum = control.minimum?.takeIf { it > 0 && it.isFinite() }
                 ?.let { UiText.Res(RecordbookStrings.recordbook_control_minimum, listOf(formatRecordbookNumber(it))) },
             below = control.isBelowMinimum,

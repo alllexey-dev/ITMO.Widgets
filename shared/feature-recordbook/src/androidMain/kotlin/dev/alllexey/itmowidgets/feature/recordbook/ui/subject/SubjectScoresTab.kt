@@ -62,6 +62,7 @@ import dev.alllexey.itmowidgets.shared.compose.strings.Res
 import dev.alllexey.itmowidgets.shared.compose.strings.common_load_error_title
 import dev.alllexey.itmowidgets.shared.compose.strings.common_retry
 import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_details_empty_description
+import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_lms_source
 import dev.alllexey.itmowidgets.shared.compose.strings.recordbook_score_pending
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_actions
 import dev.alllexey.itmowidgets.shared.compose.strings.sheet_scores_change_total
@@ -276,6 +277,8 @@ private fun ControlRow(row: SubjectControlRow) {
                 color = if (row.graded) ItmoTheme.colorScheme.onSurface else ItmoTheme.colorScheme.onSurfaceVariant,
             )
         }
+        if (row.lms) Text(stringResource(Res.string.recordbook_lms_source), color = ItmoTheme.colorScheme.onSurfaceVariant,
+            style = ItmoTheme.typography.bodySmall)
         row.share?.let { share ->
             LinearProgressIndicator(
                 progress = { share },
