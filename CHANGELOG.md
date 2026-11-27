@@ -6,6 +6,9 @@ publication or deployment.
 
 ## Unreleased
 
+- iOS: shared links `https://widgets.alllexey.dev/u/<isu>`, `/sport/<id>`, `/sport/p/<id>` and `/pair` (and the dev
+  host) open the app as Universal Links, as on Android: the signed entitlements get associated domains for both hosts.
+  Needs the Associated Domains capability on the App ID, a new profile and the site's `apple-app-site-association`.
 - iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
   reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
   content reports, around the countdown, the progress and the widgets' `GeometryReader`s.

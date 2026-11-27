@@ -1,7 +1,7 @@
 # False positives scripts/check-docs.sh accepts: `<finding key or whole doc path>  # <reason>`, one per line.
 # Delete a line once its finding is gone (a stale line fails --strict).
 
-docs/features/app-links.md:path:site/.well-known/assetlinks.json  # Web repository file without the W/ prefix
+docs/features/app-links.md:path:web/public/.well-known/assetlinks.json  # Web repository file without the W/ prefix
 
 docs/product/releases.md:path:assetlinks.json  # Web repository file without the W/ prefix
 docs/settings.md:path:docs/ops/account-deletion.md  # Backend doc without the B/ prefix
