@@ -4,6 +4,7 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.UiText
+import dev.alllexey.itmowidgets.feature.connections.domain.ClientType
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
 import dev.alllexey.itmowidgets.feature.connections.domain.Devices
@@ -141,12 +142,25 @@ class ConnectedClientViewModelTest {
     }
 
     @Test
-    fun aClientWithoutItmoSsoCanStillGiveItsSignInBack() = runTest(main.dispatcher) {
+    fun anAgentCanGiveItsSignInBackAndIsToldItStopsWorking() = runTest(main.dispatcher) {
         val model = viewModel()
         advanceUntilIdle()
 
         assertFalse(model.uiState.value.fullItmoAccess)
         assertTrue(model.uiState.value.takeBack)
+        model.askTakeBackItmo()
+        assertEquals(
+            UiText.Res(AccountStrings.connection_take_back_agent_text, listOf("nas")),
+            model.uiState.value.confirm?.text,
+        )
+    }
+
+    @Test
+    fun anMcpServerWithoutFullAccessLosesOnlyItsMyItmoSignIn() = runTest(main.dispatcher) {
+        devices.next = Devices(listOf(Samples.agent().copy(client = ClientType.MCP)), emptyList())
+        val model = viewModel()
+        advanceUntilIdle()
+
         model.askTakeBackItmo()
         assertEquals(
             UiText.Res(AccountStrings.connection_take_back_text, listOf("nas")),

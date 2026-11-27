@@ -469,6 +469,18 @@
         }
       }
     },
+    "connection_take_back_agent_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ потеряет вход в My ITMO и перестанет работать за вас, пока вы снова не войдёте через «Войти в ИТМО». Доступ к ITMO.Widgets останется."
+          }
+        }
+      }
+    },
     "connection_take_back_full_text" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -1436,7 +1448,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Недоступно в этой версии приложения"
+            "value" : "Недоступно в этой версии приложения: обновите его, чтобы дать этот доступ"
           }
         }
       }

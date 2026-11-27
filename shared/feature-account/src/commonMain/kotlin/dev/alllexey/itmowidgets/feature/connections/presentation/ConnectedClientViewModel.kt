@@ -146,10 +146,11 @@ class ConnectedClientViewModel(
                 confirm = ConfirmAsk(
                     title = UiText.Res(AccountStrings.connection_take_back_title),
                     text = UiText.Res(
-                        if (ItmoGrants.SSO in connection.itmoGrants) {
-                            AccountStrings.connection_take_back_full_text
-                        } else {
-                            AccountStrings.connection_take_back_text
+                        when {
+                            ItmoGrants.SSO in connection.itmoGrants -> AccountStrings.connection_take_back_full_text
+                            // The agent's whole job runs through My ITMO (its registry grant is required).
+                            connection.client == ClientType.AGENT -> AccountStrings.connection_take_back_agent_text
+                            else -> AccountStrings.connection_take_back_text
                         },
                         listOf(connection.name),
                     ),

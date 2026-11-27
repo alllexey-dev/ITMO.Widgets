@@ -106,6 +106,7 @@
     <string name="connection_take_back_title">Забрать доступ к ИТМО?</string>
     <string name="connection_take_back_text">%1$s потеряет вход в My ITMO. Доступ к ITMO.Widgets останется. Вернуть вход можно здесь же, через «Войти в ИТМО».</string>
     <string name="connection_take_back_full_text">%1$s потеряет вход в My ITMO и полный доступ к ITMO.ID. Доступ к ITMO.Widgets останется. Вернуть вход можно здесь же, через «Войти в ИТМО»; полный доступ нужно будет дать заново.</string>
+    <string name="connection_take_back_agent_text">%1$s потеряет вход в My ITMO и перестанет работать за вас, пока вы снова не войдёте через «Войти в ИТМО». Доступ к ITMO.Widgets останется.</string>
     <string name="connection_full_access_text">БАРС, ИСУ и другие сервисы ИТМО</string>
     <string name="connection_sign_in_none">Входа в ИТМО нет</string>
     <string name="connection_sign_in_none_text">%1$s работает только с ITMO.Widgets</string>
@@ -175,6 +176,6 @@
     <string name="grant_sso_confirm_action">Дать доступ</string>
     <string name="grant_purpose">Зачем: %1$s</string>
     <string name="grant_required">Нужно для работы</string>
-    <string name="grant_unavailable">Недоступно в этой версии приложения</string>
+    <string name="grant_unavailable">Недоступно в этой версии приложения: обновите его, чтобы дать этот доступ</string>
     <string name="grant_other_title">Другой доступ к ИТМО</string>
 </resources>
