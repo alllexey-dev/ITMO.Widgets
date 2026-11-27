@@ -1,0 +1,66 @@
+{
+  "success": true,
+  "data": {
+    "from": "2026-10-04",
+    "to": "2026-10-05",
+    "collectedSince": "2026-10-05",
+    "days": [
+      {
+        "date": "2026-10-04",
+        "requests": 0,
+        "errors5xx": 0,
+        "p50Millis": null,
+        "p95Millis": null,
+        "myItmoCalls": 0,
+        "myItmoFailures": 0,
+        "pushSent": 0,
+        "pushFailed": 0,
+        "pushTokenGone": 0
+      },
+      {
+        "date": "2026-10-05",
+        "requests": 48200,
+        "errors5xx": 12,
+        "p50Millis": 18,
+        "p95Millis": 240,
+        "myItmoCalls": 3100,
+        "myItmoFailures": 25,
+        "pushSent": 920,
+        "pushFailed": 3,
+        "pushTokenGone": 7
+      }
+    ],
+    "routes": [
+      {
+        "group": "sport",
+        "requests": 21000,
+        "errors4xx": 140,
+        "errors5xx": 9,
+        "p50Millis": 22,
+        "p95Millis": 310
+      }
+    ],
+    "myItmo": [
+      {
+        "operation": "sportSchedule",
+        "calls": 2400,
+        "failures": {
+          "AUTH": 0,
+          "HTTP": 4,
+          "NETWORK": 15,
+          "MAPPING": 0
+        }
+      }
+    ],
+    "push": [
+      {
+        "type": "SPORT_FREE_SIGN_LESSONS",
+        "sent": 610,
+        "failed": 2,
+        "tokenGone": 5,
+        "noDevice": 40
+      }
+    ]
+  },
+  "error": null
+}

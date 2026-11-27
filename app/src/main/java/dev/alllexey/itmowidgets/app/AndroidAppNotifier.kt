@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import dev.alllexey.itmowidgets.R
 import dev.alllexey.itmowidgets.core.navigation.AppEntryIntents
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.toBundle
 import dev.alllexey.itmowidgets.core.notification.AppNotification
@@ -115,6 +116,12 @@ class AndroidAppNotifier(
             }
             NotificationDestination.Dormitory -> action = AppEntryIntents.ACTION_OPEN_DORMITORY
             NotificationDestination.Tuition -> action = AppEntryIntents.ACTION_OPEN_TUITION
+            is NotificationDestination.SubjectLinks -> {
+                action = AppEntryIntents.ACTION_OPEN_SUBJECT_LINKS
+                putExtra(SubjectLinksArgs.SUBJECT_ID, target.args.subjectId)
+                putExtra(SubjectLinksArgs.SUBJECT_NAME, target.args.subjectName)
+                putExtra(SubjectLinksArgs.PERIOD_KEY, target.args.periodKey)
+            }
         }
     }
 

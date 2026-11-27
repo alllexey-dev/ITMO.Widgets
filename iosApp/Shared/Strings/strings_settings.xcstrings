@@ -937,6 +937,30 @@
         }
       }
     },
+    "notifications_moderation" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Модерация"
+          }
+        }
+      }
+    },
+    "notifications_moderation_text" : {
+      "comment" : "Generated from strings_settings.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Решения о ваших ссылках и отзывах"
+          }
+        }
+      }
+    },
     "notifications_push_connection" : {
       "comment" : "Generated from strings_settings.xml",
       "extractionState" : "manual",

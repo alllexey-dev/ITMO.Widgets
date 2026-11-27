@@ -222,7 +222,12 @@ class NotificationSettingsViewModelTest {
         advanceUntilIdle()
         assertEquals(setOf("friends"), fixture.settings.local.value.disabledPushes)
         assertEquals(
-            listOf(PushNotifications(PushKind.SPORT, true), PushNotifications(PushKind.FRIENDS, false), PushNotifications(PushKind.DEVICES, true)),
+            listOf(
+                PushNotifications(PushKind.SPORT, true),
+                PushNotifications(PushKind.FRIENDS, false),
+                PushNotifications(PushKind.DEVICES, true),
+                PushNotifications(PushKind.MODERATION, true),
+            ),
             fixture.viewModel.uiState.value.pushes,
         )
         assertEquals(emptyList(), events)
@@ -285,7 +290,7 @@ class NotificationSettingsViewModelTest {
         assertEquals(
             dev.alllexey.itmowidgets.core.text.UiText.Res(
                 dev.alllexey.itmowidgets.shared.feature.settings.SettingsStrings.notifications_subtitle_count,
-                listOf(4, 6),
+                listOf(5, 7),
             ),
             connected.viewModel.uiState.value.subtitle,
         )

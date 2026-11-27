@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "MODERATION_NOTICE_PAYLOAD",
+    "payload": {
+      "id": "00000000-0000-4000-8000-000000000901",
+      "outcome": "REJECTED",
+      "note": "Ссылка не про предмет",
+      "decidedAt": "2026-10-05T08:00:00Z",
+      "link": {
+        "id": "00000000-0000-4000-8000-000000000101",
+        "subjectId": 501,
+        "subjectName": "Математический анализ",
+        "periodKey": "2026-1",
+        "title": "Ведомость",
+        "host": "docs.google.com"
+      }
+    }
+  },
+  "recipient_isu": "100001"
+}

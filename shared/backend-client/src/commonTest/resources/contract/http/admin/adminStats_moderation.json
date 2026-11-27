@@ -1,0 +1,86 @@
+{
+  "success": true,
+  "data": {
+    "from": "2026-10-04",
+    "to": "2026-10-05",
+    "days": [
+      {
+        "date": "2026-10-04",
+        "newReviews": 3,
+        "reviewVotes": 12,
+        "externalReviewVotes": 5,
+        "linkVotes": 8,
+        "casesOpened": 4,
+        "casesResolved": 2,
+        "casesWithdrawn": 1,
+        "backlog": 6,
+        "reports": 2
+      },
+      {
+        "date": "2026-10-05",
+        "newReviews": 0,
+        "reviewVotes": 1,
+        "externalReviewVotes": 0,
+        "linkVotes": 2,
+        "casesOpened": 1,
+        "casesResolved": 3,
+        "casesWithdrawn": 0,
+        "backlog": 4,
+        "reports": 0
+      }
+    ],
+    "ownReviews": 214,
+    "cases": [
+      {
+        "targetType": "SUBJECT_RESOURCE",
+        "reason": "SUBMISSION",
+        "opened": 3,
+        "resolved": 3,
+        "withdrawn": 0,
+        "medianSecondsToDecision": 1800,
+        "maxSecondsToDecision": 7200
+      },
+      {
+        "targetType": "TEACHER_REVIEW",
+        "reason": "REPORTS",
+        "opened": 2,
+        "resolved": 1,
+        "withdrawn": 1,
+        "medianSecondsToDecision": 86400,
+        "maxSecondsToDecision": 86400
+      },
+      {
+        "targetType": "TEACHER_REVIEW",
+        "reason": "SUBMISSION",
+        "opened": 1,
+        "resolved": 0,
+        "withdrawn": 0,
+        "medianSecondsToDecision": null,
+        "maxSecondsToDecision": null
+      }
+    ],
+    "decisions": [
+      {
+        "targetType": "SUBJECT_RESOURCE",
+        "action": "APPROVE",
+        "actor": "POLICY",
+        "count": 2
+      },
+      {
+        "targetType": "TEACHER_REVIEW",
+        "action": "HIDE",
+        "actor": "MODERATOR",
+        "count": 1
+      }
+    ],
+    "reports": [
+      {
+        "targetType": "TEACHER_REVIEW",
+        "reason": "OFFENSIVE",
+        "total": 2,
+        "dismissed": 1
+      }
+    ]
+  },
+  "error": null
+}

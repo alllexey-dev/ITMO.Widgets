@@ -197,6 +197,8 @@
     <string name="notifications_friends">Друзья</string>
     <string name="notifications_devices">Новые устройства</string>
     <string name="notifications_devices_text">Вход на сайт или в агент</string>
+    <string name="notifications_moderation">Модерация</string>
+    <string name="notifications_moderation_text">Решения о ваших ссылках и отзывах</string>
     <string name="notifications_push_connection">Нужно подключение к ITMO.Widgets</string>
     <string name="notifications_sound">Звук и вибрация</string>
     <!-- The widgets gallery -->

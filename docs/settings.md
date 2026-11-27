@@ -285,9 +285,11 @@ on: the checks, and the pushes while connected) or `запрещены в сис
   it is off is not posted later: turning it back on brings no backlog.
 - Turning a check on without the permission asks for it as the gate does; the
   switch stays on whatever the answer is.
-- The pushes of ITMO.Widgets (`Спорт`, `Друзья`, `Новые устройства`) have a
+- Every type's tile is `Primary` while its switch is on and it can arrive, `Neutral` otherwise; the icon names the
+  type, the colour says on or off (both platforms).
+- The pushes of ITMO.Widgets (`Спорт`, `Друзья`, `Новые устройства`, `Модерация`) have a
   switch per type in `PushCategoryPreferences` (`sport_notifications_enabled`,
-  `friends_notifications_enabled`, `connections_notifications_enabled`; absent
+  `friends_notifications_enabled`, `connections_notifications_enabled`, `moderation_notifications_enabled`; absent
   means on; a device setting that survives sign-out). Backend has no per-type
   preference, so the device drops them
   ([notifications](features/notifications.md#flow)). A sport push still books

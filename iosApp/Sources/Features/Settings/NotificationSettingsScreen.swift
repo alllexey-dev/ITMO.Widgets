@@ -158,7 +158,6 @@ struct NotificationSettingsContent: View {
                         typeSwitch(
                             title: "notifications_changes",
                             symbol: .editCalendar,
-                            tone: .warn,
                             isOn: Binding(get: { state.scheduleChanges }, set: actions.scheduleChanges)
                         )
                         .accessibilityIdentifier("notifications.changes")
@@ -166,7 +165,6 @@ struct NotificationSettingsContent: View {
                             title: "notifications_dormitory_payments",
                             text: "notifications_dormitory_payments_text",
                             symbol: .apartment,
-                            tone: .primary,
                             isOn: Binding(get: { state.dormitoryPayments }, set: actions.dormitoryPayments)
                         )
                         .accessibilityIdentifier("notifications.dormitoryPayments")
@@ -215,7 +213,6 @@ struct NotificationSettingsContent: View {
             typeSwitch(
                 title: "notifications_marks",
                 symbol: .star,
-                tone: .primary,
                 isOn: Binding(get: { marks.enabled }, set: actions.marks)
             )
             if marks.enabled {
@@ -234,14 +231,15 @@ struct NotificationSettingsContent: View {
         .accessibilityIdentifier("notifications.marks")
     }
 
-    /// A type with its switch: the icon in its tone while on, neutral while off or unavailable.
+    /// A type with its switch. Every type's tile is `.primary` while on and available, `.neutral` otherwise: the
+    /// colour says on or off, the symbol says which type (as Android's `TypeSwitch`).
     private func typeSwitch(
-        title: String, text: String? = nil, symbol: AppSymbol, tone: ItmoTone, enabled: Bool = true, isOn: Binding<Bool>
+        title: String, text: String? = nil, symbol: AppSymbol, enabled: Bool = true, isOn: Binding<Bool>
     ) -> some View {
         let active = enabled && !denied
         return Toggle(isOn: isOn) {
             HStack(spacing: ItmoSpacing.content) {
-                ItmoIconTile(symbol: symbol, tone: isOn.wrappedValue && active ? tone : .neutral, size: 30)
+                ItmoIconTile(symbol: symbol, tone: isOn.wrappedValue && active ? .primary : .neutral, size: 30)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(verbatim: AppStrings.string(title)).font(.itmo(.bodyLarge))
                     if let text {
@@ -259,16 +257,21 @@ struct NotificationSettingsContent: View {
 
     /// A push type: the app's switch; it waits for the connection, without which Backend sends nothing.
     private func pushSwitch(_ push: PushNotifications) -> some View {
-        let (title, symbol, tone): (String, AppSymbol, ItmoTone) = switch push.kind {
-        case .sport: ("notifications_sport", .sprint, .ok)
-        case .friends: ("notifications_friends", .personAdd, .tertiary)
-        case .devices: ("notifications_devices", .devices, .primary)
+        let (title, symbol): (String, AppSymbol) = switch push.kind {
+        case .sport: ("notifications_sport", .sprint)
+        case .friends: ("notifications_friends", .personAdd)
+        case .devices: ("notifications_devices", .devices)
+        case .moderation: ("notifications_moderation", .editNote)
+        }
+        let text: String? = switch push.kind {
+        case .devices: "notifications_devices_text"
+        case .moderation: "notifications_moderation_text"
+        default: nil
         }
         return typeSwitch(
             title: title,
-            text: push.kind == .devices ? "notifications_devices_text" : nil,
+            text: text,
             symbol: symbol,
-            tone: tone,
             enabled: state.connected,
             isOn: Binding(get: { push.enabled }, set: { actions.push(push.kind, $0) })
         )

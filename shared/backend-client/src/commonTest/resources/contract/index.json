@@ -32,6 +32,14 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "MODERATION_NOTICE_PAYLOAD",
+    "kind": "fcm",
+    "method": null,
+    "path": null,
+    "file": "fcm/MODERATION_NOTICE_PAYLOAD.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "ModerationDecisionRequest",
     "kind": "request",
     "method": null,
@@ -248,6 +256,14 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "adminModeration_revert",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/admin/moderation/cases/{id}/decisions/{decisionId}/revert",
+    "file": "http/admin/adminModeration_revert.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "adminModeration_revoke",
     "kind": "http",
     "method": "POST",
@@ -336,6 +352,46 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "adminStats_audience",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/stats/audience",
+    "file": "http/admin/adminStats_audience.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminStats_features",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/stats/features",
+    "file": "http/admin/adminStats_features.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminStats_moderation",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/stats/moderation",
+    "file": "http/admin/adminStats_moderation.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminStats_server",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/stats/server",
+    "file": "http/admin/adminStats_server.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminStats_sport",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/stats/sport",
+    "file": "http/admin/adminStats_sport.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "adminSystem_appVersion",
     "kind": "http",
     "method": "GET",
@@ -376,6 +432,14 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "adminSystem_sheetRules",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/system/sheet-rules",
+    "file": "http/admin/adminSystem_sheetRules.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "adminSystem_sport",
     "kind": "http",
     "method": "GET",
@@ -384,11 +448,27 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "adminSystem_sportSettings",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/system/sport/settings",
+    "file": "http/admin/adminSystem_sportSettings.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "adminSystem_updateAppVersion",
     "kind": "http",
     "method": "PUT",
     "path": "/api/admin/system/app-version",
     "file": "http/admin/adminSystem_updateAppVersion.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminSystem_updateSportSettings",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/admin/system/sport/settings",
+    "file": "http/admin/adminSystem_updateSportSettings.json",
     "minCore": "1.8.0"
   },
   {
@@ -624,6 +704,14 @@
     "minCore": "1.2.0"
   },
   {
+    "id": "friendsOnDay",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/schedule/friends",
+    "file": "http/schedule/friendsOnDay.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "friendsOnLesson",
     "kind": "http",
     "method": "GET",
@@ -702,6 +790,14 @@
     "path": "/api/moderation/cases",
     "file": "http/moderation/moderationCases.json",
     "minCore": "1.7.0"
+  },
+  {
+    "id": "moderationNotices",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/users/me/moderation-notices",
+    "file": "http/moderation/moderationNotices.json",
+    "minCore": "1.8.0"
   },
   {
     "id": "moderationSettings",

@@ -9,7 +9,8 @@
         "details": "role MODERATOR",
         "createdAt": "2026-10-05T09:00:00Z",
         "actorIsu": 100001,
-        "actorName": "Студент Тестовый"
+        "actorName": "Студент Тестовый",
+        "targetName": "Друг Первый"
       },
       {
         "id": "00000000-0000-4000-8000-000000000602",
@@ -18,7 +19,8 @@
         "details": null,
         "createdAt": "2026-10-04T12:00:00Z",
         "actorIsu": 100001,
-        "actorName": "Студент Тестовый"
+        "actorName": "Студент Тестовый",
+        "targetName": "Преподаватель Тестовый"
       }
     ],
     "page": 0,

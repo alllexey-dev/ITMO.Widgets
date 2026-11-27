@@ -101,6 +101,8 @@ data class InstallInfo(
     @Serializable(with = WireInstantSerializer::class) val firstSeenAt: Instant,
     @Serializable(with = WireInstantSerializer::class) val lastSeenAt: Instant,
     val pushEnabled: Boolean,
+    /** When the install last signed out and dropped its push registration; null if it never did. Not shown yet. */
+    @Serializable(with = WireInstantSerializer::class) val signedOutAt: Instant? = null,
     val sid: String?,
     val current: Boolean,
 )

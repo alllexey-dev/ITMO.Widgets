@@ -24,6 +24,8 @@ object AppEntryIntents {
     const val ACTION_OPEN_DEVICES = "dev.alllexey.itmowidgets.action.OPEN_DEVICES"
     /** One connected client over «Устройства», its connection id in [EXTRA_CONNECTION]. */
     const val ACTION_OPEN_CONNECTION = "dev.alllexey.itmowidgets.action.OPEN_CONNECTION"
+    /** A subject's links over the recordbook, its [SubjectLinksArgs] in their keys: a moderation notice of a link. */
+    const val ACTION_OPEN_SUBJECT_LINKS = "dev.alllexey.itmowidgets.action.OPEN_SUBJECT_LINKS"
     /** `Общежитие` over Сегодня: a notification of the check `Общежитие и оплата`. */
     const val ACTION_OPEN_DORMITORY = "dev.alllexey.itmowidgets.action.OPEN_DORMITORY"
     /** `Оплата обучения` over Сегодня. */

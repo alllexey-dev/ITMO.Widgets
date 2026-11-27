@@ -33,6 +33,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
 import dev.alllexey.itmowidgets.shared.designsystem.ic_apartment
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_calendar
+import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_note
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_notifications_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
@@ -139,7 +140,6 @@ fun NotificationSettingsScreen(
                                 TypeSwitch(
                                     SettingsStrings.notifications_marks,
                                     Res.drawable.ic_star,
-                                    Tone.Primary,
                                     marks.enabled,
                                     !denied,
                                     actions.onMarks,
@@ -164,7 +164,6 @@ fun NotificationSettingsScreen(
                         TypeSwitch(
                             SettingsStrings.notifications_changes,
                             Res.drawable.ic_edit_calendar,
-                            Tone.Warning,
                             state.scheduleChanges,
                             !denied,
                             actions.onScheduleChanges,
@@ -175,7 +174,6 @@ fun NotificationSettingsScreen(
                         TypeSwitch(
                             SettingsStrings.notifications_dormitory_payments,
                             Res.drawable.ic_apartment,
-                            Tone.Primary,
                             state.dormitoryPayments,
                             !denied,
                             actions.onDormitoryPayments,
@@ -236,12 +234,14 @@ fun NotificationSettingsScreen(
     }
 }
 
-/** A type with its switch: the icon in its tone while on, neutral while off. */
+/**
+ * A type with its switch. Every type's tile has the one `Primary` tone while it is on and can arrive, `Neutral`
+ * otherwise: the colour says on or off, the icon says which type.
+ */
 @Composable
 private fun TypeSwitch(
     title: String,
     icon: DrawableResource,
-    tone: Tone,
     checked: Boolean,
     enabled: Boolean,
     onChange: (Boolean) -> Unit,
@@ -255,7 +255,7 @@ private fun TypeSwitch(
         modifier = modifier,
         subtitle = subtitle?.let { text(it) },
         icon = painterResource(icon),
-        iconTone = if (checked && enabled) tone else Tone.Neutral,
+        iconTone = if (checked && enabled) Tone.Primary else Tone.Neutral,
         enabled = enabled,
     )
 }
@@ -263,20 +263,24 @@ private fun TypeSwitch(
 /** A push type: the app's switch; it waits for the connection, without which Backend sends nothing. */
 @Composable
 private fun PushSwitch(push: PushNotifications, enabled: Boolean, onChange: (PushKind, Boolean) -> Unit) {
-    val (title, icon, tone) = when (push.kind) {
-        PushKind.SPORT -> Triple(SettingsStrings.notifications_sport, Res.drawable.ic_sprint, Tone.Success)
-        PushKind.FRIENDS -> Triple(SettingsStrings.notifications_friends, Res.drawable.ic_person_add, Tone.Tertiary)
-        PushKind.DEVICES -> Triple(SettingsStrings.notifications_devices, Res.drawable.ic_devices, Tone.Primary)
+    val (title, icon) = when (push.kind) {
+        PushKind.SPORT -> SettingsStrings.notifications_sport to Res.drawable.ic_sprint
+        PushKind.FRIENDS -> SettingsStrings.notifications_friends to Res.drawable.ic_person_add
+        PushKind.DEVICES -> SettingsStrings.notifications_devices to Res.drawable.ic_devices
+        PushKind.MODERATION -> SettingsStrings.notifications_moderation to Res.drawable.ic_edit_note
     }
     TypeSwitch(
         title,
         icon,
-        tone,
         push.enabled,
         enabled,
         { onChange(push.kind, it) },
         Modifier.testTag(NotificationSettingsTags.push(push.kind)),
-        subtitle = SettingsStrings.notifications_devices_text.takeIf { push.kind == PushKind.DEVICES },
+        subtitle = when (push.kind) {
+            PushKind.DEVICES -> SettingsStrings.notifications_devices_text
+            PushKind.MODERATION -> SettingsStrings.notifications_moderation_text
+            else -> null
+        },
     )
 }
 

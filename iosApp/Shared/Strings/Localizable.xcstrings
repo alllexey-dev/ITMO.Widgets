@@ -529,6 +529,18 @@
         }
       }
     },
+    "notification_channel_moderation" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Модерация ссылок и отзывов"
+          }
+        }
+      }
+    },
     "notification_channel_schedule_changes" : {
       "comment" : "Generated from strings_platform.xml",
       "extractionState" : "manual",
@@ -621,6 +633,174 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ хочет добавить вас в друзья"
+          }
+        }
+      }
+    },
+    "notification_moderation_link_approved" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка опубликована"
+          }
+        }
+      }
+    },
+    "notification_moderation_link_body" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%1$@» · %2$@"
+          }
+        }
+      }
+    },
+    "notification_moderation_link_body_note" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%1$@» · %2$@. Причина: %3$@"
+          }
+        }
+      }
+    },
+    "notification_moderation_link_hidden" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка скрыта модератором"
+          }
+        }
+      }
+    },
+    "notification_moderation_link_rejected" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка отклонена"
+          }
+        }
+      }
+    },
+    "notification_moderation_link_restored" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка снова видна"
+          }
+        }
+      }
+    },
+    "notification_moderation_review_approved" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отзыв опубликован"
+          }
+        }
+      }
+    },
+    "notification_moderation_review_body" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@"
+          }
+        }
+      }
+    },
+    "notification_moderation_review_body_note" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@. Причина: %2$@"
+          }
+        }
+      }
+    },
+    "notification_moderation_review_hidden" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отзыв скрыт модератором"
+          }
+        }
+      }
+    },
+    "notification_moderation_review_note" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Причина: %1$@"
+          }
+        }
+      }
+    },
+    "notification_moderation_review_rejected" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отзыв отклонён"
+          }
+        }
+      }
+    },
+    "notification_moderation_review_restored" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отзыв снова виден"
+          }
+        }
+      }
+    },
+    "notification_moderation_review_unnamed" : {
+      "comment" : "Generated from strings_platform.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш отзыв о преподавателе"
           }
         }
       }

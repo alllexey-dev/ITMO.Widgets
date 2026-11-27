@@ -6,6 +6,13 @@ publication or deployment.
 
 ## Unreleased
 
+- Settings: the tiles of `Уведомления` share one colour while on and turn grey while off, instead of a different
+  colour per type.
+- Moderation: the author of a subject link or a teacher review learns the outcome of a moderator's decision on it
+  (published, rejected with the reason, hidden, visible again) in the bell and as a push on the new channel and
+  switch `Модерация`; a tap opens the subject's links or the teacher's profile. Backend's
+  `GET /api/users/me/moderation-notices` and `MODERATION_NOTICE_PAYLOAD`; the contract is synced from Backend's pull
+  request branch (with `InstallInfo.signedOutAt` and `GET /api/schedule/friends`, not mirrored, from `dev`).
 - Sheet scores: the AI no longer runs again when its total is chosen or the total is opened again. Opening the total
   reads the rule Backend already keeps for the sheet (`GET`, never an analysis) and shows it as a variant at once;
   only `Посчитать с ИИ` or the new `Пересчитать с ИИ` under an AI total ask for one (`POST`), and a stale rule is

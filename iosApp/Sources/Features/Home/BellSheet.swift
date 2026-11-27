@@ -202,6 +202,10 @@ struct BellEventRow: View {
             ItmoIconTile(symbol: .apartment, tone: .primary)
         case .payment:
             ItmoIconTile(symbol: .payments, tone: .ok)
+        case .linkModeration:
+            ItmoIconTile(symbol: .link, tone: item.failed ? .bad : .ok)
+        case .reviewModeration:
+            ItmoIconTile(symbol: .editNote, tone: item.failed ? .bad : .ok)
         }
     }
 }

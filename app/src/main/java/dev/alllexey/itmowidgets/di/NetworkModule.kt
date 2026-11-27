@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.client.ClientHeader
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.app.AppApi
 import dev.alllexey.itmowidgets.client.connections.ConnectionsApi
+import dev.alllexey.itmowidgets.client.moderation.ModerationNoticesApi
 import dev.alllexey.itmowidgets.client.device.DeviceApi
 import dev.alllexey.itmowidgets.client.friends.FriendsApi
 import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
@@ -62,6 +63,7 @@ val networkModule = module {
     }
     single<UsersApi> { get<BackendClient>().users }
     single<ConnectionsApi> { get<BackendClient>().connections }
+    single<ModerationNoticesApi> { get<BackendClient>().moderationNotices }
     single<FriendsApi> { get<BackendClient>().friends }
     single<SportApi> { get<BackendClient>().sport }
     single<SubjectLinksApi> { get<BackendClient>().links }
