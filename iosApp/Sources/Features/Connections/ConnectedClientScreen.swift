@@ -4,7 +4,8 @@ import UIKit
 
 /// A connected client (UX spec section 4) over the shared `ConnectedClientViewModel`, pushed from the devices screen and
 /// from its reminder (`AppRoutes.Connection`): its ITMO sign-in with renewal, access as switches (widening asks for the
-/// screen lock), the facts and the danger row, which asks first and leaves the screen once revoked. Renewal shows the
+/// screen lock), the facts and the danger row, which asks first and leaves the screen once revoked. A client holding
+/// `itmo:sso` has the `grant_sso_title` row with `connection_take_back`, which asks first too. Renewal shows the
 /// command for the client, then scans the client's QR and continues in the pairing sheet (`AppRoutes.Pairing`).
 struct ConnectedClientScreen: View {
     @Environment(AppRouter.self) private var router
@@ -34,6 +35,7 @@ struct ConnectedClientScreen: View {
                     model.viewModel.onScopeChanged(scopeId: id, checked: checked, unlock: appDeviceUnlock())
                 },
                 renew: { model.viewModel.askRenew() },
+                takeBackItmo: { model.viewModel.askTakeBackItmo() },
                 revoke: { model.viewModel.askRevoke() }
             )
         )
@@ -60,7 +62,7 @@ struct ConnectedClientScreen: View {
         }
         .connectionConfirm(
             model.state.confirm,
-            confirm: { model.viewModel.revoke() },
+            confirm: { model.viewModel.confirm() },
             dismiss: { model.viewModel.dismissConfirm() }
         )
         .connectionMessage(model.state.message?.resolved) { model.viewModel.onMessageShown() }
@@ -104,6 +106,7 @@ private struct KeyedRenewSheet: Identifiable {
 struct ConnectedClientActions {
     var scope: (String, Bool) -> Void = { _, _ in }
     var renew: () -> Void = {}
+    var takeBackItmo: () -> Void = {}
     var revoke: () -> Void = {}
 }
 
@@ -127,6 +130,18 @@ struct ConnectedClientContent: View {
                 if let signIn = state.signIn {
                     ItmoSectionHeader(title: AppStrings.string("connection_section_sign_in"))
                     signInGroup(signIn)
+                }
+                if state.fullItmoAccess {
+                    ItmoListGroup {
+                        ItmoRow(
+                            title: AppStrings.string("grant_sso_title"),
+                            symbol: .key,
+                            tone: .warn,
+                            trailing: AppStrings.string("connection_take_back"),
+                            action: state.busy ? nil : actions.takeBackItmo
+                        )
+                        .accessibilityIdentifier("client.fullAccess")
+                    }
                 }
                 if !state.scopes.isEmpty {
                     ItmoSectionHeader(title: AppStrings.string("connection_section_access"))

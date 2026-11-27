@@ -38,7 +38,7 @@ push decoder needs no client instance.
 | `device` | `device`, `DeviceApi` | `POST /api/device/register-device`, `DELETE /api/device/current` with a JSON body | `B/docs/contracts/notifications.md` |
 | `app` | `app`, `AppApi` | `GET /api/app/version-info` with the optional `platform` query | `B/docs/contracts/app-version.md` |
 | `schedule` | `schedule`, `ScheduleApi` | `POST /api/schedule/lessons/sync`, `GET /api/schedule/lessons/user/{isu}`, `GET /api/schedule/lessons/{pairId}/friends` | `B/docs/contracts/schedule.md`, `B/docs/contracts/privacy.md` |
-| `connections` | `connections`, `ConnectionsApi` | `POST /api/users/me/pair/{code}/open`, `POST /api/users/me/pair/{challengeId}/approve`, `GET /api/users/me/devices`, `PUT /api/users/me/connections/{id}/scopes`, `POST /api/users/me/connections/{id}/revoke` and `itmo-ended`, `POST /api/users/me/installs/{instanceId}/sign-out` | `B/docs/contracts/connections.md` |
+| `connections` | `connections`, `ConnectionsApi` | `POST /api/users/me/pair/{code}/open?protocol=2`, `POST /api/users/me/pair/{challengeId}/approve`, `GET /api/users/me/devices`, `PUT /api/users/me/connections/{id}/scopes`, `POST /api/users/me/connections/{id}/revoke`, `itmo-ended` and `itmo-closed`, `POST /api/users/me/installs/{instanceId}/sign-out` | `B/docs/contracts/connections.md` |
 | none | `push`, `FcmDecoder` | FCM data messages `FRIENDSHIP_EVENT_PAYLOAD`, `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD`, `DEVICE_CONNECTED_PAYLOAD`, `SPORT_AGENT_BOOKED_PAYLOAD` | `B/docs/contracts/notifications.md`, `B/docs/contracts/connections.md` |
 
 Wire types that two areas share (`UserProfile`, `UserData`, the vote and report requests) live in `common`; the
@@ -79,7 +79,7 @@ serializer in the `json` package (13 Q7 (b)):
 |---|---|---|---|
 | Strict | `StrictEnumSerializer` | fails decoding | `RelationshipState`, `SharingVisibility`, `LinkVisibility`, `FriendshipEvent`, the request-only enums (`ReportReason`) |
 | Most restrictive | `FallbackEnumSerializer` | decodes as `ALL` | `RestrictionCapability` |
-| Display | `UnknownTolerantEnumSerializer` | decodes as `UNKNOWN` | `QueueEntryStatus`, `SportSectionOccurrenceState`, `LinkCategory`, `SubjectLinkStatus`, `TeacherReviewKind`, `TeacherReviewStatus`, `SummaryLevel`, `SummaryConfidence`, `SummaryScaleKind`, `SummaryScaleValue`, `PairingKind`, `ConnectionClient`, `ConnectionScope`, `ItmoStatus` |
+| Display | `UnknownTolerantEnumSerializer` | decodes as `UNKNOWN` | `QueueEntryStatus`, `SportSectionOccurrenceState`, `LinkCategory`, `SubjectLinkStatus`, `TeacherReviewKind`, `TeacherReviewStatus`, `SummaryLevel`, `SummaryConfidence`, `SummaryScaleKind`, `SummaryScaleValue`, `PairingKind`, `ConnectionClient`, `ConnectionScope`, `ItmoStatus`, `ClientDeployment` |
 
 `ConnectionClient`, `ConnectionScope` and `ItmoStatus` have wire values that are no Kotlin names (`agent`,
 `friends:read`, `ok`): their serializers override `wireName`. The sport `type` discriminator is strict as well. `UNKNOWN` is decode-only: encoding it fails, and inside a request
@@ -222,8 +222,12 @@ and an OpenAPI snapshot (`B/docs/openapi.json`). This module tests against a ven
   constants except `UNKNOWN` equal the schema's `enum`, a nested model names the same schema, and the sealed sport
   types have the schema's `oneOf` with the `type` values `free` and `auto`. A model that reaches an unlisted model
   or enum fails, so a new top-level request or answer type joins `WireModels`.
-- `PendingBackendFields` lists the client fields Backend has not shipped yet, each with its reason; it is
-  empty since Backend 1.9.1. An entry the snapshot already has fails, so the list cannot go stale.
+- `PendingBackendFields` lists the client fields Backend has not shipped yet, each with its reason;
+  `PendingBackendRoutes` and `PendingBackendQueries` do the same for a route and a query parameter. They hold
+  connections protocol 2 (ADR 0040: the preview's `protocol`, `app` and `grants`, `granted`, `ConnectionInfo`'s
+  `clientId`, `app` and `itmoGrants`, `itmo-closed`, `?protocol=2`), mirrored from the wire spec while Backend builds
+  it; `ClientAppInfo`, `GrantRequest` and `ClientDeployment` join `WireModels` in the re-sync that brings their
+  schemas. An entry the snapshot already has fails, so the lists cannot go stale.
 - Seeded-drift tests (a renamed field, an extra enum value, an unknown route, an unlisted operation, an unclaimed
   fixture and others) prove that each check fails.
 

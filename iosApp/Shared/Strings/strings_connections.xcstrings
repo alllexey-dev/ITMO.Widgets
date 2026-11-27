@@ -373,6 +373,42 @@
         }
       }
     },
+    "connection_take_back" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забрать"
+          }
+        }
+      }
+    },
+    "connection_take_back_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход устройства в ИТМО закончится. Чтобы работать дальше, ему нужно обновить вход."
+          }
+        }
+      }
+    },
+    "connection_take_back_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забрать доступ к ИТМО?"
+          }
+        }
+      }
+    },
     "devices_activity_line" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -1153,6 +1189,138 @@
         }
       }
     },
+    "grant_purpose" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зачем: %1$@"
+          }
+        }
+      }
+    },
+    "grant_refresh_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание, зачётка, физкультура и заявки от вашего имени"
+          }
+        }
+      }
+    },
+    "grant_refresh_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в my.itmo"
+          }
+        }
+      }
+    },
+    "grant_required" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужно для работы"
+          }
+        }
+      }
+    },
+    "grant_sso_confirm_action" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дать доступ"
+          }
+        }
+      }
+    },
+    "grant_sso_confirm_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%1$@“ сможет действовать в ITMO.ID от вашего имени, пока вы не заберёте доступ или вход не закончится, до 90 дней."
+          }
+        }
+      }
+    },
+    "grant_sso_confirm_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дать полный доступ к ITMO.ID?"
+          }
+        }
+      }
+    },
+    "grant_sso_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в любой сервис ИТМО от вашего имени: my.itmo, БАРС, ИСУ и сам ITMO.ID — не только расписание и баллы."
+          }
+        }
+      }
+    },
+    "grant_sso_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Полный доступ к ITMO.ID"
+          }
+        }
+      }
+    },
+    "grant_sso_warning" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включайте, только если это ваше устройство и вы ему доверяете."
+          }
+        }
+      }
+    },
+    "grant_unavailable" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недоступно в этой версии"
+          }
+        }
+      }
+    },
     "pair_access" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -1321,6 +1489,18 @@
         }
       }
     },
+    "pair_done_widgets_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Входа в ИТМО у него нет. Отключить устройство можно в «Устройствах»."
+          }
+        }
+      }
+    },
     "pair_expired_text" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -1353,6 +1533,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не получилось подключить"
+          }
+        }
+      }
+    },
+    "pair_group_itmo" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИТМО"
+          }
+        }
+      }
+    },
+    "pair_group_widgets" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виджеты"
+          }
+        }
+      }
+    },
+    "pair_identity_missing" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось получить полный доступ к ITMO.ID для устройства. Войдите заново или подключите без него"
           }
         }
       }
@@ -1413,6 +1629,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Браузер увидит то же, что и приложение, кроме входа в ИТМО. Отключить его можно отсюда."
+          }
+        }
+      }
+    },
+    "pair_note_widgets" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ получит только доступ к ITMO.Widgets, без входа в ИТМО. Отключить его можно в «Устройствах»."
           }
         }
       }

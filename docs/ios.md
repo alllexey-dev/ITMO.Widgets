@@ -168,7 +168,9 @@ it too; the widgets keep the system's.
 The profile's `Устройства` row (`AppRoutes.Devices`) pushes `DevicesScreen` (`Features/Connections/`) over the shared
 `DevicesViewModel`; a client pushes `ConnectedClientScreen` (`AppRoutes.Connection`) over `ConnectedClientViewModel`
 (Koin parameters `ConnectionsIosParameters.connection(id)`), and `AppRoutes.Pairing` is the route sheet
-`PairingSheet` over `PairingViewModel` ([connected clients](features/connections.md)).
+`PairingSheet` over `PairingViewModel` ([connected clients](features/connections.md)). With `itmo:sso` granted,
+`ClientSignInPage` reads `KEYCLOAK_IDENTITY` from its `nonPersistent()` store (`ItmoIdentityCookie`) when it catches
+the callback, before calling `onSignInCallback`.
 
 - The scanner is VisionKit's `DataScannerViewController` (`PairingScanner`), behind the camera permission; without it
   the sheet takes a pasted link.

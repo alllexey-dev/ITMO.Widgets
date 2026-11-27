@@ -108,4 +108,20 @@ private func hex(_ text: String) -> Data {
         index = next
     }
     return data
+
+    func testTheIdentityCookieIsTheRealmsOwnByItsExactName() {
+        func cookie(_ name: String, _ domain: String, _ value: String) -> HTTPCookie {
+            HTTPCookie(properties: [
+                .name: name, .value: value, .domain: domain, .path: "/auth/realms/itmo/", .secure: "TRUE",
+            ])!
+        }
+        let cookies = [
+            cookie("KEYCLOAK_IDENTITY_LEGACY", "id.itmo.ru", "legacy"),
+            cookie("KEYCLOAK_IDENTITY", "my.itmo.ru", "other-host"),
+            cookie("KEYCLOAK_IDENTITY", ".id.itmo.ru", "test-identity-cookie"),
+        ]
+
+        XCTAssertEqual(ItmoIdentityCookie.value(in: cookies), "test-identity-cookie")
+        XCTAssertNil(ItmoIdentityCookie.value(in: Array(cookies.prefix(2))))
+    }
 }
