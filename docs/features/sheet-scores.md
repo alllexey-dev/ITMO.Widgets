@@ -16,8 +16,8 @@ with a flow or everybody asks Backend for a rule, never with sheet data
   the parameter; published `/d/e/...` addresses are not sheets). A Google Drive file (`https://drive.google.com/file/d/<id>`,
   `.../u/<n>/d/<id>`, `/open?id=<id>`) is read by the same id at the Sheets address: an `.xlsx` uploaded to Drive
   exports and lists its tabs like a sheet. Its link offers `Мои баллы` only under `Баллы` (`SubjectLink.offersSheetScores`),
-  elsewhere it may be a PDF; a file that is no spreadsheet fails as `Таблица закрыта`. `Посчитать с ИИ` is for
-  Sheets addresses only: Backend's link policy does not take Drive files.
+  elsewhere it may be a PDF; a file that is no spreadsheet fails as `Таблица закрыта`. `Посчитать с ИИ` takes a
+  Drive file too: Backend's link policy normalizes it to the sheet of its id.
 - `Мои баллы` opens `AppRoutes.SheetScores(SheetScoresArgs)` with the link's `ResourceScope`
   (`discipline_id` and period) and `linkId`, `SubjectLink.sharedLinkId`: the link's id when it is a Backend link
   shared with a flow or everybody, else null. One connection per scope; a new one replaces the old after a successful
