@@ -6,6 +6,9 @@ publication or deployment.
 
 ## Unreleased
 
+- Recordbook: a Google Drive link to an uploaded spreadsheet (`drive.google.com/file/d/<id>`, an `.xlsx`) under
+  `Баллы` now offers `Мои баллы`; the file is read by its id at the Sheets address. `Посчитать с ИИ` still needs a
+  Sheets address, Backend does not accept Drive links yet.
 - Sport: the `Запись` rows name the teacher (`Иванов И. И., Кронва`) instead of `Свободное`; other kinds keep their
   label and dot before the teacher, and standards lessons get a `Нормативы` pill. The lesson sheet is unchanged.
 - iOS: the QR pass and the QR widget show no light seams in the concave corners between modules; every fillet of
