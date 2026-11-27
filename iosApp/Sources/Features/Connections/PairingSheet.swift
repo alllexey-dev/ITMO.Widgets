@@ -5,7 +5,8 @@ import SwiftUI
 /// (`AppRoutes.Pairing`): paste a link or scan it (`PairingScanner`, VisionKit), check the client and choose the
 /// access, the screen lock (`DeviceUnlock` from Koin), then for an agent or MCP server the ITMO.ID page full screen
 /// (`ClientSignInPage`), and the result. A `link` (an App Link, a renewal's scan) is read once as a scan; a renewal
-/// skips the card and asks for the screen lock at once.
+/// skips the card and asks for the screen lock at once. A protocol-2 request shows its grants as switches grouped
+/// `pair_group_widgets` and `pair_group_itmo`; turning `itmo:sso` on asks first (ADR 0040).
 struct PairingSheet: View {
     let link: String?
     @State private var model = ObservableViewModel<PairingViewModel, any PairingUiState>(state: \.uiState) { store in
@@ -30,16 +31,23 @@ struct PairingSheet: View {
                     submit: { model.viewModel.submit() },
                     proceed: { model.viewModel.proceed(unlock: appDeviceUnlock()) },
                     scope: { id, checked in model.viewModel.onScopeChanged(scopeId: id, checked: checked) },
+                    grant: { id, checked in model.viewModel.onGrantChanged(grantId: id, checked: checked) },
                     cancel: { dismiss() },
                     result: result
                 )
             )
         }
+        .connectionConfirm(
+            (model.state as? PairingUiStateConfirm)?.ask,
+            confirm: { model.viewModel.confirmGrant() },
+            dismiss: { model.viewModel.dismissGrant() }
+        )
         .fullScreenCover(isPresented: signingIn) {
             if let page = model.state as? PairingUiStateSigningIn {
                 ClientSignInPage(
                     state: page,
-                    navigation: { model.viewModel.onSignInNavigation(url: $0) },
+                    isCallback: { model.viewModel.isSignInCallback(url: $0) },
+                    callback: { url, identity in model.viewModel.onSignInCallback(url: url, identityCookie: identity) },
                     close: { model.viewModel.onSignInCancelled() }
                 )
             }
@@ -128,6 +136,7 @@ struct PairingActions {
     var submit: () -> Void = {}
     var proceed: () -> Void = {}
     var scope: (String, Bool) -> Void = { _, _ in }
+    var grant: (String, Bool) -> Void = { _, _ in }
     var cancel: () -> Void = {}
     var result: () -> Void = {}
 }
@@ -211,7 +220,8 @@ private struct PairingInput: View {
     }
 }
 
-/// The client's card, the caution of a new connection, the access it asks for, the note, then the primary action and cancel.
+/// The client's card, the caution of a new connection, the access it asks for (protocol 1 scopes or protocol 2 grant
+/// groups), the note, then the primary action and cancel.
 private struct PairingConfirm: View {
     let confirm: PairingUiStateConfirm
     let actions: PairingActions
@@ -251,6 +261,14 @@ private struct PairingConfirm: View {
                 }
             }
         }
+        ForEach(Array(confirm.grants.enumerated()), id: \.offset) { _, group in
+            ItmoSectionHeader(title: group.title.resolved)
+            ItmoListGroup(inset: ItmoKit.padding) {
+                ForEach(Array(group.grants.enumerated()), id: \.offset) { _, grant in
+                    PairingGrantRow(grant: grant, enabled: grant.enabled && !confirm.busy, change: actions.grant)
+                }
+            }
+        }
         ItmoGroupNote(text: confirm.note.resolved)
         VStack(spacing: ItmoSpacing.related) {
             ItmoProgressButton(title: confirm.primary.resolved, isInProgress: confirm.busy, action: actions.proceed)
@@ -266,6 +284,39 @@ private struct PairingConfirm: View {
             .accessibilityIdentifier("pairing.cancel")
         }
         .padding(.top, ItmoSpacing.compact)
+    }
+}
+
+/// One grant switch: the title, what it gives, `grant_purpose`, `grant_required` or `grant_unavailable`, and the
+/// warning of `itmo:sso` in the error colour.
+private struct PairingGrantRow: View {
+    let grant: GrantSwitch
+    let enabled: Bool
+    let change: (String, Bool) -> Void
+
+    var body: some View {
+        Toggle(isOn: Binding(get: { grant.checked }, set: { change(grant.id, $0) })) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: grant.title.resolved)
+                    .font(.itmo(.bodyLarge))
+                    .foregroundStyle(grant.enabled || grant.checked ? .primary : .secondary)
+                ForEach([grant.description_, grant.purpose].compactMap { $0?.resolved }, id: \.self) { line in
+                    Text(verbatim: line).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
+                }
+                if let note = grant.note?.resolved {
+                    Text(verbatim: note).font(.itmo(.labelMedium)).foregroundStyle(.secondary)
+                }
+                if let warning = grant.warning?.resolved {
+                    Text(verbatim: warning).font(.itmo(.bodyMedium)).foregroundStyle(ItmoColor.error)
+                }
+            }
+        }
+        .disabled(!enabled)
+        .itmoTint()
+        .padding(.horizontal, ItmoKit.padding)
+        .padding(.vertical, 11)
+        .frame(minHeight: 52)
+        .accessibilityIdentifier("pairing.grant.\(grant.id)")
     }
 }
 

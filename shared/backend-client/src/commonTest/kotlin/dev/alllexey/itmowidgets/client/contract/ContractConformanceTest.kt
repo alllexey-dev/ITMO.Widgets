@@ -25,7 +25,13 @@ class ContractConformanceTest {
 
     @Test
     fun routesMatchTheSnapshot() = runSuspend {
-        val problems = ContractConformance.routeProblems(spec, recorded(), NotMirrored.all)
+        val problems = ContractConformance.routeProblems(
+            spec,
+            recorded(),
+            NotMirrored.all,
+            PendingBackendRoutes.all,
+            PendingBackendQueries.all,
+        )
 
         assertNoProblems(problems)
     }
@@ -112,6 +118,30 @@ class ContractConformanceTest {
         val problems = ContractConformance.modelProblems(spec, WireModels.all, WireModels.enums, listOf(shipped))
 
         assertHas(problems, "RegisterDeviceRequest.platform is in Backend's schema now")
+    }
+
+    @Test
+    fun seededShippedPendingRouteFails() = runSuspend {
+        val shipped = PendingBackendRoute(HttpMethod.Get, "/api/users/me/devices", "probe")
+
+        val problems = ContractConformance.routeProblems(spec, recorded(), NotMirrored.all, listOf(shipped))
+
+        assertHas(problems, "PendingBackendRoutes GET /api/users/me/devices (probe) is in Backend's snapshot now")
+    }
+
+    @Test
+    fun seededShippedPendingQueryFails() = runSuspend {
+        val shipped = PendingBackendQuery(HttpMethod.Get, "/api/app/version-info", "platform", "probe")
+
+        val problems = ContractConformance.routeProblems(
+            spec,
+            recorded(),
+            NotMirrored.all,
+            PendingBackendRoutes.all,
+            PendingBackendQueries.all + shipped,
+        )
+
+        assertHas(problems, "PendingBackendQueries GET /api/app/version-info ?platform is in Backend's snapshot now")
     }
 
     @Test

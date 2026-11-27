@@ -6,6 +6,15 @@ publication or deployment.
 
 ## Unreleased
 
+- Connections: pairing protocol 2 (ADR 0040, needs the Backend change). The app opens every code with `?protocol=2`; a
+  client that asks for grants gets a card of switches grouped «ITMO.Widgets» and «ИТМО»: required grants on and locked
+  («Нужно для работы»), `itmo:sso` («Полный доступ к ITMO.ID») off every time with its warning and a confirmation,
+  «Зачем: …» from the registry, an unknown ITMO grant «Другой доступ к ИТМО» with «обновите приложение». The sign-in
+  runs only for a chosen ITMO grant; with `itmo:sso` the session's `KEYCLOAK_IDENTITY` is read from the isolated store
+  at the callback, checked against the session's `sid` and sealed in the v2 bundle with the chosen items. Protocol 1
+  keeps its card and v1 bundle. A client with an open ITMO sign-in has «Забрать доступ к ИТМО» on its screen: the phone
+  ends its ITMO session and reports `itmo-closed`; a client without an ITMO sign-in shows «Входа в ИТМО нет» with «Войти
+  в ИТМО» instead of «Вход закрыт» and no reminder.
 - Settings: the tiles of `Уведомления` share one colour while on and turn grey while off, instead of a different
   colour per type.
 - Moderation: the author of a subject link or a teacher review learns the outcome of a moderator's decision on it

@@ -23,7 +23,10 @@ data class ItmoSessionRef(val sid: String, val expiresAt: Instant) {
     override fun toString(): String = "ItmoSessionRef(sid=<redacted>, expiresAt=$expiresAt)"
 }
 
-/** A connected client. [revokedAt] is set on a revoked one whose ITMO session the phone has not ended yet. */
+/**
+ * A connected client. [revokedAt] is set on a revoked one whose ITMO session the phone has not ended yet;
+ * [itmoGrants] are the `itmo:*` grants the phone sealed to it (Backend's label).
+ */
 data class Connection(
     val id: Uuid,
     val client: ClientType,
@@ -37,6 +40,7 @@ data class Connection(
     val itmo: ItmoSessionRef?,
     val health: ItmoHealth,
     val revokedAt: Instant?,
+    val itmoGrants: List<String> = emptyList(),
 )
 
 /** One app install of the user; [os] is the Android API level or the iOS major version. */
@@ -101,6 +105,9 @@ interface DevicesRepository {
 
     suspend fun itmoEnded(id: Uuid): AppResult<Unit>
 
+    /** The phone ended a live connection's ITMO session to take its ITMO grants back; the connection stays. */
+    suspend fun itmoClosed(id: Uuid): AppResult<Unit>
+
     suspend fun signOutInstall(instanceId: Uuid): AppResult<Unit>
 }
 
@@ -134,12 +141,18 @@ sealed interface SignInAlert {
 /** The reminder comes 7 days before a client's ITMO sign-in ends (UX spec U2). */
 val SIGN_IN_REMINDER: Duration = 7.days
 
-/** An agent or MCP server that holds its own ITMO session. */
+/** An agent or MCP server: a client that may hold its own ITMO session. */
 val Connection.holdsItmo: Boolean get() = client == ClientType.AGENT || client == ClientType.MCP
 
-/** Null for the web, a revoked client or a sign-in that is fine at [now]. */
+/**
+ * An agent or MCP server that has an ITMO session now. A live one has none when it was paired without ITMO grants or
+ * the phone took them back («Забрать доступ к ИТМО»): Backend forgets a live connection's `sid` only then.
+ */
+val Connection.hasItmoSignIn: Boolean get() = holdsItmo && itmo != null
+
+/** Null for the web, a client without an ITMO sign-in, a revoked client or a sign-in that is fine at [now]. */
 fun Connection.signInAlert(now: Instant): SignInAlert? {
-    if (!holdsItmo || revokedAt != null) return null
+    if (!hasItmoSignIn || revokedAt != null) return null
     val ends = itmo?.expiresAt
     if (health == ItmoHealth.CLOSED || ends == null || ends <= now) return SignInAlert.Closed
     return if (ends - now <= SIGN_IN_REMINDER) SignInAlert.Ending(ends) else null

@@ -13,6 +13,9 @@ import kotlin.uuid.Uuid
  * `SHA-256("iw-pair-commit-v1" || pk || s)`: the app compares it with the scanned link and never trusts a key from
  * Backend. [requestedScopes] carry Backend's texts in the request's `Accept-Language`; [connectionId] is set for
  * [PairingKind.RENEW]. [name], [version] and [platform] are the client's own.
+ *
+ * Opened with `?protocol=2` (the app always is), the preview also carries [protocol] (1 or 2), the registry entry
+ * [app] and the requested [grants] in registry order (ADR 0040). They are nullable so an older Backend still decodes.
  */
 @Serializable
 data class PairingPreview(
@@ -26,18 +29,53 @@ data class PairingPreview(
     val keyCommitment: String,
     @Serializable(with = UuidSerializer::class) val connectionId: Uuid?,
     @Serializable(with = WireInstantSerializer::class) val expiresAt: Instant,
+    val protocol: Int? = null,
+    val app: ClientAppInfo? = null,
+    val grants: List<GrantRequest>? = null,
 )
 
 /**
- * The approval of an opened pairing; every key is sent, `null` included. [sealedBundle] (base64url HPKE
+ * A client app of Backend's registry as the phone shows it. [verified] is false for every client of step 1 (public
+ * clients cannot prove who they are).
+ */
+@Serializable
+data class ClientAppInfo(
+    val id: String,
+    val name: String,
+    val homepage: String? = null,
+    val iconUrl: String? = null,
+    val deployment: ClientDeployment,
+    val verified: Boolean = false,
+)
+
+/**
+ * One grant a protocol-2 pairing requests: `widgets:<scope>` (Backend's [title] and [description]) or `itmo:*` (no
+ * texts: the app owns them). [purpose] is the registry's «what this client does with it»; [granted] is set only on a
+ * renewal: whether the connection already holds that ITMO grant.
+ */
+@Serializable
+data class GrantRequest(
+    val id: String,
+    val required: Boolean,
+    val title: String? = null,
+    val description: String? = null,
+    val purpose: String? = null,
+    val granted: Boolean? = null,
+)
+
+/**
+ * The approval of an opened pairing; nulls are omitted. Protocol 1: [sealedBundle] (base64url HPKE
  * `enc || ciphertext`) and [itmo] are required for agents and MCP servers and forbidden for the web; [scopes] only on
- * [PairingKind.CONNECT], a non-empty subset of the request, `null` keeps them all.
+ * [PairingKind.CONNECT], a non-empty subset of the request, `null` keeps them all; [granted] is `null`. Protocol 2:
+ * [granted] lists the grant ids the user chose (every required one included), [scopes] is `null`, and
+ * [sealedBundle] and [itmo] are sent exactly when [granted] has an `itmo:*` id.
  */
 @Serializable
 data class ApprovePairingRequest(
     val sealedBundle: String?,
     val scopes: List<ConnectionScope>?,
     val itmo: ItmoSession?,
+    val granted: List<String>?,
 )
 
 /** The connection an approval created or renewed. */
@@ -68,7 +106,9 @@ data class ScopeGrant(val scope: ScopeInfo, val granted: Boolean)
 /**
  * A connected client. [scopes] lists every scope its type allows, in Backend's order. [itmo] is `null` for the web;
  * [itmoStatus] is the client's own report. [revokedAt] is set on a revoked connection whose ITMO session the phone
- * has not ended yet: the app hides such rows and ends their sessions.
+ * has not ended yet: the app hides such rows and ends their sessions. [clientId] and [app] name its registry entry,
+ * [itmoGrants] the `itmo:*` grants the phone sealed to it (a label Backend cannot verify); all three are nullable so
+ * an older Backend still decodes.
  */
 @Serializable
 data class ConnectionInfo(
@@ -85,6 +125,9 @@ data class ConnectionInfo(
     val itmo: ItmoSession?,
     val itmoStatus: ItmoStatus,
     @Serializable(with = WireInstantSerializer::class) val revokedAt: Instant?,
+    val clientId: String? = null,
+    val app: ClientAppInfo? = null,
+    val itmoGrants: List<String>? = null,
 )
 
 /**
@@ -144,6 +187,14 @@ enum class ConnectionScope(internal val wire: String) {
     UNKNOWN("UNKNOWN"),
 }
 
+/** Where a registry client runs; wire values are lower case. Display: a newer value is [UNKNOWN]. */
+@Serializable(with = ClientDeploymentSerializer::class)
+enum class ClientDeployment(internal val wire: String) {
+    SELF_HOSTED("self_hosted"),
+    HOSTED("hosted"),
+    UNKNOWN("UNKNOWN"),
+}
+
 /** The state of a connection's ITMO session as the client reports it. Display: a newer value is [UNKNOWN]. */
 @Serializable(with = ItmoStatusSerializer::class)
 enum class ItmoStatus(internal val wire: String) {
@@ -164,6 +215,11 @@ internal object ConnectionClientSerializer :
 internal object ConnectionScopeSerializer :
     UnknownTolerantEnumSerializer<ConnectionScope>("ConnectionScope", ConnectionScope.entries, ConnectionScope.UNKNOWN) {
     override fun wireName(value: ConnectionScope): String = value.wire
+}
+
+internal object ClientDeploymentSerializer :
+    UnknownTolerantEnumSerializer<ClientDeployment>("ClientDeployment", ClientDeployment.entries, ClientDeployment.UNKNOWN) {
+    override fun wireName(value: ClientDeployment): String = value.wire
 }
 
 internal object ItmoStatusSerializer :

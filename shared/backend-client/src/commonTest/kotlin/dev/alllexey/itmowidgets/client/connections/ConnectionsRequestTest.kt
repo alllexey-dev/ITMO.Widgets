@@ -1,11 +1,13 @@
 package dev.alllexey.itmowidgets.client.connections
 
+import dev.alllexey.itmowidgets.client.support.assertJsonEquals
 import dev.alllexey.itmowidgets.client.support.assertRequest
 import dev.alllexey.itmowidgets.client.support.recordRequest
 import dev.alllexey.itmowidgets.client.support.runSuspend
 import io.ktor.http.HttpMethod
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Instant
 
 /** The method, path and body of every [ConnectionsApi] call ([ConnectionsRouteCases]). */
 class ConnectionsRequestTest {
@@ -14,13 +16,17 @@ class ConnectionsRequestTest {
 
     @Test
     fun everyPublicFunctionHasOneCase() {
-        assertEquals(7, cases.all.size)
+        assertEquals(8, cases.all.size)
         assertEquals(cases.all.size, cases.all.map { it.name }.toSet().size)
     }
 
     @Test
-    fun openPairingSendsTheCodeAsOneSegmentWithoutABody() = runSuspend {
-        cases.openPairing.assertRequest(HttpMethod.Post, "/api/users/me/pair/K7M2QX9P/open")
+    fun openPairingSendsTheCodeAsOneSegmentAndProtocol2WithoutABody() = runSuspend {
+        cases.openPairing.assertRequest(
+            HttpMethod.Post,
+            "/api/users/me/pair/K7M2QX9P/open",
+            query = listOf("protocol" to "2"),
+        )
     }
 
     @Test
@@ -36,10 +42,31 @@ class ConnectionsRequestTest {
     @Test
     fun aWebApprovalSendsNothingButNulls() = runSuspend {
         val request = recordRequest("approveWeb") {
-            client.connections.approvePairing(cases.challengeId, ApprovePairingRequest(null, null, null))
+            client.connections.approvePairing(cases.challengeId, ApprovePairingRequest(null, null, null, null))
         }
 
         assertEquals("{}", request.body)
+    }
+
+    @Test
+    fun aProtocol2ApprovalSendsTheGrantedIdsAndNoScopes() = runSuspend {
+        val request = recordRequest("approveGranted") {
+            client.connections.approvePairing(
+                cases.challengeId,
+                ApprovePairingRequest(
+                    sealedBundle = "BwcH",
+                    scopes = null,
+                    itmo = ItmoSession("sid-1", Instant.parse("2026-12-30T09:00:00Z")),
+                    granted = listOf("widgets:reviews:read", "itmo:sso"),
+                ),
+            )
+        }
+
+        assertJsonEquals(
+            """{"sealedBundle":"BwcH","itmo":{"sid":"sid-1","expiresAt":"2026-12-30T09:00:00Z"},
+                "granted":["widgets:reviews:read","itmo:sso"]}""",
+            checkNotNull(request.body),
+        )
     }
 
     @Test
@@ -66,6 +93,14 @@ class ConnectionsRequestTest {
         cases.connectionItmoEnded.assertRequest(
             HttpMethod.Post,
             "/api/users/me/connections/${cases.connectionId}/itmo-ended",
+        )
+    }
+
+    @Test
+    fun connectionItmoClosed() = runSuspend {
+        cases.connectionItmoClosed.assertRequest(
+            HttpMethod.Post,
+            "/api/users/me/connections/${cases.connectionId}/itmo-closed",
         )
     }
 

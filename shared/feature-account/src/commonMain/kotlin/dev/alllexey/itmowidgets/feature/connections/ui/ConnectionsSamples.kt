@@ -7,6 +7,8 @@ import dev.alllexey.itmowidgets.feature.connections.presentation.DeviceRow
 import dev.alllexey.itmowidgets.feature.connections.presentation.DevicesUiState
 import dev.alllexey.itmowidgets.feature.connections.presentation.Fact
 import dev.alllexey.itmowidgets.feature.connections.presentation.FactsSheet
+import dev.alllexey.itmowidgets.feature.connections.presentation.GrantGroup
+import dev.alllexey.itmowidgets.feature.connections.presentation.GrantSwitch
 import dev.alllexey.itmowidgets.feature.connections.presentation.OtherLogins
 import dev.alllexey.itmowidgets.feature.connections.presentation.PairingUiState
 import dev.alllexey.itmowidgets.feature.connections.presentation.Pill
@@ -80,6 +82,7 @@ object ConnectionsSamples {
             t("Осталось 4 дня. Потом nas не сможет обращаться к My ITMO"),
             res(AccountStrings.connection_renew),
         ),
+        takeBack = true,
         scopes = agentScopes,
         facts = listOf(
             Fact(res(AccountStrings.connection_fact_connected), t("28 июля")),
@@ -95,6 +98,7 @@ object ConnectionsSamples {
         subtitle = t("itmo-mcp 0.4, macOS"),
         icon = DeviceIcon.MCP,
         signIn = SignInStatus(SignInTone.ERROR, res(AccountStrings.connection_sign_in_closed), t("MacBook Air не может обращаться к My ITMO"), res(AccountStrings.connection_sign_in_again)),
+        takeBack = false,
         scopes = listOf(
             ScopeSwitch("REVIEWS_READ", t("Отзывы о преподавателях"), t("Читает отзывы и их сводки"), true),
             ScopeSwitch("LINKS_READ", t("Ссылки предметов"), t("Читает ссылки и чаты предметов"), true),
@@ -102,11 +106,43 @@ object ConnectionsSamples {
         ),
     )
 
+    /** An MCP server holding `itmo:sso`: «Полный доступ к ITMO.ID», then «Забрать доступ к ИТМО». */
+    val mcpFullAccess = agent.copy(
+        title = t("MacBook Air"),
+        subtitle = t("itmo-mcp 0.5, macOS"),
+        icon = DeviceIcon.MCP,
+        signIn = SignInStatus(SignInTone.OK, t("До 20 января"), null, null),
+        fullItmoAccess = true,
+        takeBack = true,
+        scopes = mcpClosed.scopes,
+        facts = listOf(
+            Fact(res(AccountStrings.connection_fact_connected), t("22 октября")),
+            Fact(res(AccountStrings.devices_fact_activity), t("2 мин назад")),
+            Fact(res(AccountStrings.connection_fact_label), t("Chrome 131, macOS")),
+            Fact(res(AccountStrings.devices_fact_ip), t("95.161.221.40")),
+        ),
+    )
+
+    /** An MCP server paired without ITMO grants, or whose ITMO access was taken back. */
+    val mcpWithoutItmo = mcpFullAccess.copy(
+        signIn = SignInStatus(
+            SignInTone.OK,
+            res(AccountStrings.connection_sign_in_none),
+            res(AccountStrings.connection_sign_in_none_text, "MacBook Air"),
+            res(AccountStrings.connection_sign_in_give),
+            signedIn = false,
+        ),
+        fullItmoAccess = false,
+        takeBack = false,
+        facts = mcpFullAccess.facts.take(2),
+    )
+
     val web = agent.copy(
         title = t("Chrome, macOS"),
         subtitle = res(AccountStrings.devices_client_web),
         icon = DeviceIcon.WEB,
         signIn = null,
+        takeBack = false,
         scopes = emptyList(),
         facts = listOf(
             Fact(res(AccountStrings.connection_fact_connected), t("20 октября")),
@@ -132,6 +168,85 @@ object ConnectionsSamples {
         scopes = agentScopes,
         note = res(AccountStrings.pair_note_client, "nas", "nas"),
         primary = res(AccountStrings.pair_continue),
+    )
+
+    /**
+     * A protocol-2 card of itmo-mcp: Widgets grants with Backend's texts, the refresh grant on with its purpose,
+     * `itmo:sso` off with the warning, and an ITMO grant this version cannot mint.
+     */
+    val pairConfirmGrants = PairingUiState.Confirm(
+        icon = DeviceIcon.MCP,
+        name = t("MacBook Air"),
+        subtitle = t("itmo-mcp 0.5, macOS"),
+        caution = true,
+        scopes = emptyList(),
+        note = res(AccountStrings.pair_note_client, "MacBook Air", "MacBook Air"),
+        primary = res(AccountStrings.pair_continue),
+        grants = listOf(
+            GrantGroup(
+                res(AccountStrings.pair_group_widgets),
+                listOf(
+                    GrantSwitch("widgets:reviews:read", t("Отзывы о преподавателях"), t("Читает отзывы и их сводки"), null, null, null, true, true),
+                    GrantSwitch("widgets:links:read", t("Ссылки предметов"), t("Читает ссылки и чаты предметов"), null, null, null, true, true),
+                    GrantSwitch("widgets:sport:queue", t("Очереди на физкультуру"), t("Может вставать в очереди и выходить из них"), null, null, null, false, true),
+                ),
+            ),
+            GrantGroup(
+                res(AccountStrings.pair_group_itmo),
+                listOf(
+                    GrantSwitch(
+                        "itmo:refresh:student-personal-cabinet",
+                        res(AccountStrings.grant_refresh_title),
+                        res(AccountStrings.grant_refresh_text),
+                        res(AccountStrings.grant_purpose, "чтобы ИИ-ассистент видел ваше расписание, зачётку и заявки"),
+                        null,
+                        null,
+                        true,
+                        true,
+                    ),
+                    GrantSwitch(
+                        "itmo:sso",
+                        res(AccountStrings.grant_sso_title),
+                        res(AccountStrings.grant_sso_text),
+                        res(AccountStrings.grant_purpose, "чтобы ИИ-ассистент видел баллы БАРС и входил в другие сервисы ИТМО"),
+                        res(AccountStrings.grant_sso_warning),
+                        null,
+                        false,
+                        true,
+                    ),
+                    GrantSwitch("itmo:refresh:dev-stand", res(AccountStrings.grant_other_title), null, null, null, res(AccountStrings.grant_unavailable), false, false),
+                ),
+            ),
+        ),
+    )
+
+    /** A protocol-2 card of the agent: the refresh grant required, on and locked. */
+    val pairConfirmRequired = pairConfirmGrants.copy(
+        icon = DeviceIcon.AGENT,
+        name = t("nas"),
+        subtitle = t("Агент ITMO.Widgets 1.3, Linux"),
+        note = res(AccountStrings.pair_note_client, "nas", "nas"),
+        grants = listOf(
+            GrantGroup(
+                res(AccountStrings.pair_group_widgets),
+                listOf(GrantSwitch("widgets:sport", t("Запись на физкультуру"), t("Записывается по очередям вместо телефона"), null, null, null, true, true)),
+            ),
+            GrantGroup(
+                res(AccountStrings.pair_group_itmo),
+                listOf(
+                    GrantSwitch(
+                        "itmo:refresh:student-personal-cabinet",
+                        res(AccountStrings.grant_refresh_title),
+                        res(AccountStrings.grant_refresh_text),
+                        res(AccountStrings.grant_purpose, "чтобы записывать вас на физкультуру"),
+                        null,
+                        res(AccountStrings.grant_required),
+                        true,
+                        false,
+                    ),
+                ),
+            ),
+        ),
     )
 
     val pairConfirmWeb = PairingUiState.Confirm(

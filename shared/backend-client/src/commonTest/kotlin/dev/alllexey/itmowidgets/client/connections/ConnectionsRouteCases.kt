@@ -13,6 +13,7 @@ object ConnectionsRouteCases {
         sealedBundle = "BwcH",
         scopes = listOf(ConnectionScope.SPORT, ConnectionScope.FRIENDS_READ),
         itmo = ItmoSession("sid-1", Instant.parse("2026-12-30T09:00:00Z")),
+        granted = null,
     )
     val narrowed = UpdateScopesRequest(listOf(ConnectionScope.SPORT))
 
@@ -22,6 +23,7 @@ object ConnectionsRouteCases {
     val updateScopes = RouteCase("updateScopes") { connections.updateScopes(connectionId, narrowed) }
     val revokeConnection = RouteCase("revokeConnection") { connections.revokeConnection(connectionId) }
     val connectionItmoEnded = RouteCase("connectionItmoEnded") { connections.connectionItmoEnded(connectionId) }
+    val connectionItmoClosed = RouteCase("connectionItmoClosed") { connections.connectionItmoClosed(connectionId) }
     val signOutInstall = RouteCase("signOutInstall") { connections.signOutInstall(instanceId) }
 
     val all: List<RouteCase> = listOf(
@@ -31,6 +33,7 @@ object ConnectionsRouteCases {
         updateScopes,
         revokeConnection,
         connectionItmoEnded,
+        connectionItmoClosed,
         signOutInstall,
     )
 }

@@ -18,6 +18,13 @@ class PairingCryptoTest {
     }
 
     @Test
+    fun theInfoOfARenewalNamesItsKind() {
+        val info = PairingCrypto.info(CHALLENGE_ID, PairingKind.RENEW, SECRET).toHexString()
+
+        assertEquals(PairingVectors.INFO_HEX.replace("434f4e4e454354", "52454e4557"), info)
+    }
+
+    @Test
     fun theInfoBindsTheChallengeTheKindAndTheSecret() {
         assertEquals(PairingVectors.INFO_HEX, PairingCrypto.info(CHALLENGE_ID, PairingKind.CONNECT, SECRET).toHexString())
     }

@@ -50,7 +50,10 @@ import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_content_copy
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
+import dev.alllexey.itmowidgets.shared.designsystem.ic_badge
 import dev.alllexey.itmowidgets.shared.designsystem.ic_key
+import dev.alllexey.itmowidgets.shared.designsystem.ic_login
+import dev.alllexey.itmowidgets.shared.designsystem.ic_remove
 import dev.alllexey.itmowidgets.shared.designsystem.ic_logout
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code_scanner
 import dev.alllexey.itmowidgets.shared.designsystem.ic_refresh
@@ -66,6 +69,7 @@ class ConnectionActions(
     val onRenew: () -> Unit = {},
     val onCloseRenew: () -> Unit = {},
     val onRevoke: () -> Unit = {},
+    val onTakeBackItmo: () -> Unit = {},
     val onConfirm: () -> Unit = {},
     val onDismissConfirm: () -> Unit = {},
     val onMessageShown: () -> Unit = {},
@@ -91,7 +95,8 @@ fun ConnectionRoute(
             onRenew = viewModel::askRenew,
             onCloseRenew = viewModel::closeRenew,
             onRevoke = viewModel::askRevoke,
-            onConfirm = viewModel::revoke,
+            onTakeBackItmo = viewModel::askTakeBackItmo,
+            onConfirm = viewModel::confirm,
             onDismissConfirm = viewModel::dismissConfirm,
             onMessageShown = viewModel::onMessageShown,
         )
@@ -139,7 +144,7 @@ fun ConnectionScreen(state: ConnectedClientUiState, actions: ConnectionActions, 
 private fun ConnectionContent(state: ConnectedClientUiState, actions: ConnectionActions) {
     state.signIn?.let { signIn ->
         SectionHeader(text(AccountStrings.connection_section_sign_in))
-        SignIn(signIn, actions)
+        SignIn(signIn, state, actions)
     }
     if (state.scopes.isNotEmpty()) {
         SectionHeader(text(AccountStrings.connection_section_access))
@@ -175,7 +180,7 @@ private fun ConnectionContent(state: ConnectedClientUiState, actions: Connection
 }
 
 @Composable
-private fun SignIn(signIn: SignInStatus, actions: ConnectionActions) = ListGroup {
+private fun SignIn(signIn: SignInStatus, state: ConnectedClientUiState, actions: ConnectionActions) = ListGroup {
     item {
         ListRow(
             signIn.title.asString(),
@@ -188,15 +193,38 @@ private fun SignIn(signIn: SignInStatus, actions: ConnectionActions) = ListGroup
             },
         )
     }
+    if (state.fullItmoAccess) {
+        item {
+            ListRow(
+                text(AccountStrings.grant_sso_title),
+                Modifier.testTag(ConnectionTestTags.FULL_ACCESS),
+                subtitle = text(AccountStrings.connection_full_access_text),
+                icon = painterResource(Res.drawable.ic_badge),
+                iconTone = Tone.Neutral,
+            )
+        }
+    }
     signIn.action?.let { action ->
         item {
             ListRow(
                 action.asString(),
                 Modifier.testTag(ConnectionTestTags.RENEW),
-                icon = painterResource(Res.drawable.ic_refresh),
+                icon = painterResource(if (signIn.signedIn) Res.drawable.ic_refresh else Res.drawable.ic_login),
                 iconTone = Tone.Primary,
                 chevron = true,
                 onClick = actions.onRenew,
+            )
+        }
+    }
+    if (state.takeBack) {
+        item {
+            ListRow(
+                text(AccountStrings.connection_take_back_row),
+                Modifier.testTag(ConnectionTestTags.TAKE_BACK),
+                icon = painterResource(Res.drawable.ic_remove),
+                iconTone = Tone.Neutral,
+                danger = true,
+                onClick = if (state.busy) null else actions.onTakeBackItmo,
             )
         }
     }
@@ -253,6 +281,8 @@ object ConnectionTestTags {
     const val SCOPES = "connection_scopes"
     const val RENEW = "connection_renew"
     const val REVOKE = "connection_revoke"
+    const val FULL_ACCESS = "connection_full_access"
+    const val TAKE_BACK = "connection_take_back"
 
     fun scope(id: String): String = "connection_scope:$id"
 }

@@ -16,6 +16,7 @@ import dev.alllexey.itmowidgets.feature.connections.domain.ClientSignIn
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientSignInAttempt
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientSignInResult
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientType
+import dev.alllexey.itmowidgets.feature.connections.domain.ItmoIdentity
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogins
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingRequest
@@ -27,6 +28,10 @@ import kotlinx.coroutines.withContext
  * A client's own ITMO.ID sign-in: PKCE for MyITMO's public client on the official page, the callback caught before
  * it loads, the code exchanged here. The tokens must name the phone's ISU, else that session is ended at once. The
  * session's end comes from ITMO.ID through the phone's cookie, else the sign-in plus 90 days (plan 5.4).
+ *
+ * An attempt with identity (an `itmo:sso` grant) also takes the session's `KEYCLOAK_IDENTITY`, which the host read
+ * from the isolated store at the callback: its unverified payload must carry the token response's `sid`, and its
+ * `exp` is when it ends. A missing or foreign cookie ends the new session (ADR 0040).
  */
 class ClientSignInImpl(
     private val myItmo: MyItmoClient,
@@ -38,7 +43,7 @@ class ClientSignInImpl(
     private val dispatchers: AppDispatchers,
 ) : ClientSignIn {
 
-    override suspend fun begin(request: PairingRequest): ClientSignInAttempt {
+    override suspend fun begin(request: PairingRequest, withIdentity: Boolean): ClientSignInAttempt {
         val verifier = Pkce.newVerifier()
         val state = Pkce.newState()
         val userAgent = if (label.isBrowserLike()) {
@@ -46,12 +51,14 @@ class ClientSignInImpl(
         } else {
             ItmoSessionLabel.botUserAgent(request.client.labelName(), request.name, request.version, request.platform)
         }
-        return Attempt(myItmo.identity.loginUrl(Pkce.challenge(verifier), state), userAgent, verifier, state)
+        val url = myItmo.identity.loginUrl(Pkce.challenge(verifier), state)
+        return Attempt(url, userAgent, withIdentity, verifier, state)
     }
 
     private inner class Attempt(
         override val url: String,
         override val userAgent: String,
+        override val withIdentity: Boolean,
         private val verifier: String,
         private val state: String,
     ) : ClientSignInAttempt {
@@ -59,7 +66,7 @@ class ClientSignInImpl(
 
         override fun isCallback(url: String): Boolean = callback.isCallback(url)
 
-        override suspend fun finish(callbackUrl: String): ClientSignInResult {
+        override suspend fun finish(callbackUrl: String, identityCookie: String?): ClientSignInResult {
             if (demo.isActive()) return ClientSignInResult.Failed(AppError.DemoUnavailable)
             val code = callback.extractCode(callbackUrl, state)
                 ?: return ClientSignInResult.Failed(AppError.Unauthorized)
@@ -73,11 +80,26 @@ class ClientSignInImpl(
                 return ClientSignInResult.OtherAccount
             }
             val sid = tokens.sessionId ?: return ClientSignInResult.Failed(AppError.Unauthorized)
+            val identity = if (withIdentity) {
+                identity(identityCookie, sid) ?: run {
+                    // The user granted the cookie: a pairing without it is not what they approved.
+                    io { myItmo.identity.logout(tokens.refreshToken) }
+                    return ClientSignInResult.IdentityMissing
+                }
+            } else {
+                null
+            }
             val listed = (logins.list() as? AppResult.Success)?.value as? ItmoLogins.Listed
             val expiresAt = listed?.sessions?.firstOrNull { it.sid == sid }?.expires ?: (clock.now() + SESSION_LIFETIME)
             return ClientSignInResult.Success(
-                ClientItmoSession(isu, sid, expiresAt, tokens.refreshToken, tokens.refreshExpiresAt),
+                ClientItmoSession(isu, sid, expiresAt, tokens.refreshToken, tokens.refreshExpiresAt, identity),
             )
+        }
+
+        /** The cookie when its payload names [sid] and carries `exp`; null otherwise. */
+        private fun identity(cookie: String?, sid: String): ItmoIdentity? {
+            if (cookie.isNullOrBlank() || IdTokenClaims.sessionId(cookie) != sid) return null
+            return IdTokenClaims.expiresAt(cookie)?.let { ItmoIdentity(cookie, it) }
         }
 
         override fun toString(): String = "ClientSignInAttempt(redacted)"

@@ -10,7 +10,10 @@ import kotlin.uuid.Uuid
 internal class KtorConnectionsApi(private val http: BackendHttp) : ConnectionsApi {
 
     override suspend fun openPairing(code: String): PairingPreview =
-        http.call(route(HttpMethod.Post, "pair", code, "open"), PairingPreview.serializer())
+        http.call(
+            route(HttpMethod.Post, "pair", code, "open", query = listOf("protocol" to PROTOCOL)),
+            PairingPreview.serializer(),
+        )
 
     override suspend fun approvePairing(challengeId: Uuid, request: ApprovePairingRequest): ApprovedPairing =
         http.call(
@@ -31,9 +34,21 @@ internal class KtorConnectionsApi(private val http: BackendHttp) : ConnectionsAp
     override suspend fun connectionItmoEnded(id: Uuid) =
         http.callUnit(route(HttpMethod.Post, "connections", id.toHexDashString(), "itmo-ended"))
 
+    override suspend fun connectionItmoClosed(id: Uuid) =
+        http.callUnit(route(HttpMethod.Post, "connections", id.toHexDashString(), "itmo-closed"))
+
     override suspend fun signOutInstall(instanceId: Uuid) =
         http.callUnit(route(HttpMethod.Post, "installs", instanceId.toHexDashString(), "sign-out"))
 
-    private fun route(method: HttpMethod, vararg segments: String, body: BackendBody? = null) =
-        BackendRoute(method, listOf("api", "users", "me") + segments, body = body)
+    private fun route(
+        method: HttpMethod,
+        vararg segments: String,
+        query: List<Pair<String, String?>> = emptyList(),
+        body: BackendBody? = null,
+    ) = BackendRoute(method, listOf("api", "users", "me") + segments, query = query, body = body)
+
+    private companion object {
+        /** The pairing protocol this client speaks (ADR 0040). */
+        const val PROTOCOL = "2"
+    }
 }

@@ -11,9 +11,11 @@ import dev.alllexey.itmowidgets.feature.connections.domain.Connection
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
 import dev.alllexey.itmowidgets.feature.connections.domain.DevicesRepository
+import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogins
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.SignInAlert
+import dev.alllexey.itmowidgets.feature.connections.domain.hasItmoSignIn
 import dev.alllexey.itmowidgets.feature.connections.domain.holdsItmo
 import dev.alllexey.itmowidgets.feature.connections.domain.signInAlert
 import dev.alllexey.itmowidgets.shared.feature.account.AccountPlurals
@@ -30,7 +32,9 @@ import kotlinx.coroutines.launch
 /**
  * One connected client: its ITMO sign-in, scopes as switches (narrowing at once, widening behind the screen lock),
  * the facts and «Отключить», which ends Backend access and then the client's ITMO session with the phone's own cookie
- * (plan 6.2). The client comes from [DevicesRepository]'s last answer, refreshed on open.
+ * (plan 6.2). A client holding `itmo:sso` has «Забрать»: the phone ends its ITMO session the same way and reports
+ * `itmo-closed`; the connection stays without ITMO grants (ADR 0040). The client comes from [DevicesRepository]'s last
+ * answer, refreshed on open.
  */
 class ConnectedClientViewModel(
     private val id: String,
@@ -43,6 +47,7 @@ class ConnectedClientViewModel(
 
     private val uuid = runCatching { Uuid.parse(id) }.getOrNull()
     private var itmo: ItmoLogins? = null
+    private var pending: Pending? = null
 
     init {
         devices.devices.onEach { render() }.launchIn(viewModelScope)
@@ -89,9 +94,15 @@ class ConnectedClientViewModel(
         _uiState.update {
             it.copy(
                 renew = RenewSheet(
-                    title = UiText.Res(AccountStrings.connection_renew_title, listOf(connection.name)),
+                    title = UiText.Res(
+                        if (connection.hasItmoSignIn) AccountStrings.connection_renew_title else AccountStrings.connection_sign_in_give_title,
+                        listOf(connection.name),
+                    ),
                     command = if (connection.client == ClientType.MCP) MCP_RENEW else AGENT_RENEW,
-                    note = UiText.Res(AccountStrings.connection_renew_note, listOf(connection.name)),
+                    note = UiText.Res(
+                        if (connection.hasItmoSignIn) AccountStrings.connection_renew_note else AccountStrings.connection_sign_in_give_note,
+                        listOf(connection.name),
+                    ),
                 ),
             )
         }
@@ -103,6 +114,7 @@ class ConnectedClientViewModel(
         val connection = connection() ?: return
         val web = connection.client == ClientType.WEB
         val noCookie = itmo !is ItmoLogins.Listed
+        pending = Pending.REVOKE
         _uiState.update {
             it.copy(
                 confirm = ConfirmAsk(
@@ -113,6 +125,7 @@ class ConnectedClientViewModel(
                     text = UiText.Res(
                         when {
                             web -> AccountStrings.connection_revoke_web_text
+                            !connection.hasItmoSignIn -> AccountStrings.connection_revoke_widgets_text
                             noCookie -> AccountStrings.connection_revoke_text_later
                             else -> AccountStrings.connection_revoke_text
                         },
@@ -123,8 +136,70 @@ class ConnectedClientViewModel(
         }
     }
 
+    /** «Забрать доступ к ИТМО»: ends the client's ITMO sign-in, with full access if it has that too. */
+    fun askTakeBackItmo() {
+        val connection = connection() ?: return
+        if (!connection.hasItmoSignIn) return
+        pending = Pending.TAKE_BACK_ITMO
+        _uiState.update {
+            it.copy(
+                confirm = ConfirmAsk(
+                    title = UiText.Res(AccountStrings.connection_take_back_title),
+                    text = UiText.Res(
+                        when {
+                            ItmoGrants.SSO in connection.itmoGrants -> AccountStrings.connection_take_back_full_text
+                            // The agent's whole job runs through My ITMO (its registry grant is required).
+                            connection.client == ClientType.AGENT -> AccountStrings.connection_take_back_agent_text
+                            else -> AccountStrings.connection_take_back_text
+                        },
+                        listOf(connection.name),
+                    ),
+                    confirm = UiText.Res(AccountStrings.connection_take_back),
+                ),
+            )
+        }
+    }
+
+    /** The confirmed action of [ConnectedClientUiState.confirm]. */
+    fun confirm() {
+        when (pending) {
+            Pending.REVOKE -> revoke()
+            Pending.TAKE_BACK_ITMO -> takeBackItmo()
+            null -> Unit
+        }
+    }
+
     fun dismissConfirm() {
-        if (!_uiState.value.busy) _uiState.update { it.copy(confirm = null) }
+        if (!_uiState.value.busy) {
+            pending = null
+            _uiState.update { it.copy(confirm = null) }
+        }
+    }
+
+    /**
+     * Ends the client's ITMO session with the phone's cookie, as «Отключить» does, then reports `itmo-closed` and
+     * reloads. The ITMO grants share that session, so taking them back ends it; a renewal brings them back.
+     */
+    fun takeBackItmo() {
+        val connection = connection() ?: return
+        if (_uiState.value.busy) return
+        _uiState.update { it.copy(busy = true) }
+        viewModelScope.launch {
+            val ended = connection.itmo?.sid?.let { logins.end(listOf(it)) } ?: AppResult.Success(Unit)
+            val closed = if (ended is AppResult.Success) devices.itmoClosed(connection.id) else ended
+            pending = null
+            _uiState.update {
+                it.copy(
+                    busy = false,
+                    confirm = null,
+                    message = when (closed) {
+                        is AppResult.Success -> UiText.Res(AccountStrings.connection_scopes_changed)
+                        is AppResult.Failure -> closed.error.toUiText()
+                    },
+                )
+            }
+            if (closed is AppResult.Success) devices.refresh()
+        }
     }
 
     fun revoke() {
@@ -170,6 +245,8 @@ class ConnectedClientViewModel(
                 subtitle = clientSubtitle(connection.client, connection.version, connection.platform),
                 icon = connection.client.icon(),
                 signIn = if (connection.holdsItmo) signIn(connection) else null,
+                fullItmoAccess = ItmoGrants.SSO in connection.itmoGrants,
+                takeBack = connection.hasItmoSignIn && connection.signInAlert(now) != SignInAlert.Closed,
                 scopes = if (web) {
                     emptyList()
                 } else {
@@ -194,6 +271,15 @@ class ConnectedClientViewModel(
     private fun signIn(connection: Connection): SignInStatus {
         val now = time.now()
         val ends = connection.itmo?.expiresAt
+        if (!connection.hasItmoSignIn) {
+            return SignInStatus(
+                tone = SignInTone.OK,
+                title = UiText.Res(AccountStrings.connection_sign_in_none),
+                text = UiText.Res(AccountStrings.connection_sign_in_none_text, listOf(connection.name)),
+                action = UiText.Res(AccountStrings.connection_sign_in_give),
+                signedIn = false,
+            )
+        }
         return when (val alert = connection.signInAlert(now)) {
             SignInAlert.Closed -> SignInStatus(
                 tone = SignInTone.ERROR,
@@ -217,6 +303,9 @@ class ConnectedClientViewModel(
             )
         }
     }
+
+    /** What [confirm] does. */
+    private enum class Pending { REVOKE, TAKE_BACK_ITMO }
 
     private companion object {
         const val AGENT_RENEW = "itmo-widgets-agent renew"

@@ -11,6 +11,8 @@ import dev.alllexey.itmowidgets.feature.connections.domain.ClientType
 import dev.alllexey.itmowidgets.feature.connections.domain.Connection
 import dev.alllexey.itmowidgets.feature.connections.domain.Devices
 import dev.alllexey.itmowidgets.feature.connections.domain.DevicesRepository
+import dev.alllexey.itmowidgets.feature.connections.domain.Grant
+import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoHealth
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogin
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogins
@@ -60,6 +62,8 @@ internal class FakeDevicesRepository(initial: Devices? = null) : DevicesReposito
 
     override suspend fun itmoEnded(id: Uuid): AppResult<Unit> = record("ended $id")
 
+    override suspend fun itmoClosed(id: Uuid): AppResult<Unit> = record("closed $id")
+
     override suspend fun signOutInstall(instanceId: Uuid): AppResult<Unit> = record("signOut $instanceId")
 
     private fun record(call: String): AppResult<Unit> {
@@ -71,12 +75,14 @@ internal class FakeDevicesRepository(initial: Devices? = null) : DevicesReposito
 /** The ITMO.ID sessions the phone's cookie lists; [ended] records every `end`. */
 internal class FakeItmoLogins(var answer: AppResult<ItmoLogins> = AppResult.Success(ItmoLogins.NoCookie)) : ItmoLoginsRepository {
     val ended = mutableListOf<List<String>>()
+    var endFailure: AppError? = null
     override val lastListed = MutableStateFlow<ItmoLogins.Listed?>(null)
 
     override suspend fun list(): AppResult<ItmoLogins> =
         answer.also { lastListed.value = ((it as? AppResult.Success)?.value as? ItmoLogins.Listed) ?: lastListed.value }
 
     override suspend fun end(sids: List<String>): AppResult<Unit> {
+        endFailure?.let { return AppResult.Failure(it) }
         ended += sids
         return AppResult.Success(Unit)
     }
@@ -94,19 +100,29 @@ internal class FakePairingRepository(var opened: PairingResult<PairingRequest>) 
     }
 }
 
-/** Sign-ins whose callback is [CALLBACK]; each finishes with [result]. */
+/**
+ * Sign-ins whose callback is [CALLBACK]; each finishes with [result]. [identities] records whether each attempt asked
+ * for the identity cookie, [cookies] what each finish got.
+ */
 internal class FakeClientSignIn(var result: ClientSignInResult) : ClientSignIn {
     var begun = 0
+    val identities = mutableListOf<Boolean>()
+    val cookies = mutableListOf<String?>()
 
-    override suspend fun begin(request: PairingRequest): ClientSignInAttempt {
+    override suspend fun begin(request: PairingRequest, withIdentity: Boolean): ClientSignInAttempt {
         begun++
+        identities += withIdentity
         return object : ClientSignInAttempt {
             override val url = "https://id.itmo.ru/auth?attempt=$begun"
             override val userAgent = "UA ${request.name}"
+            override val withIdentity = withIdentity
 
             override fun isCallback(url: String) = url.startsWith(CALLBACK)
 
-            override suspend fun finish(callbackUrl: String) = result
+            override suspend fun finish(callbackUrl: String, identityCookie: String?): ClientSignInResult {
+                cookies += identityCookie
+                return result
+            }
         }
     }
 
@@ -133,6 +149,8 @@ internal object Samples {
         revokedAt: Instant? = null,
         id: Uuid = agentId,
         sid: String = "sid-agent",
+        itmoGrants: List<String> = listOf(ItmoGrants.REFRESH),
+        signedIn: Boolean = true,
     ) = Connection(
         id = id,
         client = ClientType.AGENT,
@@ -146,9 +164,10 @@ internal object Samples {
         createdAt = Instant.parse("2026-07-28T09:00:00Z"),
         approvedAt = Instant.parse("2026-07-28T09:00:00Z"),
         lastUsedAt = Instant.parse("2026-10-07T08:55:00Z"),
-        itmo = ItmoSessionRef(sid, expiresAt),
+        itmo = ItmoSessionRef(sid, expiresAt).takeIf { signedIn },
         health = health,
         revokedAt = revokedAt,
+        itmoGrants = itmoGrants,
     )
 
     fun web() = Connection(
@@ -202,5 +221,39 @@ internal object Samples {
         platform = "linux",
         scopes = listOf(scope("SPORT", "Запись на физкультуру"), scope("FRIENDS_READ", "Друзья")),
         connectionId = connectionId,
+    )
+
+    fun grant(id: String, required: Boolean = false, held: Boolean? = null) = Grant(
+        id = id,
+        required = required,
+        title = if (id.startsWith("widgets:")) "$id title" else null,
+        description = if (id.startsWith("widgets:")) "$id description" else null,
+        purpose = if (id.startsWith("itmo:")) "$id purpose" else null,
+        held = held,
+    )
+
+    /** itmo-mcp's protocol-2 request: two Widgets grants, the refresh grant and `itmo:sso`, none required. */
+    fun mcpRequest(
+        kind: PairingKind = PairingKind.CONNECT,
+        grants: List<Grant> = listOf(
+            grant("widgets:reviews:read"),
+            grant("widgets:links:read"),
+            grant(ItmoGrants.REFRESH),
+            grant(ItmoGrants.SSO),
+        ),
+        connectionId: Uuid? = null,
+    ) = PairingRequest(
+        challengeId = PairingVectors.CHALLENGE_ID,
+        kind = kind,
+        client = ClientType.MCP,
+        name = "MacBook Air",
+        version = "0.5",
+        platform = "macos",
+        scopes = emptyList(),
+        connectionId = connectionId,
+        protocol = 2,
+        clientId = "itmo-mcp",
+        appName = "ITMO MCP",
+        grants = grants,
     )
 }
