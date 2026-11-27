@@ -94,6 +94,7 @@
         "expiresAt": "2026-10-31T10:00:00Z",
         "revokedAt": null,
         "revokedByIsu": null,
+        "revokedByName": null,
         "active": true,
         "caseId": "00000000-0000-4000-8000-000000000301"
       }

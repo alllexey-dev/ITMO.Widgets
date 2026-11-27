@@ -17,6 +17,7 @@ import dev.alllexey.itmowidgets.feature.sport.data.push.SportSignPushHandler
 import dev.alllexey.itmowidgets.feature.sport.data.widget.SportWidgetSnapshotStoreImpl
 import dev.alllexey.itmowidgets.feature.sport.domain.widget.SportWidgetSnapshotStore
 import dev.alllexey.itmowidgets.feature.connections.data.push.DeviceConnectedPushHandler
+import dev.alllexey.itmowidgets.feature.me.moderation.data.push.ModerationNoticePushHandler
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -44,5 +45,6 @@ val componentBindingsModule = module {
     single<FcmPayloadHandler>(named("sport-auto")) { SportSignPushHandler(QueueKind.AUTO, get()) }
     singleOf(::SportAgentBookedPushHandler) { named("sport-agent"); bind<FcmPayloadHandler>() }
     singleOf(::DeviceConnectedPushHandler) { named("device-connected"); bind<FcmPayloadHandler>() }
+    singleOf(::ModerationNoticePushHandler) { named("moderation-notice"); bind<FcmPayloadHandler>() }
     single<FcmPayloadDispatcher> { FcmPayloadDispatcher(getAll(), get(), get(), get()) }
 }

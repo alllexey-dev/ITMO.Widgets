@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "data": {
+    "autoSignLimit": 15,
+    "overridden": true,
+    "updatedAt": "2026-10-05T09:00:00Z"
+  },
+  "error": null
+}

@@ -10,6 +10,7 @@ import dev.alllexey.itmoapi.myitmo.MyItmoConfiguration
 import dev.alllexey.itmowidgets.client.BackendClient
 import dev.alllexey.itmowidgets.client.ClientVersion
 import dev.alllexey.itmowidgets.client.connections.ConnectionsApi
+import dev.alllexey.itmowidgets.client.moderation.ModerationNoticesApi
 import dev.alllexey.itmowidgets.client.users.UsersApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.coroutines.systemAppDispatchers
@@ -190,6 +191,7 @@ fun iosCoreModule(
     }
     single<UsersApi> { get<BackendClient>().users }
     single<ConnectionsApi> { get<BackendClient>().connections }
+    single<ModerationNoticesApi> { get<BackendClient>().moderationNotices }
 
     // An open set: each contribution is qualified.
     single<SessionDataCleaner>(named("keychain")) { KeychainSessionDataCleaner(get(), get()) }

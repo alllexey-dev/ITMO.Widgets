@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.client.push
 
 import dev.alllexey.itmowidgets.client.error.BackendException
 import dev.alllexey.itmowidgets.client.json.BackendJson
+import dev.alllexey.itmowidgets.client.moderation.ModerationNotice
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonElement
 
@@ -51,6 +52,11 @@ object FcmDecoder {
     @Throws(BackendException::class)
     fun sportAgentBooked(payload: JsonElement): SportAgentBookedPayload =
         decode(SportAgentBookedPayload.serializer(), payload)
+
+    /** The payload of a [ModerationNotice.TYPE] envelope; an unknown `outcome` is `UNKNOWN`. */
+    @Throws(BackendException::class)
+    fun moderationNotice(payload: JsonElement): ModerationNotice =
+        decode(ModerationNotice.serializer(), payload)
 
     private fun <T> decode(serializer: KSerializer<T>, payload: JsonElement): T = decode {
         BackendJson.decodeFromJsonElement(serializer, payload)

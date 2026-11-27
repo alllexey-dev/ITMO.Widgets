@@ -263,10 +263,16 @@ struct NotificationSettingsContent: View {
         case .sport: ("notifications_sport", .sprint, .ok)
         case .friends: ("notifications_friends", .personAdd, .tertiary)
         case .devices: ("notifications_devices", .devices, .primary)
+        case .moderation: ("notifications_moderation", .editNote, .warn)
+        }
+        let text: String? = switch push.kind {
+        case .devices: "notifications_devices_text"
+        case .moderation: "notifications_moderation_text"
+        default: nil
         }
         return typeSwitch(
             title: title,
-            text: push.kind == .devices ? "notifications_devices_text" : nil,
+            text: text,
             symbol: symbol,
             tone: tone,
             enabled: state.connected,

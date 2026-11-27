@@ -37,6 +37,7 @@ object NotificationSettingsSamples {
             PushNotifications(PushKind.SPORT, enabled = true),
             PushNotifications(PushKind.FRIENDS, enabled = true),
             PushNotifications(PushKind.DEVICES, enabled = false),
+            PushNotifications(PushKind.MODERATION, enabled = true),
         ),
         connected = true,
     )

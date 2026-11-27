@@ -1,0 +1,92 @@
+{
+  "success": true,
+  "data": {
+    "from": "2026-10-04",
+    "to": "2026-10-05",
+    "usersBefore": 1490,
+    "days": [
+      {
+        "date": "2026-10-04",
+        "newUsers": 18
+      },
+      {
+        "date": "2026-10-05",
+        "newUsers": 12
+      }
+    ],
+    "activePeople": {
+      "active1d": 410,
+      "active7d": 820,
+      "active30d": 1130
+    },
+    "peopleHistory": [
+      {
+        "day": "2026-10-04",
+        "active1d": 395,
+        "active7d": 812,
+        "active30d": 1121
+      }
+    ],
+    "retention": [
+      {
+        "weekStart": "2026-09-21",
+        "size": 64,
+        "retained": [
+          51,
+          47
+        ]
+      },
+      {
+        "weekStart": "2026-09-28",
+        "size": 40,
+        "retained": [
+          33
+        ]
+      }
+    ],
+    "retentionClassic": [
+      {
+        "weekStart": "2026-09-21",
+        "size": 64,
+        "active": [
+          null,
+          44
+        ]
+      },
+      {
+        "weekStart": "2026-09-28",
+        "size": 40,
+        "active": [
+          38
+        ]
+      }
+    ],
+    "faculties": [
+      {
+        "facultyShortName": "ФПИиКТ",
+        "facultyName": "Факультет программной инженерии и компьютерной техники",
+        "users": 820,
+        "active30d": 640
+      },
+      {
+        "facultyShortName": null,
+        "facultyName": null,
+        "users": 95,
+        "active30d": 20
+      }
+    ],
+    "courses": [
+      {
+        "course": 1,
+        "users": 400,
+        "active30d": 330
+      },
+      {
+        "course": null,
+        "users": 95,
+        "active30d": 20
+      }
+    ]
+  },
+  "error": null
+}

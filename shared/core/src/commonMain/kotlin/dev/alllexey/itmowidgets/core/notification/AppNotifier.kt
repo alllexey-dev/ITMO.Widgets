@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.notification
 
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.text.UiText
 
 sealed interface NotificationDestination {
@@ -20,6 +21,8 @@ sealed interface NotificationDestination {
     data object Dormitory : NotificationDestination
     /** `Оплата обучения` over Сегодня. */
     data object Tuition : NotificationDestination
+    /** A subject period's links over the recordbook. */
+    data class SubjectLinks(val args: SubjectLinksArgs) : NotificationDestination
 }
 
 data class AppNotification(

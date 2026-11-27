@@ -6,6 +6,11 @@ publication or deployment.
 
 ## Unreleased
 
+- Moderation: the author of a subject link or a teacher review learns the outcome of a moderator's decision on it
+  (published, rejected with the reason, hidden, visible again) in the bell and as a push on the new channel and
+  switch `Модерация`; a tap opens the subject's links or the teacher's profile. Backend's
+  `GET /api/users/me/moderation-notices` and `MODERATION_NOTICE_PAYLOAD`; the contract is synced from Backend's pull
+  request branch (with `InstallInfo.signedOutAt` and `GET /api/schedule/friends`, not mirrored, from `dev`).
 - iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
   reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
   content reports, around the countdown, the progress and the widgets' `GeometryReader`s.

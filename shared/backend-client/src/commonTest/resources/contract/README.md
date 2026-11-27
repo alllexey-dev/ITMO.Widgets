@@ -22,7 +22,7 @@ are.
   plus the routes of the shared client and the connected clients (`minCore` `1.8.0`): every Backend
   route except `/api/admin/**`. A test fails when a controller outside that prefix gains a route
   that has no fixture. The decode suites list the retired routes in `CoreDecodeSuite.RETIRED_ROUTES`.
-- The 29 admin routes (`AdminWebContractTest`) record the response shape Web reads:
+- The 38 admin routes (`AdminWebContractTest`) record the response shape Web reads:
   one fixture per route, no request fixtures, and no rule to cover every enum value or nullable
   field. A test fails when an admin controller gains a route that has no fixture.
 - `minCore` is the oldest decoded Core release (`1.2.0` or `1.7.0`) that calls the route or sends

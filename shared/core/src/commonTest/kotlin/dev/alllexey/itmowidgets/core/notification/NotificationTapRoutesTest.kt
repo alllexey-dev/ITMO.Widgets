@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.EntryRoute
 import dev.alllexey.itmowidgets.core.navigation.EntryRouteParser
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TabRequest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -62,6 +63,21 @@ class NotificationTapRoutesTest {
     }
 
     @Test
+    fun aModerationNoticeOpensItsLinksOrItsTeacher() {
+        val link = envelope(
+            "MODERATION_NOTICE_PAYLOAD",
+            """{"id":"00000000-0000-4000-8000-000000000901","outcome":"REJECTED","decidedAt":"2026-10-05T08:00:00Z",""" +
+                """"link":{"subjectId":501,"subjectName":"Synthetic subject","periodKey":"2026-1","host":"example.org"}}""",
+        )
+        val review = envelope("MODERATION_NOTICE_PAYLOAD", """{"outcome":"HIDDEN","review":{"teacherIsu":200001}}""")
+
+        assertEquals(EntryRoute(AppTab.RECORDBOOK, overlay = AppRoutes.SubjectLinks(links)), NotificationTapRoutes.entryRoute(link))
+        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.UserProfile(200001)), NotificationTapRoutes.entryRoute(review))
+        assertNull(NotificationTapRoutes.entryRoute(envelope("MODERATION_NOTICE_PAYLOAD", """{"link":{"subjectId":0}}""")))
+        assertNull(NotificationTapRoutes.entryRoute(envelope("MODERATION_NOTICE_PAYLOAD", """{"review":{"teacherIsu":-1}}""")))
+    }
+
+    @Test
     fun aFriendshipWithoutAValidActorOpensNothing() {
         for (payload in listOf("""{"user":{"isu":0}}""", """{"user":"100002"}""", "{}")) {
             assertNull(NotificationTapRoutes.entryRoute(envelope("FRIENDSHIP_EVENT_PAYLOAD", payload)), payload)
@@ -91,6 +107,7 @@ class NotificationTapRoutesTest {
             NotificationDestination.Connection("conn-1"),
             NotificationDestination.Dormitory,
             NotificationDestination.Tuition,
+            NotificationDestination.SubjectLinks(links),
         )
 
         for (destination in destinations) {
@@ -200,6 +217,7 @@ class NotificationTapRoutesTest {
         is NotificationDestination.Connection -> EntryRoute(AppTab.ME, overlay = AppRoutes.Connection(destination.id))
         NotificationDestination.Dormitory -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Dormitory)
         NotificationDestination.Tuition -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Tuition)
+        is NotificationDestination.SubjectLinks -> EntryRoute(AppTab.RECORDBOOK, overlay = AppRoutes.SubjectLinks(destination.args))
     }
 
     /** The route of Android's notification intent for [destination] (`AndroidAppNotifier`'s action and extras). */
@@ -217,10 +235,13 @@ class NotificationTapRoutesTest {
             EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_CONNECTION, connection = destination.id)
         NotificationDestination.Dormitory -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_DORMITORY)
         NotificationDestination.Tuition -> EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_TUITION)
+        is NotificationDestination.SubjectLinks ->
+            EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_SUBJECT_LINKS, links = destination.args)
     }
 
     private val subject = RecordbookSubjectArgs(11, 1, 3, "2026/2027", 7, "flow", "7")
     private val subjectWithoutJournal = RecordbookSubjectArgs(11, 1, 3, "2026/2027")
+    private val links = SubjectLinksArgs(501, "Synthetic subject", "2026-1")
 
     private fun envelope(type: String, payload: String) = """{"type":"$type","payload":$payload}"""
 }

@@ -15,7 +15,7 @@ object EntryRouteParser {
      * An intent replayed from Recents ([launchedFromHistory]) already ran its route and opens the app as it was.
      * A [ACTION_VIEW] intent carries an app [link]; links that are not the app's open nothing. A widget's [lesson] is
      * the JSON of its [LessonDetailsArgs] (malformed: the schedule alone), [sportLesson] a positive sport lesson id,
-     * [connection] a connection id (blank: «Устройства» alone).
+     * [connection] a connection id (blank: «Устройства» alone), [links] a subject period's links.
      */
     fun parse(
         action: String?,
@@ -27,6 +27,7 @@ object EntryRouteParser {
         sportLesson: Long? = null,
         sportPredicted: Boolean = false,
         connection: String? = null,
+        links: SubjectLinksArgs? = null,
     ): EntryRoute? = if (launchedFromHistory) null else when (action) {
         ACTION_VIEW -> linkRoute(AppLinks.parse(link))
         AppEntryIntents.ACTION_OPEN_SCHEDULE -> EntryRoute(AppTab.SCHEDULE)
@@ -47,6 +48,9 @@ object EntryRouteParser {
         AppEntryIntents.ACTION_OPEN_DEVICES -> DEVICES
         AppEntryIntents.ACTION_OPEN_CONNECTION ->
             connection?.takeIf { it.isNotBlank() }?.let { EntryRoute(AppTab.ME, overlay = AppRoutes.Connection(it)) } ?: DEVICES
+        // Arguments that do not name a subject period still open the recordbook.
+        AppEntryIntents.ACTION_OPEN_SUBJECT_LINKS ->
+            EntryRoute(AppTab.RECORDBOOK, overlay = links?.validOrNull()?.let(AppRoutes::SubjectLinks))
         AppEntryIntents.ACTION_OPEN_DORMITORY -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Dormitory)
         AppEntryIntents.ACTION_OPEN_TUITION -> EntryRoute(AppTab.HOME, overlay = AppRoutes.Tuition)
         AppEntryIntents.ACTION_OPEN_QR_PASS ->

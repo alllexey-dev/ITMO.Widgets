@@ -1,0 +1,62 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "00000000-0000-4000-8000-000000000901",
+      "outcome": "REJECTED",
+      "note": "Ссылка не про предмет",
+      "decidedAt": "2026-10-05T08:00:00Z",
+      "link": {
+        "id": "00000000-0000-4000-8000-000000000101",
+        "subjectId": 501,
+        "subjectName": "Математический анализ",
+        "periodKey": "2026-1",
+        "title": "Ведомость",
+        "host": "docs.google.com"
+      },
+      "review": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000902",
+      "outcome": "APPROVED",
+      "note": null,
+      "decidedAt": "2026-10-05T07:00:00Z",
+      "link": null,
+      "review": {
+        "id": "00000000-0000-4000-8000-000000000201",
+        "teacherIsu": 200001,
+        "teacherName": "Преподаватель Тестовый",
+        "subjectTitle": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000903",
+      "outcome": "HIDDEN",
+      "note": null,
+      "decidedAt": "2026-10-05T06:00:00Z",
+      "link": {
+        "id": "00000000-0000-4000-8000-000000000101",
+        "subjectId": 501,
+        "subjectName": "Математический анализ",
+        "periodKey": "2026-1",
+        "title": null,
+        "host": "example.org"
+      },
+      "review": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000904",
+      "outcome": "RESTORED",
+      "note": null,
+      "decidedAt": "2026-10-05T05:00:00Z",
+      "link": null,
+      "review": {
+        "id": "00000000-0000-4000-8000-000000000201",
+        "teacherIsu": 200001,
+        "teacherName": null,
+        "subjectTitle": "Математический анализ"
+      }
+    }
+  ],
+  "error": null
+}

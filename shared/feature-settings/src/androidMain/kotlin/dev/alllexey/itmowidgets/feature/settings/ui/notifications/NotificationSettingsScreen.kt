@@ -33,6 +33,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_devices
 import dev.alllexey.itmowidgets.shared.designsystem.ic_apartment
 import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_calendar
+import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_note
 import dev.alllexey.itmowidgets.shared.designsystem.ic_cloud_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_notifications_off
 import dev.alllexey.itmowidgets.shared.designsystem.ic_open_in_new
@@ -267,6 +268,7 @@ private fun PushSwitch(push: PushNotifications, enabled: Boolean, onChange: (Pus
         PushKind.SPORT -> Triple(SettingsStrings.notifications_sport, Res.drawable.ic_sprint, Tone.Success)
         PushKind.FRIENDS -> Triple(SettingsStrings.notifications_friends, Res.drawable.ic_person_add, Tone.Tertiary)
         PushKind.DEVICES -> Triple(SettingsStrings.notifications_devices, Res.drawable.ic_devices, Tone.Primary)
+        PushKind.MODERATION -> Triple(SettingsStrings.notifications_moderation, Res.drawable.ic_edit_note, Tone.Warning)
     }
     TypeSwitch(
         title,
@@ -276,7 +278,11 @@ private fun PushSwitch(push: PushNotifications, enabled: Boolean, onChange: (Pus
         enabled,
         { onChange(push.kind, it) },
         Modifier.testTag(NotificationSettingsTags.push(push.kind)),
-        subtitle = SettingsStrings.notifications_devices_text.takeIf { push.kind == PushKind.DEVICES },
+        subtitle = when (push.kind) {
+            PushKind.DEVICES -> SettingsStrings.notifications_devices_text
+            PushKind.MODERATION -> SettingsStrings.notifications_moderation_text
+            else -> null
+        },
     )
 }
 

@@ -14,7 +14,8 @@ A data message: `data` holds the `{type, payload}` envelope from Core
 (`SportSignPushHandler`, `QueueKind.FREE`/`AUTO`), `FRIENDSHIP_EVENT_PAYLOAD`
 (`FriendshipPushHandler`), `DEVICE_CONNECTED_PAYLOAD` (`DeviceConnectedPushHandler`: `Подключено новое
 устройство`, the client's name or the site, opens `Устройства`) and `SPORT_AGENT_BOOKED_PAYLOAD`
-(`SportAgentBookedPushHandler`: `Вы записаны на спорт` with `записал «<agent>»`, nothing booked). iOS shows
+(`SportAgentBookedPushHandler`: `Вы записаны на спорт` with `записал «<agent>»`, nothing booked) and
+`MODERATION_NOTICE_PAYLOAD` (`ModerationNoticePushHandler`, [moderation](#moderation)). iOS shows
 Backend's alert for a new connection (`notification_device_connected_title`, `_agent`, `_web`) and rewrites the
 agent's booking with `notification_sport_agent_booked`. Unknown types and malformed payloads are logged by
 type only and ignored; payloads above 4 KB (`FcmPayloadDispatcher.MAX_PAYLOAD_BYTES`) are dropped.
@@ -63,8 +64,9 @@ before clearing credentials.
 | `schedule_changes` | `Изменения расписания` | the local schedule check |
 | `marks` | `Оценки` | the local mark check |
 | `dormitory_payments` | `Общежитие и оплата` | the local dormitory and payments check |
+| `moderation` | `Модерация ссылок и отзывов` | FCM |
 
-- All six are at default importance, created on start (`AppNotificationChannels`). Android owns the permission,
+- All seven are at default importance, created on start (`AppNotificationChannels`). Android owns the permission,
   sound and per-channel visibility. The switches of «Уведомления» ([settings](../settings.md#notifications)) switch
   the checks themselves and, for the pushes, whether the device shows them; they never change a channel.
 - A denied notification permission suppresses only the visual alert, not sport automation already enabled or the
@@ -134,6 +136,28 @@ Local: `PaymentsCheck` (`shared/core`, `core/payments/check`) runs the parts of 
 - Nothing is shown 00:00-06:00 Moscow time; the first run after 06:00 posts what waited.
 - Taps: `ACTION_OPEN_DORMITORY` and `ACTION_OPEN_TUITION` open `Общежитие` or `Оплата обучения` over Сегодня.
 - Without the permission the notices count as posted.
+
+## Moderation
+
+Backend tells the author of a subject link or a teacher review the outcome of a moderation decision on it
+(Backend `docs/contracts/notifications.md#moderation-notices`): approval of a pending submission, rejection with the
+moderator's note, hiding and restoring. A moderator's decision arrives 11 minutes after it was taken (its undo window
+and a minute); an undone one never arrives.
+
+- The bell: `ModerationBellSource` (`feature-account`, `feature/me/moderation`) over `ModerationNoticesRepository`, which
+  keeps Backend's `GET /api/users/me/moderation-notices` (the last 30 days) in memory, cleared with the session. The
+  demo and a missing opt-in ask nothing. A row is `LINK_MODERATION` or `REVIEW_MODERATION`, red for a rejection or a
+  hiding, and opens the subject's links (`AppRoutes.SubjectLinks`) or the teacher's profile.
+- Texts (`ModerationNotice.title` and `text`, `notification_moderation_*` of `strings_platform.xml`): the title names
+  the kind and the outcome (`Ссылка отклонена`, `Отзыв снова виден`); the text is `«<title or host>» · <subject>` or the
+  teacher (the review's subject when the name is unknown), with `. Причина: <note>` for a rejection. Backend's iOS alert
+  uses the same keys and arguments, so they are frozen.
+- Android: `ModerationNoticePushHandler` adds the notice to the repository (the bell shows it at once) and, with the
+  switch `Модерация` on, posts it on the `moderation` channel; the lock screen shows the title only. A tap sends
+  `ACTION_OPEN_SUBJECT_LINKS` with the `SubjectLinksArgs` keys (a period that is not `YYYY-S` opens the recordbook
+  alone) or `ACTION_OPEN_USER_PROFILE`. An unknown outcome is skipped.
+- iOS: the notification service shows Backend's alert as is; `moderation` is its type's channel for `disabledPushes`.
+  A tap routes by the payload (`NotificationTapRoutes`).
 
 ## iOS
 

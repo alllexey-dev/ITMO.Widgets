@@ -1,6 +1,7 @@
 package dev.alllexey.itmowidgets.core.notification
 
 import dev.alllexey.itmowidgets.client.error.BackendException
+import dev.alllexey.itmowidgets.client.moderation.ModerationNotice
 import dev.alllexey.itmowidgets.client.push.DeviceConnectedPayload
 import dev.alllexey.itmowidgets.client.push.FcmDecoder
 import dev.alllexey.itmowidgets.client.push.FriendshipEventPayload
@@ -13,8 +14,10 @@ import dev.alllexey.itmowidgets.core.navigation.AppTab
 import dev.alllexey.itmowidgets.core.navigation.EntryRoute
 import dev.alllexey.itmowidgets.core.navigation.EntryRouteParser
 import dev.alllexey.itmowidgets.core.navigation.RecordbookSubjectArgs
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.TabRequest
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -25,7 +28,7 @@ import kotlinx.serialization.json.longOrNull
  * Where a tap on a notification opens the app (`docs/features/notifications.md`). A Backend push routes by the
  * payload type of its `data` envelope (Wire contract): a friendship event opens the actor's profile, a sport booking
  * (the phone's or an agent's) its lesson (the sport tab when the push names several), a new connection
- * «Устройства». A local notification of the iOS notifier carries its
+ * «Устройства», a moderation notice its link's subject links or its teacher's profile. A local notification of the iOS notifier carries its
  * [NotificationDestination] as [userInfoOf] writes it, Android's entry action and its arguments as strings, which
  * `EntryRouteParser` reads as it reads Android's notification intents. The iOS notification delegate hands the route
  * to the shared route queue.
@@ -65,6 +68,11 @@ object NotificationTapRoutes {
             action(AppEntryIntents.ACTION_OPEN_CONNECTION) + (CONNECTION_KEY to destination.id)
         NotificationDestination.Dormitory -> action(AppEntryIntents.ACTION_OPEN_DORMITORY)
         NotificationDestination.Tuition -> action(AppEntryIntents.ACTION_OPEN_TUITION)
+        is NotificationDestination.SubjectLinks -> action(AppEntryIntents.ACTION_OPEN_SUBJECT_LINKS) + mapOf(
+            SubjectLinksArgs.SUBJECT_ID to destination.args.subjectId.toString(),
+            SubjectLinksArgs.SUBJECT_NAME to destination.args.subjectName,
+            SubjectLinksArgs.PERIOD_KEY to destination.args.periodKey,
+        )
     }
 
     /**
@@ -86,6 +94,7 @@ object NotificationTapRoutes {
             SportFreeSignLessonsPayload.TYPE, SportAutoSignLessonsPayload.TYPE, SportAgentBookedPayload.TYPE ->
                 sportRoute(envelope.payload.lessonId())
             DeviceConnectedPayload.TYPE -> EntryRouteParser.DEVICES
+            ModerationNotice.TYPE -> envelope.payload.moderationRoute()
             else -> null
         }
     }
@@ -97,6 +106,7 @@ object NotificationTapRoutes {
             isu = userInfo.int(ISU_KEY),
             subject = userInfo.subjectArgs(),
             connection = userInfo[CONNECTION_KEY] as? String,
+            links = userInfo.linksArgs(),
         )
     }
 
@@ -133,6 +143,13 @@ object NotificationTapRoutes {
         )
     }
 
+    private fun Map<*, *>.linksArgs(): SubjectLinksArgs? {
+        val id = number(SubjectLinksArgs.SUBJECT_ID) ?: return null
+        val name = this[SubjectLinksArgs.SUBJECT_NAME] as? String ?: return null
+        val period = this[SubjectLinksArgs.PERIOD_KEY] as? String ?: return null
+        return SubjectLinksArgs(id, name, period)
+    }
+
     /** A string or a number (on iOS an `NSNumber`, whose string form is its value); null for anything else. */
     private fun Map<*, *>.number(key: String): Long? = when (val value = this[key]) {
         null, is Boolean -> null
@@ -155,12 +172,31 @@ object NotificationTapRoutes {
         AppEntryIntents.ACTION_OPEN_CONNECTION,
         AppEntryIntents.ACTION_OPEN_DORMITORY,
         AppEntryIntents.ACTION_OPEN_TUITION,
+        AppEntryIntents.ACTION_OPEN_SUBJECT_LINKS,
     )
 
     private fun profileRoute(isu: Int) = EntryRoute(AppTab.ME, overlay = AppRoutes.UserProfile(isu))
 
     private fun sportRoute(lessonId: Long?) =
         EntryRoute(AppTab.SPORT, request = lessonId?.let { TabRequest.SportLesson(it) })
+
+    /** A link's subject links over the recordbook, a review's teacher profile; null for a malformed notice. */
+    private fun JsonObject.moderationRoute(): EntryRoute? = runCatching {
+        val link = get("link") as? JsonObject
+        val review = get("review") as? JsonObject
+        when {
+            link != null -> {
+                val args = SubjectLinksArgs(
+                    link["subjectId"]?.jsonPrimitive?.longOrNull ?: return@runCatching null,
+                    link["subjectName"]?.jsonPrimitive?.contentOrNull ?: return@runCatching null,
+                    link["periodKey"]?.jsonPrimitive?.contentOrNull ?: return@runCatching null,
+                ).validOrNull() ?: return@runCatching null
+                EntryRoute(AppTab.RECORDBOOK, overlay = AppRoutes.SubjectLinks(args))
+            }
+            review != null -> review["teacherIsu"]?.jsonPrimitive?.intOrNull?.takeIf { it > 0 }?.let(::profileRoute)
+            else -> null
+        }
+    }.getOrNull()
 
     private fun JsonObject.actorIsu(): Int? =
         runCatching { get("user")?.jsonObject?.get("isu")?.jsonPrimitive?.intOrNull }.getOrNull()?.takeIf { it > 0 }

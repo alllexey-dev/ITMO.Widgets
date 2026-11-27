@@ -65,7 +65,7 @@ internal object SettingsPreviewData {
     /** The build the presentation tests' fixture reports. */
     private val BUILD = AppBuild("2.1-test", "20100", AppBuild.CUSTOM, "AlexPer777/ITMO.Widgets", "a1b2c3d4e5f6")
 
-    /** Services on and notifications allowed with the defaults: the checks and the three pushes, every one on. */
+    /** Services on and notifications allowed with the defaults: the checks and the four pushes, every one on. */
     val Root = state(
         SettingsPage.ROOT,
         SettingSection(
@@ -86,7 +86,7 @@ internal object SettingsPreviewData {
             items = listOf(
                 navigation(
                     SettingsPage.NOTIFICATIONS,
-                    value = UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(6, 6)),
+                    value = UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(7, 7)),
                     icon = AppIcon.NOTIFICATION
                 ),
                 navigation(SettingsPage.WIDGETS, icon = AppIcon.WIDGETS),

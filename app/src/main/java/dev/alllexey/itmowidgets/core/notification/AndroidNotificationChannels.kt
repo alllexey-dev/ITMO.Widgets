@@ -18,6 +18,8 @@ fun AppNotificationChannels.create(context: Context) {
         NotificationChannel(CONNECTIONS, localized.getString(R.string.notification_channel_connections),
             NotificationManager.IMPORTANCE_DEFAULT),
         NotificationChannel(DORMITORY_PAYMENTS, localized.getString(R.string.notification_channel_dormitory_payments),
+            NotificationManager.IMPORTANCE_DEFAULT),
+        NotificationChannel(MODERATION, localized.getString(R.string.notification_channel_moderation),
             NotificationManager.IMPORTANCE_DEFAULT)
     ))
     manager.deleteNotificationChannel("fcm_default_channel")

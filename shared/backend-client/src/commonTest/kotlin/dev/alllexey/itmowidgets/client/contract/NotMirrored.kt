@@ -35,8 +35,14 @@ object NotMirrored {
             method = null,
             path = "/api/moderation/**",
             reason = "no Kotlin consumer; moderators work in Web, which uses /api/admin",
+            // http/moderation/moderationNotices.json is the author's own route, mirrored in `moderation`.
             fixtures = listOf(
-                "http/moderation/",
+                "http/moderation/decide.json",
+                "http/moderation/moderationCases.json",
+                "http/moderation/moderationSettings.json",
+                "http/moderation/revokeRestriction.json",
+                "http/moderation/updateModerationSettings.json",
+                "http/moderation/userRestrictions.json",
                 "requests/ModerationDecisionRequest.json",
                 "requests/ModerationSettings.json",
             ),
@@ -64,6 +70,12 @@ object NotMirrored {
             path = "/api/app/version",
             reason = "the latest Android version as a bare string, kept for 2.0.x; the apps read /api/app/version-info",
             fixtures = listOf("http/app/latestAppVersion.json"),
+        ),
+        NotMirroredRoute(
+            method = HttpMethod.Get,
+            path = "/api/schedule/friends",
+            reason = "friends' day for the web cabinet; the apps read each friend's schedule",
+            fixtures = listOf("http/schedule/friendsOnDay.json"),
         ),
         NotMirroredRoute(
             method = HttpMethod.Get,

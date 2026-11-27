@@ -39,7 +39,8 @@ push decoder needs no client instance.
 | `app` | `app`, `AppApi` | `GET /api/app/version-info` with the optional `platform` query | `B/docs/contracts/app-version.md` |
 | `schedule` | `schedule`, `ScheduleApi` | `POST /api/schedule/lessons/sync`, `GET /api/schedule/lessons/user/{isu}`, `GET /api/schedule/lessons/{pairId}/friends` | `B/docs/contracts/schedule.md`, `B/docs/contracts/privacy.md` |
 | `connections` | `connections`, `ConnectionsApi` | `POST /api/users/me/pair/{code}/open`, `POST /api/users/me/pair/{challengeId}/approve`, `GET /api/users/me/devices`, `PUT /api/users/me/connections/{id}/scopes`, `POST /api/users/me/connections/{id}/revoke` and `itmo-ended`, `POST /api/users/me/installs/{instanceId}/sign-out` | `B/docs/contracts/connections.md` |
-| none | `push`, `FcmDecoder` | FCM data messages `FRIENDSHIP_EVENT_PAYLOAD`, `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD`, `DEVICE_CONNECTED_PAYLOAD`, `SPORT_AGENT_BOOKED_PAYLOAD` | `B/docs/contracts/notifications.md`, `B/docs/contracts/connections.md` |
+| `moderationNotices` | `moderation`, `ModerationNoticesApi` | `GET /api/users/me/moderation-notices` | `B/docs/contracts/notifications.md` |
+| none | `push`, `FcmDecoder` | FCM data messages `FRIENDSHIP_EVENT_PAYLOAD`, `SPORT_FREE_SIGN_LESSONS_PAYLOAD`, `SPORT_AUTO_SIGN_LESSONS_PAYLOAD`, `DEVICE_CONNECTED_PAYLOAD`, `SPORT_AGENT_BOOKED_PAYLOAD`, `MODERATION_NOTICE_PAYLOAD` | `B/docs/contracts/notifications.md`, `B/docs/contracts/connections.md` |
 
 Wire types that two areas share (`UserProfile`, `UserData`, the vote and report requests) live in `common`; the
 transport (`http`), the `Json` and its serializers (`json`) and `BackendException` (`error`) are shared by every
