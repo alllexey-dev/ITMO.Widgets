@@ -5,7 +5,7 @@ import okio.Buffer
 
 /**
  * The byte strings both ends of a pairing derive from the link's public key `pk` and secret `s`. Backend sees only
- * [keyCommitment]; it can compute neither the HPKE [info] nor the [verificationCode].
+ * [keyCommitment]; it cannot compute the HPKE [info].
  */
 object PairingCrypto {
 
@@ -24,14 +24,6 @@ object PairingCrypto {
         .writeUtf8(kind.name).writeByte(0)
         .write(secret)
         .readByteArray()
-
-    /** Six digits: the first 20 bits of `SHA-256("iw-pair-sas-v1" || challengeId || pk || s)` modulo 10^6. */
-    fun verificationCode(challengeId: Uuid, publicKey: ByteArray, secret: ByteArray): String {
-        val hash = sha256("iw-pair-sas-v1".encodeToByteArray(), challengeId.toByteArray(), publicKey, secret)
-        val bits = (hash[0].toInt() and 0xff shl 12) or (hash[1].toInt() and 0xff shl 4) or
-            (hash[2].toInt() and 0xff shr 4)
-        return (bits % 1_000_000).toString().padStart(6, '0')
-    }
 
     private fun sha256(vararg parts: ByteArray): ByteArray =
         Buffer().apply { parts.forEach(::write) }.sha256().toByteArray()

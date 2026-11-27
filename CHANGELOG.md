@@ -6,6 +6,11 @@ publication or deployment.
 
 ## Unreleased
 
+- Connections: pairing no longer asks to compare a six-digit code. A new connection's card says instead to approve
+  only a QR or link opened on the user's own device (`pair_caution_title`, `pair_caution_text`); renewals have no
+  caution, as only the owner's live connection can be renewed. The code checked only a QR other than the one on a
+  genuine screen and never stopped phishing; the key commitment, the screen lock and the push after a new connection
+  stay. `PairingCrypto.verificationCode`, `Confirm.code` and `SigningIn.code` are gone; the wire is unchanged.
 - iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
   reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
   content reports, around the countdown, the progress and the widgets' `GeometryReader`s.

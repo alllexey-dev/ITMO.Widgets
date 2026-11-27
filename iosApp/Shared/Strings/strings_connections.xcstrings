@@ -1177,6 +1177,30 @@
         }
       }
     },
+    "pair_caution_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключайте, только если сами открыли этот QR-код или ссылку на своём устройстве. Если их прислал кто-то другой, нажмите «Отмена»."
+          }
+        }
+      }
+    },
+    "pair_caution_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот QR-код на вашем экране?"
+          }
+        }
+      }
+    },
     "pair_client_unavailable" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -1197,30 +1221,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Закрыть"
-          }
-        }
-      }
-    },
-    "pair_code_hint" : {
-      "comment" : "Generated from strings_connections.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Подключайте, только если код совпадает"
-          }
-        }
-      }
-    },
-    "pair_code_title" : {
-      "comment" : "Generated from strings_connections.xml",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Код на экране устройства"
           }
         }
       }
