@@ -15,6 +15,9 @@
 # - xcodegen generates iosApp/ITMOWidgets.xcodeproj (ignored); xcodebuild runs build-for-testing, then
 #   test-without-building, with DerivedData in iosApp/build/DerivedData and the result bundle in
 #   iosApp/build/test-results/. The app target's Run Script builds the Kotlin framework with Gradle.
+# - Every build here is a `custom` one (ITMO_BUILD_CHANNEL=custom on the xcodebuild line), whatever the owner's
+#   Signing.local.xcconfig sets: the about page's version row reads the build identity, and its snapshot must look
+#   the same in a worktree, in CI and in the owner's checkout.
 # - One simulator per worktree, `itmo-<worktree directory>` (`itmo-ci` with --ci), created from the pinned device
 #   type and runtime on first use; --cleanup (and the end of a --ci run) deletes it. No other simulator is touched.
 # - The default run and --only skip the UITests target; `ui` runs only it (XCUITest launches the app, so it is slower).
@@ -228,6 +231,7 @@ run_xcode() { # label
     -configuration Debug
     -destination "platform=iOS Simulator,id=$udid"
     -derivedDataPath iosApp/build/DerivedData
+    ITMO_BUILD_CHANNEL=custom
   )
   note "xcodebuild build-for-testing for $sim_name"
   xcodebuild "${xcode_args[@]}" build-for-testing || return 1
