@@ -30,6 +30,7 @@ class PushCategoryPreferences(dataStore: DataStore<Preferences>) : DataStorePref
             AppNotificationChannels.SPORT to booleanPreferencesKey("sport_notifications_enabled"),
             AppNotificationChannels.FRIENDS to booleanPreferencesKey("friends_notifications_enabled"),
             AppNotificationChannels.CONNECTIONS to booleanPreferencesKey("connections_notifications_enabled"),
+            AppNotificationChannels.MODERATION to booleanPreferencesKey("moderation_notifications_enabled"),
         )
     }
 }

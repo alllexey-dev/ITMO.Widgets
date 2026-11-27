@@ -1,0 +1,105 @@
+{
+  "success": true,
+  "data": {
+    "from": "2026-10-04",
+    "to": "2026-10-05",
+    "days": [
+      {
+        "date": "2026-10-04",
+        "autoSign": {
+          "created": 12,
+          "satisfied": 7
+        },
+        "freeSign": {
+          "created": 5,
+          "satisfied": 2
+        },
+        "signUps": 11
+      },
+      {
+        "date": "2026-10-05",
+        "autoSign": {
+          "created": 0,
+          "satisfied": 0
+        },
+        "freeSign": {
+          "created": 3,
+          "satisfied": 0
+        },
+        "signUps": 4
+      }
+    ],
+    "autoSign": {
+      "created": 12,
+      "outcomes": {
+        "WAITING": 1,
+        "NOTIFIED": 1,
+        "SATISFIED": 7,
+        "EXPIRED": 1,
+        "GAVE_UP_NOTIFYING": 1,
+        "CANCELLED": 1
+      },
+      "timed": 6,
+      "medianSeconds": 42,
+      "p90Seconds": 310
+    },
+    "freeSign": {
+      "created": 8,
+      "outcomes": {
+        "WAITING": 3,
+        "NOTIFIED": 1,
+        "SATISFIED": 1,
+        "EXPIRED": 1,
+        "GAVE_UP_NOTIFYING": 1,
+        "CANCELLED": 1
+      },
+      "timed": 0,
+      "medianSeconds": null,
+      "p90Seconds": null
+    },
+    "subscriptions": {
+      "active": 25,
+      "stopped": {
+        "USER": 4,
+        "EXPIRED": 9
+      },
+      "created": 6,
+      "occurrences": {
+        "QUEUED": 18,
+        "LIMIT": 2,
+        "SKIPPED": 1
+      }
+    },
+    "sections": [
+      {
+        "sectionName": "Плавание",
+        "autoSignEntries": 9,
+        "freeSignEntries": 6,
+        "satisfied": 8,
+        "medianWaitSeconds": 5400
+      },
+      {
+        "sectionName": "Настольный теннис",
+        "autoSignEntries": 3,
+        "freeSignEntries": 2,
+        "satisfied": 0,
+        "medianWaitSeconds": null
+      }
+    ],
+    "slots": [
+      {
+        "weekday": 1,
+        "timeStart": "08:20",
+        "entries": 7,
+        "satisfied": 5
+      },
+      {
+        "weekday": 7,
+        "timeStart": "18:30",
+        "entries": 5,
+        "satisfied": 2
+      }
+    ]
+  },
+  "error": null
+}

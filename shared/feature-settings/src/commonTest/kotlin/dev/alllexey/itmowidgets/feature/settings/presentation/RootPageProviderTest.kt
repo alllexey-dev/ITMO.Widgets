@@ -112,7 +112,7 @@ class RootPageProviderTest {
                 disabledPushes = setOf(AppNotificationChannels.FRIENDS),
             )
             advanceUntilIdle()
-            assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(5, 6)), row().value)
+            assertEquals(UiText.Res(SettingsStrings.notifications_subtitle_count, listOf(6, 7)), row().value)
         }
 
     @Test

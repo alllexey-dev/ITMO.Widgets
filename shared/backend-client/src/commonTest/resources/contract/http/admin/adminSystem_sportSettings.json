@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "data": {
+    "autoSignLimit": 10,
+    "overridden": false,
+    "updatedAt": null
+  },
+  "error": null
+}

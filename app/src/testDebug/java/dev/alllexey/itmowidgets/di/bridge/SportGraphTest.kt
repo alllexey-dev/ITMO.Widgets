@@ -78,7 +78,7 @@ class SportGraphTest {
         assertEquals(1, handlers.count { it is FriendshipPushHandler })
         assertEquals(1, handlers.count { it is SportAgentBookedPushHandler })
         assertEquals(1, handlers.count { it is DeviceConnectedPushHandler })
-        assertEquals(5, handlers.map { it.type }.toSet().size)
+        assertEquals(6, handlers.map { it.type }.toSet().size)
         assertTrue(koin.get<SportLessonTemplateProvider>() is DefaultSportLessonTemplateProvider)
     }
 

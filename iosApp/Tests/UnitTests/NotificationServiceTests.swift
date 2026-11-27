@@ -233,8 +233,8 @@ final class NotificationServiceTests: XCTestCase {
     /// leaves its result for the bell.
     func testATypeTurnedOffInTheAppIsDroppedButSportStillBooks() async throws {
         var session = Self.signedIn
-        session.disabledPushes = ["sport", "friends", "connections"]
-        for name in ["FRIENDSHIP_EVENT_PAYLOAD", "DEVICE_CONNECTED_PAYLOAD", "SPORT_AGENT_BOOKED_PAYLOAD"] {
+        session.disabledPushes = ["sport", "friends", "connections", "moderation"]
+        for name in ["FRIENDSHIP_EVENT_PAYLOAD", "DEVICE_CONNECTED_PAYLOAD", "SPORT_AGENT_BOOKED_PAYLOAD", "MODERATION_NOTICE_PAYLOAD"] {
             let shown = await handler(session: session, honorsDisabledPushes: true).handle(try push(name))
             XCTAssertTrue(shown.title.isEmpty && shown.body.isEmpty, name)
         }
@@ -247,6 +247,14 @@ final class NotificationServiceTests: XCTestCase {
 
         XCTAssertTrue(shown.title.isEmpty && shown.body.isEmpty)
         XCTAssertEqual(recorded.map(\.booked), [true])
+    }
+
+    /// A moderation notice is shown as Backend wrote it (`notification_moderation_*`); the switch `Модерация` gates it.
+    func testAModerationNoticeIsShownAsBackendWroteIt() async throws {
+        let notice = try push("MODERATION_NOTICE_PAYLOAD")
+        let shown = await handler().handle(notice)
+        XCTAssertTrue(shown === notice)
+        XCTAssertEqual(PushMessage(userInfo: notice.userInfo)?.channel, "moderation")
     }
 
     /// Without the filtering entitlement the switches are hidden, so a type stored as off is shown as any other.

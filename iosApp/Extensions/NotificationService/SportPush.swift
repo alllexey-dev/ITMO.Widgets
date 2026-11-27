@@ -10,12 +10,14 @@ struct PushMessage {
     static let friendship = "FRIENDSHIP_EVENT_PAYLOAD"
     static let agentBooked = "SPORT_AGENT_BOOKED_PAYLOAD"
     static let deviceConnected = "DEVICE_CONNECTED_PAYLOAD"
+    static let moderationNotice = "MODERATION_NOTICE_PAYLOAD"
 
     /// The category of the push, Android's channel id (`AppNotificationChannels`); the user's switch is stored by it.
     var channel: String? {
         switch type {
         case Self.friendship: "friends"
         case Self.deviceConnected: "connections"
+        case Self.moderationNotice: "moderation"
         case Self.agentBooked: "sport"
         default: SportQueue(pushType: type) == nil ? nil : "sport"
         }

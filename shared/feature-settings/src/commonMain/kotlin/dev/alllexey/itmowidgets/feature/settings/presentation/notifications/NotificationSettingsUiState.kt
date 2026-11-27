@@ -76,6 +76,7 @@ enum class PushKind(val channel: String) {
     SPORT(AppNotificationChannels.SPORT),
     FRIENDS(AppNotificationChannels.FRIENDS),
     DEVICES(AppNotificationChannels.CONNECTIONS),
+    MODERATION(AppNotificationChannels.MODERATION),
 }
 
 /** One push type and the app's switch of it. */

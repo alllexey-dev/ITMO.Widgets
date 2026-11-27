@@ -62,6 +62,8 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_menu_book
 import dev.alllexey.itmowidgets.shared.designsystem.ic_settings
 import dev.alllexey.itmowidgets.shared.designsystem.ic_key
 import dev.alllexey.itmowidgets.shared.designsystem.ic_payments
+import dev.alllexey.itmowidgets.shared.designsystem.ic_link
+import dev.alllexey.itmowidgets.shared.designsystem.ic_edit_note
 import dev.alllexey.itmowidgets.shared.designsystem.ic_sprint
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -254,6 +256,9 @@ private fun Lead(item: BellItem) {
         BellKind.CONNECTION -> IconTile(painterResource(KitRes.drawable.ic_key), if (item.failed) Tone.Error else Tone.Warning)
         BellKind.DORMITORY -> IconTile(painterResource(KitRes.drawable.ic_apartment), Tone.Primary)
         BellKind.PAYMENT -> IconTile(painterResource(KitRes.drawable.ic_payments), Tone.Success)
+        BellKind.LINK_MODERATION -> IconTile(painterResource(KitRes.drawable.ic_link), if (item.failed) Tone.Error else Tone.Success)
+        BellKind.REVIEW_MODERATION ->
+            IconTile(painterResource(KitRes.drawable.ic_edit_note), if (item.failed) Tone.Error else Tone.Success)
     }
 }
 

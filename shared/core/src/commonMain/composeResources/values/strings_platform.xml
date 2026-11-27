@@ -70,6 +70,7 @@
     <string name="notification_channel_schedule_changes">Изменения расписания</string>
     <string name="notification_channel_marks">Оценки</string>
     <string name="notification_channel_connections">Подключения устройств</string>
+    <string name="notification_channel_moderation">Модерация ссылок и отзывов</string>
     <string name="notification_channel_dormitory_payments">Общежитие и оплата</string>
     <string name="marks_new_title">Новые оценки</string>
     <string name="marks_subjects_more">%1$s и ещё\u00A0%2$d</string>
@@ -97,6 +98,21 @@
     <string name="notification_device_connected_agent">Устройство «%1$s» — если это не вы, отключите его</string>
     <string name="notification_device_connected_web">Вход на сайт ITMO.Widgets — если это не вы, отключите его</string>
     <string name="notification_device_connected_other">Новое устройство — если это не вы, отключите его</string>
+    <!-- A moderation decision on the user's link or review; Backend sends these keys as an iOS alert -->
+    <string name="notification_moderation_link_approved">Ссылка опубликована</string>
+    <string name="notification_moderation_link_rejected">Ссылка отклонена</string>
+    <string name="notification_moderation_link_hidden">Ссылка скрыта модератором</string>
+    <string name="notification_moderation_link_restored">Ссылка снова видна</string>
+    <string name="notification_moderation_review_approved">Отзыв опубликован</string>
+    <string name="notification_moderation_review_rejected">Отзыв отклонён</string>
+    <string name="notification_moderation_review_hidden">Отзыв скрыт модератором</string>
+    <string name="notification_moderation_review_restored">Отзыв снова виден</string>
+    <string name="notification_moderation_link_body">«%1$s» · %2$s</string>
+    <string name="notification_moderation_link_body_note">«%1$s» · %2$s. Причина: %3$s</string>
+    <string name="notification_moderation_review_body">%1$s</string>
+    <string name="notification_moderation_review_body_note">%1$s. Причина: %2$s</string>
+    <string name="notification_moderation_review_unnamed">Ваш отзыв о преподавателе</string>
+    <string name="notification_moderation_review_note">Причина: %1$s</string>
     <!-- Widgets of the UX overhaul (W1 next lesson, W2 day, W3 sport), shared by Android and iOS -->
     <string name="widget_next_now">Сейчас, до %1$s</string>
     <string name="widget_next_first">Первая пара в %1$s</string>

@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.client.push
 
 import dev.alllexey.itmowidgets.client.contract.VendoredContract
 import dev.alllexey.itmowidgets.client.json.BackendJson
+import dev.alllexey.itmowidgets.client.moderation.ModerationNotice
 import dev.alllexey.itmowidgets.client.support.assertJsonEquals
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonElement
@@ -36,6 +37,7 @@ class FcmVendoredFixturesTest {
             SportAgentBookedPayload.serializer(),
             FcmDecoder::sportAgentBooked,
         ),
+        FcmClaim("fcm/MODERATION_NOTICE_PAYLOAD.json", ModerationNotice.serializer(), FcmDecoder::moderationNotice),
     )
 
     @Test

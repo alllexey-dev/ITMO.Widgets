@@ -66,6 +66,7 @@ import dev.alllexey.itmowidgets.core.navigation.RouteQueue
 import dev.alllexey.itmowidgets.core.navigation.ShellBackStack
 import dev.alllexey.itmowidgets.core.navigation.ShellGate
 import dev.alllexey.itmowidgets.core.navigation.ShellSurface
+import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
 import dev.alllexey.itmowidgets.core.navigation.UserScreenArgs
 import dev.alllexey.itmowidgets.core.navigation.appRouteSerializersModule
 import dev.alllexey.itmowidgets.core.navigation.from
@@ -211,9 +212,17 @@ class ShellHost(
             sportLesson = intent.getLongExtra(AppEntryIntents.EXTRA_SPORT_LESSON, 0L),
             sportPredicted = intent.getBooleanExtra(AppEntryIntents.EXTRA_SPORT_PREDICTED, false),
             connection = intent.getStringExtra(AppEntryIntents.EXTRA_CONNECTION),
+            links = subjectLinksArgs(intent),
         ) ?: return
         routes.offer(route)
         routeOffers++
+    }
+
+    /** The subject period of [AppEntryIntents.ACTION_OPEN_SUBJECT_LINKS]; the parser drops one that names none. */
+    private fun subjectLinksArgs(intent: Intent): SubjectLinksArgs? {
+        val name = intent.getStringExtra(SubjectLinksArgs.SUBJECT_NAME) ?: return null
+        val period = intent.getStringExtra(SubjectLinksArgs.PERIOD_KEY) ?: return null
+        return SubjectLinksArgs(intent.getLongExtra(SubjectLinksArgs.SUBJECT_ID, 0L), name, period)
     }
 
     private fun saveState(): Bundle = Bundle().apply {

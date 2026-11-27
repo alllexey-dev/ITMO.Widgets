@@ -123,6 +123,7 @@
         "firstSeenAt": "2026-09-01T09:00:00Z",
         "lastSeenAt": "2026-10-05T09:00:00Z",
         "pushEnabled": true,
+        "signedOutAt": null,
         "sid": "8d1f0c2e-1b6a-4c55-9a43-0f2d7e6b1a03",
         "current": true
       },
@@ -135,6 +136,7 @@
         "firstSeenAt": "2026-09-10T09:00:00Z",
         "lastSeenAt": "2026-10-03T21:40:00Z",
         "pushEnabled": false,
+        "signedOutAt": "2026-10-04T12:00:00Z",
         "sid": null,
         "current": false
       }

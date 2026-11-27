@@ -9,6 +9,7 @@ import dev.alllexey.itmowidgets.feature.auth.di.accountIosModule
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
+import dev.alllexey.itmowidgets.feature.me.di.moderationNoticesModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsIosModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
 import dev.alllexey.itmowidgets.feature.dormitory.di.dormitoryModule
@@ -77,6 +78,8 @@ object IosKoinModules {
         // «Устройства» and pairing with its CryptoKit and LocalAuthentication ports, and the update offer on its iOS
         // ports.
         connectionsDataModule, connectionsModule, connectionsIosModule(platform), updateModule, updateIosModule,
+        // The author's moderation notices from Backend for the bell.
+        moderationNoticesModule,
         // Сегодня and the bell over every feature's sources.
         homeModule,
         // The notifier with the bundle's string tables as the text resolver, the app refresh task and the schedule

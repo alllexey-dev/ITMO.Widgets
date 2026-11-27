@@ -1,0 +1,2 @@
+# The author's moderation notices ModerationNoticesVendoredFixturesTest checks; the moderators' routes are NotMirrored.
+http/moderation/moderationNotices.json

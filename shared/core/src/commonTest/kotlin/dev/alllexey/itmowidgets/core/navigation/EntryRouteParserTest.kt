@@ -211,4 +211,16 @@ class EntryRouteParserTest {
             AppEntryIntents.ACTION_OPEN_CONNECTION
         )
     }
+
+    @Test
+    fun subjectLinksOpenOverTheRecordbookOnlyForASubjectPeriod() {
+        val links = SubjectLinksArgs(501, "Synthetic subject", "2026-2")
+        assertEquals(
+            EntryRoute(AppTab.RECORDBOOK, overlay = AppRoutes.SubjectLinks(links)),
+            EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_SUBJECT_LINKS, links = links),
+        )
+        for (broken in listOf(links.copy(subjectId = 0), links.copy(subjectName = " "), links.copy(periodKey = "2026/2027"), null)) {
+            assertEquals(EntryRoute(AppTab.RECORDBOOK), EntryRouteParser.parse(AppEntryIntents.ACTION_OPEN_SUBJECT_LINKS, links = broken))
+        }
+    }
 }

@@ -210,7 +210,9 @@
           "note": "Синтетическое решение 1",
           "restriction": null,
           "createdAt": "2026-10-02T11:00:00Z",
-          "actor": "MODERATOR"
+          "actor": "MODERATOR",
+          "revertedAt": "2026-10-02T11:05:00Z",
+          "revertibleUntil": null
         },
         {
           "id": "00000000-0000-4000-8000-000000000312",
@@ -222,7 +224,9 @@
             "days": 30
           },
           "createdAt": "2026-10-03T12:00:00Z",
-          "actor": "MODERATOR"
+          "actor": "MODERATOR",
+          "revertedAt": null,
+          "revertibleUntil": null
         },
         {
           "id": "00000000-0000-4000-8000-000000000313",
@@ -231,7 +235,9 @@
           "note": "Синтетическое решение 3",
           "restriction": null,
           "createdAt": "2026-10-04T13:00:00Z",
-          "actor": "MODERATOR"
+          "actor": "MODERATOR",
+          "revertedAt": null,
+          "revertibleUntil": null
         }
       ]
     },
@@ -250,7 +256,9 @@
           "note": null,
           "restriction": null,
           "createdAt": "2026-10-01T14:00:00Z",
-          "actor": "POLICY"
+          "actor": "POLICY",
+          "revertedAt": null,
+          "revertibleUntil": null
         }
       ]
     },
@@ -421,7 +429,9 @@
           "note": "Синтетическое решение 5",
           "restriction": null,
           "createdAt": "2026-10-02T15:00:00Z",
-          "actor": "MODERATOR"
+          "actor": "MODERATOR",
+          "revertedAt": null,
+          "revertibleUntil": "2026-10-02T15:10:00Z"
         }
       ]
     },

@@ -19,6 +19,12 @@ enum class BellKind {
 
     /** A Платёж became paid. */
     PAYMENT,
+
+    /** A moderation decision on the user's link. */
+    LINK_MODERATION,
+
+    /** A moderation decision on the user's teacher review. */
+    REVIEW_MODERATION,
 }
 
 /**

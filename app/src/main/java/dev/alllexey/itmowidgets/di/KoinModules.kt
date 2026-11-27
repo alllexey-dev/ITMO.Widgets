@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.di
 import dev.alllexey.itmowidgets.feature.auth.di.authDataModule
 import dev.alllexey.itmowidgets.feature.auth.di.authModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsDataModule
+import dev.alllexey.itmowidgets.feature.me.di.moderationNoticesModule
 import dev.alllexey.itmowidgets.feature.connections.di.connectionsModule
 import dev.alllexey.itmowidgets.feature.dormitory.di.dormitoryModule
 import dev.alllexey.itmowidgets.feature.finances.di.financesModule
@@ -79,6 +80,7 @@ object KoinModules {
         reviewsModule,
         connectionsDataModule,
         connectionsModule,
+        moderationNoticesModule,
         updateModule,
     )
 }

@@ -1,0 +1,103 @@
+{
+  "success": true,
+  "data": {
+    "from": "2026-10-04",
+    "to": "2026-10-05",
+    "users": 1520,
+    "usersWithFriends": 610,
+    "socialUsers": 230,
+    "features": [
+      {
+        "feature": "FRIENDS",
+        "events": 41,
+        "users": 70
+      },
+      {
+        "feature": "SCHEDULE",
+        "events": null,
+        "users": 1105
+      },
+      {
+        "feature": "SPORT_AUTO_SIGN",
+        "events": 12,
+        "users": 9
+      }
+    ],
+    "days": [
+      {
+        "date": "2026-10-04",
+        "friendRequests": 25,
+        "friendAccepts": 18,
+        "connectionsCreated": {
+          "agent": 1,
+          "mcp": 0,
+          "web": 6
+        },
+        "connectionsRevoked": {
+          "agent": 0,
+          "mcp": 1,
+          "web": 2
+        }
+      },
+      {
+        "date": "2026-10-05",
+        "friendRequests": 16,
+        "friendAccepts": 11,
+        "connectionsCreated": {
+          "agent": 0,
+          "mcp": 0,
+          "web": 0
+        },
+        "connectionsRevoked": {
+          "agent": 0,
+          "mcp": 0,
+          "web": 0
+        }
+      }
+    ],
+    "privacy": {
+      "schedule": {
+        "ALL": 120,
+        "FRIENDS": 1350,
+        "NOBODY": 50
+      },
+      "sport": {
+        "ALL": 80,
+        "FRIENDS": 1400,
+        "NOBODY": 40
+      },
+      "friends": {
+        "ALL": 1300,
+        "FRIENDS": 180,
+        "NOBODY": 40
+      }
+    },
+    "pairing": [
+      {
+        "client": "agent",
+        "created": 4,
+        "opened": 3,
+        "approved": 3,
+        "claimed": 2,
+        "expired": 1
+      },
+      {
+        "client": "mcp",
+        "created": 0,
+        "opened": 0,
+        "approved": 0,
+        "claimed": 0,
+        "expired": 0
+      },
+      {
+        "client": "web",
+        "created": 31,
+        "opened": 29,
+        "approved": 27,
+        "claimed": 27,
+        "expired": 2
+      }
+    ]
+  },
+  "error": null
+}

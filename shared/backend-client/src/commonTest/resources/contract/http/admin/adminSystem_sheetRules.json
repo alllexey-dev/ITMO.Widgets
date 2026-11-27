@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "data": {
+    "enabled": true,
+    "running": true,
+    "runningSince": "2026-10-05T08:58:00Z",
+    "statuses": {
+      "PENDING": 2,
+      "RUNNING": 1,
+      "READY": 14,
+      "INSUFFICIENT": 3,
+      "FAILED": 4
+    },
+    "attempts": 9,
+    "lastAnalyzedAt": "2026-10-05T08:40:00Z",
+    "errors": [
+      {
+        "error": "closed",
+        "sheets": 3
+      },
+      {
+        "error": "timeout",
+        "sheets": 1
+      }
+    ],
+    "budgetDay": "2026-10-05",
+    "budgetUsed": 6,
+    "dailyBudget": 20
+  },
+  "error": null
+}

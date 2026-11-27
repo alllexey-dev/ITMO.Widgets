@@ -68,6 +68,72 @@
         "parameters": [
           {
             "in": "query",
+            "name": "actorIsu",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ROLE_GRANTED",
+                "ROLE_REVOKED",
+                "MODERATION_SETTINGS_CHANGED",
+                "APP_VERSION_CHANGED",
+                "SPORT_SETTINGS_CHANGED",
+                "REVIEWS_SYNC_STARTED",
+                "SERVICE_CREDENTIAL_REPLACED",
+                "AI_SUMMARIES_RUN_STARTED",
+                "AI_SUMMARY_HIDDEN",
+                "AI_SUMMARY_SHOWN",
+                "AI_SUMMARY_REGENERATION_REQUESTED",
+                "AGENT_ACCESS_GRANTED",
+                "AGENT_ACCESS_REVOKED"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "targetType",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "target",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
             "name": "page",
             "required": false,
             "schema": {
@@ -265,6 +331,46 @@
         ]
       }
     },
+    "/api/admin/moderation/cases/{id}/decisions/{decisionId}/revert": {
+      "post": {
+        "operationId": "adminModeration_revert",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "decisionId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseModerationCase"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/moderation/restrictions": {
       "get": {
         "operationId": "adminModeration_restrictions",
@@ -276,6 +382,14 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -630,6 +744,206 @@
         ]
       }
     },
+    "/api/admin/stats/audience": {
+      "get": {
+        "operationId": "adminStats_audience",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminAudienceStats"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/stats/features": {
+      "get": {
+        "operationId": "adminStats_features",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminFeatureStats"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/stats/moderation": {
+      "get": {
+        "operationId": "adminStats_moderation",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminModerationStats"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/stats/server": {
+      "get": {
+        "operationId": "adminStats_server",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminServerStats"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/stats/sport": {
+      "get": {
+        "operationId": "adminStats_sport",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminSportStats"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/system/app-version": {
       "get": {
         "operationId": "adminSystem_appVersion",
@@ -815,6 +1129,26 @@
         ]
       }
     },
+    "/api/admin/system/sheet-rules": {
+      "get": {
+        "operationId": "adminSystem_sheetRules",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminSheetRules"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/system/sport": {
       "get": {
         "operationId": "adminSystem_sport",
@@ -824,6 +1158,54 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseAdminSportStatus"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/system/sport/settings": {
+      "get": {
+        "operationId": "adminSystem_sportSettings",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminSportSettings"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "put": {
+        "operationId": "adminSystem_updateSportSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSportSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseAdminSportSettings"
                 }
               }
             },
@@ -845,6 +1227,26 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "MODERATOR",
+                "ADMIN"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "restricted",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           },
           {
@@ -2063,6 +2465,37 @@
         },
         "tags": [
           "reviews"
+        ]
+      }
+    },
+    "/api/schedule/friends": {
+      "get": {
+        "operationId": "schedule_friendsOnDay",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListFriendDay"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "schedule"
         ]
       }
     },
@@ -3364,6 +3797,26 @@
         ]
       }
     },
+    "/api/users/me/moderation-notices": {
+      "get": {
+        "operationId": "moderationNotice_notices",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListModerationNotice"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "moderation"
+        ]
+      }
+    },
     "/api/users/me/pair/{challengeId}/approve": {
       "post": {
         "operationId": "pairing_approve",
@@ -3588,6 +4041,28 @@
   },
   "components": {
     "schemas": {
+      "AdminActivePeople": {
+        "type": "object",
+        "properties": {
+          "active1d": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active30d": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active7d": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "active1d",
+          "active30d",
+          "active7d"
+        ]
+      },
       "AdminAgentAccess": {
         "type": "object",
         "properties": {
@@ -3789,6 +4264,91 @@
           "note"
         ]
       },
+      "AdminAudienceDay": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "newUsers": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "date",
+          "newUsers"
+        ]
+      },
+      "AdminAudienceStats": {
+        "type": "object",
+        "properties": {
+          "activePeople": {
+            "$ref": "#/components/schemas/AdminActivePeople"
+          },
+          "courses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminCourseCount"
+            }
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAudienceDay"
+            }
+          },
+          "faculties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminFacultyCount"
+            }
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "peopleHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminPeopleDay"
+            }
+          },
+          "retention": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminRetentionCohort"
+            }
+          },
+          "retentionClassic": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminClassicCohort"
+            }
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "usersBefore": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "activePeople",
+          "courses",
+          "days",
+          "faculties",
+          "from",
+          "peopleHistory",
+          "retention",
+          "retentionClassic",
+          "to",
+          "usersBefore"
+        ]
+      },
       "AdminAuditEntry": {
         "type": "object",
         "properties": {
@@ -3818,6 +4378,12 @@
           },
           "target": {
             "type": "string"
+          },
+          "targetName": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -3827,7 +4393,8 @@
           "createdAt",
           "details",
           "id",
-          "target"
+          "target",
+          "targetName"
         ]
       },
       "AdminCaseItem": {
@@ -3860,6 +4427,16 @@
           "openedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "outcome": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminCaseOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reason": {
             "type": "string",
@@ -3914,6 +4491,13 @@
               "SUBJECT_RESOURCE",
               "TEACHER_REVIEW"
             ]
+          },
+          "withdrawnByCaseId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
           }
         },
         "required": [
@@ -3921,13 +4505,150 @@
           "id",
           "link",
           "openedAt",
+          "outcome",
           "reason",
           "reportCount",
           "resolvedAt",
           "review",
           "revision",
           "status",
-          "targetType"
+          "targetType",
+          "withdrawnByCaseId"
+        ]
+      },
+      "AdminCaseOutcome": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "APPROVE",
+              "REJECT",
+              "HIDE",
+              "RESTORE",
+              "DISMISS",
+              "RESTRICT_USER",
+              "HIDE_ALL_BY_USER"
+            ]
+          },
+          "actor": {
+            "type": "string",
+            "enum": [
+              "MODERATOR",
+              "POLICY"
+            ]
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "moderatorIsu": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "moderatorName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "action",
+          "actor",
+          "decidedAt",
+          "moderatorIsu",
+          "moderatorName",
+          "note"
+        ]
+      },
+      "AdminCaseStats": {
+        "type": "object",
+        "properties": {
+          "maxSecondsToDecision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "medianSecondsToDecision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "opened": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "SUBMISSION",
+              "REPORTS",
+              "VOTES"
+            ]
+          },
+          "resolved": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "SUBJECT_RESOURCE",
+              "TEACHER_REVIEW"
+            ]
+          },
+          "withdrawn": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "maxSecondsToDecision",
+          "medianSecondsToDecision",
+          "opened",
+          "reason",
+          "resolved",
+          "targetType",
+          "withdrawn"
+        ]
+      },
+      "AdminClassicCohort": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "weekStart": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "active",
+          "size",
+          "weekStart"
         ]
       },
       "AdminClient": {
@@ -4266,6 +4987,31 @@
           "kinds"
         ]
       },
+      "AdminCourseCount": {
+        "type": "object",
+        "properties": {
+          "active30d": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "course": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "users": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "active30d",
+          "course",
+          "users"
+        ]
+      },
       "AdminDashboard": {
         "type": "object",
         "properties": {
@@ -4379,6 +5125,47 @@
           "webSessions7d"
         ]
       },
+      "AdminDecisionStats": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "APPROVE",
+              "REJECT",
+              "HIDE",
+              "RESTORE",
+              "DISMISS",
+              "RESTRICT_USER",
+              "HIDE_ALL_BY_USER"
+            ]
+          },
+          "actor": {
+            "type": "string",
+            "enum": [
+              "MODERATOR",
+              "POLICY"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "SUBJECT_RESOURCE",
+              "TEACHER_REVIEW"
+            ]
+          }
+        },
+        "required": [
+          "action",
+          "actor",
+          "count",
+          "targetType"
+        ]
+      },
       "AdminDevice": {
         "type": "object",
         "properties": {
@@ -4444,6 +5231,156 @@
           "platform"
         ]
       },
+      "AdminFacultyCount": {
+        "type": "object",
+        "properties": {
+          "active30d": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "facultyName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "facultyShortName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "users": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "active30d",
+          "facultyName",
+          "facultyShortName",
+          "users"
+        ]
+      },
+      "AdminFeatureStats": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminFeatureStatsDay"
+            }
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminFeatureUsage"
+            }
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "pairing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminPairingFunnel"
+            }
+          },
+          "privacy": {
+            "$ref": "#/components/schemas/AdminPrivacyStats"
+          },
+          "socialUsers": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "users": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "usersWithFriends": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "days",
+          "features",
+          "from",
+          "pairing",
+          "privacy",
+          "socialUsers",
+          "to",
+          "users",
+          "usersWithFriends"
+        ]
+      },
+      "AdminFeatureStatsDay": {
+        "type": "object",
+        "properties": {
+          "connectionsCreated": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "connectionsRevoked": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "friendAccepts": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "friendRequests": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "connectionsCreated",
+          "connectionsRevoked",
+          "date",
+          "friendAccepts",
+          "friendRequests"
+        ]
+      },
+      "AdminFeatureUsage": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "feature": {
+            "type": "string"
+          },
+          "users": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "events",
+          "feature",
+          "users"
+        ]
+      },
       "AdminLinkSummary": {
         "type": "object",
         "properties": {
@@ -4476,6 +5413,113 @@
           "score",
           "subjectId",
           "subjectName"
+        ]
+      },
+      "AdminModerationStats": {
+        "type": "object",
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminCaseStats"
+            }
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminModerationStatsDay"
+            }
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminDecisionStats"
+            }
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "ownReviews": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminReportStats"
+            }
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "cases",
+          "days",
+          "decisions",
+          "from",
+          "ownReviews",
+          "reports",
+          "to"
+        ]
+      },
+      "AdminModerationStatsDay": {
+        "type": "object",
+        "properties": {
+          "backlog": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "casesOpened": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "casesResolved": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "casesWithdrawn": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "externalReviewVotes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "linkVotes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "newReviews": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reports": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reviewVotes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "backlog",
+          "casesOpened",
+          "casesResolved",
+          "casesWithdrawn",
+          "date",
+          "externalReviewVotes",
+          "linkVotes",
+          "newReviews",
+          "reports",
+          "reviewVotes"
         ]
       },
       "AdminPageAdminAuditEntry": {
@@ -4623,6 +5667,173 @@
           "total"
         ]
       },
+      "AdminPairingFunnel": {
+        "type": "object",
+        "properties": {
+          "approved": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "claimed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "client": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "mcp",
+              "web"
+            ]
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "expired": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "opened": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "approved",
+          "claimed",
+          "client",
+          "created",
+          "expired",
+          "opened"
+        ]
+      },
+      "AdminPeopleDay": {
+        "type": "object",
+        "properties": {
+          "active1d": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active30d": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active7d": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "day": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "active1d",
+          "active30d",
+          "active7d",
+          "day"
+        ]
+      },
+      "AdminPrivacyStats": {
+        "type": "object",
+        "properties": {
+          "friends": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "schedule": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "sport": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "required": [
+          "friends",
+          "schedule",
+          "sport"
+        ]
+      },
+      "AdminPushStats": {
+        "type": "object",
+        "properties": {
+          "failed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "noDevice": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sent": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tokenGone": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "failed",
+          "noDevice",
+          "sent",
+          "tokenGone",
+          "type"
+        ]
+      },
+      "AdminReportStats": {
+        "type": "object",
+        "properties": {
+          "dismissed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "BROKEN",
+              "WRONG_SUBJECT",
+              "SPAM",
+              "OTHER",
+              "OFFENSIVE",
+              "WRONG_TEACHER"
+            ]
+          },
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "SUBJECT_RESOURCE",
+              "TEACHER_REVIEW"
+            ]
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "dismissed",
+          "reason",
+          "targetType",
+          "total"
+        ]
+      },
       "AdminRestriction": {
         "type": "object",
         "properties": {
@@ -4671,6 +5882,12 @@
             ],
             "format": "int32"
           },
+          "revokedByName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "startsAt": {
             "type": "string",
             "format": "date-time"
@@ -4688,8 +5905,34 @@
           "reason",
           "revokedAt",
           "revokedByIsu",
+          "revokedByName",
           "startsAt",
           "user"
+        ]
+      },
+      "AdminRetentionCohort": {
+        "type": "object",
+        "properties": {
+          "retained": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "weekStart": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "retained",
+          "size",
+          "weekStart"
         ]
       },
       "AdminReviewSummary": {
@@ -4708,6 +5951,15 @@
             "type": "string",
             "format": "uuid"
           },
+          "revisionStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "WITHDRAWN"
+            ]
+          },
           "score": {
             "type": "integer",
             "format": "int32"
@@ -4721,6 +5973,12 @@
           "teacherIsu": {
             "type": "integer",
             "format": "int32"
+          },
+          "teacherName": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -4728,9 +5986,11 @@
           "excerpt",
           "hidden",
           "id",
+          "revisionStatus",
           "score",
           "subjectTitle",
-          "teacherIsu"
+          "teacherIsu",
+          "teacherName"
         ]
       },
       "AdminReviewVerification": {
@@ -4866,6 +6126,164 @@
           "upstreamTeachers"
         ]
       },
+      "AdminRouteStats": {
+        "type": "object",
+        "properties": {
+          "errors4xx": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "errors5xx": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "group": {
+            "type": "string"
+          },
+          "p50Millis": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "p95Millis": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "requests": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "errors4xx",
+          "errors5xx",
+          "group",
+          "p50Millis",
+          "p95Millis",
+          "requests"
+        ]
+      },
+      "AdminServerDay": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "errors5xx": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "myItmoCalls": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "myItmoFailures": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "p50Millis": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "p95Millis": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "pushFailed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pushSent": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pushTokenGone": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "requests": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "date",
+          "errors5xx",
+          "myItmoCalls",
+          "myItmoFailures",
+          "p50Millis",
+          "p95Millis",
+          "pushFailed",
+          "pushSent",
+          "pushTokenGone",
+          "requests"
+        ]
+      },
+      "AdminServerStats": {
+        "type": "object",
+        "properties": {
+          "collectedSince": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminServerDay"
+            }
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "myItmo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUpstreamStats"
+            }
+          },
+          "push": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminPushStats"
+            }
+          },
+          "routes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminRouteStats"
+            }
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "collectedSince",
+          "days",
+          "from",
+          "myItmo",
+          "push",
+          "routes",
+          "to"
+        ]
+      },
       "AdminServiceCredential": {
         "type": "object",
         "properties": {
@@ -4990,6 +6408,146 @@
           "updatedSource"
         ]
       },
+      "AdminSheetRuleError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "sheets": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "error",
+          "sheets"
+        ]
+      },
+      "AdminSheetRules": {
+        "type": "object",
+        "properties": {
+          "attempts": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "budgetDay": {
+            "type": "string",
+            "format": "date"
+          },
+          "budgetUsed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dailyBudget": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSheetRuleError"
+            }
+          },
+          "lastAnalyzedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "runningSince": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "statuses": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "required": [
+          "attempts",
+          "budgetDay",
+          "budgetUsed",
+          "dailyBudget",
+          "enabled",
+          "errors",
+          "lastAnalyzedAt",
+          "running",
+          "runningSince",
+          "statuses"
+        ]
+      },
+      "AdminSportDayEntries": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "satisfied": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "created",
+          "satisfied"
+        ]
+      },
+      "AdminSportEntryStats": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "medianSeconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "outcomes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "p90Seconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "timed": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "created",
+          "medianSeconds",
+          "outcomes",
+          "p90Seconds",
+          "timed"
+        ]
+      },
       "AdminSportRun": {
         "type": "object",
         "properties": {
@@ -5056,6 +6614,179 @@
           "updatedLessons"
         ]
       },
+      "AdminSportSectionStats": {
+        "type": "object",
+        "properties": {
+          "autoSignEntries": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "freeSignEntries": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "medianWaitSeconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "satisfied": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sectionName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "autoSignEntries",
+          "freeSignEntries",
+          "medianWaitSeconds",
+          "satisfied",
+          "sectionName"
+        ]
+      },
+      "AdminSportSettings": {
+        "type": "object",
+        "properties": {
+          "autoSignLimit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overridden": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "autoSignLimit",
+          "overridden",
+          "updatedAt"
+        ]
+      },
+      "AdminSportSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "autoSignLimit": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 100,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "autoSignLimit"
+        ]
+      },
+      "AdminSportSlotStats": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "satisfied": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "timeStart": {
+            "type": "string"
+          },
+          "weekday": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "entries",
+          "satisfied",
+          "timeStart",
+          "weekday"
+        ]
+      },
+      "AdminSportStats": {
+        "type": "object",
+        "properties": {
+          "autoSign": {
+            "$ref": "#/components/schemas/AdminSportEntryStats"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSportStatsDay"
+            }
+          },
+          "freeSign": {
+            "$ref": "#/components/schemas/AdminSportEntryStats"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSportSectionStats"
+            }
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSportSlotStats"
+            }
+          },
+          "subscriptions": {
+            "$ref": "#/components/schemas/AdminSportSubscriptionStats"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "autoSign",
+          "days",
+          "freeSign",
+          "from",
+          "sections",
+          "slots",
+          "subscriptions",
+          "to"
+        ]
+      },
+      "AdminSportStatsDay": {
+        "type": "object",
+        "properties": {
+          "autoSign": {
+            "$ref": "#/components/schemas/AdminSportDayEntries"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "freeSign": {
+            "$ref": "#/components/schemas/AdminSportDayEntries"
+          },
+          "signUps": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "autoSign",
+          "date",
+          "freeSign",
+          "signUps"
+        ]
+      },
       "AdminSportStatus": {
         "type": "object",
         "properties": {
@@ -5110,6 +6841,39 @@
           "lastSuccessAt",
           "outcomes7d",
           "runs"
+        ]
+      },
+      "AdminSportSubscriptionStats": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "occurrences": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "stopped": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "required": [
+          "active",
+          "created",
+          "occurrences",
+          "stopped"
         ]
       },
       "AdminSummaryHiddenRequest": {
@@ -5215,6 +6979,30 @@
           "teacherName"
         ]
       },
+      "AdminUpstreamStats": {
+        "type": "object",
+        "properties": {
+          "calls": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failures": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "operation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "calls",
+          "failures",
+          "operation"
+        ]
+      },
       "AdminUserDetail": {
         "type": "object",
         "properties": {
@@ -5291,6 +7079,10 @@
       "AdminUserItem": {
         "type": "object",
         "properties": {
+          "activeRestrictions": {
+            "type": "integer",
+            "format": "int32"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -5322,6 +7114,7 @@
           }
         },
         "required": [
+          "activeRestrictions",
           "createdAt",
           "groups",
           "isu",
@@ -5459,6 +7252,39 @@
           "success"
         ]
       },
+      "ApiResponseAdminAudienceStats": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminAudienceStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
       "ApiResponseAdminClientVersions": {
         "type": "object",
         "properties": {
@@ -5532,6 +7358,72 @@
             "oneOf": [
               {
                 "$ref": "#/components/schemas/AdminDashboard"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseAdminFeatureStats": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminFeatureStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseAdminModerationStats": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminModerationStats"
               },
               {
                 "type": "null"
@@ -5763,6 +7655,138 @@
             "oneOf": [
               {
                 "$ref": "#/components/schemas/AdminReviewsSync"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseAdminServerStats": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminServerStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseAdminSheetRules": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminSheetRules"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseAdminSportSettings": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminSportSettings"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseAdminSportStats": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AdminSportStats"
               },
               {
                 "type": "null"
@@ -6151,6 +8175,38 @@
           "success"
         ]
       },
+      "ApiResponseListFriendDay": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/FriendDay"
+            }
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
       "ApiResponseListLessonDto": {
         "type": "object",
         "properties": {
@@ -6193,6 +8249,38 @@
             ],
             "items": {
               "$ref": "#/components/schemas/ModerationCase"
+            }
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseListModerationNotice": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ModerationNotice"
             }
           },
           "error": {
@@ -7655,6 +9743,24 @@
           "message"
         ]
       },
+      "FriendDay": {
+        "type": "object",
+        "properties": {
+          "lessons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LessonDto"
+            }
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserData"
+          }
+        },
+        "required": [
+          "lessons",
+          "user"
+        ]
+      },
       "FriendSportBooking": {
         "type": "object",
         "properties": {
@@ -7774,6 +9880,13 @@
               "null"
             ]
           },
+          "signedOutAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
           "version": {
             "type": "string"
           }
@@ -7788,6 +9901,7 @@
           "platform",
           "pushEnabled",
           "sid",
+          "signedOutAt",
           "version"
         ]
       },
@@ -8200,6 +10314,20 @@
                 "type": "null"
               }
             ]
+          },
+          "revertedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "revertibleUntil": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         },
         "required": [
@@ -8209,7 +10337,9 @@
           "id",
           "moderatorId",
           "note",
-          "restriction"
+          "restriction",
+          "revertedAt",
+          "revertibleUntil"
         ]
       },
       "ModerationDecisionRequest": {
@@ -8246,6 +10376,129 @@
         },
         "required": [
           "action"
+        ]
+      },
+      "ModerationNotice": {
+        "type": "object",
+        "properties": {
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "link": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ModerationNoticeLink"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "APPROVED",
+              "REJECTED",
+              "HIDDEN",
+              "RESTORED"
+            ]
+          },
+          "review": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ModerationNoticeReview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "decidedAt",
+          "id",
+          "link",
+          "note",
+          "outcome",
+          "review"
+        ]
+      },
+      "ModerationNoticeLink": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "periodKey": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "subjectName": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "host",
+          "id",
+          "periodKey",
+          "subjectId",
+          "subjectName",
+          "title"
+        ]
+      },
+      "ModerationNoticeReview": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectTitle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "teacherIsu": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "teacherName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "subjectTitle",
+          "teacherIsu",
+          "teacherName"
         ]
       },
       "ModerationPolicy": {
