@@ -5,7 +5,8 @@ import UserNotifications
 
 /// The first-run flow over the shared `OnboardingViewModel` (owner, 2026-10-19: two steps), as Android's
 /// `OnboardingScreen`: who signed in with the permissions one by one (notifications through `requestAuthorization`, the
-/// calendar through `CalendarAccess`), the connection through `ServicesConsentSheet` or `onboarding_connection_not_now`.
+/// calendar through `CalendarAccess`), the connection with one button that is the consent (`ServicesConsentSheet` only
+/// for the details) or `onboarding_connection_not_now`.
 /// Every choice is stored as it is made; `finished` runs once the flow ends, after the stored flag is written.
 struct OnboardingScreen: View {
     let finished: () -> Void
@@ -32,7 +33,7 @@ struct OnboardingScreen: View {
             .sheet(isPresented: $showsConsent) {
                 ServicesConsentSheet {
                     showsConsent = false
-                    model.viewModel.onConsent()
+                    model.viewModel.connect()
                 }
             }
             .alert(
@@ -80,8 +81,6 @@ struct OnboardingScreen: View {
             Task {
                 if await calendarAccess.turnOn() == .granted { model.viewModel.onCalendarAccessGranted() }
             }
-        case .showConsent:
-            showsConsent = true
         case let .showError(event):
             errorText = AppErrorTextsKt.toUiText(event.error).resolved
         }
@@ -107,7 +106,7 @@ struct OnboardingScreen: View {
     }
 }
 
-/// The callbacks of the flow, one per `OnboardingViewModel` entry point, plus the consent sheet to read.
+/// The callbacks of the flow, one per `OnboardingViewModel` entry point, plus the consent sheet to read the details.
 struct OnboardingActions {
     var next: () -> Void = {}
     var back: () -> Void = {}
@@ -205,12 +204,22 @@ struct OnboardingContent: View {
         }
     }
 
-    /// `onboarding_next` on the first step; `onboarding_connection_connect` and `onboarding_connection_not_now` on
-    /// the last, `onboarding_done` once connected.
+    /// `onboarding_next` on the first step; on the last, `onboarding_connection_consent` over
+    /// `onboarding_connection_connect` (the button agrees and connects) and `onboarding_connection_not_now`, or only
+    /// `onboarding_done` once connected.
     private var footer: some View {
         let last = state.step == .connection
+        let consenting = last && !state.servicesEnabled
         let primary = !last ? "onboarding_next" : (state.servicesEnabled ? "onboarding_done" : "onboarding_connection_connect")
         return VStack(spacing: 10) {
+            if consenting {
+                Text(verbatim: AppStrings.string("onboarding_connection_consent"))
+                    .font(.itmo(.bodySmall))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("onboarding.connection.consent")
+            }
             Button(action: last ? actions.connect : actions.next) {
                 Text(verbatim: AppStrings.string(primary))
                     .font(.itmo(.titleMedium, emphasized: true))
@@ -224,7 +233,7 @@ struct OnboardingContent: View {
             .itmoTint()
             .disabled(state.finished || state.servicesBusy)
             .accessibilityIdentifier("onboarding.next")
-            if last && !state.servicesEnabled {
+            if consenting {
                 Button(action: actions.notNow) {
                     Text(verbatim: AppStrings.string("onboarding_connection_not_now")).frame(maxWidth: .infinity)
                 }
@@ -338,19 +347,28 @@ struct OnboardingPermissionRow: View {
     }
 }
 
-/// Step 2: a row to read what the server keeps; once connected (a replay), the pill says so.
+/// Step 2, the consent in short (owner, 2026-11-27): what the server keeps in one line (`ServicesStoredData`), a row to
+/// the consent sheet for the details, and, once connected (a replay), the pill that says so. The footer's
+/// `onboarding_connection_connect` is the agreement.
 struct OnboardingConnectionStep: View {
     let state: OnboardingUiState
     let actions: OnboardingActions
 
     var body: some View {
         ItmoListGroup {
+            ItmoRow(title: AppStrings.string("services_consent_stored"), subtitle: Self.storedSummary, symbol: .lock)
+                .accessibilityIdentifier("onboarding.connection.stored")
             ItmoRow(title: AppStrings.string("onboarding_connection_details"), symbol: .info, chevron: true, action: actions.details)
+                .accessibilityIdentifier("onboarding.connection.details")
         }
-        .accessibilityIdentifier("onboarding.connection.details")
         if state.servicesEnabled {
             ItmoStatusPill(pill: ItmoPill(text: AppStrings.string("onboarding_connection_connected"), tone: .ok, symbol: .check))
                 .padding(.leading, ItmoSpacing.compact)
         }
+    }
+
+    /// The short name (`services_stored_*_short`) of each kind of data the server keeps, joined with commas.
+    static var storedSummary: String {
+        ServicesStoredData.shared.items.map(\.brief.resolved).joined(separator: ", ")
     }
 }

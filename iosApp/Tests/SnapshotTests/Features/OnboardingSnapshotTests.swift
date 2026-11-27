@@ -5,7 +5,7 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The first-run flow's two steps, as Android's `OnboardingScreen` references: the permissions under the person
-/// asked and granted, the connection before and after, and the consent sheet. `OnboardingContent` is rendered directly from `OnboardingSamples`, in a window so the glass
+/// asked and granted, the connection before and after (and on an iPhone SE), and the consent sheet. `OnboardingContent` is rendered directly from `OnboardingSamples`, in a window so the glass
 /// buttons draw as on screen.
 @MainActor
 final class OnboardingSnapshotTests: XCTestCase {
@@ -21,6 +21,11 @@ final class OnboardingSnapshotTests: XCTestCase {
 
     func testConnection() {
         assertScreenAppearances(of: content("connection"), named: "connection")
+    }
+
+    /// iPhone SE (375 x 667 pt) without its 20 pt status bar: the last step fits without scrolling.
+    func testConnectionSmallPhone() {
+        assertScreenAppearances(of: content("connection"), named: "connection-small", appearances: [.light, .dark], width: 375, height: 647)
     }
 
     func testConnected() {

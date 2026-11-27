@@ -38,7 +38,5 @@ sealed interface OnboardingEvent {
     /** Asks for the calendar when needed, then reports back through `onCalendarAccessGranted`. */
     data object RequestCalendarAccess : OnboardingEvent
 
-    /** The consent sheet; the connection turns on only from its `Подключить`. */
-    data object ShowConsent : OnboardingEvent
     data class ShowError(val error: AppError) : OnboardingEvent
 }

@@ -11,6 +11,11 @@ publication or deployment.
   caution, as only the owner's live connection can be renewed. The code checked only a QR other than the one on a
   genuine screen and never stopped phishing; the key commitment, the screen lock and the push after a new connection
   stay. `PairingCrypto.verificationCode`, `Confirm.code` and `SigningIn.code` are gone; the wire is unchanged.
+- First run: the `Друзья и очередь` step connects with one tap. The step itself says what the server keeps (the
+  short names of `ServicesStoredData`) and that `Подключить` agrees to it, so the button turns the connection on
+  directly instead of opening the consent sheet for a second `Подключить`; `Подробнее` still opens the full sheet.
+  The step fits a 360 x 640 dp phone and an iPhone SE without scrolling (Android and iOS). Backend's consent
+  recording is unchanged.
 - iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
   reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
   content reports, around the countdown, the progress and the widgets' `GeometryReader`s.

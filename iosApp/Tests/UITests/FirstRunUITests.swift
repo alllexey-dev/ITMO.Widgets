@@ -37,7 +37,11 @@ final class FirstRunUITests: XCTestCase {
 
         XCTAssertTrue(element(app, "onboarding.step.connection").waitForExistence(timeout: stepTimeout))
         attachScreenshot(named: "connection")
-        // The demo session keeps the connection on, so the last step only finishes; `Не сейчас` is for the others.
+        XCTAssertTrue(element(app, "onboarding.connection.stored").exists, "the step says what the server keeps")
+        XCTAssertTrue(element(app, "onboarding.connection.details").exists)
+        // The demo session keeps the connection on, so the last step only finishes; the consent line and
+        // `Не сейчас` are for the others.
+        XCTAssertFalse(element(app, "onboarding.connection.consent").exists)
         XCTAssertFalse(element(app, "onboarding.notNow").exists)
         next.tap()
 

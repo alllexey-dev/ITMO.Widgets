@@ -166,6 +166,12 @@
     <string name="services_stored_sport">Записи и очереди на спорт</string>
     <string name="services_stored_links">Ваши ссылки к предметам</string>
     <string name="services_stored_device">Токен уведомлений этого устройства</string>
+    <string name="services_stored_identity_short">ИСУ, имя и фото</string>
+    <string name="services_stored_group_short">группа</string>
+    <string name="services_stored_schedule_short">расписание</string>
+    <string name="services_stored_sport_short">записи на спорт</string>
+    <string name="services_stored_links_short">ваши ссылки</string>
+    <string name="services_stored_device_short">токен уведомлений</string>
     <string name="services_stored_token">Токен ITMO.ID сервер проверяет один раз и не сохраняет. Пароль он не видит никогда.</string>
     <!-- The age of a stored answer after a refresh failed -->
     <string name="common_updated_now">Обновлено только что</string>
