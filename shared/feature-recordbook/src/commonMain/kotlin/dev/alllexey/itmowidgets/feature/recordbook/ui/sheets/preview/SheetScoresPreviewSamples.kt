@@ -14,6 +14,7 @@ import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotalDecis
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.SheetTotals
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalChoice
 import dev.alllexey.itmowidgets.feature.recordbook.domain.sheets.TotalReason
+import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetAiProposal
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetAiState
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetColumnOption
 import dev.alllexey.itmowidgets.feature.recordbook.presentation.sheets.SheetFormulaText
@@ -86,26 +87,29 @@ object SheetScoresPreviewSamples {
         columns = columns(ownRow),
     )
 
-    /** The AI offer of a shared sheet beside the automatic total. */
+    /** The AI offer of a shared sheet beside the automatic total: an explained card under it. */
     val pickTotalAiOffer = pickTotal.copy(ai = SheetAiState.Offer)
 
-    /** Backend's analysis running. */
+    /** Backend's analysis running: the card's button shows its progress. */
     val pickTotalAiRunning = pickTotal.copy(ai = SheetAiState.Running)
 
-    /** The AI rule applied to the own row on top: the labs and the test added up, the teacher's total beside. */
-    val pickTotalAi = pickTotal.copy(
-        selection = TotalOption.Ai,
-        ai = SheetAiState.Proposal(
-            formula = SheetFormulaText.describe(
-                SheetFormula.sum(ownRow.take(5).map { SheetCellRef(it.tab.gid, SheetColumnRef(it.headerPath, it.column)) }),
-            ),
-            value = "45",
-            official = "0",
-            hasOfficial = true,
-            summary = "Баллы — сумма лабораторных и теста; итог преподавателя ставится после допуска",
-            warnings = listOf("Итог может быть 0 до допуска"),
+    /** The AI rule applied to the own row: the labs and the test added up, the teacher's total beside. */
+    val aiRule = SheetAiProposal(
+        formula = SheetFormulaText.describe(
+            SheetFormula.sum(ownRow.take(5).map { SheetCellRef(it.tab.gid, SheetColumnRef(it.headerPath, it.column)) }),
         ),
+        value = "45",
+        official = "0",
+        hasOfficial = true,
+        summary = "Баллы — сумма лабораторных и теста; итог преподавателя ставится после допуска",
+        warnings = listOf("Итог может быть 0 до допуска"),
     )
+
+    /** The AI's result on top, `Пересчитать с ИИ` under it. */
+    val pickTotalAi = pickTotal.copy(selection = TotalOption.Ai, ai = SheetAiState.Offer, aiRule = aiRule)
+
+    /** The rule Backend already had for this sheet, read on opening: a variant, no card and no new analysis. */
+    val pickTotalAiKnown = pickTotal.copy(ai = SheetAiState.Offer, aiRule = aiRule)
 
     /** The AI analysis found nothing; the automatic total stays on top. */
     val pickTotalAiFailed = pickTotal.copy(ai = SheetAiState.Failed(UiText.Res(RecordbookStrings.sheet_ai_insufficient)))

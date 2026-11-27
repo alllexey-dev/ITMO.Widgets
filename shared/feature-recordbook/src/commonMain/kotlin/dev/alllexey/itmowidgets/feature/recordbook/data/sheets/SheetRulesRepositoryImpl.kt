@@ -26,8 +26,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
 /**
- * Backend's sheet rules over Core 2.0's [SheetRulesApi]. The demo session answers [DemoRecordbook.sheetRule] and never
- * calls Backend; outside it every call needs [BackendGate.mayCallBackend]. A route the device cannot read (an unknown
+ * Backend's sheet rules over Core 2.0's [SheetRulesApi]. The demo session never calls Backend: nobody has asked for its
+ * sheet yet ([state] is pending) and a request answers [DemoRecordbook.sheetRule]; outside it every call needs
+ * [BackendGate.mayCallBackend]. A route the device cannot read (an unknown
  * purpose, kind, policy or node) is dropped, as the analyzer drops one it cannot check.
  */
 class SheetRulesRepositoryImpl(
@@ -39,12 +40,13 @@ class SheetRulesRepositoryImpl(
 
     override suspend fun available(): Boolean = demo.isActive() || backend.mayCallBackend()
 
-    override suspend fun request(linkId: String): SheetRuleResult = call(linkId) { api.requestSheetRule(it) }
+    override suspend fun request(linkId: String): SheetRuleResult =
+        call(linkId, SheetRuleResult.Ready(DemoRecordbook.sheetRule())) { api.requestSheetRule(it) }
 
-    override suspend fun state(linkId: String): SheetRuleResult = call(linkId) { api.sheetRule(it) }
+    override suspend fun state(linkId: String): SheetRuleResult = call(linkId, SheetRuleResult.Pending) { api.sheetRule(it) }
 
-    private suspend fun call(linkId: String, route: suspend (Uuid) -> SheetRuleResponse): SheetRuleResult {
-        if (demo.isActive()) return SheetRuleResult.Ready(DemoRecordbook.sheetRule())
+    private suspend fun call(linkId: String, demoAnswer: SheetRuleResult, route: suspend (Uuid) -> SheetRuleResponse): SheetRuleResult {
+        if (demo.isActive()) return demoAnswer
         if (!backend.mayCallBackend()) return SheetRuleResult.Unavailable
         val id = Uuid.parseOrNull(linkId) ?: return SheetRuleResult.Unavailable
         return try {
@@ -63,9 +65,9 @@ class SheetRulesRepositoryImpl(
             return SheetRuleResult.Failed
         }
         return when (status) {
+            SheetRuleStatus.READY -> rule?.let { SheetRuleResult.Ready(it) } ?: SheetRuleResult.Failed
             // A stale rule stays valid while Backend checks the sheet's structure again.
-            SheetRuleStatus.READY, SheetRuleStatus.PENDING, SheetRuleStatus.RUNNING ->
-                rule?.let(SheetRuleResult::Ready) ?: if (status == SheetRuleStatus.READY) SheetRuleResult.Failed else SheetRuleResult.Pending
+            SheetRuleStatus.PENDING, SheetRuleStatus.RUNNING -> rule?.let { SheetRuleResult.Ready(it, checking = true) } ?: SheetRuleResult.Pending
             SheetRuleStatus.NONE -> SheetRuleResult.Pending
             SheetRuleStatus.INSUFFICIENT -> SheetRuleResult.Insufficient
             SheetRuleStatus.FAILED, SheetRuleStatus.UNKNOWN -> SheetRuleResult.Failed

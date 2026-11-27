@@ -65,9 +65,13 @@ sealed interface SheetRuleNode {
 
 /** Where a rule stands for one link; every failure leaves the manual pick. */
 sealed interface SheetRuleResult {
-    /** Queued or running on Backend: ask again in a few seconds. */
+    /** Nobody asked yet, or queued or running on Backend without a rule: ask again in a few seconds. */
     data object Pending : SheetRuleResult
-    data class Ready(val rule: SheetRule) : SheetRuleResult
+    /**
+     * A usable rule; [checking] while Backend checks a stale one against the sheet again (it may be replaced in a few
+     * seconds, or after a new analysis).
+     */
+    data class Ready(val rule: SheetRule, val checking: Boolean = false) : SheetRuleResult
     /** The analysis found no route it could check. */
     data object Insufficient : SheetRuleResult
     /** The analysis failed: the sheet is closed, too large, no longer shared, or the model failed. */
@@ -83,10 +87,13 @@ interface SheetRulesRepository {
     /** Whether `Разобрать с ИИ` may be offered at all: the services opt-in, or the demo session. */
     suspend fun available(): Boolean
 
-    /** Asks Backend to analyse the sheet of [linkId] (or answers the stored state). */
+    /**
+     * Asks Backend to analyse the sheet of [linkId] (`POST`): it queues an analysis only when the sheet has no verdict
+     * yet or it is stale, else answers the stored state. Only an explicit tap of the viewer calls it.
+     */
     suspend fun request(linkId: String): SheetRuleResult
 
-    /** The stored state of [linkId]'s sheet; polled while [SheetRuleResult.Pending]. */
+    /** The stored state of [linkId]'s sheet (`GET`, never starts an analysis); read on opening and polled after [request]. */
     suspend fun state(linkId: String): SheetRuleResult
 }
 

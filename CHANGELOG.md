@@ -6,6 +6,15 @@ publication or deployment.
 
 ## Unreleased
 
+- Sheet scores: the AI no longer runs again when its total is chosen or the total is opened again. Opening the total
+  reads the rule Backend already keeps for the sheet (`GET`, never an analysis) and shows it as a variant at once;
+  only `Посчитать с ИИ` or the new `Пересчитать с ИИ` under an AI total ask for one (`POST`), and a stale rule is
+  waited for while Backend checks it. The connected AI rule read again is that total, not a second variant.
+- Sheet scores: `Посчитать с ИИ` is an action card right under `Ваш итог` that says what the AI reads and never sees,
+  with its progress in the button, instead of a plain row at the bottom of the ways.
+- Subject page: `Мои баллы из таблицы` stands right under the hero of `Баллы`, whose number the sheet would become,
+  instead of at the end of the page beside the BARS offer.
+- Kit: `ActionCard` (iOS `ItmoActionCard`) can show its button's progress.
 - iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
   reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
   content reports, around the countdown, the progress and the widgets' `GeometryReader`s.

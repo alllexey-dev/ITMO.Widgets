@@ -114,7 +114,8 @@ total is the hero's number (`таблица, в 16:30`) by the
 with the teacher's total adds `Итог преподавателя: 0`. The stored value shows
 at once and the tab is downloaded on entry and on every pull. An `AUTO_CHECK` total read without a
 failure adds `Проверьте итог`, which opens the review. Without a connection `Мои баллы из
-таблицы` offers the subject's sheet links.
+таблицы` (`Если преподаватель ведёт таблицу`) stands right under the hero, whose number it would become, and offers
+the subject's sheet links (several ask which); the BARS offer stays at the end of the page.
 
 ## The total
 
@@ -126,13 +127,21 @@ one screen that saves and two pages (`TotalPage`):
   one note: the automatic total waiting for a check in the warning colour (`Проверьте: на другом листе у вас другой
   итог`, `... этот столбец пока пуст у всех`, `... в таблице нет столбца «Итог»`, `... в этом столбце не баллы`), or for
   an AI rule `Посчитано по формуле ИИ — сверьте с таблицей` with `Итог преподавателя: 0` and `Как считает ИИ` (the
-  rule's summary and warnings). The choice starts at the connected total, else the automatic one; nothing chosen
-  shows `Итог не найден` with `В таблице нет столбца «Итог»` or `В вашей строке пока нет баллов`.
+  rule's summary and warnings) and `Пересчитать с ИИ`. The choice starts at the connected total, else the automatic
+  one, else a rule Backend already has; nothing chosen shows `Итог не найден` with `В таблице нет столбца «Итог»` or
+  `В вашей строке пока нет баллов`.
+- Right under it, for a shared sheet whose rule is not known yet, the AI's action card (`ActionCard`, iOS
+  `ItmoActionCard`, `auto_awesome`): `ИИ найдёт, как считается итог`, what it does and never sees (`ИИ разберёт, как
+  устроена таблица: листы, заголовки и формулы. Имена и ИСУ он не видит, а баллы по найденной формуле считает
+  телефон.`) and the tonal `Посчитать с ИИ`. While Backend answers the button shows its progress and the line says
+  `Разбираем таблицу, обычно до минуты`; a failure takes the line (`ИИ не понял, как считаются баллы`) and the button
+  asks again. The card is gone once a rule is known (it is a variant then) and while an AI total is on top.
 - `Другой итог` (`Как найти итог` while nothing is chosen): the other ready totals (`variants`), never the one on
   top: the automatic total (`Найден автоматически`), up to 4 total columns whose own value is a number, the
-  connected and the last picked column, the saved sum or AI rule, the sum made here and the AI result, each with
-  its value; the tab joins the caption when they span tabs. A tap puts it on top.
-- Then `Выбрать столбец`, `Сложить столбцы` and, for a shared sheet, `Посчитать с ИИ`.
+  connected and the last picked column, the saved sum or AI rule, the sum made here and the AI's rule (unless it is
+  the connected one), each with its value; the tab joins the caption when they span tabs. A tap puts it on top and
+  never asks Backend.
+- Then `Выбрать столбец` and `Сложить столбцы`.
 - One button (`action`): `Сохранить` when the choice differs from the connected total or confirms one waiting for a
   check (choice `AUTO` for the automatic column, else `MANUAL`, `AI` for the rule); `Готово` closes without a
   write when nothing changes; none while nothing is chosen. On iOS it is the bar's confirmation button.
@@ -146,22 +155,32 @@ one screen that saves and two pages (`TotalPage`):
 
 ## AI rule
 
-- `Посчитать с ИИ` shows only with a link id and `SheetRulesRepository.available()` (the services opt-in, or the demo
-  session). A tap posts `POST /api/links/{id}/sheet-rule`, then polls `GET` every 4 s while Backend answers
-  `PENDING`/`RUNNING` (a stale rule that is still sent is used at once), up to 3 minutes; leaving the sheet stops it.
-  The row says `Разбираем таблицу, обычно до минуты` meanwhile, and the rest of the screen stays usable.
-- `SheetRulesRepositoryImpl` holds the client: the demo session answers `DemoRecordbook.sheetRule()` and calls nothing;
-  otherwise every call passes `BackendGate.mayCallBackend()`. A route with an unknown purpose, kind, policy or node is
-  dropped; no route left is a failure.
+- The AI shows only with a link id and `SheetRulesRepository.available()` (the services opt-in, or the demo session).
+- Opening the total reads the rule Backend already has: `GET /api/links/{id}/sheet-rule` once, which never starts an
+  analysis. A usable rule (`READY`, or a stale one sent with `PENDING`/`RUNNING` while Backend checks it) is a variant
+  at once, the total on top only while nothing else is chosen; anything else (none yet, a failure, no connection)
+  leaves the card as it is, without a message. Backend keeps one rule per sheet, so every student of the flow and
+  every later opening reuse it.
+- Only an explicit tap asks for an analysis: `Посчитать с ИИ` on the card, or `Пересчитать с ИИ` under an AI total on
+  top. It posts `POST /api/links/{id}/sheet-rule` (Backend queues an analysis only for a sheet without a verdict or
+  with one checked over a day ago, else answers the stored rule), then polls `GET` every 4 s while Backend answers
+  `PENDING`/`RUNNING`, a stale rule included, up to 3 minutes (a stale rule then stays); leaving the sheet stops it.
+  Choosing the AI's variant, reopening the sheet or saving never posts. While it runs the rest of the screen stays
+  usable; an answer with the formula already known says `Формула не изменилась`, a failure keeps the rule known
+  before.
+- `SheetRulesRepositoryImpl` holds the client: the demo session calls nothing, has no stored rule (`state` is pending)
+  and answers `DemoRecordbook.sheetRule()` to a request; otherwise every call passes `BackendGate.mayCallBackend()`. A
+  route with an unknown purpose, kind, policy or node is dropped; no route left is a failure.
 - READY: the route of the tab holding the own row (a workbook with a tab per group has a route per tab;
   `current_accumulated` first) is resolved against the downloaded tabs (gid, else tab name; each cell takes its header
   path there) and read over the own row. The result goes on top at once: the own value, the formula in words (a sum
   of more than 4 columns only as `Сумма 12 столбцов`), `Итог преподавателя` from the `official_total` route; the
   rule's summary and the routes' warnings stay under `Как считает ИИ`. `Сохранить` saves it (choice `AI`); another
-  variant on top drops nothing and saves nothing of it.
+  variant on top drops nothing and saves nothing of it. The connected AI rule read again is that total, not another
+  variant: on top it shows the rule's summary and `Пересчитать с ИИ`, and `Готово` closes.
 - INSUFFICIENT, FAILED, 404 or 409 (not shared, not a sheet, the feature off), 429, no connection, a rule naming what
-  the device does not see, or still pending after 3 minutes: a short Russian line on the AI row, which can be tapped
-  again.
+  the device does not see, or still pending after 3 minutes: a short Russian line on the AI card (or under the AI
+  total), whose button asks again.
 
 ## In the recordbook list
 

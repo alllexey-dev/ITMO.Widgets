@@ -41,9 +41,10 @@ sealed interface RecordbookSubjectEvent {
 // Баллы -------------------------------------------------------------------------------------------------------------
 
 /**
- * The hero with the grade scale, the connected [sheet], the [sport] points of physical education, then the
- * checkpoints in [groups]. Without checkpoints: the quiet [barsOffer] (BARS not connected) and the [sheetOffer]
- * (`Мои баллы из таблицы`), or [noDetails] when BARS is connected and still has none.
+ * The hero with the grade scale and the connected [sheet] (or right under it the [sheetOffer], `Мои баллы из
+ * таблицы`, the sheet links to connect), the [sport] points of physical education, then the checkpoints in [groups].
+ * Without checkpoints: the quiet [barsOffer] (BARS not connected), or [noDetails] when BARS is connected and still
+ * has none.
  */
 data class SubjectScores(
     val hero: SubjectHero,

@@ -93,16 +93,21 @@ struct ItmoGateCard: View {
     }
 }
 
-/// Something worth doing, not a lock (add a course link): the gate's layout with a tonal button.
+/// Something worth doing, not a lock (add a course link, ask the AI): the gate's layout with a tonal button. While
+/// `isInProgress` the button shows a spinner in place of its title, keeps its size and ignores taps.
 struct ItmoActionCard: View {
     let title: String
     let reason: String
     let action: (title: String, run: () -> Void)
     let symbol: AppSymbol
     var tone: ItmoTone = .primary
+    var isInProgress = false
 
     var body: some View {
-        ItmoNoticeCard(title: title, reason: reason, symbol: symbol, tone: tone, action: action, prominent: false)
+        ItmoNoticeCard(
+            title: title, reason: reason, symbol: symbol, tone: tone, action: action, prominent: false,
+            isInProgress: isInProgress
+        )
     }
 }
 
@@ -125,6 +130,7 @@ private struct ItmoNoticeCard: View {
     let tone: ItmoTone
     let action: (title: String, run: () -> Void)?
     let prominent: Bool
+    var isInProgress = false
 
     var body: some View {
         ItmoCard {
@@ -153,7 +159,14 @@ private struct ItmoNoticeCard: View {
         if prominent {
             ItmoProminentButton(title: action.title, action: action.run)
         } else {
-            Button(action: action.run) { Text(verbatim: action.title) }.buttonStyle(.bordered)
+            Button(action: action.run) {
+                Text(verbatim: action.title)
+                    .opacity(isInProgress ? 0 : 1)
+                    .overlay { if isInProgress { ProgressView().controlSize(.small) } }
+            }
+            .buttonStyle(.bordered)
+            .allowsHitTesting(!isInProgress)
+            .accessibilityLabel(Text(verbatim: action.title))
         }
     }
 }

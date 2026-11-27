@@ -80,10 +80,16 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_table
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-/** `Баллы`: the hero, the sport points of physical education, the checkpoints by group, or the offers without them. */
+/**
+ * `Баллы`: the hero with the offer to connect a sheet right under it (it would become the hero's number), the sport
+ * points of physical education, the checkpoints by group, or the BARS offer without them.
+ */
 internal fun LazyListScope.scoresTab(scores: SubjectScores, actions: RecordbookSubjectActions) {
     scores.barsNotice?.let { notice -> item(key = "bars-notice") { BarsNotice(notice, actions.onBarsSignIn, actions.onRefresh) } }
     item(key = "hero") { Hero(scores.hero, scores.sheet, actions) }
+    if (scores.sheetOffer.isNotEmpty()) {
+        item(key = "sheet-offer") { ListGroup { item { SheetOfferRow(scores.sheetOffer, actions) } } }
+    }
     scores.sport?.let { sport ->
         item(key = "sport") {
             ListGroup {
@@ -117,13 +123,8 @@ internal fun LazyListScope.scoresTab(scores: SubjectScores, actions: RecordbookS
             }
         }
     }
-    if (scores.barsOffer || scores.sheetOffer.isNotEmpty()) {
-        item(key = "offers") {
-            ListGroup {
-                if (scores.barsOffer) item { BarsOfferRow(actions.onBarsSignIn) }
-                if (scores.sheetOffer.isNotEmpty()) item { SheetOfferRow(scores.sheetOffer, actions) }
-            }
-        }
+    if (scores.barsOffer) {
+        item(key = "offers") { ListGroup { item { BarsOfferRow(actions.onBarsSignIn) } } }
     }
     if (scores.noDetails) {
         item(key = "no-details") { ListGroupNote(stringResource(Res.string.recordbook_details_empty_description)) }

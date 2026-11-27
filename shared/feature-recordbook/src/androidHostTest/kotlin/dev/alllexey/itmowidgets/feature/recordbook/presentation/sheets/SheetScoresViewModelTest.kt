@@ -383,7 +383,9 @@ class SheetScoresViewModelTest {
         advanceTimeBy(9.seconds)
         runCurrent()
 
-        val proposal = vm.pickTotal().ai as SheetAiState.Proposal
+        val proposal = vm.pickTotal().aiRule!!
+        assertEquals(SheetAiState.Offer, vm.pickTotal().ai)
+        assertEquals(1, rules.reads)
         assertEquals(2, rules.polls)
         assertEquals("18", proposal.value)
         assertEquals("66,3", proposal.official)
@@ -415,7 +417,7 @@ class SheetScoresViewModelTest {
 
         vm.analyze()
         runCurrent()
-        assertTrue(vm.pickTotal().ai is SheetAiState.Proposal)
+        assertTrue(vm.pickTotal().aiRule != null)
         assertEquals(TotalOption.Ai, vm.pickTotal().selection)
         vm.select(vm.pickTotal().current!!)
         assertTrue(vm.pickTotal().variants.any { it.option == TotalOption.Ai })
@@ -478,7 +480,7 @@ class SheetScoresViewModelTest {
         vm.analyze()
         runCurrent()
 
-        val proposal = vm.pickTotal().ai as SheetAiState.Proposal
+        val proposal = vm.pickTotal().aiRule!!
         assertEquals("18", proposal.value)
         assertEquals("66,3", proposal.official)
     }
@@ -497,6 +499,118 @@ class SheetScoresViewModelTest {
         runCurrent()
 
         assertEquals(SheetAiState.Failed(UiText.Res(RecordbookStrings.sheet_ai_not_applicable)), vm.pickTotal().ai)
+    }
+
+    @Test fun `opening reads the stored rule, choosing it or opening again never asks for an analysis`() = runTest(main.dispatcher) {
+        repository.scores.value = listOf(sheetScore(scope = scope))
+        repository.inspections += ready(testWorkbook())
+        repository.inspections += ready(testWorkbook())
+        rules.stored = SheetRuleResult.Ready(rule)
+        val vm = model(Step.TOTAL, link = linkId)
+        runCurrent()
+
+        // The stored rule is a variant at once; the connected total stays on top and the card is gone.
+        val picker = vm.pickTotal()
+        assertEquals(1, rules.reads)
+        assertEquals("18", picker.aiRule?.value)
+        assertEquals(picker.current, picker.selection)
+        assertTrue(picker.variants.any { it.option == TotalOption.Ai })
+        assertNull(picker.aiEntry)
+
+        vm.select(TotalOption.Ai)
+        runCurrent()
+        assertEquals("18", vm.pickTotal().hero?.value)
+        assertEquals(SheetAiState.Offer, vm.pickTotal().ai)
+        assertEquals(TotalAction.SAVE, vm.pickTotal().action)
+
+        // The sheet opened again reads the stored rule again; nothing is ever asked.
+        model(Step.TOTAL, link = linkId).also { runCurrent() }
+        assertEquals(2, rules.reads)
+        assertTrue(rules.requests.isEmpty())
+    }
+
+    @Test fun `a stored rule goes on top while nothing else is chosen`() = runTest(main.dispatcher) {
+        repository.inspections += ready(only("no_total.csv"))
+        val tab = SheetRuleTab("P3110", 22)
+        val test = SheetRuleRoute(SheetRulePurpose.CURRENT, tab, direct = true, SheetRuleNode.Cell(tab, 4), BlankPolicy.PRESERVE, "Тест", emptyList())
+        rules.stored = SheetRuleResult.Ready(SheetRule("Тест", listOf(test)))
+        val vm = model(link = linkId)
+        runCurrent()
+
+        assertEquals(TotalOption.Ai, vm.pickTotal().selection)
+        assertEquals("9", vm.pickTotal().hero?.value)
+        assertEquals(TotalAction.SAVE, vm.pickTotal().action)
+        assertTrue(rules.requests.isEmpty())
+    }
+
+    @Test fun `the connected AI rule read again is that total, and asking again says it did not change`() = runTest(main.dispatcher) {
+        repository.scores.value = listOf(sheetScore(scope = scope))
+        repository.inspections += ready(testWorkbook())
+        rules.stored = SheetRuleResult.Ready(rule)
+        model(Step.TOTAL, link = linkId).apply {
+            runCurrent()
+            select(TotalOption.Ai)
+            save()
+            runCurrent()
+        }
+        val saved = repository.totals.single().pick
+        repository.scores.value = listOf(
+            sheetScore(scope = scope).copy(formula = saved.formula, choice = TotalChoice.AI, official = saved.official, linkId = linkId),
+        )
+        repository.inspections += ready(testWorkbook())
+        val vm = model(Step.TOTAL)
+        runCurrent()
+
+        val picker = vm.pickTotal()
+        assertEquals(TotalOption.Saved, picker.selection)
+        assertTrue(picker.aiRule!!.connected)
+        assertTrue(picker.variants.none { it.option == TotalOption.Ai })
+        assertTrue(picker.aiOnTop)
+        assertNull(picker.aiEntry)
+        assertEquals(listOf("Сумма работ", "Итог может быть 0"), picker.hero?.details)
+        assertEquals(SheetHeroAi(running = false, line = null), picker.hero?.ai)
+
+        // `Пересчитать с ИИ` is the explicit ask: the same rule keeps the connected total and says so.
+        rules.requestResult = SheetRuleResult.Ready(rule)
+        vm.analyze()
+        runCurrent()
+        assertEquals(listOf(linkId), rules.requests)
+        assertEquals(TotalOption.Saved, vm.pickTotal().selection)
+        assertTrue(vm.pickTotal().aiUnchanged)
+        assertEquals(UiText.Res(RecordbookStrings.sheet_ai_unchanged), vm.pickTotal().hero?.ai?.line)
+        assertEquals(TotalAction.DONE, vm.pickTotal().action)
+    }
+
+    @Test fun `an explicit ask waits while a stale rule is checked and a failure keeps the known rule`() = runTest(main.dispatcher) {
+        repository.scores.value = listOf(sheetScore(scope = scope))
+        repository.inspections += ready(testWorkbook())
+        rules.stored = SheetRuleResult.Ready(rule, checking = true)
+        val vm = model(Step.TOTAL, link = linkId)
+        runCurrent()
+        assertEquals("18", vm.pickTotal().aiRule?.value)
+
+        val fewer = rule.copy(routes = listOf(rule.routes.first().copy(node = SheetRuleNode.Cell(SheetRuleTab("P3110", 22), 3))) + rule.routes.drop(1))
+        rules.requestResult = SheetRuleResult.Ready(rule, checking = true)
+        rules.states += SheetRuleResult.Ready(rule, checking = true)
+        rules.states += SheetRuleResult.Ready(fewer)
+        vm.select(TotalOption.Ai)
+        vm.analyze()
+        runCurrent()
+        assertEquals(SheetAiState.Running, vm.pickTotal().ai)
+        assertEquals(SheetHeroAi(running = true, line = UiText.Res(RecordbookStrings.sheet_ai_running)), vm.pickTotal().hero?.ai)
+        advanceTimeBy(9.seconds)
+        runCurrent()
+        assertEquals(2, rules.polls)
+        assertEquals(SheetAiState.Offer, vm.pickTotal().ai)
+        assertFalse(vm.pickTotal().aiUnchanged)
+        assertEquals("2", vm.pickTotal().hero?.value)
+
+        rules.requestResult = SheetRuleResult.Offline
+        vm.analyze()
+        runCurrent()
+        assertEquals(SheetAiState.Failed(UiText.Res(RecordbookStrings.sheet_scores_offline)), vm.pickTotal().ai)
+        assertEquals("2", vm.pickTotal().hero?.value)
+        assertEquals(UiText.Res(RecordbookStrings.sheet_scores_offline), vm.pickTotal().hero?.ai?.line)
     }
 
     @Test fun `a saved computed total shows in words with its value`() = runTest(main.dispatcher) {
