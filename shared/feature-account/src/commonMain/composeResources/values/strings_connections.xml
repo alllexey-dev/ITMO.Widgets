@@ -101,6 +101,9 @@
     <string name="connection_renew_note">Доступ и настройки %1$s не изменятся, обновится только вход в ИТМО.</string>
     <string name="connection_renew_scan">Сканировать QR-код</string>
     <string name="connection_copy">Скопировать</string>
+    <string name="connection_take_back">Забрать</string>
+    <string name="connection_take_back_title">Забрать доступ к ИТМО?</string>
+    <string name="connection_take_back_text">Вход устройства в ИТМО закончится. Чтобы работать дальше, ему нужно обновить вход.</string>
     <string name="connection_reminder_title">Вход %1$s в ИТМО закончится %2$s</string>
     <string name="connection_reminder_closed">Вход %1$s в ИТМО закрыт</string>
     <string name="connection_reminder_text">Обновите его в «Устройствах»</string>
@@ -118,6 +121,9 @@
     <string name="pair_access">Получит доступ</string>
     <string name="pair_note_client">Дальше войдите в ИТМО за %1$s. Пароль останется на телефоне: %2$s получит только свой вход, который можно отключить отсюда.</string>
     <string name="pair_note_web">Браузер увидит то же, что и приложение, кроме входа в ИТМО. Отключить его можно отсюда.</string>
+    <string name="pair_note_widgets">%1$s получит только доступ к ITMO.Widgets, без входа в ИТМО. Отключить его можно в «Устройствах».</string>
+    <string name="pair_group_widgets">Виджеты</string>
+    <string name="pair_group_itmo">ИТМО</string>
     <string name="pair_continue">Продолжить</string>
     <string name="pair_connect">Подключить</string>
     <string name="pair_unlock_reason">Подтвердите подключение устройства</string>
@@ -128,6 +134,7 @@
     <string name="pair_done_web_renew">Вход в %1$s подтверждён</string>
     <string name="pair_done_text">Вход в ИТМО действует до %1$s. Перед концом срока приложение напомнит обновить его.</string>
     <string name="pair_done_web_text">Отключить браузер можно в «Устройствах».</string>
+    <string name="pair_done_widgets_text">Входа в ИТМО у него нет. Отключить устройство можно в «Устройствах».</string>
     <string name="pair_done_action">Готово</string>
     <string name="pair_failed_title">Не получилось подключить</string>
     <string name="pair_other_account_title">Это другой аккаунт ИТМО</string>
@@ -141,8 +148,22 @@
     <string name="pair_services_disabled">Нужно подключение к серверу ITMO.Widgets</string>
     <string name="pair_lock_required">Включите блокировку экрана, чтобы подключать устройства</string>
     <string name="pair_cancelled">Вход не завершён, устройство не подключено</string>
+    <string name="pair_identity_missing">Не удалось получить полный доступ к ITMO.ID для устройства. Войдите заново или подключите без него</string>
     <string name="pair_webview_outdated">Обновите Android System WebView, чтобы войти в ИТМО за устройство</string>
     <string name="pair_close">Закрыть</string>
     <string name="pair_sign_in_again">Войти заново</string>
     <string name="pair_scan_again">Сканировать снова</string>
+
+    <!-- Grants of a protocol-2 pairing (ADR 0040): the app's own texts of ITMO grants -->
+    <string name="grant_refresh_title">Вход в my.itmo</string>
+    <string name="grant_refresh_text">Расписание, зачётка, физкультура и заявки от вашего имени</string>
+    <string name="grant_sso_title">Полный доступ к ITMO.ID</string>
+    <string name="grant_sso_text">Вход в любой сервис ИТМО от вашего имени: my.itmo, БАРС, ИСУ и сам ITMO.ID — не только расписание и баллы.</string>
+    <string name="grant_sso_warning">Включайте, только если это ваше устройство и вы ему доверяете.</string>
+    <string name="grant_sso_confirm_title">Дать полный доступ к ITMO.ID?</string>
+    <string name="grant_sso_confirm_text">„%1$s“ сможет действовать в ITMO.ID от вашего имени, пока вы не заберёте доступ или вход не закончится, до 90 дней.</string>
+    <string name="grant_sso_confirm_action">Дать доступ</string>
+    <string name="grant_purpose">Зачем: %1$s</string>
+    <string name="grant_required">Нужно для работы</string>
+    <string name="grant_unavailable">Недоступно в этой версии</string>
 </resources>

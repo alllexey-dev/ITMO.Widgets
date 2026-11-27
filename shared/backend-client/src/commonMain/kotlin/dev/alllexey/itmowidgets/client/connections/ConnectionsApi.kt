@@ -12,8 +12,9 @@ import kotlin.uuid.Uuid
 interface ConnectionsApi {
 
     /**
-     * `POST /api/users/me/pair/{code}/open`: binds the code to the caller (anyone else then gets 404) and extends it to
-     * ten minutes. 404 `not_found` for an unknown, expired or foreign code; for `CONNECT` 403 `permission_denied` with
+     * `POST /api/users/me/pair/{code}/open?protocol=2`: binds the code to the caller (anyone else then gets 404) and
+     * extends it to ten minutes. The app always opens with protocol 2, so Backend's 409 `update_required` for a
+     * protocol-2 challenge opened without it never reaches it, and the preview carries `protocol`, `app` and `grants`. 404 `not_found` for an unknown, expired or foreign code; for `CONNECT` 403 `permission_denied` with
      * the client type off and 409 `business_rule_violation` with five live connections of the type.
      */
     @Throws(BackendException::class, CancellationException::class)
@@ -45,6 +46,13 @@ interface ConnectionsApi {
     /** `POST /api/users/me/connections/{id}/itmo-ended`: the phone ended the revoked connection's session; 409 live. */
     @Throws(BackendException::class, CancellationException::class)
     suspend fun connectionItmoEnded(id: Uuid)
+
+    /**
+     * `POST /api/users/me/connections/{id}/itmo-closed` (phone only): the phone ended the live connection's ITMO.ID
+     * session to take its ITMO grants back; the connection stays, without ITMO grants. 404 unknown, 409 revoked.
+     */
+    @Throws(BackendException::class, CancellationException::class)
+    suspend fun connectionItmoClosed(id: Uuid)
 
     /** `POST /api/users/me/installs/{instanceId}/sign-out`: drops another install's push; 400 own, 404 unknown. */
     @Throws(BackendException::class, CancellationException::class)

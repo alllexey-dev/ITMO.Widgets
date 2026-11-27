@@ -5,7 +5,8 @@ import dev.alllexey.itmowidgets.core.text.UiText
 /**
  * A connected client (UX spec section 4). [gone] is a client that is not in the list (revoked elsewhere): the screen
  * says so; [closed] is set once this screen revoked it and the host leaves. [signIn] and [scopes] are an agent's
- * or an MCP server's; the web has neither.
+ * or an MCP server's; the web has neither. [fullItmoAccess] shows «Полный доступ к ITMO.ID» with «Забрать» for a
+ * client holding `itmo:sso`. [confirm] is answered with [ConnectedClientViewModel.confirm].
  */
 data class ConnectedClientUiState(
     val loading: Boolean = true,
@@ -14,6 +15,7 @@ data class ConnectedClientUiState(
     val subtitle: UiText? = null,
     val icon: DeviceIcon = DeviceIcon.COMPUTER,
     val signIn: SignInStatus? = null,
+    val fullItmoAccess: Boolean = false,
     val scopes: List<ScopeSwitch> = emptyList(),
     val facts: List<Fact> = emptyList(),
     val revoke: UiText = UiText.Dynamic(""),

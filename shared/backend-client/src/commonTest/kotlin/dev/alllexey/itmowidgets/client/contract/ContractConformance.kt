@@ -22,23 +22,39 @@ object ContractConformance {
 
     /**
      * Every recorded request is one OpenAPI operation with the same query parameter names, and every operation is
-     * either recorded or covered by exactly one [NotMirroredRoute], never both.
+     * either recorded or covered by exactly one [NotMirroredRoute], never both. A request of a [pendingRoutes] entry
+     * may match no operation, and a [pendingQueries] name may be missing from its operation; either fails once the
+     * snapshot has it.
      */
     fun routeProblems(
         spec: OpenApi,
         recorded: List<Pair<String, RecordedRequest>>,
         notMirrored: List<NotMirroredRoute>,
+        pendingRoutes: List<PendingBackendRoute> = emptyList(),
+        pendingQueries: List<PendingBackendQuery> = emptyList(),
     ): List<String> {
         val problems = mutableListOf<String>()
         val mirrored = mutableSetOf<Operation>()
+        for (route in pendingRoutes) {
+            if (spec.operations.any { it.method == route.method && it.path == route.path }) {
+                problems += "PendingBackendRoutes $route is in Backend's snapshot now; remove it"
+            }
+        }
         for ((name, request) in recorded) {
             val operation = spec.operationOf(request)
             if (operation == null) {
-                problems += "$name: ${request.method.value} ${request.path} is no Backend operation"
+                if (pendingRoutes.none { it.matches(request.method, request.path) }) {
+                    problems += "$name: ${request.method.value} ${request.path} is no Backend operation"
+                }
                 continue
             }
             mirrored += operation
-            val sent = request.query.map { it.first }.toSet()
+            val pendingNames = pendingQueries.filter { it.method == operation.method && it.path == operation.path }
+                .map { it.name }.toSet()
+            for (pending in pendingNames intersect operation.queryNames) {
+                problems += "PendingBackendQueries $operation ?$pending is in Backend's snapshot now; remove it"
+            }
+            val sent = request.query.map { it.first }.toSet() - pendingNames
             if (sent != operation.queryNames) {
                 problems += "$name: $operation takes query ${operation.queryNames.sorted()}, the client sends " +
                     "${sent.sorted()}"

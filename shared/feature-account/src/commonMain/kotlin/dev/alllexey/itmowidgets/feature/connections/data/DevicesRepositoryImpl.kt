@@ -46,6 +46,8 @@ class DevicesRepositoryImpl(
 
     override suspend fun itmoEnded(id: Uuid): AppResult<Unit> = call { api.connectionItmoEnded(id) }
 
+    override suspend fun itmoClosed(id: Uuid): AppResult<Unit> = call { api.connectionItmoClosed(id) }
+
     override suspend fun signOutInstall(instanceId: Uuid): AppResult<Unit> = call { api.signOutInstall(instanceId) }
         .also {
             if (it is AppResult.Success) {

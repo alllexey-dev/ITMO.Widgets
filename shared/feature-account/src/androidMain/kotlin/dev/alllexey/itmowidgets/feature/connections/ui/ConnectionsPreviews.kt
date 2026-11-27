@@ -62,6 +62,12 @@ internal class ConnectionScreenMcpClosedPreview {
     fun ConnectionScreen() = Client(ConnectionsSamples.mcpClosed)
 }
 
+internal class ConnectionScreenMcpFullAccessPreview {
+    @Preview(name = "mcp-full-access", heightDp = 1100)
+    @Composable
+    fun ConnectionScreen() = Client(ConnectionsSamples.mcpFullAccess)
+}
+
 internal class ConnectionScreenWebPreview {
     @Preview(name = "web")
     @Composable
@@ -84,6 +90,18 @@ internal class PairingSheetConfirmPreview {
     @Preview(name = "confirm", heightDp = 1100)
     @Composable
     fun PairingSheet() = ItmoPreview { PairingConfirm(ConnectionsSamples.pairConfirm, close, {}, { _, _ -> }, {}) }
+}
+
+internal class PairingSheetConfirmGrantsPreview {
+    @Preview(name = "confirm-grants", heightDp = 1500)
+    @Composable
+    fun PairingSheet() = ItmoPreview { PairingConfirm(ConnectionsSamples.pairConfirmGrants, close, {}, { _, _ -> }, {}) }
+}
+
+internal class PairingSheetConfirmRequiredPreview {
+    @Preview(name = "confirm-required", heightDp = 1100)
+    @Composable
+    fun PairingSheet() = ItmoPreview { PairingConfirm(ConnectionsSamples.pairConfirmRequired, close, {}, { _, _ -> }, {}) }
 }
 
 internal class PairingSheetConfirmWebPreview {

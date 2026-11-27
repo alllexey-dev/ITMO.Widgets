@@ -23,7 +23,10 @@ data class ItmoSessionRef(val sid: String, val expiresAt: Instant) {
     override fun toString(): String = "ItmoSessionRef(sid=<redacted>, expiresAt=$expiresAt)"
 }
 
-/** A connected client. [revokedAt] is set on a revoked one whose ITMO session the phone has not ended yet. */
+/**
+ * A connected client. [revokedAt] is set on a revoked one whose ITMO session the phone has not ended yet;
+ * [itmoGrants] are the `itmo:*` grants the phone sealed to it (Backend's label).
+ */
 data class Connection(
     val id: Uuid,
     val client: ClientType,
@@ -37,6 +40,7 @@ data class Connection(
     val itmo: ItmoSessionRef?,
     val health: ItmoHealth,
     val revokedAt: Instant?,
+    val itmoGrants: List<String> = emptyList(),
 )
 
 /** One app install of the user; [os] is the Android API level or the iOS major version. */
@@ -100,6 +104,9 @@ interface DevicesRepository {
     suspend fun revoke(id: Uuid): AppResult<Unit>
 
     suspend fun itmoEnded(id: Uuid): AppResult<Unit>
+
+    /** The phone ended a live connection's ITMO session to take its ITMO grants back; the connection stays. */
+    suspend fun itmoClosed(id: Uuid): AppResult<Unit>
 
     suspend fun signOutInstall(instanceId: Uuid): AppResult<Unit>
 }

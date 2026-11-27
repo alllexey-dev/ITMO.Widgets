@@ -66,6 +66,7 @@ class ConnectionActions(
     val onRenew: () -> Unit = {},
     val onCloseRenew: () -> Unit = {},
     val onRevoke: () -> Unit = {},
+    val onTakeBackItmo: () -> Unit = {},
     val onConfirm: () -> Unit = {},
     val onDismissConfirm: () -> Unit = {},
     val onMessageShown: () -> Unit = {},
@@ -91,7 +92,8 @@ fun ConnectionRoute(
             onRenew = viewModel::askRenew,
             onCloseRenew = viewModel::closeRenew,
             onRevoke = viewModel::askRevoke,
-            onConfirm = viewModel::revoke,
+            onTakeBackItmo = viewModel::askTakeBackItmo,
+            onConfirm = viewModel::confirm,
             onDismissConfirm = viewModel::dismissConfirm,
             onMessageShown = viewModel::onMessageShown,
         )
@@ -140,6 +142,20 @@ private fun ConnectionContent(state: ConnectedClientUiState, actions: Connection
     state.signIn?.let { signIn ->
         SectionHeader(text(AccountStrings.connection_section_sign_in))
         SignIn(signIn, actions)
+    }
+    if (state.fullItmoAccess) {
+        ListGroup {
+            item {
+                ListRow(
+                    text(AccountStrings.grant_sso_title),
+                    Modifier.testTag(ConnectionTestTags.FULL_ACCESS),
+                    icon = painterResource(Res.drawable.ic_key),
+                    iconTone = Tone.Warning,
+                    trailing = text(AccountStrings.connection_take_back),
+                    onClick = if (state.busy) null else actions.onTakeBackItmo,
+                )
+            }
+        }
     }
     if (state.scopes.isNotEmpty()) {
         SectionHeader(text(AccountStrings.connection_section_access))
@@ -253,6 +269,7 @@ object ConnectionTestTags {
     const val SCOPES = "connection_scopes"
     const val RENEW = "connection_renew"
     const val REVOKE = "connection_revoke"
+    const val FULL_ACCESS = "connection_full_access"
 
     fun scope(id: String): String = "connection_scope:$id"
 }

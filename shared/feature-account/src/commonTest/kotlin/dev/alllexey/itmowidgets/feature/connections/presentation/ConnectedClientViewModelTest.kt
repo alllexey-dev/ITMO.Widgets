@@ -1,10 +1,12 @@
 package dev.alllexey.itmowidgets.feature.connections.presentation
 
+import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
 import dev.alllexey.itmowidgets.feature.connections.domain.Devices
+import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoHealth
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogins
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
@@ -134,5 +136,64 @@ class ConnectedClientViewModelTest {
         model.askRenew()
 
         assertEquals("itmo-widgets-agent renew", model.uiState.value.renew?.command)
+    }
+
+    @Test
+    fun aClientWithoutItmoSsoHasNoFullAccessRow() = runTest(main.dispatcher) {
+        val model = viewModel()
+        advanceUntilIdle()
+
+        assertFalse(model.uiState.value.fullItmoAccess)
+        model.askTakeBackItmo()
+        assertNull(model.uiState.value.confirm)
+    }
+
+    @Test
+    fun takingFullAccessBackEndsTheSessionReportsItAndReloads() = runTest(main.dispatcher) {
+        devices.next = Devices(listOf(Samples.agent(itmoGrants = listOf(ItmoGrants.REFRESH, ItmoGrants.SSO))), emptyList())
+        val model = viewModel()
+        advanceUntilIdle()
+        assertTrue(model.uiState.value.fullItmoAccess)
+
+        model.askTakeBackItmo()
+        assertNotNull(model.uiState.value.confirm)
+        devices.calls.clear()
+        model.confirm()
+        advanceUntilIdle()
+
+        assertEquals(listOf(listOf("sid-agent")), logins.ended)
+        assertEquals(listOf("closed ${Samples.agentId}", "refresh"), devices.calls)
+        assertNull(model.uiState.value.confirm)
+        assertFalse(model.uiState.value.closed)
+    }
+
+    @Test
+    fun aSessionThatCouldNotBeEndedIsNotReportedClosed() = runTest(main.dispatcher) {
+        devices.next = Devices(listOf(Samples.agent(itmoGrants = listOf(ItmoGrants.SSO))), emptyList())
+        logins.endFailure = AppError.Unauthorized
+        val model = viewModel()
+        advanceUntilIdle()
+        devices.calls.clear()
+
+        model.askTakeBackItmo()
+        model.confirm()
+        advanceUntilIdle()
+
+        assertTrue(devices.calls.isEmpty())
+        assertNotNull(model.uiState.value.message)
+        assertFalse(model.uiState.value.busy)
+    }
+
+    @Test
+    fun theRevokeDialogStillRevokes() = runTest(main.dispatcher) {
+        val model = viewModel()
+        advanceUntilIdle()
+
+        model.askRevoke()
+        model.confirm()
+        advanceUntilIdle()
+
+        assertTrue("revoke ${Samples.agentId}" in devices.calls)
+        assertTrue(model.uiState.value.closed)
     }
 }
