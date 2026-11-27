@@ -51,6 +51,7 @@ internal class FakeSubjectLinksRepository : SubjectLinksRepository {
     var refreshes = 0
     var restrictionRefreshes = 0
     var lastSave: SubjectLink? = null
+    var lastFlowOptions: List<LinkAudience>? = null
 
     override fun observe(scope: ResourceScope) = state
     override fun peek(scope: ResourceScope) = (state.value as? SubjectLinksState.Content)?.snapshot
@@ -63,11 +64,13 @@ internal class FakeSubjectLinksRepository : SubjectLinksRepository {
         title: String?,
         visibility: LinkVisibility,
         flowId: Long?,
+        flowOptions: List<LinkAudience>,
     ): AppResult<SubjectLink> {
         actions += "save"
         gate()
         val link = subjectLink(id, category, visibility, flowId = flowId).copy(scope = scope, url = url, title = title)
         lastSave = link
+        lastFlowOptions = flowOptions
         return (result as? AppResult.Failure) ?: AppResult.Success(link)
     }
     override suspend fun delete(scope: ResourceScope, id: String) = act("delete:$id")

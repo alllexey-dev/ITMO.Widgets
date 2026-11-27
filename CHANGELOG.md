@@ -6,6 +6,9 @@ publication or deployment.
 
 ## Unreleased
 
+- Links: a `FLOW` or `ALL` link save sends Backend the flows the editor offered (`flowOptions` in
+  `SaveSubjectLinkRequest`, at most 32), so that a moderator can move a `FLOW` link to another of the author's flows;
+  a `PRIVATE` save sends none, and a Backend without the field ignores it.
 - Recordbook: a Google Drive link to an uploaded spreadsheet (`drive.google.com/file/d/<id>`, an `.xlsx`) under
   `Баллы` now offers `Мои баллы`; the file is read by its id at the Sheets address. `Посчитать с ИИ` takes such a
   link too, Backend normalizes it to the sheet of its id (itmo-widgets-backend#76).
