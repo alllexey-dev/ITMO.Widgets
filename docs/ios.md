@@ -109,6 +109,8 @@ The root is the SwiftUI shell in `iosApp/Sources/App/Shell/`.
 The scheme is the build setting `APP_URL_SCHEME`. Placed widgets and Controls keep their URLs, so the scheme, the route
 ids and the query names `args`, `lesson`, `predicted` are frozen (`StableIdentifiersTests`). Widgets build them in
 `WidgetRoute` (`Extensions/Widgets/Common/`); `RouteURL` reads them through `IosRoutes.lessonRoute` and `sportRoute`.
+Shared `https` links (`/u/<isu>`, `/sport/<id>`, `/sport/p/<id>`, `/pair`) arrive in the same `.onOpenURL` as Universal
+Links in signed builds and go through `IosRoutes.linkRoute` ([app links](features/app-links.md#ios)).
 
 ## Swift bridge and screens
 
@@ -272,6 +274,10 @@ also sets `ITMO_BUILD_CHANNEL = official` ([build identity](building.md#build-id
   `CA92.1`, file timestamps `C617.1`, found with `nm -u` on a Release archive; the extensions link none) and the
   data Backend stores with the services opt-in, as the privacy policy lists it. A new required-reason API in Swift or
   Kotlin needs its entry, or App Store Connect rejects the upload.
+- Universal Links need the app's `com.apple.developer.associated-domains` (`ITMOWidgets.signed.entitlements`,
+  `applinks:` for both hosts), the Associated Domains capability on the App ID in the Apple Developer account and
+  a provisioning profile that includes it, and the site's `apple-app-site-association` for the same team
+  ([app links](features/app-links.md#ios)).
 - `ITSAppUsesNonExemptEncryption = NO`: the app uses only the system's HTTPS and Keychain.
 - App Store Connect takes only `N.N.N` as the marketing version: `archive.sh --signed` drops the pre-release suffix
   of `MARKETING_VERSION` (`2.3.0-beta.4` -> `2.3.0`); the unsigned `.ipa` keeps it.
@@ -403,7 +409,8 @@ calendar sync), keeps Android's periods in
 | Background checks | when iOS wakes the app, at launch and on return | iOS has no WorkManager |
 | BARS in the background | only through the Keychain cookie copy | a background run has about 30 s and no window |
 | Notification channels | one switch | iOS has no channels |
-| Push, Universal Links, dropped-push filtering | not available in unsigned builds | they need the Apple developer account |
+| Push, dropped-push filtering | not available in unsigned builds | they need the Apple developer account |
+| Universal Links | only in builds signed by the owner's team (App Store, TestFlight, the owner's signed builds); unsigned and sideloaded builds open `https://widgets.alllexey.dev/u/*`, `/sport/*`, `/pair` in Safari | the site's `apple-app-site-association` names only that team's app ID ([app links](features/app-links.md#ios)) |
 | Wi-Fi quick connect | none: the sheet has no `Подключиться`, the password is copied and pasted in the Wi-Fi settings by hand | `NEHotspotConfiguration` needs the Hotspot Configuration capability, which re-signed builds do not get; iOS has no public Wi-Fi settings URL |
 | Push switches (`Спорт`, `Друзья`, `Новые устройства`) | hidden, every push shows | dropping a push needs `com.apple.developer.usernotifications.filtering`, not granted yet |
 | Update offer | App Store page only, nothing while `APP_STORE_ID` is empty | no other channel on iOS |
