@@ -52,6 +52,11 @@ class SubjectLinkContractTest {
         )
         assertRoundTrips(SaveSubjectLinkRequest.serializer(), fixtures.save)
         assertRoundTrips(SaveSubjectLinkRequest.serializer(), fixtures.privateSave.copy(title = "Очередь"))
+        assertRoundTrips(SaveSubjectLinkRequest.serializer(), fixtures.flowSave)
+        assertRoundTrips(
+            SaveSubjectLinkRequest.serializer(),
+            fixtures.flowSave.copy(visibility = LinkVisibility.ALL, flowId = null),
+        )
         assertRoundTrips(PinSubjectLinkRequest.serializer(), PinSubjectLinkRequest("2026-1", fixtures.id))
         assertRoundTrips(PinSubjectLinkRequest.serializer(), PinSubjectLinkRequest("2026-1"))
         assertRoundTrips(ResourceVoteRequest.serializer(), ResourceVoteRequest(-1))
@@ -93,6 +98,16 @@ class SubjectLinkContractTest {
             jsonOf(SaveSubjectLinkRequest.serializer(), fixtures.privateSave),
         )
         assertEquals(
+            BackendJson.parseToJsonElement(
+                """{"subjectId":42,"subjectName":"Предмет","periodKey":"2026-1","category":"QUEUE",
+                "url":"https://example.invalid/queue","visibility":"FLOW","flowId":7103,"flowOptions":[
+                {"flowId":7101,"label":"ФИЗ ПИИКТ 3","typeId":1,"depth":1},
+                {"flowId":7102,"label":"ФИЗ ПИИКТ 3.2","typeId":3,"depth":2},
+                {"flowId":7103,"label":"ФИЗ ПИИКТ 3.2.1","typeId":2,"depth":3}]}""",
+            ),
+            jsonOf(SaveSubjectLinkRequest.serializer(), fixtures.flowSave),
+        )
+        assertEquals(
             BackendJson.parseToJsonElement("""{"periodKey":"2026-1","linkId":"${fixtures.id}"}"""),
             jsonOf(PinSubjectLinkRequest.serializer(), PinSubjectLinkRequest("2026-1", fixtures.id)),
         )
@@ -125,6 +140,9 @@ class SubjectLinkContractTest {
 
         val privateSave = jsonOf(SaveSubjectLinkRequest.serializer(), fixtures.privateSave).with("flowId", "null")
         assertNull(decode(SaveSubjectLinkRequest.serializer(), privateSave).flowId)
+        val noOptions = jsonOf(SaveSubjectLinkRequest.serializer(), fixtures.flowSave)
+        assertEquals(fixtures.save, decode(SaveSubjectLinkRequest.serializer(), noOptions.with("flowOptions", "null")))
+        assertEquals(fixtures.save, decode(SaveSubjectLinkRequest.serializer(), noOptions.with("flowOptions", null)))
         val noPin = jsonOf(SubjectLinksResponse.serializer(), fixtures.links).with("pinnedId", "null")
         assertNull(decode(SubjectLinksResponse.serializer(), noPin).pinnedId)
         val noExpiry = jsonOf(UserRestriction.serializer(), fixtures.restriction).with("expiresAt", "null")
@@ -236,6 +254,17 @@ class SubjectLinkContractTest {
         }
         // 2.0: the app cannot build a request Backend would refuse with 400.
         assertFailsWith<IllegalArgumentException> { fixtures.save.copy(flowId = null) }
+        val options = fixtures.links.audiences
+        assertFailsWith<IllegalArgumentException>("PRIVATE with options") { fixtures.privateSave.copy(flowOptions = options) }
+        assertFailsWith<IllegalArgumentException>("empty options") { fixtures.save.copy(flowOptions = emptyList()) }
+        assertFailsWith<IllegalArgumentException>("duplicate options") { fixtures.save.copy(flowOptions = options + options) }
+        assertFailsWith<IllegalArgumentException>("options without the flow") {
+            fixtures.save.copy(flowOptions = options.filterNot { it.flowId == ResourceContractFixtures.FLOW_ID })
+        }
+        val many = (1L..SaveSubjectLinkRequest.MAX_FLOW_OPTIONS + 1L).map { LinkAudience(it, "Поток $it", 1, 1) }
+        val all = fixtures.save.copy(visibility = LinkVisibility.ALL, flowId = null)
+        assertEquals(many.dropLast(1), all.copy(flowOptions = many.dropLast(1)).flowOptions)
+        assertFailsWith<IllegalArgumentException>("33 options") { all.copy(flowOptions = many) }
         assertFailsWith<IllegalArgumentException> {
             fixtures.privateSave.copy(flowId = ResourceContractFixtures.FLOW_ID)
         }

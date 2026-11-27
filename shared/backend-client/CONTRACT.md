@@ -222,8 +222,8 @@ and an OpenAPI snapshot (`B/docs/openapi.json`). This module tests against a ven
   constants except `UNKNOWN` equal the schema's `enum`, a nested model names the same schema, and the sealed sport
   types have the schema's `oneOf` with the `type` values `free` and `auto`. A model that reaches an unlisted model
   or enum fails, so a new top-level request or answer type joins `WireModels`.
-- `PendingBackendFields` lists the client fields Backend has not shipped yet, each with its reason; it is
-  empty since Backend 1.9.1. An entry the snapshot already has fails, so the list cannot go stale.
+- `PendingBackendFields` lists the client fields Backend has not shipped yet, each with its reason; now only
+  `SaveSubjectLinkRequest.flowOptions`. An entry the snapshot already has fails, so the list cannot go stale.
 - Seeded-drift tests (a renamed field, an extra enum value, an unknown route, an unlisted operation, an unclaimed
   fixture and others) prove that each check fails.
 

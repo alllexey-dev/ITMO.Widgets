@@ -3,6 +3,7 @@ package dev.alllexey.itmowidgets.feature.resources.data
 import dev.alllexey.itmowidgets.client.common.ModerationReportRequest
 import dev.alllexey.itmowidgets.client.common.ResourceVoteRequest
 import dev.alllexey.itmowidgets.client.links.PinSubjectLinkRequest
+import dev.alllexey.itmowidgets.client.links.SaveSubjectLinkRequest
 import dev.alllexey.itmowidgets.client.links.SubjectLinksApi
 import dev.alllexey.itmowidgets.core.coroutines.AppDispatchers
 import dev.alllexey.itmowidgets.core.demo.DemoMode
@@ -10,6 +11,7 @@ import dev.alllexey.itmowidgets.feature.resources.data.demo.DemoSubjectLinks
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
@@ -134,10 +136,12 @@ class SubjectLinksRepositoryImpl(
         title: String?,
         visibility: LinkVisibility,
         flowId: Long?,
+        flowOptions: List<LinkAudience>,
     ): AppResult<SubjectLink> = if (demo.isActive()) AppResult.Failure(AppError.DemoUnavailable) else attempt {
         val generation = epoch.load()
         load(generation)
         val request = saveRequest(scope, id, category, url, title, visibility, flowId)
+        val options = flowOptions(visibility, flowId, flowOptions)
         if (!isEnabled()) {
             val onServer = current().scopes.values.any { cached -> cached.response.mine.any { it.id == id } }
             if (visibility != LinkVisibility.PRIVATE || onServer) throw Failure(AppError.CustomServicesDisabled)
@@ -146,7 +150,7 @@ class SubjectLinksRepositoryImpl(
             return@attempt link.toModel()
         }
         networkLock.withLock {
-            val answer = restricted(generation) { request(generation) { api.saveSubjectLink(id.toWireId(), request.toWire()) } }.toStored()
+            val answer = restricted(generation) { request(generation) { api.saveSubjectLink(id.toWireId(), request.toWire(options)) } }.toStored()
             mutate(generation) { it.copy(local = it.local - id).withMine(scope, answer) }
             if (current().scopes[scope.key] == null) {
                 try { fetch(generation, scope) } catch (_: Failure) { /* The saved link comes with the next refresh. */ }
@@ -402,6 +406,21 @@ class SubjectLinksRepositoryImpl(
         require((visibility == LinkVisibility.FLOW) == (flowId != null))
         return StoredLinkRequest(scope.subjectId, scope.subjectName.trim(), scope.periodKey, category, cleanUrl, cleanTitle,
             visibility, flowId)
+    }
+
+    /**
+     * The flows offered with a FLOW or ALL save, unique and at most [SaveSubjectLinkRequest.MAX_FLOW_OPTIONS] in the
+     * editor's order; a FLOW link's own flow always stays. None with PRIVATE or an empty list.
+     */
+    private fun flowOptions(visibility: LinkVisibility, flowId: Long?, offered: List<LinkAudience>): List<LinkAudience>? {
+        if (visibility == LinkVisibility.PRIVATE) return null
+        val unique = offered.distinctBy { it.flowId }
+        val chosen = unique.filter { it.flowId == flowId }
+        // Backend checks a FLOW link's flow against the list, so a list without it would refuse the save.
+        if (flowId != null && chosen.isEmpty()) return null
+        val kept = (chosen + unique.filter { it.flowId != flowId }.take(SaveSubjectLinkRequest.MAX_FLOW_OPTIONS - chosen.size))
+            .map { it.flowId }.toSet()
+        return unique.filter { it.flowId in kept }.ifEmpty { null }
     }
 
     private fun StoredLinks.withResponse(scope: ResourceScope, response: StoredLinksAnswer) =

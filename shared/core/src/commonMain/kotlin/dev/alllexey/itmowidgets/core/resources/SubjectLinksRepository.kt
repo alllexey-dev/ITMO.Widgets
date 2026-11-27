@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
  * Without it links are PRIVATE and stay on the device until the first refresh with the opt-in uploads them;
  * voting, reports, pinning or saving others' links and non-PRIVATE visibility fail with `CustomServicesDisabled`.
  * A FLOW link names one of the viewer's [LinkAudience.flowId]s in [save]; other visibilities pass null.
+ * [save] also takes the flows the editor offered ([SubjectLinksSnapshot.audiences]): a FLOW or ALL link sends them to
+ * the server so that a moderator can move a FLOW link to another of them; a PRIVATE link does not.
  */
 interface SubjectLinksRepository {
     fun observe(scope: ResourceScope): Flow<SubjectLinksState>
@@ -21,6 +23,7 @@ interface SubjectLinksRepository {
         title: String?,
         visibility: LinkVisibility,
         flowId: Long?,
+        flowOptions: List<LinkAudience> = emptyList(),
     ): AppResult<SubjectLink>
     suspend fun delete(scope: ResourceScope, id: String): AppResult<Unit>
     /** A null [id] removes the pin of the period. */
