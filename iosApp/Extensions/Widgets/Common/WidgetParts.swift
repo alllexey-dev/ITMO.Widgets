@@ -134,13 +134,19 @@ private struct WidgetTile: ViewModifier {
     }
 }
 
-/// Passes its content the proposal with every infinite dimension left unspecified. The Mac's widget host measures an
-/// entry view with an infinite width or height; a `GeometryReader` (the day timeline, the cards' progress) then took
-/// that infinite size and SwiftUI aborted the extension ("view origin is invalid"). Unspecified, a dimension falls
-/// back to the content's ideal size; a finite proposal, which WidgetKit gives on the phone, passes unchanged.
+/// Passes its content the proposal with every infinite dimension left unspecified, and reports an infinite size of
+/// the content as the proposal (or zero). The Mac's widget host measures entry views with infinite widths and its
+/// archived live texts report an infinite ideal width; a `GeometryReader` (the day timeline, the cards and their
+/// progress) then took that size and SwiftUI aborted the extension ("view origin is invalid"). On the phone, where
+/// WidgetKit proposes the family's size and texts are finite, it changes nothing.
 struct FiniteProposal: Layout {
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        subviews.first?.sizeThatFits(Self.finite(proposal)) ?? .zero
+        let finite = Self.finite(proposal)
+        guard let size = subviews.first?.sizeThatFits(finite) else { return .zero }
+        return CGSize(
+            width: size.width.isFinite ? size.width : finite.width ?? 0,
+            height: size.height.isFinite ? size.height : finite.height ?? 0
+        )
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
@@ -154,6 +160,13 @@ struct FiniteProposal: Layout {
             width: proposal.width.flatMap { $0.isFinite ? $0 : nil },
             height: proposal.height.flatMap { $0.isFinite ? $0 : nil }
         )
+    }
+}
+
+extension View {
+    /// This view inside `FiniteProposal`: never given nor reporting an infinite size.
+    func finiteLayout() -> some View {
+        FiniteProposal { self }
     }
 }
 

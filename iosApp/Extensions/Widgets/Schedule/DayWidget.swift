@@ -151,6 +151,7 @@ private struct DayTimeline: View {
             }
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
         }
+        .finiteLayout()
     }
 
     /// The full hours inside the axis, without the one under the now chip.

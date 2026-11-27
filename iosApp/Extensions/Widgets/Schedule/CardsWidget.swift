@@ -170,6 +170,7 @@ private struct CardsTile: View {
             .padding(.bottom, 10)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .finiteLayout()
     }
 
     private func header(date: String, day: DayContent, offset: Int, index: Int, last: Int, base: String) -> some View {
@@ -336,6 +337,7 @@ private struct CardsLessonCard: View {
                         .foregroundStyle(colors.onHero)
                         .lineLimit(1)
                         .fixedSize()
+                        .finiteLayout()
                 }
             }
         }
@@ -431,6 +433,7 @@ struct WavyProgress: View {
                 }
             }
         }
+        .finiteLayout()
         .frame(height: 12)
         .accessibilityHidden(true)
     }
