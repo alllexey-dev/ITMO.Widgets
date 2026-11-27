@@ -17,8 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.text.asString
@@ -63,7 +61,6 @@ fun PairingSheetRoute(viewModel: PairingViewModel, unlock: DeviceUnlock, onScan:
             url = current.url,
             userAgent = current.userAgent,
             title = current.title.asString(),
-            code = current.code,
             onNavigation = viewModel::onSignInNavigation,
             onClose = viewModel::onSignInCancelled,
             onUnsupported = viewModel::onSignInUnsupported,
@@ -164,16 +161,11 @@ internal fun PairingConfirm(
                 }
             }
         }
-        ItmoCard(Modifier.testTag(PairingTestTags.CODE)) {
-            Text(text(AccountStrings.pair_code_title), style = ItmoTheme.typography.labelLarge)
-            Text(
-                state.code,
-                Modifier.fillMaxWidth().padding(vertical = ItmoTheme.spacing.related),
-                style = ItmoTheme.typography.displaySmall,
-                fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.Center,
-            )
-            Text(text(AccountStrings.pair_code_hint), style = ItmoTheme.typography.bodySmall)
+        if (state.caution) {
+            ItmoCard(Modifier.testTag(PairingTestTags.CAUTION)) {
+                Text(text(AccountStrings.pair_caution_title), style = ItmoTheme.typography.labelLarge)
+                Text(text(AccountStrings.pair_caution_text), style = ItmoTheme.typography.bodySmall)
+            }
         }
         if (state.scopes.isNotEmpty()) {
             SectionHeader(text(AccountStrings.pair_access))
@@ -223,7 +215,7 @@ object PairingTestTags {
     const val FIELD = "pairing_field"
     const val SCAN = "pairing_scan"
     const val OPEN = "pairing_open"
-    const val CODE = "pairing_code"
+    const val CAUTION = "pairing_caution"
     const val PROCEED = "pairing_proceed"
     const val RESULT = "pairing_result"
     const val SIGN_IN = "pairing_sign_in"

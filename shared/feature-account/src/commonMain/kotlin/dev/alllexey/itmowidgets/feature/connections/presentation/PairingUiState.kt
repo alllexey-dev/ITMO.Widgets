@@ -10,15 +10,15 @@ sealed interface PairingUiState {
     data object Opening : PairingUiState
 
     /**
-     * The client and the code to compare. [scopes] are switches of a new agent or MCP server (narrowing only);
-     * [renewal] has no card: the host asks for the screen lock at once ([PairingViewModel.proceed]) and the code
-     * shows over the sign-in page.
+     * The client to approve. [scopes] are switches of a new agent or MCP server (narrowing only); [caution] asks a new
+     * connection to be approved only for a QR on the user's own screen; [renewal] has no card: the host asks for the
+     * screen lock at once ([PairingViewModel.proceed]).
      */
     data class Confirm(
         val icon: DeviceIcon,
         val name: UiText,
         val subtitle: UiText,
-        val code: String,
+        val caution: Boolean,
         val scopes: List<ScopeSwitch>,
         val note: UiText,
         val primary: UiText,
@@ -30,9 +30,9 @@ sealed interface PairingUiState {
 
     /**
      * The official ITMO.ID page for the client, full screen, in a browser with its own empty store and [userAgent];
-     * every main-frame navigation goes through [PairingViewModel.onSignInNavigation]. [code] is shown on a renewal.
+     * every main-frame navigation goes through [PairingViewModel.onSignInNavigation].
      */
-    data class SigningIn(val url: String, val userAgent: String, val title: UiText, val code: String?) : PairingUiState
+    data class SigningIn(val url: String, val userAgent: String, val title: UiText) : PairingUiState
 
     data object Sending : PairingUiState
 

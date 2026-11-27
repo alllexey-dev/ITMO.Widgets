@@ -21,7 +21,6 @@ import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoSessionRef
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingApproval
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingBundle
-import dev.alllexey.itmowidgets.feature.connections.domain.PairingCrypto
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingError
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingKind
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingRepository
@@ -36,10 +35,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * «Подключить устройство»: a client's link (scanned, pasted or an App Link), its card with the code to compare, the
- * screen lock, then for an agent or MCP server the official ITMO.ID page in an empty browser store: the new session
- * is sealed to the link's key and approved with its `sid`; a renewal ends the old session after. The web is approved
- * without a sign-in. The link and the client's tokens stay in memory only, never in the saved state.
+ * «Подключить устройство»: a client's link (scanned, pasted or an App Link), its card, the screen lock, then for an
+ * agent or MCP server the official ITMO.ID page in an empty browser store: the new session is sealed to the link's key
+ * and approved with its `sid`; a renewal ends the old session after. The web is approved without a sign-in. The link and the client's tokens stay in memory only, never in the saved state.
  */
 class PairingViewModel(
     private val handle: SavedStateHandle,
@@ -164,12 +162,12 @@ class PairingViewModel(
         job = viewModelScope.launch {
             _uiState.value = when (val opened = pairing.open(parsed)) {
                 is PairingResult.Failure -> pairingFailure(opened.error)
-                is PairingResult.Success -> confirm(opened.value, parsed)
+                is PairingResult.Success -> confirm(opened.value)
             }
         }
     }
 
-    private fun confirm(opened: PairingRequest, parsed: PairLink): PairingUiState.Confirm {
+    private fun confirm(opened: PairingRequest): PairingUiState.Confirm {
         request = opened
         val web = opened.client == ClientType.WEB
         val connect = opened.kind == PairingKind.CONNECT
@@ -184,7 +182,7 @@ class PairingViewModel(
             subtitle = if (web) UiText.Res(AccountStrings.pair_web_subtitle) else {
                 clientSubtitle(opened.client, opened.version, opened.platform)
             },
-            code = code(opened, parsed),
+            caution = connect,
             scopes = chosen,
             note = if (web) UiText.Res(AccountStrings.pair_note_web) else {
                 UiText.Res(AccountStrings.pair_note_client, listOf(opened.name, opened.name))
@@ -196,14 +194,12 @@ class PairingViewModel(
 
     private suspend fun beginSignIn() {
         val opened = request ?: return
-        val parsed = link ?: return
         val started = signIn.begin(opened)
         attempt = started
         _uiState.value = PairingUiState.SigningIn(
             url = started.url,
             userAgent = started.userAgent,
             title = UiText.Res(AccountStrings.pair_sign_in_title, listOf(opened.name)),
-            code = code(opened, parsed).takeIf { opened.kind == PairingKind.RENEW },
         )
     }
 
@@ -282,9 +278,6 @@ class PairingViewModel(
         } ?: UiText.Res(AccountStrings.pair_done_web_text)
         return PairingUiState.Result(true, title, text, UiText.Res(AccountStrings.pair_done_action), ResultAction.CLOSE)
     }
-
-    private fun code(opened: PairingRequest, parsed: PairLink): String =
-        PairingCrypto.verificationCode(opened.challengeId, parsed.publicKey, parsed.secret).chunked(3).joinToString(" ")
 
     private fun pairingFailure(error: PairingError): PairingUiState.Result = when (error) {
         PairingError.LinkMismatch -> failure(UiText.Res(AccountStrings.pair_link_mismatch), ResultAction.SCAN_AGAIN)

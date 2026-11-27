@@ -4,7 +4,6 @@ import dev.alllexey.itmowidgets.feature.connections.domain.PairingVectors.CHALLE
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingVectors.SECRET
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.uuid.Uuid
 
 /** Expected values computed independently with Python's `hashlib` from the formulas of the pairing design. */
 class PairingCryptoTest {
@@ -21,13 +20,5 @@ class PairingCryptoTest {
     @Test
     fun theInfoBindsTheChallengeTheKindAndTheSecret() {
         assertEquals(PairingVectors.INFO_HEX, PairingCrypto.info(CHALLENGE_ID, PairingKind.CONNECT, SECRET).toHexString())
-    }
-
-    @Test
-    fun theVerificationCodeIsSixDigitsFromTheFirstTwentyBits() {
-        assertEquals("765323", PairingCrypto.verificationCode(CHALLENGE_ID, publicKey, SECRET))
-        // 20 bits reach 1_048_575: this one is 1_003_981, so it wraps and keeps its leading zeros.
-        val challenge = Uuid.parse("00000000-0000-0000-0000-000000000001")
-        assertEquals("003981", PairingCrypto.verificationCode(challenge, publicKey, ByteArray(16) { 42 }))
     }
 }

@@ -62,9 +62,10 @@ Two sources, joined by `sid`:
 
 1. The link (scanner, paste or App Link) is parsed by `PairLink`; `open` returns the request, shown only when
    Backend's `keyCommitment` equals `SHA-256("iw-pair-commit-v1" || pk || s)` of the link.
-2. The card shows the client, the six-digit code `SHA-256("iw-pair-sas-v1" || challengeId || pk || s)` (first 20 bits
-   mod 10^6) and the requested scopes as switches (narrowing only). A `RENEW` of an agent or MCP has no card: the
-   code stays over the sign-in page.
+2. The card shows the client (the web: browser and OS; an agent or MCP: name, version, platform), on a `CONNECT` the
+   caution «Этот QR-код на вашем экране?» (approve only a QR or link the user opened on their own device), and the
+   requested scopes as switches (narrowing only). A `RENEW` opens only for the owner's own live connection, so it has
+   no caution, and a `RENEW` of an agent or MCP has no card at all. There is no code to compare ([why](#why-no-code)).
 3. Screen lock (`DeviceUnlock`: `BiometricPrompt`, LocalAuthentication). iOS answers once the app is active again: a
    WKWebView that comes up while the Face ID UI still holds the app inactive never loads or takes a touch. The page
    focuses its e-mail field at once; the pairing sheet stays under it, so its `.content` height must not count the
@@ -84,6 +85,21 @@ Two sources, joined by `sid`:
 6. The web is approved without a sign-in and without a bundle.
 
 The link, the PKCE secrets and the client's tokens live only in memory; the saved state keeps the pasted text.
+
+### Why no code
+
+Both screens used to show a six-digit code (`SHA-256("iw-pair-sas-v1" || challengeId || pk || s)`) to compare
+before approving. It caught only one case: the phone opening a QR or link other than the one on the genuine screen in
+front of the user (a link someone sent). It did not stop phishing: a page or CLI the attacker controls shows the
+attacker's QR and the matching code. Nor was it needed against Backend swapping the client's key: the phone checks
+`keyCommitment` against the scanned link. What protects a pairing now:
+
+- the key commitment check (Backend cannot substitute `pk`);
+- a short code life (2 minutes until opened, 10 after) and the first opener owning the code;
+- the caution on a new connection's card and the screen lock before every approval;
+- `DEVICE_CONNECTED_PAYLOAD` on all the user's devices after every new connection, and «Отключить» in «Устройства».
+
+Older app, web, agent and itmo-mcp builds may still show a code; nothing reads it, and the wire is unchanged.
 
 ## Sign-in label
 
