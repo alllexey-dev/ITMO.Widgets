@@ -214,7 +214,6 @@ private fun OnboardingEntry() {
                     event,
                     notifications,
                     askCalendar = { calendar.launch(CALENDAR_PERMISSIONS) },
-                    showConsent = { consent = true },
                     showSnackbar = showSnackbar,
                 )
             }

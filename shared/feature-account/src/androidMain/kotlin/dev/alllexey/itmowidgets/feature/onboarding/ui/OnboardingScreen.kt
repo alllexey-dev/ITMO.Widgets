@@ -31,8 +31,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.alllexey.itmowidgets.core.services.ServicesStoredData
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
@@ -49,10 +51,12 @@ import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingMe
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingStep
 import dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingUiState
+import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
 import dev.alllexey.itmowidgets.shared.designsystem.ic_calendar_add
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_info
+import dev.alllexey.itmowidgets.shared.designsystem.ic_lock
 import dev.alllexey.itmowidgets.shared.designsystem.ic_notification
 import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import org.jetbrains.compose.resources.DrawableResource
@@ -68,12 +72,15 @@ object OnboardingTestTags {
     const val NOTIFICATIONS_GRANTED = "onboarding_notifications_granted"
     const val CALENDAR_BUTTON = "onboarding_calendar_button"
     const val CALENDAR_GRANTED = "onboarding_calendar_granted"
+    const val CONSENT = "onboarding_connection_consent"
+    const val CONSENT_NOTE = "onboarding_connection_consent_note"
     const val DETAILS = "onboarding_connection_details"
 }
 
 /**
  * The callbacks of the first-run flow, one per [dev.alllexey.itmowidgets.feature.onboarding.presentation.OnboardingViewModel]
- * entry point. [onDetails] opens the consent sheet to read what the server keeps, without connecting.
+ * entry point. [onDetails] opens the consent sheet to read the details; [onConnect] (the step's button) and [onConsent]
+ * (the sheet's) both connect.
  */
 data class OnboardingActions(
     val onNext: () -> Unit = {},
@@ -89,8 +96,9 @@ data class OnboardingActions(
 /**
  * The first-run flow (owner, 2026-10-19): the step dots with `1 из 2`, the step's title (and line) over its scrolling
  * body, and the step's actions pinned at the bottom: `Далее` on the first (it works without any permission),
- * `Подключить` and `Не сейчас` on the last. [consentShown] is the consent sheet the host keeps. The [Surface] gives
- * every text without its own colour `onSurface`, so the dark theme draws none of it black.
+ * `Подключить` (the consent itself) and `Не сейчас` on the last, which fits a 360 x 640 dp phone without scrolling.
+ * [consentShown] is the consent sheet the host keeps. The [Surface] gives every text without its own colour
+ * `onSurface`, so the dark theme draws none of it black.
  */
 @Composable
 fun OnboardingScreen(
@@ -276,13 +284,24 @@ private fun PermissionRow(
     }
 }
 
-/** Step 2: a row to read what the server keeps; once connected (a replay), the pill says so. */
+/**
+ * Step 2, the consent in short (owner, 2026-11-27): what the server keeps in one line, a row to the consent sheet for
+ * the details, and, once connected (a replay), the pill that says so. The footer's `Подключить` is the agreement.
+ */
 @Composable
 private fun ConnectionStep(state: OnboardingUiState, actions: OnboardingActions) {
-    ListGroup(Modifier.testTag(OnboardingTestTags.DETAILS)) {
+    ListGroup(Modifier.testTag(OnboardingTestTags.CONSENT)) {
+        item {
+            ListRow(
+                text(CoreStrings.services_consent_stored),
+                subtitle = ServicesStoredData.items.map { it.brief.asString() }.joinToString(", "),
+                icon = painterResource(Res.drawable.ic_lock),
+            )
+        }
         item {
             ListRow(
                 text(AccountStrings.onboarding_connection_details),
+                Modifier.testTag(OnboardingTestTags.DETAILS),
                 icon = painterResource(Res.drawable.ic_info),
                 chevron = true,
                 onClick = actions.onDetails,
@@ -299,6 +318,10 @@ private fun ConnectionStep(state: OnboardingUiState, actions: OnboardingActions)
     }
 }
 
+/**
+ * `Далее` on the first step; on the last, the consent line over `Подключить` (the button agrees and connects) and
+ * `Не сейчас`, or only `Готово` once connected.
+ */
 @Composable
 private fun Footer(state: OnboardingUiState, actions: OnboardingActions) {
     Column(
@@ -306,6 +329,19 @@ private fun Footer(state: OnboardingUiState, actions: OnboardingActions) {
         verticalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.related),
     ) {
         val last = state.step == OnboardingStep.CONNECTION
+        val consenting = last && !state.servicesEnabled
+        if (consenting) {
+            Text(
+                text(AccountStrings.onboarding_connection_consent),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = ItmoTheme.spacing.compact)
+                    .testTag(OnboardingTestTags.CONSENT_NOTE),
+                color = ItmoTheme.colorScheme.onSurfaceVariant,
+                style = ItmoTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+            )
+        }
         ProgressButton(
             label = text(
                 when {
@@ -319,7 +355,7 @@ private fun Footer(state: OnboardingUiState, actions: OnboardingActions) {
             inProgress = state.servicesBusy,
             enabled = !state.finished,
         )
-        if (last && !state.servicesEnabled) {
+        if (consenting) {
             ProgressButton(
                 label = text(AccountStrings.onboarding_connection_not_now),
                 onClick = actions.onNotNow,

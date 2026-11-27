@@ -1453,6 +1453,18 @@
         }
       }
     },
+    "services_stored_device_short" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "токен уведомлений"
+          }
+        }
+      }
+    },
     "services_stored_group" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",
@@ -1461,6 +1473,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Учебная группа"
+          }
+        }
+      }
+    },
+    "services_stored_group_short" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "группа"
           }
         }
       }
@@ -1477,6 +1501,18 @@
         }
       }
     },
+    "services_stored_identity_short" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИСУ, имя и фото"
+          }
+        }
+      }
+    },
     "services_stored_links" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",
@@ -1485,6 +1521,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ваши ссылки к предметам"
+          }
+        }
+      }
+    },
+    "services_stored_links_short" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ваши ссылки"
           }
         }
       }
@@ -1501,6 +1549,18 @@
         }
       }
     },
+    "services_stored_schedule_short" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "расписание"
+          }
+        }
+      }
+    },
     "services_stored_sport" : {
       "comment" : "Generated from strings_common.xml",
       "extractionState" : "manual",
@@ -1509,6 +1569,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Записи и очереди на спорт"
+          }
+        }
+      }
+    },
+    "services_stored_sport_short" : {
+      "comment" : "Generated from strings_common.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "записи на спорт"
           }
         }
       }

@@ -61,6 +61,18 @@
         }
       }
     },
+    "onboarding_connection_consent" : {
+      "comment" : "Generated from strings_onboarding.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажимая «Подключить», вы соглашаетесь на хранение этих данных. Удалить их можно в настройках."
+          }
+        }
+      }
+    },
     "onboarding_connection_details" : {
       "comment" : "Generated from strings_onboarding.xml",
       "extractionState" : "manual",
@@ -68,7 +80,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Что хранит сервер"
+            "value" : "Подробнее"
           }
         }
       }
@@ -92,7 +104,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Друзья и очередь на спорт работают через сервер ITMO.Widgets, остальное — без него."
+            "value" : "Для них нужен сервер ITMO.Widgets, остальное работает без него."
           }
         }
       }

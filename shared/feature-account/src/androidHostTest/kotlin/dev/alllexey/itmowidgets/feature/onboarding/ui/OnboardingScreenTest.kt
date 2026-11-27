@@ -11,7 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -128,6 +130,28 @@ class OnboardingScreenTest {
         onNodeWithTag(OnboardingTestTags.CALENDAR_BUTTON).performScrollTo().assertIsDisplayed()
     }
 
+    /** The step is the consent in short: what the server keeps and the line that the button agrees, then one tap. */
+    @Test
+    fun theLastStepShowsTheConsentAndFitsASmallPhoneWithoutScrolling() = runComposeUiTest {
+        setContent { Box(Modifier.requiredSize(SmallWidth, SmallHeight)) { Screen(OnboardingSamples.state("connection")) } }
+
+        onNodeWithText("Сервер будет хранить").assertIsDisplayed()
+        onNodeWithText("ИСУ, имя и фото, группа, расписание, записи на спорт, ваши ссылки, токен уведомлений")
+            .assertIsDisplayed()
+        onNodeWithTag(OnboardingTestTags.CONSENT_NOTE).assertIsDisplayed()
+        onNodeWithTag(OnboardingTestTags.DETAILS).assertIsDisplayed()
+        val scroll = onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange))
+            .fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange]
+        assertEquals(0f, scroll.maxValue(), "the last step scrolls on a 360 x 640 dp phone")
+    }
+
+    @Test
+    fun connectedTheLastStepHasNoConsentLine() = runComposeUiTest {
+        setContent { Screen(OnboardingSamples.state("connected")) }
+
+        onNodeWithTag(OnboardingTestTags.CONSENT_NOTE).assertDoesNotExist()
+    }
+
     @Test
     fun theLastStepConnectsOrLeavesItAndTheDetailsOpenTheConsent() = runComposeUiTest {
         var connect = 0
@@ -189,6 +213,10 @@ class OnboardingScreenTest {
         ).map(OnboardingSamples::state)
 
         val NarrowWidth: Dp = 320.dp
+
+        /** A 360 x 640 dp phone without its status bar (24 dp) and three-button navigation (48 dp). */
+        val SmallWidth: Dp = 360.dp
+        val SmallHeight: Dp = 568.dp
         val WindowHeight: Dp = 891.dp
         const val NARROW_FONT_SCALE = 1.3f
         const val INITIALS = "АМ"

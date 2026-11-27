@@ -122,15 +122,12 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun connectingGoesThroughTheConsentAndEndsTheFlow() = runTest(main.dispatcher) {
+    fun theConnectButtonIsTheConsentAndEndsTheFlow() = runTest(main.dispatcher) {
         val fixture = Fixture()
         advanceUntilIdle()
 
         fixture.viewModel.connect()
-        assertEquals(OnboardingEvent.ShowConsent, fixture.viewModel.events.first())
-        assertEquals(emptyList(), fixture.services.requests, "nothing turns on before the consent")
-
-        fixture.viewModel.onConsent()
+        fixture.viewModel.connect()
         advanceUntilIdle()
 
         assertEquals(listOf(true), fixture.services.requests)
@@ -144,7 +141,7 @@ class OnboardingViewModelTest {
         fixture.services.failing = true
         advanceUntilIdle()
 
-        fixture.viewModel.onConsent()
+        fixture.viewModel.connect()
         advanceUntilIdle()
 
         assertTrue(fixture.viewModel.events.first() is OnboardingEvent.ShowError)

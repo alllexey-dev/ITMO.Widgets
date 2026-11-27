@@ -16,8 +16,9 @@
     <string name="onboarding_calendar_add">Добавить пары</string>
 
     <string name="onboarding_connection_title">Друзья и очередь</string>
-    <string name="onboarding_connection_text">Друзья и очередь на спорт работают через сервер ITMO.Widgets, остальное — без него.</string>
-    <string name="onboarding_connection_details">Что хранит сервер</string>
+    <string name="onboarding_connection_text">Для них нужен сервер ITMO.Widgets, остальное работает без него.</string>
+    <string name="onboarding_connection_details">Подробнее</string>
+    <string name="onboarding_connection_consent">Нажимая «Подключить», вы соглашаетесь на хранение этих данных. Удалить их можно в настройках.</string>
     <string name="onboarding_connection_connect">Подключить</string>
     <string name="onboarding_connection_not_now">Не сейчас</string>
     <string name="onboarding_connection_connected">Подключено</string>
