@@ -11,8 +11,8 @@ Product behaviour: [Как это работает: оценки](../how-it-work
   keeps its scroll. It opens on `Баллы`; a key with `materials = true` (the lesson sheet's `Ссылки`) opens
   on `Материалы`. No `Люди` tab: teachers are rows of `Пары`.
 - `Баллы`: a BARS notice row (`Войти` or `Повторить`), the hero (points, grade or final result, the
-  next grade hint), the connected sheet with its menu ([sheet scores](sheet-scores.md#on-the-subject-page)),
-  the sport points of Физкультура, then the checkpoints by group with their sums and minimums. The source
+  next grade hint), the connected sheet with its menu or, without one, `Мои баллы из таблицы` right under the
+  hero ([sheet scores](sheet-scores.md#on-the-subject-page)), the sport points of Физкультура, then the checkpoints by group with their sums and minimums. The source
   of the hero's number follows the list: BARS, a sheet's total while in progress, My ITMO.
 - `Пары`: the schedule question (below), the teachers as rows that open the person (review gate or
   `Написать отзыв` when no teacher has a summary), then the three nearest lessons as the schedule's lesson

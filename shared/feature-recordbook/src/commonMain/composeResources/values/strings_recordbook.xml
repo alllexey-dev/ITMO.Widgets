@@ -104,12 +104,15 @@
     <string name="sheet_total_find">Как найти итог</string>
     <string name="sheet_total_pick_column">Выбрать столбец</string>
     <string name="sheet_total_done">Готово</string>
-    <string name="sheet_ai_offer_note">ИИ разберёт формулы таблицы</string>
+    <string name="sheet_ai_offer_title">ИИ найдёт, как считается итог</string>
+    <string name="sheet_ai_offer_note">ИИ разберёт, как устроена таблица: листы, заголовки и формулы.</string>
     <string name="sheet_formula_sum">Сумма: %1$s</string>
     <string name="sheet_formula_min">мин(%1$s)</string>
     <string name="sheet_formula_max">макс(%1$s)</string>
     <string name="subject_sheet_caption_formula">%1$s, лист «%2$s»</string>
     <string name="sheet_ai_analyze">Посчитать с ИИ</string>
+    <string name="sheet_ai_recompute">Пересчитать с ИИ</string>
+    <string name="sheet_ai_unchanged">Формула не изменилась</string>
     <string name="sheet_ai_running">Разбираем таблицу, обычно до минуты</string>
     <string name="sheet_ai_more">Как считает ИИ</string>
     <string name="sheet_ai_less">Скрыть</string>

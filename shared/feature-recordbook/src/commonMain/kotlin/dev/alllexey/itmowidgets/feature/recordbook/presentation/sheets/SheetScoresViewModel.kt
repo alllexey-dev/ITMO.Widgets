@@ -80,10 +80,15 @@ class SheetScoresViewModel(
     private var matches: List<SheetRowMatch> = emptyList()
     /** One action at a time: a second tap while one runs is ignored. */
     private var job: Job? = null
-    /** The AI request and its polling; it runs beside the manual pick and stops with the view model. */
+    /**
+     * The stored rule's read on opening, or an ask and its polling; it runs beside the manual pick and stops with the
+     * view model. An ask replaces the read.
+     */
     private var aiJob: Job? = null
-    /** The AI rule's own row and totals over this workbook while its proposal shows. */
+    /** The AI rule's own row and totals over this workbook while its result is known. */
     private var proposal: Pair<SheetRowMatch, SheetTotalPick>? = null
+    /** The connected formula when the AI made it: the same rule read again is that total, not another variant. */
+    private var connectedAi: SheetFormula? = null
 
     init {
         start()
@@ -173,21 +178,27 @@ class SheetScoresViewModel(
         }
     }
 
-    /** `Посчитать с ИИ`: asks Backend, then polls until the rule is ready, it fails or [AI_TIMEOUT] passes. */
+    /**
+     * `Посчитать с ИИ` or `Пересчитать с ИИ`, the only way to ask Backend for an analysis (`POST`): polls until the rule
+     * is ready and no longer being checked, it fails or [AI_TIMEOUT] passes (a stale rule then stays). Choosing the AI's
+     * variant or opening the sheet again never asks: the stored rule is read on opening ([readStoredRule]).
+     */
     fun analyze() {
         val link = linkId ?: return
         val review = _state.value as? SheetScoresUiState.PickTotal ?: return
-        if (aiJob?.isActive == true || (review.ai !is SheetAiState.Offer && review.ai !is SheetAiState.Failed)) return
-        setAi(SheetAiState.Running)
+        if (review.ai == SheetAiState.Hidden || review.ai == SheetAiState.Running) return
+        aiJob?.cancel()
+        val known = proposal?.second?.formula ?: connectedAi
+        _state.update { if (it is SheetScoresUiState.PickTotal) it.copy(ai = SheetAiState.Running, aiUnchanged = false) else it }
         aiJob = viewModelScope.launch {
             var result = rules.request(link)
             var waited = 0.seconds
-            while (result == SheetRuleResult.Pending && waited < AI_TIMEOUT) {
+            while (result.unsettled && waited < AI_TIMEOUT) {
                 delay(AI_POLL)
                 waited += AI_POLL
                 result = rules.state(link)
             }
-            setAi(outcome(result))
+            asked(result, known)
         }
     }
 
@@ -210,10 +221,47 @@ class SheetScoresViewModel(
         _state.update { if (it is SheetScoresUiState.PickTotal) change(it) else it }
     }
 
-    /** A ready AI result goes on top at once: the viewer asked for it. */
-    private fun setAi(ai: SheetAiState) = _state.update {
-        if (it !is SheetScoresUiState.PickTotal) return@update it
-        it.copy(ai = ai, selection = if (ai is SheetAiState.Proposal) TotalOption.Ai else it.selection)
+    /** Still worth polling after an ask: nothing yet, or a stale rule Backend is checking again. */
+    private val SheetRuleResult.unsettled: Boolean
+        get() = this == SheetRuleResult.Pending || (this is SheetRuleResult.Ready && checking)
+
+    /**
+     * The rule Backend already has for this sheet (`GET`, never an analysis): a known rule is a variant at once, or the
+     * total on top while nothing is chosen. Anything else leaves the offer as it is, quietly.
+     */
+    private fun readStoredRule() {
+        val link = linkId ?: return
+        if ((_state.value as? SheetScoresUiState.PickTotal)?.ai != SheetAiState.Offer) return
+        aiJob = viewModelScope.launch {
+            val rule = (rules.state(link) as? SheetRuleResult.Ready)?.rule ?: return@launch
+            val result = propose(rule) ?: return@launch
+            _state.update {
+                if (it !is SheetScoresUiState.PickTotal || it.ai != SheetAiState.Offer) return@update it
+                it.copy(aiRule = result, selection = it.selection ?: TotalOption.Ai.takeUnless { result.connected })
+            }
+        }
+    }
+
+    /**
+     * The answer to an ask goes on top at once: the viewer asked for it (the connected total when it is the same rule).
+     * A failure keeps the rule known before; [known] tells a formula that did not change.
+     */
+    private fun asked(result: SheetRuleResult, known: SheetFormula?) {
+        val rule = (result as? SheetRuleResult.Ready)?.rule
+        val proposed = rule?.let(::propose)
+        _state.update { state ->
+            if (state !is SheetScoresUiState.PickTotal) return@update state
+            when {
+                proposed != null -> state.copy(
+                    ai = SheetAiState.Offer,
+                    aiRule = proposed,
+                    aiUnchanged = known != null && known == proposal?.second?.formula,
+                    selection = if (proposed.connected) state.current else TotalOption.Ai,
+                )
+                rule != null -> state.copy(ai = failed(RecordbookStrings.sheet_ai_not_applicable))
+                else -> state.copy(ai = failure(result))
+            }
+        }
     }
 
     private fun SheetScoresUiState.PickTotal.withSum(summed: List<SheetCell>) = copy(
@@ -257,6 +305,7 @@ class SheetScoresViewModel(
             SheetSavedTotal(SheetFormulaText.describe(it), reading.value, reading.official)
         }
         val current = current(book, score, cells)?.let(TotalOption::Column) ?: saved?.let { TotalOption.Saved }
+        connectedAi = score.formula.takeIf { score.choice == TotalChoice.AI && current != null }
         // A hand-made sum opens its columns again on the sum page.
         val summed = computed?.takeIf { score.choice == TotalChoice.MANUAL }?.cells.orEmpty()
             .mapNotNull { ref ->
@@ -264,6 +313,7 @@ class SheetScoresViewModel(
                 tab.firstOrNull { it.headerPath == ref.column.headerPath } ?: tab.firstOrNull { it.column == ref.column.index }
             }
         _state.value = review(book, cells, current, decide(book, matches), score.choice, saved).withSum(summed)
+        readStoredRule()
     }
 
     /** The cells of [rows]; an automatic total is saved at once, otherwise the viewer picks it. */
@@ -273,6 +323,7 @@ class SheetScoresViewModel(
         val decision = decide(book, rows)
         if (decision == null || step == Step.TOTAL) {
             _state.value = review(book, cells, null, decision, null, null)
+            readStoredRule()
             return
         }
         val row = rows.first { it.tab == decision.total.tab }
@@ -322,8 +373,8 @@ class SheetScoresViewModel(
         }
     }
 
-    private fun outcome(result: SheetRuleResult): SheetAiState = when (result) {
-        is SheetRuleResult.Ready -> propose(result.rule)
+    private fun failure(result: SheetRuleResult): SheetAiState = when (result) {
+        is SheetRuleResult.Ready -> failed(RecordbookStrings.sheet_ai_not_applicable)
         SheetRuleResult.Pending -> failed(RecordbookStrings.sheet_ai_timeout)
         SheetRuleResult.Insufficient -> failed(RecordbookStrings.sheet_ai_insufficient)
         SheetRuleResult.Failed -> failed(RecordbookStrings.sheet_ai_failed)
@@ -334,25 +385,29 @@ class SheetScoresViewModel(
 
     private fun failed(key: String) = SheetAiState.Failed(UiText.Res(key))
 
-    /** The rule over this workbook and the own row; a rule naming a tab, row or column that is not here is no proposal. */
-    private fun propose(rule: SheetRule): SheetAiState {
-        val book = workbook ?: return failed(RecordbookStrings.sheet_ai_not_applicable)
-        val route = rule.mainFor(book, matches) ?: return failed(RecordbookStrings.sheet_ai_not_applicable)
-        val row = matches.firstOrNull { it.tab == route.tabIn(book) } ?: return failed(RecordbookStrings.sheet_ai_not_applicable)
-        val main = route.formula(book, matches) ?: return failed(RecordbookStrings.sheet_ai_not_applicable)
+    /**
+     * The rule over this workbook and the own row, remembered for [save]; null (nothing remembered) for a rule naming a
+     * tab, row or column that is not here.
+     */
+    private fun propose(rule: SheetRule): SheetAiProposal? {
+        val book = workbook ?: return null
+        val route = rule.mainFor(book, matches) ?: return null
+        val row = matches.firstOrNull { it.tab == route.tabIn(book) } ?: return null
+        val main = route.formula(book, matches) ?: return null
         val officialRoute = rule.officialFor(route, book)
         val official = officialRoute?.formula(book, matches)
         val reading = reading(main, official)
-        if (reading.status != SheetStatus.OK) return failed(RecordbookStrings.sheet_ai_not_applicable)
+        if (reading.status != SheetStatus.OK) return null
         val summary = rule.summary.ifBlank { route.explanation }
         proposal = row to SheetTotalPick(main, TotalChoice.AI, reading, official, summary)
-        return SheetAiState.Proposal(
+        return SheetAiProposal(
             formula = SheetFormulaText.describe(main),
             value = reading.value,
             official = reading.official,
             hasOfficial = official != null,
             summary = summary,
             warnings = (route.warnings + officialRoute?.warnings.orEmpty()).distinct(),
+            connected = main == connectedAi,
         )
     }
 

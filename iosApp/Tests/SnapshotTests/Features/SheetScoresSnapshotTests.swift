@@ -5,8 +5,8 @@ import XCTest
 @testable import ITMOWidgets
 
 /// The scores sheet at its tall height on the shared states of `SheetScoresPreviewSamples` (the Compose previews'
-/// samples): the total sure, to check, hand-picked and missing, the column list, the sum, the AI offer, result and
-/// failure, the own rows, loading and a failure.
+/// samples): the total sure, to check, hand-picked and missing, the column list, the sum, the AI card offered, running
+/// and failed, its result on top, a stored rule as a variant, the own rows, loading and a failure.
 @MainActor
 final class SheetScoresSnapshotTests: XCTestCase {
     private let samples = SheetScoresPreviewSamples.shared
@@ -41,6 +41,14 @@ final class SheetScoresSnapshotTests: XCTestCase {
 
     func testAiProposal() {
         assertSheet(samples.pickTotalAi, named: "ai-proposal")
+    }
+
+    func testAiRunning() {
+        assertSheet(samples.pickTotalAiRunning, named: "ai-running", appearances: [.light])
+    }
+
+    func testAiKnown() {
+        assertSheet(samples.pickTotalAiKnown, named: "ai-known", appearances: [.light])
     }
 
     func testAiFailed() {

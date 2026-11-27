@@ -315,14 +315,17 @@ class SheetScoresSheetTest {
         setContent { Sheet(state) }
 
         onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI))
-        assertShown("ИИ разберёт формулы таблицы")
-        onNodeWithText("Посчитать с ИИ").performClick()
+        assertShown("ИИ найдёт, как считается итог")
+        assertTrue(onAllNodesWithText("листы, заголовки и формулы", substring = true).fetchSemanticsNodes().isNotEmpty())
+        scrollTo("Посчитать с ИИ")
+        onNodeWithText("Посчитать с ИИ", useUnmergedTree = true).performClick()
+        assertEquals(listOf<Any>("analyze"), calls)
         state = SheetScoresPreviewSamples.pickTotalAiRunning
         waitForIdle()
         onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI))
         assertShown("Разбираем таблицу, обычно до минуты")
         // A tap while it runs asks nothing again.
-        onNodeWithTag(SheetScoresSheetTestTags.AI).performClick()
+        onNodeWithText("Посчитать с ИИ", useUnmergedTree = true).performClick()
 
         state = SheetScoresPreviewSamples.pickTotalAi
         waitForIdle()
@@ -335,13 +338,25 @@ class SheetScoresSheetTest {
         scrollTo("Итог может быть 0 до допуска")
         assertNoTextOverflow()
         assertTouchTargets()
+        onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI_RECOMPUTE))
+        onNodeWithTag(SheetScoresSheetTestTags.AI_RECOMPUTE).performClick()
         onNodeWithTag(SheetScoresSheetTestTags.SAVE).assertTextEquals("Сохранить").performClick()
-        assertEquals(listOf<Any>("analyze", "save"), calls)
+        assertEquals(listOf<Any>("analyze", "analyze", "save"), calls)
 
         state = SheetScoresPreviewSamples.pickTotalAiFailed
         waitForIdle()
         onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI))
         assertShown("ИИ не понял, как считаются баллы")
+    }
+
+    @Test
+    fun aKnownRuleIsAVariantWithoutTheCard() = runComposeUiTest {
+        setContent { Sheet(SheetScoresPreviewSamples.pickTotalAiKnown) }
+
+        onAllNodesWithTag(SheetScoresSheetTestTags.AI).assertCountEquals(0)
+        scrollTo("Формула ИИ")
+        onNodeWithText("Формула ИИ", substring = true).performClick()
+        assertEquals(listOf<Any>(TotalOption.Ai), calls)
     }
 
     private fun ComposeUiTest.scrollTo(text: String) {

@@ -30,7 +30,9 @@ sealed interface SheetScoresUiState {
      * total in words ([saved]). [page] is the overview, the column list or the columns to add: [summed] is the sum
      * being made there with its own [sum] and [sumText], [made] the last finished one and [picked] the last column
      * picked from the list, both variants until the sheet closes. [cells] is the own row by tab, [columns] describe
-     * each cell, [ai] is the AI offer and its result.
+     * each cell. [ai] is where asking the AI stands, [aiRule] its last result over this sheet (the stored rule read on
+     * opening, or the answer to the last ask), kept when a later ask fails; [aiUnchanged] when the last ask gave the
+     * formula already known.
      */
     data class PickTotal(
         val cells: List<SheetCell>,
@@ -41,6 +43,8 @@ sealed interface SheetScoresUiState {
         val saved: SheetSavedTotal? = null,
         val columns: List<SheetColumnOption> = emptyList(),
         val ai: SheetAiState = SheetAiState.Hidden,
+        val aiRule: SheetAiProposal? = null,
+        val aiUnchanged: Boolean = false,
         val page: TotalPage = TotalPage.OVERVIEW,
         val summed: List<SheetCell> = emptyList(),
         val sum: String? = null,
@@ -55,37 +59,65 @@ sealed interface SheetScoresUiState {
                 choice == TotalChoice.AUTO_CHECK || (it.confidence == TotalConfidence.LOW && choice != TotalChoice.AUTO)
             }?.total
 
+        /** The AI's total is on top: its result, or the connected AI rule. */
+        val aiOnTop: Boolean
+            get() = selection != null && (selection == TotalOption.Ai || (selection == current && choice == TotalChoice.AI))
+
+        /**
+         * The AI entry under the total (`Посчитать с ИИ`, explained): offered, running or failed while no rule is known
+         * for this sheet and no AI total is on top; null hides it. A known rule is a variant instead, and an AI total on
+         * top asks again from its own card ([SheetTotalHero.ai]).
+         */
+        val aiEntry: SheetAiState?
+            get() = ai.takeIf { it != SheetAiState.Hidden && aiRule == null && !aiOnTop }
+
         /** The selection on top: its value, where it comes from and at most one note. */
         val hero: SheetTotalHero?
-            get() = when (val option = selection) {
-                null -> null
-                is TotalOption.Column -> {
-                    val check = REASONS[decision?.reason]?.takeIf { option.cell == unsureTotal }
-                    SheetTotalHero(option.cell.value.ifEmpty { null }, columnSource(option.cell), check?.let(UiText::Res), warning = check != null)
-                }
-                is TotalOption.Sum -> SheetTotalHero(option.value, option.text)
-                TotalOption.Saved -> saved?.let { saved ->
-                    SheetTotalHero(
-                        value = saved.value,
-                        source = saved.formula,
-                        note = UiText.Res(RecordbookStrings.sheet_total_ai_note).takeIf { choice == TotalChoice.AI },
-                        official = saved.official?.let { UiText.Res(RecordbookStrings.sheet_scores_official, listOf(it)) },
-                    )
-                }
-                TotalOption.Ai -> (ai as? SheetAiState.Proposal)?.let { proposal ->
-                    SheetTotalHero(
-                        value = proposal.value,
-                        source = proposal.formula,
-                        note = UiText.Res(RecordbookStrings.sheet_total_ai_note),
-                        official = if (proposal.hasOfficial) {
-                            UiText.Res(RecordbookStrings.sheet_scores_official, listOf(proposal.official ?: EMPTY))
-                        } else {
-                            null
-                        },
-                        details = listOf(proposal.summary).filter { it.isNotBlank() } + proposal.warnings,
-                    )
-                }
+            get() {
+                val hero = when (val option = selection) {
+                    null -> return null
+                    is TotalOption.Column -> {
+                        val check = REASONS[decision?.reason]?.takeIf { option.cell == unsureTotal }
+                        SheetTotalHero(option.cell.value.ifEmpty { null }, columnSource(option.cell), check?.let(UiText::Res), warning = check != null)
+                    }
+                    is TotalOption.Sum -> SheetTotalHero(option.value, option.text)
+                    TotalOption.Saved -> saved?.let { saved ->
+                        SheetTotalHero(
+                            value = saved.value,
+                            source = saved.formula,
+                            note = UiText.Res(RecordbookStrings.sheet_total_ai_note).takeIf { choice == TotalChoice.AI },
+                            official = saved.official?.let { UiText.Res(RecordbookStrings.sheet_scores_official, listOf(it)) },
+                        )
+                    }
+                    TotalOption.Ai -> aiRule?.let { rule ->
+                        SheetTotalHero(
+                            value = rule.value,
+                            source = rule.formula,
+                            note = UiText.Res(RecordbookStrings.sheet_total_ai_note),
+                            official = if (rule.hasOfficial) {
+                                UiText.Res(RecordbookStrings.sheet_scores_official, listOf(rule.official ?: EMPTY))
+                            } else {
+                                null
+                            },
+                        )
+                    }
+                } ?: return null
+                if (!aiOnTop) return hero
+                // The connected AI rule shows the summary of the same rule read again.
+                val rule = aiRule?.takeIf { selection == TotalOption.Ai || it.connected }
+                return hero.copy(
+                    details = rule?.let { listOf(it.summary).filter(String::isNotBlank) + it.warnings }.orEmpty(),
+                    ai = heroAi(),
+                )
             }
+
+        /** `Пересчитать с ИИ` on an AI total on top: running, why the last ask failed, or that it gave the same formula. */
+        private fun heroAi(): SheetHeroAi? = when (val state = ai) {
+            SheetAiState.Hidden -> null
+            SheetAiState.Running -> SheetHeroAi(running = true, line = UiText.Res(RecordbookStrings.sheet_ai_running))
+            is SheetAiState.Failed -> SheetHeroAi(running = false, line = state.text)
+            SheetAiState.Offer -> SheetHeroAi(running = false, line = UiText.Res(RecordbookStrings.sheet_ai_unchanged).takeIf { aiUnchanged })
+        }
 
         /** Why nothing is on top: the own row is empty, or the sheet has no total header. */
         val missing: UiText
@@ -116,7 +148,7 @@ sealed interface SheetScoresUiState {
                         SheetTotalVariant(TotalOption.Saved, it.formula, AI_MARK.takeIf { choice == TotalChoice.AI }, it.value ?: EMPTY)
                     },
                     made?.let { SheetTotalVariant(it, it.text, null, it.value ?: EMPTY) },
-                    (ai as? SheetAiState.Proposal)?.let { SheetTotalVariant(TotalOption.Ai, it.formula, AI_MARK, it.value ?: EMPTY) },
+                    aiRule?.takeIf { !it.connected }?.let { SheetTotalVariant(TotalOption.Ai, it.formula, AI_MARK, it.value ?: EMPTY) },
                 )
                 return options.filter { it.option != selection }
             }
@@ -195,7 +227,11 @@ data class SheetTotalHero(
     val warning: Boolean = false,
     val official: UiText? = null,
     val details: List<String> = emptyList(),
+    val ai: SheetHeroAi? = null,
 )
+
+/** `Пересчитать с ИИ` under an AI total: [running] while Backend answers, and one [line] (why it failed, or no change). */
+data class SheetHeroAi(val running: Boolean, val line: UiText?)
 
 /** Another ready total: what it is ([title], [subtitle]) and its [value] as shown. */
 data class SheetTotalVariant(val option: TotalOption, val title: UiText, val subtitle: UiText?, val value: String)
@@ -269,25 +305,31 @@ data class SheetColumnOption(val cell: SheetCell, val stats: SheetColumnStats) {
     val empty: Boolean get() = stats.filled == 0
 }
 
-/** `Посчитать с ИИ`: not offered, offered, running, its result, or why there is none. */
+/**
+ * Asking the AI (`Посчитать с ИИ`, `Пересчитать с ИИ`): not offered, ready to ask, running, or why the last ask gave
+ * nothing. Its result is [SheetScoresUiState.PickTotal.aiRule].
+ */
 sealed interface SheetAiState {
     data object Hidden : SheetAiState
     data object Offer : SheetAiState
     data object Running : SheetAiState
-    /**
-     * The rule applied to the own row: [formula] in words, the own [value] (null is a dash), the teacher's [official]
-     * total when the rule has one, the model's [summary] and [warnings]. Nothing is saved before `Сохранить`.
-     */
-    data class Proposal(
-        val formula: UiText,
-        val value: String?,
-        val official: String?,
-        val hasOfficial: Boolean,
-        val summary: String,
-        val warnings: List<String>,
-    ) : SheetAiState
     data class Failed(val text: UiText) : SheetAiState
 }
+
+/**
+ * The AI rule applied to the own row: [formula] in words, the own [value] (null is a dash), the teacher's [official]
+ * total when the rule has one, the model's [summary] and [warnings]; [connected] when it is the formula connected
+ * already. Nothing is saved before `Сохранить`.
+ */
+data class SheetAiProposal(
+    val formula: UiText,
+    val value: String?,
+    val official: String?,
+    val hasOfficial: Boolean,
+    val summary: String,
+    val warnings: List<String>,
+    val connected: Boolean = false,
+)
 
 sealed interface SheetScoresEvent {
     data class SaveFailed(val text: UiText) : SheetScoresEvent

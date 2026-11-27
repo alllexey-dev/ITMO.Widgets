@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -101,7 +103,10 @@ fun GateCard(
     icon: Painter = painterResource(Res.drawable.ic_lock),
 ) = NoticeCard(title, reason, icon, Tone.Warning, NoticeAction(fix, onFix), modifier)
 
-/** Not a lock but something worth doing (`Добавить ссылку`): the same layout as [GateCard] with its [action]. */
+/**
+ * Not a lock but something worth doing (`Добавить ссылку`, `Посчитать с ИИ`): the same layout as [GateCard] with its
+ * [action]; while [inProgress] the button shows its own progress and ignores taps.
+ */
 @Composable
 fun ActionCard(
     title: String,
@@ -111,7 +116,8 @@ fun ActionCard(
     icon: Painter,
     modifier: Modifier = Modifier,
     tone: Tone = Tone.Primary,
-) = NoticeCard(title, reason, icon, tone, NoticeAction(action, onAction), modifier)
+    inProgress: Boolean = false,
+) = NoticeCard(title, reason, icon, tone, NoticeAction(action, onAction, inProgress), modifier)
 
 /**
  * Locked with no fix for the viewer: what is closed and why, no button. Not for someone else's privacy, where hidden
@@ -125,7 +131,7 @@ fun LockNote(
     icon: Painter = painterResource(Res.drawable.ic_lock),
 ) = NoticeCard(title, reason, icon, Tone.Neutral, null, modifier)
 
-private class NoticeAction(val label: String, val onClick: () -> Unit)
+private class NoticeAction(val label: String, val onClick: () -> Unit, val inProgress: Boolean = false)
 
 @Composable
 private fun NoticeCard(title: String, reason: String, icon: Painter, tone: Tone, action: NoticeAction?, modifier: Modifier) {
@@ -136,8 +142,18 @@ private fun NoticeCard(title: String, reason: String, icon: Painter, tone: Tone,
                 Text(title, style = ItmoTheme.typography.titleMedium)
                 Text(reason, color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
                 if (action != null) {
-                    TonalButton(onClick = action.onClick, Modifier.padding(top = ItmoTheme.spacing.compact)) {
-                        Text(action.label)
+                    TonalButton(onClick = { if (!action.inProgress) action.onClick() }, Modifier.padding(top = ItmoTheme.spacing.compact)) {
+                        // The label stays measured and read; only its pixels give way to the indicator.
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(action.label, Modifier.alpha(if (action.inProgress) 0f else 1f))
+                            if (action.inProgress) {
+                                CircularProgressIndicator(
+                                    Modifier.size(ButtonIndicator),
+                                    color = LocalContentColor.current,
+                                    strokeWidth = ButtonIndicatorStroke,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -161,6 +177,10 @@ fun StaleContent(label: String, modifier: Modifier = Modifier, content: @Composa
         Box(Modifier.alpha(STALE_ALPHA)) { content() }
     }
 }
+
+/** The progress inside a notice card's button, as `ProgressButton` draws it. */
+private val ButtonIndicator = 14.dp
+private val ButtonIndicatorStroke = 2.dp
 
 /** Between the lines of a card. */
 private val CardContentGap = 6.dp

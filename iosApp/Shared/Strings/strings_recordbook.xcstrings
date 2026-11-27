@@ -1280,7 +1280,19 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ИИ разберёт формулы таблицы"
+            "value" : "ИИ разберёт, как устроена таблица: листы, заголовки и формулы."
+          }
+        }
+      }
+    },
+    "sheet_ai_offer_title" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИИ найдёт, как считается итог"
           }
         }
       }
@@ -1293,6 +1305,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Слишком много разборов, попробуйте через час"
+          }
+        }
+      }
+    },
+    "sheet_ai_recompute" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пересчитать с ИИ"
           }
         }
       }
@@ -1329,6 +1353,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Для этой таблицы разбор недоступен"
+          }
+        }
+      }
+    },
+    "sheet_ai_unchanged" : {
+      "comment" : "Generated from strings_recordbook.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формула не изменилась"
           }
         }
       }

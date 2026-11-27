@@ -3,8 +3,9 @@ import SwiftUI
 
 // The subject page's three tabs over their parts of `RecordbookSubjectUiStateContent`.
 
-/// Scores: a BARS notice, the hero with the grade scale and the connected sheet, the sport points of physical
-/// education, the checkpoints by group with their minimums, or the quiet offers without them.
+/// Scores: a BARS notice, the hero with the grade scale and the connected sheet (or the offer to connect one right
+/// under it), the sport points of physical education, the checkpoints by group with their minimums, or the quiet
+/// BARS offer without them.
 struct SubjectScoresTab: View {
     let scores: SubjectScores
     let actions: RecordbookSubjectContentActions
@@ -14,6 +15,9 @@ struct SubjectScoresTab: View {
             RecordbookBarsNoticeRow(notice: notice, signIn: actions.barsSignIn, retry: actions.retry)
         }
         SubjectHeroCard(hero: scores.hero, sheet: scores.sheet, actions: actions)
+        if !scores.sheetOffer.isEmpty {
+            ItmoListGroup { SheetOfferRow(options: scores.sheetOffer, open: actions.sheetScores) }
+        }
         if let sport = scores.sport {
             ItmoListGroup {
                 ItmoRow(
@@ -52,11 +56,8 @@ struct SubjectScoresTab: View {
                     }
             }
         }
-        if scores.barsOffer || !scores.sheetOffer.isEmpty {
-            ItmoListGroup {
-                if scores.barsOffer { RecordbookBarsOfferRow(connect: actions.barsSignIn) }
-                if !scores.sheetOffer.isEmpty { SheetOfferRow(options: scores.sheetOffer, open: actions.sheetScores) }
-            }
+        if scores.barsOffer {
+            ItmoListGroup { RecordbookBarsOfferRow(connect: actions.barsSignIn) }
         }
         if scores.noDetails {
             ItmoGroupNote(text: AppStrings.string("recordbook_details_empty_description"))

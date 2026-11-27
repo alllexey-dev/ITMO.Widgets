@@ -33,13 +33,19 @@ const val TEST_SHEET_URL = "https://docs.google.com/spreadsheets/d/$TEST_SHEET_I
 val TEST_IDENTITY = OwnIdentity(123456, "Тестов Тест Тестович")
 
 /**
- * Backend's sheet rules: [available] for the offer, then [request] answers [requestResult] and every [state] the next of
- * [states] (Pending once they run out); every call is recorded.
+ * Backend's sheet rules: [available] for the offer; a [state] before any ask answers [stored], [request] answers
+ * [requestResult] and every later [state] the next of [states] (Pending once they run out); every call is recorded.
  */
 class FakeSheetRulesRepository(var available: Boolean = true) : SheetRulesRepository {
+    /** What Backend already has for the sheet: every read before the first ask answers it. */
+    var stored: SheetRuleResult = SheetRuleResult.Pending
     var requestResult: SheetRuleResult = SheetRuleResult.Pending
+    /** The answers of the polls after an ask, in order; then pending. */
     val states = ArrayDeque<SheetRuleResult>()
     val requests = mutableListOf<String>()
+    /** Reads before the first ask (`GET` on opening). */
+    var reads = 0
+    /** Reads after an ask. */
     var polls = 0
 
     override suspend fun available(): Boolean = available
@@ -50,6 +56,10 @@ class FakeSheetRulesRepository(var available: Boolean = true) : SheetRulesReposi
     }
 
     override suspend fun state(linkId: String): SheetRuleResult {
+        if (requests.isEmpty()) {
+            reads++
+            return stored
+        }
         polls++
         return states.removeFirstOrNull() ?: SheetRuleResult.Pending
     }

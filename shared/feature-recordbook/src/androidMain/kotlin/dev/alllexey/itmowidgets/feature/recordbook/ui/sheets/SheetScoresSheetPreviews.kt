@@ -126,28 +126,35 @@ internal class SheetScoresSheetSumPreview {
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickSum)
 }
 
-/** A shared sheet offers `Посчитать с ИИ` among the ways. */
+/** A shared sheet without a known rule: the AI's explained card under the total. */
 internal class SheetScoresSheetAiOfferPreview {
     @Preview(name = "ai-offer")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalAiOffer)
 }
 
-/** Backend analyses the sheet: the AI row waits. */
+/** Backend analyses the sheet: the card's button shows its progress. */
 internal class SheetScoresSheetAiRunningPreview {
     @Preview(name = "ai-running")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalAiRunning)
 }
 
-/** The AI result on top: the own value, the formula in words, the caution and the teacher's total; `Сохранить`. */
+/** The AI result on top: the own value, the formula in words, the caution, the teacher's total and `Пересчитать с ИИ`. */
 internal class SheetScoresSheetAiProposalPreview {
     @Preview(name = "ai-proposal")
     @Composable
     fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalAi)
 }
 
-/** No rule: why, on the AI row, which can be tapped again. */
+/** The rule Backend already had, read on opening: a variant under `Другой итог`, no card, no new analysis. */
+internal class SheetScoresSheetAiKnownPreview {
+    @Preview(name = "ai-known")
+    @Composable
+    fun SheetScoresSheet() = SheetPreview(SheetScoresPreviewSamples.pickTotalAiKnown)
+}
+
+/** No rule: why, on the card, whose button can be tapped again. */
 internal class SheetScoresSheetAiFailedPreview {
     @Preview(name = "ai-failed")
     @Composable

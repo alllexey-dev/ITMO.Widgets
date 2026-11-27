@@ -127,7 +127,9 @@ class SheetRulesRepositoryImplTest {
             assertEquals(wireAnswer.status.name, expected, repository().state(linkId))
         }
         answer = { response(SheetRuleStatus.RUNNING, json(wire)) }
-        assertTrue(repository().state(linkId) is SheetRuleResult.Ready)
+        assertTrue((repository().state(linkId) as SheetRuleResult.Ready).checking)
+        answer = { response(SheetRuleStatus.READY, json(wire)) }
+        assertFalse((repository().state(linkId) as SheetRuleResult.Ready).checking)
     }
 
     @Test fun `a rule with no applicable route is a failure`() = runTest(main.dispatcher) {
@@ -159,12 +161,12 @@ class SheetRulesRepositoryImplTest {
         assertTrue(calls.isEmpty())
     }
 
-    @Test fun `the demo answers its fixture rule and never calls Backend`() = runTest(main.dispatcher) {
+    @Test fun `the demo has no stored rule, answers its fixture rule when asked and never calls Backend`() = runTest(main.dispatcher) {
         val repository = repository(optedIn = true, demo = true)
 
         assertTrue(repository.available())
+        assertEquals(SheetRuleResult.Pending, repository.state(linkId))
         assertEquals(SheetRuleResult.Ready(DemoRecordbook.sheetRule()), repository.request(linkId))
-        assertEquals(SheetRuleResult.Ready(DemoRecordbook.sheetRule()), repository.state(linkId))
         assertTrue(calls.isEmpty())
     }
 
