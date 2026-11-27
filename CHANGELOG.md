@@ -6,6 +6,9 @@ publication or deployment.
 
 ## Unreleased
 
+- Links: a `FLOW` or `ALL` link save sends Backend the flows the editor offered (`flowOptions` in
+  `SaveSubjectLinkRequest`, at most 32), so that a moderator can move a `FLOW` link to another of the author's flows;
+  a `PRIVATE` save sends none, and a Backend without the field ignores it.
 - iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
   reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
   content reports, around the countdown, the progress and the widgets' `GeometryReader`s.

@@ -80,7 +80,9 @@ class LinkEditorViewModel(
         }
         state.update { it.copy(saving = true) }
         viewModelScope.launch {
-            val result = repository.save(scope, id, category, url, title.ifEmpty { null }, form.visibility, form.flowId)
+            // The flows of the picker go along, so that a moderator can move a FLOW link to another of them.
+            val flows = form.options.filterIsInstance<LinkAudienceOption.Flow>().map { it.audience }
+            val result = repository.save(scope, id, category, url, title.ifEmpty { null }, form.visibility, form.flowId, flows)
             state.update { it.copy(saving = false) }
             eventQueue.send(when (result) {
                 is AppResult.Success -> LinkEvent.Saved

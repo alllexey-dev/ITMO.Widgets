@@ -158,6 +158,37 @@ class SubjectLinksRepositoryImplTest {
         assertEquals(null, api.saved.single().flowId)
     }
 
+    @Test fun flowAndAllSavesSendTheOfferedFlowsAndAPrivateSaveDoesNot() = runTest {
+        val api = FakeSubjectLinksApi(); val repository = repo(folder(), api, FakeBackendGate(true))
+        repository.refresh(scope)
+        val offered = repository.content(scope).audiences
+        val wire = listOf(WireAudience(7101, "ФИЗ ПИИКТ 3", 1, 1), WireAudience(7103, "ФИЗ ПИИКТ 3.2.1", 2, 3))
+
+        repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, 7103, offered)
+        repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.ALL, null, offered)
+        repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.PRIVATE, null, offered)
+        repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.ALL, null, emptyList())
+
+        assertEquals(listOf(wire, wire, null, null), api.saved.map { it.flowOptions })
+    }
+
+    @Test fun theOfferedFlowsAreUniqueAtMost32AndKeepTheChosenFlow() = runTest {
+        val api = FakeSubjectLinksApi(); val repository = repo(folder(), api, FakeBackendGate(true))
+        repository.refresh(scope)
+        val many = (1L..40L).map { LinkAudience(8000 + it, "Поток $it", 1, 1) }
+        val chosen = many.last()
+
+        repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.ALL, null, many + many.first())
+        repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, chosen.flowId, many)
+        // A list without the chosen flow would be refused, so the save goes without one.
+        repository.save(scope, id, LinkCategory.TASKS, url, null, LinkVisibility.FLOW, 7103, many)
+
+        val (all, flow, other) = api.saved.map { request -> request.flowOptions?.map { it.flowId } }
+        assertEquals(many.take(32).map { it.flowId }, all)
+        assertEquals(many.take(31).map { it.flowId } + chosen.flowId, flow)
+        assertNull(other)
+    }
+
     @Test fun aNetworkErrorKeepsTheCachedSnapshot() = runTest {
         val api = FakeSubjectLinksApi(); val repository = repo(folder(), api, FakeBackendGate(true))
         api.shared += api.link(Uuid.random(), LinkCategory.SCORES, isMine = false)
@@ -338,6 +369,24 @@ class SubjectLinksRepositoryImplTest {
         assertEquals("ЛЕК МАТАН 3.1", link.audienceLabel)
         assertEquals(SubjectLinkStatus.PENDING, link.status)
         assertEquals(link, repository.content(matan).mine.first { it.id == ownId })
+    }
+
+    @Test fun aFLOWSaveSendsTheOfferedFlowsAsFlowOptions() = runTest {
+        val harness = LinksBackendHarness { request ->
+            if (request.method == HttpMethod.Get) respondJson(LinksRemoteFixtures.SUBJECT_LINKS)
+            else respondJson(LinksRemoteFixtures.SAVE_SUBJECT_LINK)
+        }
+        val repository = repo(folder(), harness.client.links, FakeBackendGate(true))
+        repository.refresh(matan)
+
+        repository.save(matan, ownId, LinkCategory.MATERIALS, "https://example.org/links/new", "Конспекты лекций",
+            LinkVisibility.FLOW, 7001, repository.content(matan).audiences)
+
+        val expected = json("""{"subjectId":501,"subjectName":"Математический анализ","periodKey":"2026-1",
+            "category":"MATERIALS","url":"https://example.org/links/new","title":"Конспекты лекций","visibility":"FLOW",
+            "flowId":7001,"flowOptions":[{"flowId":7001,"label":"ЛЕК МАТАН 3.1","typeId":1,"depth":1},
+            {"flowId":7003,"label":"ПРАК МАТАН 3.1.2","typeId":3,"depth":2}]}""")
+        assertEquals(expected, harness.requests.last().bodyJson())
     }
 
     @Test fun deletePinVoteAndReportSendBackendsRoutesAndBodies() = runTest {

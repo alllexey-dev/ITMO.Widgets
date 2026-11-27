@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import dev.alllexey.itmowidgets.core.navigation.SubjectLinksArgs
+import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
@@ -333,6 +334,7 @@ class SubjectLinksSheetTest {
             title: String?,
             visibility: LinkVisibility,
             flowId: Long?,
+            flowOptions: List<LinkAudience>,
         ): AppResult<SubjectLink> = error("not used")
         override suspend fun delete(scope: ResourceScope, id: String): AppResult<Unit> = error("not used")
         override suspend fun pin(scope: ResourceScope, id: String?): AppResult<Unit> = error("not used")

@@ -138,6 +138,18 @@ class LinkEditorViewModelTest {
         assertNull(saved.title)
         assertEquals(LinkVisibility.FLOW, saved.visibility)
         assertEquals(7102L, saved.flowId)
+        assertEquals(listOf(lecture, practice, lab), repository.lastFlowOptions)
+    }
+
+    @Test fun aSaveWithoutTheConnectionOffersNoFlows() = runTest(main.dispatcher) {
+        show(linksSnapshot(audiences = listOf(lecture, practice, lab), servicesEnabled = false))
+        val vm = model()
+        vm.onUrlChanged("https://github.com/itmo/labs")
+
+        vm.save(); runCurrent()
+
+        assertEquals(LinkVisibility.PRIVATE, repository.lastSave!!.visibility)
+        assertEquals(emptyList<LinkAudience>(), repository.lastFlowOptions)
     }
 
     @Test fun aFailedSaveKeepsTheFormAndReportsTheError() = runTest(main.dispatcher) {
