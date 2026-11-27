@@ -6,6 +6,8 @@ publication or deployment.
 
 ## Unreleased
 
+- Settings: the tiles of `Уведомления` share one colour while on and turn grey while off, instead of a different
+  colour per type.
 - Moderation: the author of a subject link or a teacher review learns the outcome of a moderator's decision on it
   (published, rejected with the reason, hidden, visible again) in the bell and as a push on the new channel and
   switch `Модерация`; a tap opens the subject's links or the teacher's profile. Backend's
