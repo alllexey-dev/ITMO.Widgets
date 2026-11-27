@@ -21,7 +21,8 @@
           "status": "PENDING",
           "submittedAt": "2026-10-02T07:00:00Z",
           "decidedAt": null,
-          "note": null
+          "note": null,
+          "flowOptions": null
         },
         "link": {
           "id": "00000000-0000-4000-8000-000000000101",
@@ -212,7 +213,8 @@
           "createdAt": "2026-10-02T11:00:00Z",
           "actor": "MODERATOR",
           "revertedAt": "2026-10-02T11:05:00Z",
-          "revertibleUntil": null
+          "revertibleUntil": null,
+          "flowId": null
         },
         {
           "id": "00000000-0000-4000-8000-000000000312",
@@ -226,7 +228,8 @@
           "createdAt": "2026-10-03T12:00:00Z",
           "actor": "MODERATOR",
           "revertedAt": null,
-          "revertibleUntil": null
+          "revertibleUntil": null,
+          "flowId": null
         },
         {
           "id": "00000000-0000-4000-8000-000000000313",
@@ -237,7 +240,8 @@
           "createdAt": "2026-10-04T13:00:00Z",
           "actor": "MODERATOR",
           "revertedAt": null,
-          "revertibleUntil": null
+          "revertibleUntil": null,
+          "flowId": null
         }
       ]
     },
@@ -258,7 +262,8 @@
           "createdAt": "2026-10-01T14:00:00Z",
           "actor": "POLICY",
           "revertedAt": null,
-          "revertibleUntil": null
+          "revertibleUntil": null,
+          "flowId": null
         }
       ]
     },
@@ -358,7 +363,8 @@
           "status": "REJECTED",
           "submittedAt": "2026-10-03T07:00:00Z",
           "decidedAt": "2026-10-03T08:00:00Z",
-          "note": "Ссылка ведёт не на тот предмет"
+          "note": "Ссылка ведёт не на тот предмет",
+          "flowOptions": null
         },
         "link": {
           "id": "00000000-0000-4000-8000-000000000101",
@@ -431,7 +437,8 @@
           "createdAt": "2026-10-02T15:00:00Z",
           "actor": "MODERATOR",
           "revertedAt": null,
-          "revertibleUntil": "2026-10-02T15:10:00Z"
+          "revertibleUntil": "2026-10-02T15:10:00Z",
+          "flowId": null
         }
       ]
     },
@@ -455,7 +462,8 @@
           "status": "WITHDRAWN",
           "submittedAt": "2026-10-01T07:00:00Z",
           "decidedAt": "2026-10-01T08:00:00Z",
-          "note": null
+          "note": null,
+          "flowOptions": null
         },
         "link": {
           "id": "00000000-0000-4000-8000-000000000101",

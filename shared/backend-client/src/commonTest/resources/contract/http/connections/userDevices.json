@@ -43,7 +43,19 @@
           "expiresAt": "2026-12-30T09:00:00Z"
         },
         "itmoStatus": "ok",
-        "revokedAt": null
+        "revokedAt": null,
+        "clientId": "itmo-widgets-agent",
+        "app": {
+          "id": "itmo-widgets-agent",
+          "name": "ITMO.Widgets agent",
+          "homepage": null,
+          "iconUrl": null,
+          "deployment": "self_hosted",
+          "verified": false
+        },
+        "itmoGrants": [
+          "itmo:refresh:student-personal-cabinet"
+        ]
       },
       {
         "id": "00000000-0000-4000-8000-000000000603",
@@ -67,7 +79,17 @@
         "live": false,
         "itmo": null,
         "itmoStatus": "none",
-        "revokedAt": null
+        "revokedAt": null,
+        "clientId": "web",
+        "app": {
+          "id": "web",
+          "name": "ITMO.Widgets в браузере",
+          "homepage": null,
+          "iconUrl": null,
+          "deployment": "hosted",
+          "verified": false
+        },
+        "itmoGrants": []
       },
       {
         "id": "00000000-0000-4000-8000-000000000602",
@@ -110,7 +132,20 @@
           "expiresAt": "2026-12-19T09:00:00Z"
         },
         "itmoStatus": "closed",
-        "revokedAt": "2026-10-04T09:00:00Z"
+        "revokedAt": "2026-10-04T09:00:00Z",
+        "clientId": "itmo-mcp",
+        "app": {
+          "id": "itmo-mcp",
+          "name": "ITMO MCP",
+          "homepage": null,
+          "iconUrl": null,
+          "deployment": "self_hosted",
+          "verified": false
+        },
+        "itmoGrants": [
+          "itmo:refresh:student-personal-cabinet",
+          "itmo:sso"
+        ]
       }
     ],
     "installs": [

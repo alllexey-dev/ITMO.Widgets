@@ -224,11 +224,8 @@ and an OpenAPI snapshot (`B/docs/openapi.json`). This module tests against a ven
   types have the schema's `oneOf` with the `type` values `free` and `auto`. A model that reaches an unlisted model
   or enum fails, so a new top-level request or answer type joins `WireModels`.
 - `PendingBackendFields` lists the client fields Backend has not shipped yet, each with its reason;
-  `PendingBackendRoutes` and `PendingBackendQueries` do the same for a route and a query parameter. They hold
-  `SaveSubjectLinkRequest.flowOptions` and connections protocol 2 (ADR 0040: the preview's `protocol`, `app` and
-  `grants`, `granted`, `ConnectionInfo`'s `clientId`, `app` and `itmoGrants`, `itmo-closed`, `?protocol=2`), mirrored
-  from the wire spec while Backend builds it; `ClientAppInfo`, `GrantRequest` and `ClientDeployment` join `WireModels`
-  in the re-sync that brings their schemas. An entry the snapshot already has fails, so the lists cannot go stale.
+  `PendingBackendRoutes` and `PendingBackendQueries` do the same for a route and a query parameter. All three are
+  empty now. An entry the snapshot already has fails, so the lists cannot go stale.
 - Seeded-drift tests (a renamed field, an extra enum value, an unknown route, an unlisted operation, an unclaimed
   fixture and others) prove that each check fails.
 

@@ -17,6 +17,9 @@ class ConnectionsVendoredFixturesTest {
         ResponseClaim("http/connections/openPairing.json", PairingPreview.serializer()) {
             connections.openPairing("K7Q2M9AB")
         },
+        ResponseClaim("http/connections/openPairingProtocol2.json", PairingPreview.serializer()) {
+            connections.openPairing("K7Q2M9AB")
+        },
         ResponseClaim("http/connections/approvePairing.json", ApprovedPairing.serializer()) {
             connections.approvePairing(cases.challengeId, cases.approval)
         },
@@ -29,6 +32,9 @@ class ConnectionsVendoredFixturesTest {
         },
         ResponseClaim("http/connections/connectionItmoEnded.json", null) {
             connections.connectionItmoEnded(cases.connectionId)
+        },
+        ResponseClaim("http/connections/connectionItmoClosed.json", null) {
+            connections.connectionItmoClosed(cases.connectionId)
         },
         ResponseClaim("http/connections/signOutInstall.json", null) { connections.signOutInstall(cases.instanceId) },
     )

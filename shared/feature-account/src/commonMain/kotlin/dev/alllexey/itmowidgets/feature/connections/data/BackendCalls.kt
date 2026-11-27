@@ -38,7 +38,7 @@ internal fun ConnectionClient.toDomain(): ClientType = when (this) {
     ConnectionClient.AGENT -> ClientType.AGENT
     ConnectionClient.MCP -> ClientType.MCP
     ConnectionClient.WEB -> ClientType.WEB
-    ConnectionClient.UNKNOWN -> ClientType.OTHER
+    ConnectionClient.APP, ConnectionClient.UNKNOWN -> ClientType.OTHER
 }
 
 /** The domain's scope id is the wire enum's name; an unknown scope has none and cannot be chosen. */

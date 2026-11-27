@@ -31,12 +31,14 @@
         "connectionsCreated": {
           "agent": 1,
           "mcp": 0,
-          "web": 6
+          "web": 6,
+          "app": 0
         },
         "connectionsRevoked": {
           "agent": 0,
           "mcp": 1,
-          "web": 2
+          "web": 2,
+          "app": 0
         }
       },
       {
@@ -46,12 +48,14 @@
         "connectionsCreated": {
           "agent": 0,
           "mcp": 0,
-          "web": 0
+          "web": 0,
+          "app": 0
         },
         "connectionsRevoked": {
           "agent": 0,
           "mcp": 0,
-          "web": 0
+          "web": 0,
+          "app": 0
         }
       }
     ],
@@ -96,6 +100,14 @@
         "approved": 27,
         "claimed": 27,
         "expired": 2
+      },
+      {
+        "client": "app",
+        "created": 0,
+        "opened": 0,
+        "approved": 0,
+        "claimed": 0,
+        "expired": 0
       }
     ]
   },

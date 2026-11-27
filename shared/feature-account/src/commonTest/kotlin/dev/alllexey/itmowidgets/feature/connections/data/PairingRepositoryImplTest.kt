@@ -8,7 +8,7 @@ import dev.alllexey.itmowidgets.client.connections.ConnectionClient
 import dev.alllexey.itmowidgets.client.connections.ConnectionInfo
 import dev.alllexey.itmowidgets.client.connections.ConnectionScope
 import dev.alllexey.itmowidgets.client.connections.ConnectionsApi
-import dev.alllexey.itmowidgets.client.connections.GrantRequest
+import dev.alllexey.itmowidgets.client.connections.PairingGrant
 import dev.alllexey.itmowidgets.client.connections.PairingKind
 import dev.alllexey.itmowidgets.client.connections.PairingPreview
 import dev.alllexey.itmowidgets.client.connections.ScopeInfo
@@ -109,7 +109,7 @@ class PairingRepositoryImplTest {
 
     @Test
     fun aProtocol2PreviewCarriesTheGrantsAndTheRegistryEntry() = runTest(dispatcher) {
-        api.preview = protocol2(GrantRequest("widgets:reviews:read", false, " Отзывы ", "Читает", null, null), REFRESH, SSO)
+        api.preview = protocol2(PairingGrant("widgets:reviews:read", false, " Отзывы ", "Читает", null, null), REFRESH, SSO)
 
         val opened = assertIs<PairingResult.Success<PairingRequest>>(repository().open(link)).value
 
@@ -133,10 +133,10 @@ class PairingRepositoryImplTest {
 
     @Test
     fun anUnknownItmoGrantIsUnsupportedOnlyWhenRequired() = runTest(dispatcher) {
-        api.preview = protocol2(REFRESH, GrantRequest("itmo:refresh:dev-stand", false, null, null, null, null))
+        api.preview = protocol2(REFRESH, PairingGrant("itmo:refresh:dev-stand", false, null, null, null, null))
         assertIs<PairingResult.Success<PairingRequest>>(repository().open(link))
 
-        api.preview = protocol2(REFRESH, GrantRequest("itmo:refresh:dev-stand", true, null, null, null, null))
+        api.preview = protocol2(REFRESH, PairingGrant("itmo:refresh:dev-stand", true, null, null, null, null))
         assertEquals(PairingResult.Failure(PairingError.Unsupported), repository().open(link))
     }
 
@@ -162,7 +162,7 @@ class PairingRepositoryImplTest {
         assertNull(sent.scopes)
     }
 
-    private fun protocol2(vararg grants: GrantRequest) = preview(commitment).copy(
+    private fun protocol2(vararg grants: PairingGrant) = preview(commitment).copy(
         client = ConnectionClient.MCP,
         requestedScopes = emptyList(),
         protocol = 2,
@@ -211,8 +211,8 @@ class PairingRepositoryImplTest {
     }
 
     private companion object {
-        val REFRESH = GrantRequest(ItmoGrants.REFRESH, false, null, null, " purpose ", null)
-        val SSO = GrantRequest(ItmoGrants.SSO, false, null, null, null, null)
+        val REFRESH = PairingGrant(ItmoGrants.REFRESH, false, null, null, " purpose ", null)
+        val SSO = PairingGrant(ItmoGrants.SSO, false, null, null, null, null)
         val CONNECTION: Uuid = Uuid.parse("00000000-0000-4000-8000-000000000601")
     }
 }

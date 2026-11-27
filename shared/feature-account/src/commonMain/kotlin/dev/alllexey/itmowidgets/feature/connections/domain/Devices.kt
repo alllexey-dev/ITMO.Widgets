@@ -7,7 +7,7 @@ import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.StateFlow
 
-/** A connected client's type; [OTHER] is one this version does not know. */
+/** A connected client's type; [OTHER] is an `app` client or one this version does not know. */
 enum class ClientType { AGENT, MCP, WEB, OTHER }
 
 /** The client's own report about its ITMO session. */

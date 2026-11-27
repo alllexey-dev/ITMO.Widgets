@@ -123,7 +123,7 @@ class ConnectionsContractTest {
     @Test
     fun aRenewalSaysWhichItmoGrantsTheConnectionHolds() {
         val grants = BackendJson.decodeFromString(
-            ListSerializer(GrantRequest.serializer()),
+            ListSerializer(PairingGrant.serializer()),
             """[{"id":"itmo:refresh:student-personal-cabinet","required":true,"granted":true},
                 {"id":"itmo:sso","required":false,"granted":false}]""",
         )
@@ -141,7 +141,7 @@ class ConnectionsContractTest {
 
         assertEquals(ClientDeployment.UNKNOWN, app.deployment)
         assertFailsWith<SerializationException> {
-            BackendJson.decodeFromString(GrantRequest.serializer(), """{"id":"itmo:sso"}""")
+            BackendJson.decodeFromString(PairingGrant.serializer(), """{"id":"itmo:sso"}""")
         }
     }
 

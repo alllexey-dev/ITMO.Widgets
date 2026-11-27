@@ -13,6 +13,9 @@ import dev.alllexey.itmowidgets.client.common.UserData
 import dev.alllexey.itmowidgets.client.common.UserProfile
 import dev.alllexey.itmowidgets.client.connections.ApprovePairingRequest
 import dev.alllexey.itmowidgets.client.connections.ApprovedPairing
+import dev.alllexey.itmowidgets.client.connections.ClientAppInfo
+import dev.alllexey.itmowidgets.client.connections.ClientDeployment
+import dev.alllexey.itmowidgets.client.connections.ClientDeploymentSerializer
 import dev.alllexey.itmowidgets.client.connections.ConnectionClient
 import dev.alllexey.itmowidgets.client.connections.ConnectionClientSerializer
 import dev.alllexey.itmowidgets.client.connections.ConnectionInfo
@@ -24,6 +27,7 @@ import dev.alllexey.itmowidgets.client.connections.ItmoStatus
 import dev.alllexey.itmowidgets.client.connections.ItmoStatusSerializer
 import dev.alllexey.itmowidgets.client.connections.PairingKind
 import dev.alllexey.itmowidgets.client.connections.PairingKindSerializer
+import dev.alllexey.itmowidgets.client.connections.PairingGrant
 import dev.alllexey.itmowidgets.client.connections.PairingPreview
 import dev.alllexey.itmowidgets.client.connections.ScopeGrant
 import dev.alllexey.itmowidgets.client.connections.ScopeInfo
@@ -138,6 +142,8 @@ object WireModels {
         model<UserPrivacySettings>(),
         model<ConsentRequest>(),
         model<PairingPreview>(),
+        model<PairingGrant>(),
+        model<ClientAppInfo>(),
         model<ApprovePairingRequest>(),
         model<ApprovedPairing>(),
         model<ItmoSession>(),
@@ -209,6 +215,7 @@ object WireModels {
         wireEnum(ConnectionClientSerializer, ConnectionClient.entries),
         wireEnum(ConnectionScopeSerializer, ConnectionScope.entries),
         wireEnum(ItmoStatusSerializer, ItmoStatus.entries),
+        wireEnum(ClientDeploymentSerializer, ClientDeployment.entries),
     )
 
     private inline fun <reified T : Any> model(): WireModel = WireModel(T::class.simpleName!!, serializer<T>())

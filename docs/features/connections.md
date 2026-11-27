@@ -166,7 +166,7 @@ closed and, once per sign-in end, a local notification on the `connections` chan
 
 ## Texts
 
-Scope titles and descriptions come from Backend (`ScopeInfo` and the `widgets:*` entries of `GrantRequest`, by
+Scope titles and descriptions come from Backend (`ScopeInfo` and the `widgets:*` entries of `PairingGrant`, by
 `Accept-Language`, which every Backend request carries as `APP_LANGUAGE`), as does a grant's `purpose` from the
 registry: an exception to ADR 0028, so a new scope or client needs no app release. Everything else, the ITMO grants'
 texts included, is in `strings_connections.xml`.
@@ -175,8 +175,6 @@ texts included, is in `strings_connections.xml`.
 
 - Core 2: `ConnectionsRequestTest`, `ConnectionsContractTest`, `ConnectionsVendoredFixturesTest`,
   `AcceptLanguageHeaderTest`, conformance.
-- Core 2 conformance runs ahead of Backend's snapshot for protocol 2: `PendingBackendFields`,
-  `PendingBackendRoutes` (`itmo-closed`) and `PendingBackendQueries` (`?protocol=2`) fail once a re-sync brings them.
 - Shared: `PairingViewModelTest` (grant card, `itmo:sso` confirmation, bundle v2 items, no sign-in without ITMO
   grants, renewal cards), `DevicesViewModelTest`, `ConnectedClientViewModelTest` («Забрать»),
   `PairingRepositoryImplTest`, `ClientSignInImplTest` (the identity cookie against the token response's `sid`),

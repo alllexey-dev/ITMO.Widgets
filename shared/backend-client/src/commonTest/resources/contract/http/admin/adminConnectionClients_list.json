@@ -1,0 +1,68 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "itmo-mcp",
+      "kind": "mcp",
+      "name": "ITMO MCP",
+      "homepage": "https://github.com/alllexey-dev/itmo-mcp",
+      "iconUrl": null,
+      "deployment": "self_hosted",
+      "auth": "public",
+      "status": "active",
+      "maxPerUser": null,
+      "grants": [
+        {
+          "id": "widgets:reviews:read",
+          "required": false,
+          "requestedByDefault": true,
+          "purpose": null
+        },
+        {
+          "id": "widgets:links:read",
+          "required": false,
+          "requestedByDefault": true,
+          "purpose": null
+        },
+        {
+          "id": "widgets:sport:queue",
+          "required": false,
+          "requestedByDefault": false,
+          "purpose": null
+        },
+        {
+          "id": "itmo:refresh:student-personal-cabinet",
+          "required": false,
+          "requestedByDefault": true,
+          "purpose": "чтобы ИИ-ассистент видел ваше расписание, зачётку и заявки"
+        },
+        {
+          "id": "itmo:sso",
+          "required": false,
+          "requestedByDefault": false,
+          "purpose": "чтобы ИИ-ассистент видел баллы БАРС и входил в другие сервисы ИТМО"
+        }
+      ]
+    },
+    {
+      "id": "synthetic-service",
+      "kind": "app",
+      "name": "Synthetic service",
+      "homepage": null,
+      "iconUrl": "https://example.com/icon.png",
+      "deployment": "hosted",
+      "auth": "confidential",
+      "status": "suspended",
+      "maxPerUser": 2,
+      "grants": [
+        {
+          "id": "widgets:user",
+          "required": true,
+          "requestedByDefault": true,
+          "purpose": null
+        }
+      ]
+    }
+  ],
+  "error": null
+}
