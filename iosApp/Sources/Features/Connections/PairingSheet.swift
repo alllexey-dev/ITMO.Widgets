@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 
 /// The pairing sheet (`pair_title`, UX spec section 5) over the shared `PairingViewModel`, a route sheet
-/// (`AppRoutes.Pairing`): paste a link or scan it (`PairingScanner`, VisionKit), compare the code and choose the
+/// (`AppRoutes.Pairing`): paste a link or scan it (`PairingScanner`, VisionKit), check the client and choose the
 /// access, the screen lock (`DeviceUnlock` from Koin), then for an agent or MCP server the ITMO.ID page full screen
 /// (`ClientSignInPage`), and the result. A `link` (an App Link, a renewal's scan) is read once as a scan; a renewal
 /// skips the card and asks for the screen lock at once.
@@ -211,7 +211,7 @@ private struct PairingInput: View {
     }
 }
 
-/// The client's card, the code to compare, the access it asks for, the note, then the primary action and cancel.
+/// The client's card, the caution of a new connection, the access it asks for, the note, then the primary action and cancel.
 private struct PairingConfirm: View {
     let confirm: PairingUiStateConfirm
     let actions: PairingActions
@@ -231,7 +231,9 @@ private struct PairingConfirm: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("pairing.client")
-        PairingCodeCard(code: confirm.code)
+        if confirm.caution {
+            PairingCautionCard()
+        }
         if !confirm.scopes.isEmpty {
             ItmoSectionHeader(title: AppStrings.string("pair_access"))
             ItmoListGroup(inset: ItmoKit.padding) {
@@ -267,23 +269,17 @@ private struct PairingConfirm: View {
     }
 }
 
-/// `pair_code_title`: the digits large and monospaced on a neutral card (a tinted one was too loud).
-private struct PairingCodeCard: View {
-    let code: String
-
+/// `pair_caution_title`: a new connection is approved only for a QR on the user's own screen, on a neutral card.
+private struct PairingCautionCard: View {
     var body: some View {
         ItmoCard {
-            Text(verbatim: AppStrings.string("pair_code_title"))
+            Text(verbatim: AppStrings.string("pair_caution_title"))
                 .font(.itmo(.labelLarge))
-            Text(verbatim: code)
-                .font(.itmo(.displaySmall).monospaced())
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, ItmoSpacing.related)
-                .accessibilityIdentifier("pairing.code")
-            Text(verbatim: AppStrings.string("pair_code_hint"))
+            Text(verbatim: AppStrings.string("pair_caution_text"))
                 .font(.itmo(.bodySmall))
                 .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("pairing.caution")
     }
 }

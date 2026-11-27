@@ -9,6 +9,11 @@ publication or deployment.
 - iOS: shared links `https://widgets.alllexey.dev/u/<isu>`, `/sport/<id>`, `/sport/p/<id>` and `/pair` (and the dev
   host) open the app as Universal Links, as on Android: the signed entitlements get associated domains for both hosts.
   Needs the Associated Domains capability on the App ID, a new profile and the site's `apple-app-site-association`.
+- Connections: pairing no longer asks to compare a six-digit code. A new connection's card says instead to approve
+  only a QR or link opened on the user's own device (`pair_caution_title`, `pair_caution_text`); renewals have no
+  caution, as only the owner's live connection can be renewed. The code checked only a QR other than the one on a
+  genuine screen and never stopped phishing; the key commitment, the screen lock and the push after a new connection
+  stay. `PairingCrypto.verificationCode`, `Confirm.code` and `SigningIn.code` are gone; the wire is unchanged.
 - iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
   reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
   content reports, around the countdown, the progress and the widgets' `GeometryReader`s.

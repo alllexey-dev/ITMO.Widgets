@@ -3,10 +3,10 @@ import SwiftUI
 import WebKit
 
 /// The official ITMO.ID page for a client (UX spec section 5, step 3), full screen: the inline title
-/// (`pair_sign_in_title`) over id.itmo.ru with the close button, on a renewal the code to compare above the page. The
-/// page runs on its own `WKWebsiteDataStore.nonPersistent()`, so the client's sign-in never touches the app's cookies
-/// and leaves nothing behind, with the User-Agent the ViewModel chose. Every main-frame navigation goes to
-/// `navigation` first: the callback is the ViewModel's and never loads; anything else loads only over https.
+/// (`pair_sign_in_title`) over id.itmo.ru with the close button. The page runs on its own
+/// `WKWebsiteDataStore.nonPersistent()`, so the client's sign-in never touches the app's cookies and leaves nothing
+/// behind, with the User-Agent the ViewModel chose. Every main-frame navigation goes to `navigation` first: the
+/// callback is the ViewModel's and never loads; anything else loads only over https.
 struct ClientSignInPage: View {
     let state: PairingUiStateSigningIn
     let navigation: (String) -> Bool
@@ -15,21 +15,6 @@ struct ClientSignInPage: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if let code = state.code {
-                    HStack(spacing: ItmoSpacing.content) {
-                        Text(verbatim: AppStrings.string("pair_code_title"))
-                            .font(.itmo(.bodyMedium))
-                        Spacer(minLength: ItmoSpacing.compact)
-                        Text(verbatim: code)
-                            .font(.itmo(.titleLarge).monospaced())
-                            .accessibilityIdentifier("pairing.signIn.code")
-                    }
-                    .padding(ItmoSpacing.content)
-                    .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: ItmoCorner.medium))
-                    .padding(.horizontal, ItmoKit.margin)
-                    .padding(.vertical, ItmoSpacing.related)
-                    .accessibilityElement(children: .combine)
-                }
                 ClientSignInWebView(url: state.url, userAgent: state.userAgent, navigation: navigation)
                     .ignoresSafeArea(edges: .bottom)
             }

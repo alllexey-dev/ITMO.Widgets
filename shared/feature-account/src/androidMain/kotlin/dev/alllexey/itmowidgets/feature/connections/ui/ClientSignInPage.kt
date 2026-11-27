@@ -11,25 +11,19 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -57,7 +51,6 @@ internal fun ClientSignInPage(
     url: String,
     userAgent: String,
     title: String,
-    code: String?,
     onNavigation: (String) -> Boolean,
     onClose: () -> Unit,
     onUnsupported: () -> Unit,
@@ -75,7 +68,6 @@ internal fun ClientSignInPage(
                 navigation = { AppTopBarAction(painterResource(Res.drawable.ic_close), text(CoreStrings.common_close), onClose) },
                 subtitle = text(AccountStrings.pair_sign_in_host),
             )
-            code?.let { CodeStrip(it) }
             AndroidView(
                 factory = { context -> isolatedWebView(context, userAgent) { navigation(it) }.also { it.loadUrl(url) } },
                 modifier = Modifier.fillMaxWidth().weight(1f).navigationBarsPadding(),
@@ -85,20 +77,6 @@ internal fun ClientSignInPage(
     }
 }
 
-/** On a renewal the code to compare stays on top of the page. */
-@Composable
-private fun CodeStrip(code: String) = Row(
-    Modifier
-        .fillMaxWidth()
-        .padding(horizontal = ItmoTheme.spacing.screenMargin, vertical = ItmoTheme.spacing.related)
-        .background(ItmoTheme.colorScheme.surfaceContainerHigh, ItmoTheme.shapes.medium)
-        .padding(ItmoTheme.spacing.content),
-    horizontalArrangement = Arrangement.SpaceBetween,
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    Text(text(AccountStrings.pair_code_title), style = ItmoTheme.typography.bodyMedium, color = ItmoTheme.colorScheme.onSurface)
-    Text(code, style = ItmoTheme.typography.titleLarge, fontFamily = FontFamily.Monospace, color = ItmoTheme.colorScheme.onSurface)
-}
 
 @SuppressLint("SetJavaScriptEnabled")
 private fun isolatedWebView(context: Context, userAgent: String, onNavigation: (String) -> Boolean): WebView {
