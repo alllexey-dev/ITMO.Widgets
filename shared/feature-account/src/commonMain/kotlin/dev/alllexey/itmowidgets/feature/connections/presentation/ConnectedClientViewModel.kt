@@ -15,6 +15,7 @@ import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogins
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.SignInAlert
+import dev.alllexey.itmowidgets.feature.connections.domain.hasItmoSignIn
 import dev.alllexey.itmowidgets.feature.connections.domain.holdsItmo
 import dev.alllexey.itmowidgets.feature.connections.domain.signInAlert
 import dev.alllexey.itmowidgets.shared.feature.account.AccountPlurals
@@ -93,9 +94,15 @@ class ConnectedClientViewModel(
         _uiState.update {
             it.copy(
                 renew = RenewSheet(
-                    title = UiText.Res(AccountStrings.connection_renew_title, listOf(connection.name)),
+                    title = UiText.Res(
+                        if (connection.hasItmoSignIn) AccountStrings.connection_renew_title else AccountStrings.connection_sign_in_give_title,
+                        listOf(connection.name),
+                    ),
                     command = if (connection.client == ClientType.MCP) MCP_RENEW else AGENT_RENEW,
-                    note = UiText.Res(AccountStrings.connection_renew_note, listOf(connection.name)),
+                    note = UiText.Res(
+                        if (connection.hasItmoSignIn) AccountStrings.connection_renew_note else AccountStrings.connection_sign_in_give_note,
+                        listOf(connection.name),
+                    ),
                 ),
             )
         }
@@ -118,6 +125,7 @@ class ConnectedClientViewModel(
                     text = UiText.Res(
                         when {
                             web -> AccountStrings.connection_revoke_web_text
+                            !connection.hasItmoSignIn -> AccountStrings.connection_revoke_widgets_text
                             noCookie -> AccountStrings.connection_revoke_text_later
                             else -> AccountStrings.connection_revoke_text
                         },
@@ -128,16 +136,23 @@ class ConnectedClientViewModel(
         }
     }
 
-    /** «Забрать» on «Полный доступ к ITMO.ID». */
+    /** «Забрать доступ к ИТМО»: ends the client's ITMO sign-in, with full access if it has that too. */
     fun askTakeBackItmo() {
         val connection = connection() ?: return
-        if (ItmoGrants.SSO !in connection.itmoGrants) return
+        if (!connection.hasItmoSignIn) return
         pending = Pending.TAKE_BACK_ITMO
         _uiState.update {
             it.copy(
                 confirm = ConfirmAsk(
                     title = UiText.Res(AccountStrings.connection_take_back_title),
-                    text = UiText.Res(AccountStrings.connection_take_back_text),
+                    text = UiText.Res(
+                        if (ItmoGrants.SSO in connection.itmoGrants) {
+                            AccountStrings.connection_take_back_full_text
+                        } else {
+                            AccountStrings.connection_take_back_text
+                        },
+                        listOf(connection.name),
+                    ),
                     confirm = UiText.Res(AccountStrings.connection_take_back),
                 ),
             )
@@ -230,6 +245,7 @@ class ConnectedClientViewModel(
                 icon = connection.client.icon(),
                 signIn = if (connection.holdsItmo) signIn(connection) else null,
                 fullItmoAccess = ItmoGrants.SSO in connection.itmoGrants,
+                takeBack = connection.hasItmoSignIn && connection.signInAlert(now) != SignInAlert.Closed,
                 scopes = if (web) {
                     emptyList()
                 } else {
@@ -254,6 +270,15 @@ class ConnectedClientViewModel(
     private fun signIn(connection: Connection): SignInStatus {
         val now = time.now()
         val ends = connection.itmo?.expiresAt
+        if (!connection.hasItmoSignIn) {
+            return SignInStatus(
+                tone = SignInTone.OK,
+                title = UiText.Res(AccountStrings.connection_sign_in_none),
+                text = UiText.Res(AccountStrings.connection_sign_in_none_text, listOf(connection.name)),
+                action = UiText.Res(AccountStrings.connection_sign_in_give),
+                signedIn = false,
+            )
+        }
         return when (val alert = connection.signInAlert(now)) {
             SignInAlert.Closed -> SignInStatus(
                 tone = SignInTone.ERROR,

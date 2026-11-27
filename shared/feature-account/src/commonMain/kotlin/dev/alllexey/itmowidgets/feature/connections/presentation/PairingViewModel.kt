@@ -298,7 +298,10 @@ class PairingViewModel(
         return current.copy(
             grants = groups,
             note = when {
-                signs -> UiText.Res(AccountStrings.pair_note_client, listOf(opened.name, opened.name))
+                signs -> UiText.Res(
+                    if (ItmoGrants.SSO in granted) AccountStrings.pair_note_client_full else AccountStrings.pair_note_client,
+                    listOf(opened.name, opened.name),
+                )
                 web -> UiText.Res(AccountStrings.pair_note_web)
                 else -> UiText.Res(AccountStrings.pair_note_widgets, listOf(opened.name))
             },
@@ -337,8 +340,12 @@ class PairingViewModel(
         val (title, description) = when (id) {
             ItmoGrants.REFRESH -> UiText.Res(AccountStrings.grant_refresh_title) to UiText.Res(AccountStrings.grant_refresh_text)
             ItmoGrants.SSO -> UiText.Res(AccountStrings.grant_sso_title) to UiText.Res(AccountStrings.grant_sso_text)
-            else -> UiText.Dynamic(if (itmo) id else title?.ifEmpty { null } ?: id) to
-                (if (itmo) null else description?.ifEmpty { null }?.let(UiText::Dynamic))
+            else -> if (itmo) {
+                // An ITMO grant this version does not know: its id means nothing to a student.
+                UiText.Res(AccountStrings.grant_other_title) to null
+            } else {
+                UiText.Dynamic(title?.ifEmpty { null } ?: id) to description?.ifEmpty { null }?.let(UiText::Dynamic)
+            }
         }
         return GrantSwitch(
             id = id,

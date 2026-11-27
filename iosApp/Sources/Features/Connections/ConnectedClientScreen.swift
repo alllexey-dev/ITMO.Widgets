@@ -5,8 +5,9 @@ import UIKit
 /// A connected client (UX spec section 4) over the shared `ConnectedClientViewModel`, pushed from the devices screen and
 /// from its reminder (`AppRoutes.Connection`): its ITMO sign-in with renewal, access as switches (widening asks for the
 /// screen lock), the facts and the danger row, which asks first and leaves the screen once revoked. A client holding
-/// `itmo:sso` has the `grant_sso_title` row with `connection_take_back`, which asks first too. Renewal shows the
-/// command for the client, then scans the client's QR and continues in the pairing sheet (`AppRoutes.Pairing`).
+/// `itmo:sso` has the `grant_sso_title` row; an open sign-in has `connection_take_back_row`, which asks first too.
+/// Renewal shows the command for the client, then scans the client's QR and continues in the pairing sheet
+/// (`AppRoutes.Pairing`).
 struct ConnectedClientScreen: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
@@ -131,18 +132,6 @@ struct ConnectedClientContent: View {
                     ItmoSectionHeader(title: AppStrings.string("connection_section_sign_in"))
                     signInGroup(signIn)
                 }
-                if state.fullItmoAccess {
-                    ItmoListGroup {
-                        ItmoRow(
-                            title: AppStrings.string("grant_sso_title"),
-                            symbol: .key,
-                            tone: .warn,
-                            trailing: AppStrings.string("connection_take_back"),
-                            action: state.busy ? nil : actions.takeBackItmo
-                        )
-                        .accessibilityIdentifier("client.fullAccess")
-                    }
-                }
                 if !state.scopes.isEmpty {
                     ItmoSectionHeader(title: AppStrings.string("connection_section_access"))
                     ItmoListGroup(inset: ItmoKit.padding) {
@@ -177,7 +166,8 @@ struct ConnectedClientContent: View {
         }
     }
 
-    /// The status row in its tone, then the action row while renewal is due.
+    /// The status row in its tone, full access when the client holds it, the action row while renewal is due (or
+    /// the sign-in to give a client without one), then `connection_take_back_row` while the sign-in is open.
     private func signInGroup(_ signIn: SignInStatus) -> some View {
         ItmoListGroup {
             ItmoRow(
@@ -186,9 +176,34 @@ struct ConnectedClientContent: View {
                 symbol: signIn.tone == .error ? .error : .key,
                 tone: signIn.tone.kit
             )
+            if state.fullItmoAccess {
+                ItmoRow(
+                    title: AppStrings.string("grant_sso_title"),
+                    subtitle: AppStrings.string("connection_full_access_text"),
+                    symbol: .badge,
+                    tone: .neutral
+                )
+                .accessibilityIdentifier("client.fullAccess")
+            }
             if let action = signIn.action?.resolved {
-                ItmoRow(title: action, symbol: .refresh, tone: .primary, chevron: true, action: actions.renew)
-                    .accessibilityIdentifier("client.renew")
+                ItmoRow(
+                    title: action,
+                    symbol: signIn.signedIn ? .refresh : .login,
+                    tone: .primary,
+                    chevron: true,
+                    action: actions.renew
+                )
+                .accessibilityIdentifier("client.renew")
+            }
+            if state.takeBack {
+                ItmoRow(
+                    title: AppStrings.string("connection_take_back_row"),
+                    symbol: .remove,
+                    tone: .neutral,
+                    danger: true,
+                    action: state.busy ? nil : actions.takeBackItmo
+                )
+                .accessibilityIdentifier("client.takeBack")
             }
         }
     }

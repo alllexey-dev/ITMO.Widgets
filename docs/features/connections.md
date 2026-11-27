@@ -54,11 +54,17 @@ Two sources, joined by `sid`:
 - «Вход в ИТМО»: until when, a warning within 7 days, an error when closed; «Обновить вход» appears in the last 14
   days and opens the renewal sheet with the client's command (`itmo-widgets-agent renew`, `itmo-mcp renew`) and
   «Сканировать QR-код»; the scanned `RENEW` link continues in the pairing sheet.
-- «Полный доступ к ITMO.ID» (`grant_sso_title`) with «Забрать», only while `ConnectionInfo.itmoGrants` has
-  `itmo:sso`: after its dialog the phone ends the client's `sid` with its own cookie, as «Отключить» does, then
-  `POST /api/users/me/connections/{id}/itmo-closed` and a reload. The connection stays without ITMO grants («Вход
-  закрыт»); a renewal brings them back. Taking the cookie alone back is impossible: every ITMO item shares the session.
-  Without the phone's cookie the end fails, the error shows and nothing is reported.
+- A client without an ITMO sign-in (paired without ITMO grants, or after «Забрать доступ к ИТМО»; Backend sends no
+  `itmo` for a live connection only then, `Connection.hasItmoSignIn`): «Входа в ИТМО нет» in the neutral tone and
+  «Войти в ИТМО», which opens the same renewal sheet. No bell item, no pill, and «Отключить» says only that the
+  ITMO.Widgets access ends.
+- «Полный доступ к ITMO.ID» (`grant_sso_title`, «БАРС, ИСУ и другие сервисы ИТМО») in the same group while
+  `ConnectionInfo.itmoGrants` has `itmo:sso`.
+- «Забрать доступ к ИТМО» (danger row, last in the group) while the sign-in is open, with or without full access:
+  its dialog names what the client loses (My ITMO, and full access when held) and that the ITMO.Widgets access stays.
+  The phone ends the client's `sid` with its own cookie, as «Отключить» does, then
+  `POST /api/users/me/connections/{id}/itmo-closed` and a reload. Taking the cookie alone back is impossible: every
+  ITMO item shares the session. Without the phone's cookie the end fails, the error shows and nothing is reported.
 - «Доступ»: Backend's `ScopeGrant`s as switches. Off applies at once; on asks for the screen lock first; the last
   scope stays on. The web has no switches.
 - «Отключить»: `revoke`, then the phone ends the client's `sid` and reports `itmo-ended`; a failure is left to the
@@ -79,7 +85,7 @@ requires an ITMO grant this version cannot mint, is «Обновите прил�
    requested scopes as switches (narrowing only). A `RENEW` opens only for the owner's own live connection, so it has
    no caution, and a `RENEW` of an agent or MCP has no card at all. There is no code to compare ([why](#why-no-code)).
 
-   Protocol 2: the grants as switches in registry order, grouped «Виджеты» (`widgets:*`) and «ИТМО» (`itmo:*`), see
+   Protocol 2: the grants as switches in registry order, grouped «ITMO.Widgets» (`widgets:*`) and «ИТМО» (`itmo:*`), see
    [Grants](#grants). Approving needs a Widgets grant on a new connection. A `RENEW` shows a card only when a requested
    ITMO grant is not held yet (`granted: false`), with only those; the held ones go along without a switch.
 3. Screen lock (`DeviceUnlock`: `BiometricPrompt`, LocalAuthentication). iOS answers once the app is active again: a
@@ -118,7 +124,7 @@ requires an ITMO grant this version cannot mint, is «Обновите прил�
 | Grant | Switch | Texts |
 |---|---|---|
 | `widgets:<scope>` | on; on and locked when required | Backend's `title` and `description` |
-| `itmo:refresh:student-personal-cabinet` | on; on and locked when required | «Вход в my.itmo» (`grant_refresh_*`) |
+| `itmo:refresh:student-personal-cabinet` | on; on and locked when required | «Вход в My ITMO» (`grant_refresh_*`) |
 | `itmo:sso` | off every time; turning it on asks «Дать полный доступ к ITMO.ID?» | «Полный доступ к ITMO.ID», the warning in the error colour (`grant_sso_*`) |
 | another `itmo:*` | off and locked, «Недоступно в этой версии»; required: the pairing is refused | its id |
 

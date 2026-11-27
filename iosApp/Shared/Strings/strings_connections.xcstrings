@@ -49,6 +49,18 @@
         }
       }
     },
+    "connection_full_access_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "БАРС, ИСУ и другие сервисы ИТМО"
+          }
+        }
+      }
+    },
     "connection_gone" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -217,6 +229,18 @@
         }
       }
     },
+    "connection_revoke_widgets_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ к ITMO.Widgets закончится сразу."
+          }
+        }
+      }
+    },
     "connection_scopes_changed" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -337,6 +361,66 @@
         }
       }
     },
+    "connection_sign_in_give" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти в ИТМО"
+          }
+        }
+      }
+    },
+    "connection_sign_in_give_note" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ к ITMO.Widgets не изменится, у %1$@ появится вход в ИТМО."
+          }
+        }
+      }
+    },
+    "connection_sign_in_give_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в ИТМО для %1$@"
+          }
+        }
+      }
+    },
+    "connection_sign_in_none" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Входа в ИТМО нет"
+          }
+        }
+      }
+    },
+    "connection_sign_in_none_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ работает только с ITMO.Widgets"
+          }
+        }
+      }
+    },
     "connection_sign_in_until" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -385,6 +469,30 @@
         }
       }
     },
+    "connection_take_back_full_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ потеряет вход в My ITMO и полный доступ к ITMO.ID. Доступ к ITMO.Widgets останется. Вернуть вход можно здесь же, через «Войти в ИТМО»; полный доступ нужно будет дать заново."
+          }
+        }
+      }
+    },
+    "connection_take_back_row" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забрать доступ к ИТМО"
+          }
+        }
+      }
+    },
     "connection_take_back_text" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -392,7 +500,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вход устройства в ИТМО закончится. Чтобы работать дальше, ему нужно обновить вход."
+            "value" : "%1$@ потеряет вход в My ITMO. Доступ к ITMO.Widgets останется. Вернуть вход можно здесь же, через «Войти в ИТМО»."
           }
         }
       }
@@ -1189,6 +1297,18 @@
         }
       }
     },
+    "grant_other_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другой доступ к ИТМО"
+          }
+        }
+      }
+    },
     "grant_purpose" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -1208,7 +1328,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Расписание, зачётка, физкультура и заявки от вашего имени"
+            "value" : "Расписание, зачётка, физкультура и заявки от вашего имени. Без БАРС"
           }
         }
       }
@@ -1220,7 +1340,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вход в my.itmo"
+            "value" : "Вход в My ITMO"
           }
         }
       }
@@ -1256,7 +1376,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„%1$@“ сможет действовать в ITMO.ID от вашего имени, пока вы не заберёте доступ или вход не закончится, до 90 дней."
+            "value" : "%1$@ сможет действовать в ITMO.ID от вашего имени, пока вы не заберёте доступ в «Устройствах» или вход не закончится, самое позднее через 90 дней."
           }
         }
       }
@@ -1280,7 +1400,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вход в любой сервис ИТМО от вашего имени: my.itmo, БАРС, ИСУ и сам ITMO.ID — не только расписание и баллы."
+            "value" : "Вход в любой сервис ИТМО от вашего имени: My ITMO, БАРС, ИСУ и сам ITMO.ID."
           }
         }
       }
@@ -1316,7 +1436,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Недоступно в этой версии"
+            "value" : "Недоступно в этой версии приложения"
           }
         }
       }
@@ -1556,7 +1676,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Виджеты"
+            "value" : "ITMO.Widgets"
           }
         }
       }
@@ -1616,7 +1736,19 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Дальше войдите в ИТМО за %1$@. Пароль останется на телефоне: %2$@ получит только свой вход, который можно отключить отсюда."
+            "value" : "Дальше войдите в ИТМО за %1$@. Пароль останется на телефоне: %2$@ получит только свой вход, который можно отключить в «Устройствах»."
+          }
+        }
+      }
+    },
+    "pair_note_client_full" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дальше войдите в ИТМО за %1$@. Пароль останется на телефоне: %2$@ получит свой вход с полным доступом к ITMO.ID. Забрать его можно в «Устройствах»."
           }
         }
       }

@@ -7,13 +7,14 @@ publication or deployment.
 ## Unreleased
 
 - Connections: pairing protocol 2 (ADR 0040, needs the Backend change). The app opens every code with
-  `?protocol=2`; a client that asks for grants gets a card of switches grouped «Виджеты» and «ИТМО»: required grants
+  `?protocol=2`; a client that asks for grants gets a card of switches grouped «ITMO.Widgets» and «ИТМО»: required grants
   on and locked («Нужно для работы»), `itmo:sso` («Полный доступ к ITMO.ID») off every time with its warning and a
-  confirmation, «Зачем: …» from the registry, an unknown ITMO grant «Недоступно в этой версии». The sign-in runs only
+  confirmation, «Зачем: …» from the registry, an unknown ITMO grant «Другой доступ к ИТМО», «Недоступно в этой версии приложения». The sign-in runs only
   for a chosen ITMO grant; with `itmo:sso` the session's `KEYCLOAK_IDENTITY` is read from the isolated store at the
   callback, checked against the session's `sid` and sealed in the v2 bundle with the chosen items. Protocol 1 keeps
-  its card and v1 bundle. A client holding `itmo:sso` has «Забрать» on its screen: the phone ends its ITMO session
-  and reports `itmo-closed`.
+  its card and v1 bundle. A client with an open ITMO sign-in has «Забрать доступ к ИТМО» on its screen: the phone
+  ends its ITMO session and reports `itmo-closed`; a client without an ITMO sign-in shows «Входа в ИТМО нет» with
+  «Войти в ИТМО» instead of «Вход закрыт» and no reminder.
 - Connections: pairing no longer asks to compare a six-digit code. A new connection's card says instead to approve
   only a QR or link opened on the user's own device (`pair_caution_title`, `pair_caution_text`); renewals have no
   caution, as only the owner's live connection can be renewed. The code checked only a QR other than the one on a

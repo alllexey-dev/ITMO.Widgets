@@ -141,12 +141,18 @@ sealed interface SignInAlert {
 /** The reminder comes 7 days before a client's ITMO sign-in ends (UX spec U2). */
 val SIGN_IN_REMINDER: Duration = 7.days
 
-/** An agent or MCP server that holds its own ITMO session. */
+/** An agent or MCP server: a client that may hold its own ITMO session. */
 val Connection.holdsItmo: Boolean get() = client == ClientType.AGENT || client == ClientType.MCP
 
-/** Null for the web, a revoked client or a sign-in that is fine at [now]. */
+/**
+ * An agent or MCP server that has an ITMO session now. A live one has none when it was paired without ITMO grants or
+ * the phone took them back («Забрать доступ к ИТМО»): Backend forgets a live connection's `sid` only then.
+ */
+val Connection.hasItmoSignIn: Boolean get() = holdsItmo && itmo != null
+
+/** Null for the web, a client without an ITMO sign-in, a revoked client or a sign-in that is fine at [now]. */
 fun Connection.signInAlert(now: Instant): SignInAlert? {
-    if (!holdsItmo || revokedAt != null) return null
+    if (!hasItmoSignIn || revokedAt != null) return null
     val ends = itmo?.expiresAt
     if (health == ItmoHealth.CLOSED || ends == null || ends <= now) return SignInAlert.Closed
     return if (ends - now <= SIGN_IN_REMINDER) SignInAlert.Ending(ends) else null

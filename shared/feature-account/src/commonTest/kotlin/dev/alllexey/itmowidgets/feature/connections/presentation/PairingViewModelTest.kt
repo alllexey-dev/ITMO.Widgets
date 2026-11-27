@@ -329,6 +329,7 @@ class PairingViewModelTest {
         assertEquals(UiText.Res(AccountStrings.grant_required), refresh.note)
         val unknown = confirm.switch("itmo:refresh:dev-stand")
         assertFalse(unknown.checked || unknown.enabled)
+        assertEquals(UiText.Res(AccountStrings.grant_other_title), unknown.title)
         assertEquals(UiText.Res(AccountStrings.grant_unavailable), unknown.note)
 
         model.onGrantChanged(ItmoGrants.REFRESH, false)
@@ -354,9 +355,12 @@ class PairingViewModelTest {
         val confirmed = assertIs<PairingUiState.Confirm>(model.uiState.value)
         assertNull(confirmed.ask)
         assertTrue(confirmed.switch(ItmoGrants.SSO).checked)
+        assertEquals(UiText.Res(AccountStrings.pair_note_client_full, listOf("MacBook Air", "MacBook Air")), confirmed.note)
 
         model.onGrantChanged(ItmoGrants.SSO, false)
-        assertFalse(assertIs<PairingUiState.Confirm>(model.uiState.value).switch(ItmoGrants.SSO).checked)
+        val off = assertIs<PairingUiState.Confirm>(model.uiState.value)
+        assertFalse(off.switch(ItmoGrants.SSO).checked)
+        assertEquals(UiText.Res(AccountStrings.pair_note_client, listOf("MacBook Air", "MacBook Air")), off.note)
     }
 
     @Test

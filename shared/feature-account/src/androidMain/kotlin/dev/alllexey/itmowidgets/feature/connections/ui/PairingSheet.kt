@@ -234,7 +234,7 @@ private fun GrantRow(grant: GrantSwitch, enabled: Boolean, onGrant: (String, Boo
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(GrantLineGap)) {
         Text(
             grant.title.asString(),
-            color = if (grant.enabled) ItmoTheme.colorScheme.onSurface else ItmoTheme.colorScheme.onSurfaceVariant,
+            color = if (grant.enabled || grant.checked) ItmoTheme.colorScheme.onSurface else ItmoTheme.colorScheme.onSurfaceVariant,
             style = ItmoTheme.typography.bodyLarge,
         )
         listOfNotNull(grant.description, grant.purpose).forEach {

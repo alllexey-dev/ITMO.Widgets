@@ -299,7 +299,7 @@ private struct PairingGrantRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: grant.title.resolved)
                     .font(.itmo(.bodyLarge))
-                    .foregroundStyle(grant.enabled ? .primary : .secondary)
+                    .foregroundStyle(grant.enabled || grant.checked ? .primary : .secondary)
                 ForEach([grant.description_, grant.purpose].compactMap { $0?.resolved }, id: \.self) { line in
                     Text(verbatim: line).font(.itmo(.bodyMedium)).foregroundStyle(.secondary)
                 }

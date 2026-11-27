@@ -75,7 +75,7 @@ A grant is one thing the phone can hand over. The client requests a set; the reg
 
 ### 3. The card: the user picks what to send
 
-The card lists the request as switches, grouped «Виджеты» and «ИТМО»:
+The card lists the request as switches, grouped «ITMO.Widgets» and «ИТМО»:
 
 - required grants: on and locked, marked «Нужно для работы»; declining them is «Отклонить»;
 - optional low and medium grants: on;
@@ -86,9 +86,9 @@ Each switch has three texts, from three owners:
 
 | Text | Example for `itmo:sso` of itmo-mcp | Comes from | Why there |
 |---|---|---|---|
-| title and what it gives | «Полный доступ к ITMO.ID» / «Вход в любой сервис ИТМО от вашего имени: my.itmo, БАРС, ИСУ и сам ITMO.ID» | app strings | the same for every client; Backend cannot change it |
+| title and what it gives | «Полный доступ к ITMO.ID» / «Вход в любой сервис ИТМО от вашего имени: My ITMO, БАРС, ИСУ и сам ITMO.ID» | app strings | the same for every client; Backend cannot change it |
 | warning (high risk only) | «Включайте, только если это ваше устройство и вы ему доверяете» | app strings | the same; Backend cannot soften it |
-| purpose: what this client does with it | «Баллы и оценки из БАРС» | the registry entry's `purpose`, through `PairingPreview` | per client, changes without an app release; the owner writes it |
+| purpose: why this client needs it, after «Зачем: » | «чтобы ИИ-ассистент видел баллы БАРС» | the registry entry's `purpose`, through `PairingPreview` | per client, changes without an app release; the owner writes it |
 
 The client's own request carries no text: a `public` client could claim anything. The client says the same in its own
 interface: `itmo-mcp pair` prints which grants it asks for and what stops working without each (without `itmo:sso`:
@@ -127,7 +127,8 @@ client's `returnUrl` from the registry (never from the link), and the client cla
 
 - A whole connection: «Отключить», as today (Backend at once, then the phone ends the `sid`).
 - Widgets grants: switches on the client screen, at once.
-- ITMO grants: only by ending the session; «Забрать доступ к ИТМО» ends the client's `sid` and calls the phone-only
+- ITMO grants: only by ending the session; «Забрать доступ к ИТМО» (on any client with an open ITMO sign-in) ends
+  the client's `sid` and calls the phone-only
   `POST /api/users/me/connections/{id}/itmo-closed`. The connection stays; a renewal brings the ITMO grants back.
   Taking back the cookie alone is impossible, since every ITMO item shares the session.
 - A whole client app: suspension in the registry.

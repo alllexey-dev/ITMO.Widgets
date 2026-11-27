@@ -68,6 +68,12 @@ internal class ConnectionScreenMcpFullAccessPreview {
     fun ConnectionScreen() = Client(ConnectionsSamples.mcpFullAccess)
 }
 
+internal class ConnectionScreenMcpWithoutItmoPreview {
+    @Preview(name = "mcp-without-itmo", heightDp = 1100)
+    @Composable
+    fun ConnectionScreen() = Client(ConnectionsSamples.mcpWithoutItmo)
+}
+
 internal class ConnectionScreenWebPreview {
     @Preview(name = "web")
     @Composable

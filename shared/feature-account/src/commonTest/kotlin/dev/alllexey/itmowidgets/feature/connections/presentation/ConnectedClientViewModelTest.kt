@@ -3,12 +3,14 @@ package dev.alllexey.itmowidgets.feature.connections.presentation
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
+import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
 import dev.alllexey.itmowidgets.feature.connections.domain.Devices
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoHealth
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogins
+import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
 import dev.alllexey.itmowidgets.testkit.TestMainDispatcher
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -139,13 +141,39 @@ class ConnectedClientViewModelTest {
     }
 
     @Test
-    fun aClientWithoutItmoSsoHasNoFullAccessRow() = runTest(main.dispatcher) {
+    fun aClientWithoutItmoSsoCanStillGiveItsSignInBack() = runTest(main.dispatcher) {
         val model = viewModel()
         advanceUntilIdle()
 
         assertFalse(model.uiState.value.fullItmoAccess)
+        assertTrue(model.uiState.value.takeBack)
+        model.askTakeBackItmo()
+        assertEquals(
+            UiText.Res(AccountStrings.connection_take_back_text, listOf("nas")),
+            model.uiState.value.confirm?.text,
+        )
+    }
+
+    @Test
+    fun aClientWithoutAnItmoSignInIsNotClosedAndGetsOneThroughRenewal() = runTest(main.dispatcher) {
+        devices.next = Devices(listOf(Samples.agent(itmoGrants = emptyList(), signedIn = false)), emptyList())
+        val model = viewModel()
+        advanceUntilIdle()
+
+        val state = model.uiState.value
+        assertEquals(SignInTone.OK, state.signIn?.tone)
+        assertEquals(UiText.Res(AccountStrings.connection_sign_in_none), state.signIn?.title)
+        assertEquals(false, state.signIn?.signedIn)
+        assertFalse(state.takeBack)
         model.askTakeBackItmo()
         assertNull(model.uiState.value.confirm)
+        model.askRenew()
+        assertEquals(
+            UiText.Res(AccountStrings.connection_sign_in_give_title, listOf("nas")),
+            model.uiState.value.renew?.title,
+        )
+        model.askRevoke()
+        assertEquals(UiText.Res(AccountStrings.connection_revoke_widgets_text), model.uiState.value.confirm?.text)
     }
 
     @Test
@@ -156,7 +184,10 @@ class ConnectedClientViewModelTest {
         assertTrue(model.uiState.value.fullItmoAccess)
 
         model.askTakeBackItmo()
-        assertNotNull(model.uiState.value.confirm)
+        assertEquals(
+            UiText.Res(AccountStrings.connection_take_back_full_text, listOf("nas")),
+            model.uiState.value.confirm?.text,
+        )
         devices.calls.clear()
         model.confirm()
         advanceUntilIdle()

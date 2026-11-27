@@ -150,6 +150,7 @@ internal object Samples {
         id: Uuid = agentId,
         sid: String = "sid-agent",
         itmoGrants: List<String> = listOf(ItmoGrants.REFRESH),
+        signedIn: Boolean = true,
     ) = Connection(
         id = id,
         client = ClientType.AGENT,
@@ -163,7 +164,7 @@ internal object Samples {
         createdAt = Instant.parse("2026-07-28T09:00:00Z"),
         approvedAt = Instant.parse("2026-07-28T09:00:00Z"),
         lastUsedAt = Instant.parse("2026-10-07T08:55:00Z"),
-        itmo = ItmoSessionRef(sid, expiresAt),
+        itmo = ItmoSessionRef(sid, expiresAt).takeIf { signedIn },
         health = health,
         revokedAt = revokedAt,
         itmoGrants = itmoGrants,
