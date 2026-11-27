@@ -63,6 +63,7 @@ internal fun ConnectionInfo.toDomain() = Connection(
         ItmoStatus.NONE, ItmoStatus.UNKNOWN -> ItmoHealth.NONE
     },
     revokedAt = revokedAt,
+    itmoGrants = itmoGrants.orEmpty(),
 )
 
 internal fun InstallInfo.toDomain() = AppInstall(

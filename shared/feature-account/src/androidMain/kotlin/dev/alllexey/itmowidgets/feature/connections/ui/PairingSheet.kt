@@ -7,9 +7,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.text.asString
@@ -37,11 +43,13 @@ import dev.alllexey.itmowidgets.designsystem.kit.SectionHeader
 import dev.alllexey.itmowidgets.designsystem.kit.SwitchListRow
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
+import dev.alllexey.itmowidgets.feature.connections.presentation.GrantSwitch
 import dev.alllexey.itmowidgets.feature.connections.presentation.PairingUiState
 import dev.alllexey.itmowidgets.feature.connections.presentation.PairingViewModel
 import dev.alllexey.itmowidgets.feature.connections.presentation.ResultAction
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
 import dev.alllexey.itmowidgets.shared.designsystem.Res
+import dev.alllexey.itmowidgets.shared.designsystem.ic_check
 import dev.alllexey.itmowidgets.shared.designsystem.ic_check_circle
 import dev.alllexey.itmowidgets.shared.designsystem.ic_error
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code_scanner
@@ -61,7 +69,9 @@ fun PairingSheetRoute(viewModel: PairingViewModel, unlock: DeviceUnlock, onScan:
             url = current.url,
             userAgent = current.userAgent,
             title = current.title.asString(),
-            onNavigation = viewModel::onSignInNavigation,
+            readIdentity = current.readIdentity,
+            isCallback = viewModel::isSignInCallback,
+            onCallback = viewModel::onSignInCallback,
             onClose = viewModel::onSignInCancelled,
             onUnsupported = viewModel::onSignInUnsupported,
         )
@@ -69,7 +79,16 @@ fun PairingSheetRoute(viewModel: PairingViewModel, unlock: DeviceUnlock, onScan:
             LaunchedEffect(current) { if (!current.busy) viewModel.proceed(unlock) }
             Progress(close)
         } else {
-            PairingConfirm(current, close, onProceed = { viewModel.proceed(unlock) }, onScope = viewModel::onScopeChanged, onCancel = onClose)
+            PairingConfirm(
+                current,
+                close,
+                onProceed = { viewModel.proceed(unlock) },
+                onScope = viewModel::onScopeChanged,
+                onCancel = onClose,
+                onGrant = viewModel::onGrantChanged,
+                onConfirmGrant = viewModel::confirmGrant,
+                onDismissGrant = viewModel::dismissGrant,
+            )
         }
         else -> Unit
     }
@@ -128,6 +147,9 @@ internal fun PairingConfirm(
     onProceed: () -> Unit,
     onScope: (String, Boolean) -> Unit,
     onCancel: () -> Unit,
+    onGrant: (String, Boolean) -> Unit = { _, _ -> },
+    onConfirmGrant: () -> Unit = {},
+    onDismissGrant: () -> Unit = {},
 ) = SheetScaffold(
     title = text(AccountStrings.pair_title),
     close = close,
@@ -183,8 +205,54 @@ internal fun PairingConfirm(
                 }
             }
         }
+        state.grants.forEach { group ->
+            SectionHeader(group.title.asString())
+            ListGroup(Modifier.testTag(PairingTestTags.GRANTS)) {
+                group.grants.forEach { grant -> item { GrantRow(grant, enabled = grant.enabled && !state.busy, onGrant) } }
+            }
+        }
         ListGroupNote(state.note.asString())
     }
+    state.ask?.let { ConfirmAskDialog(it, onConfirmGrant, onDismissGrant) }
+}
+
+/**
+ * A grant switch: the title, what it gives, «Зачем: …», then «Нужно для работы» or «Недоступно в этой версии», and the
+ * warning of `itmo:sso` in the error colour.
+ */
+@Composable
+private fun GrantRow(grant: GrantSwitch, enabled: Boolean, onGrant: (String, Boolean) -> Unit) = Row(
+    Modifier
+        .fillMaxWidth()
+        .toggleable(grant.checked, enabled, Role.Switch) { onGrant(grant.id, it) }
+        .padding(start = ItmoTheme.spacing.cardPadding, end = ItmoTheme.spacing.content)
+        .padding(vertical = ItmoTheme.spacing.content)
+        .testTag(PairingTestTags.grant(grant.id)),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.content),
+) {
+    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(GrantLineGap)) {
+        Text(
+            grant.title.asString(),
+            color = if (grant.enabled || grant.checked) ItmoTheme.colorScheme.onSurface else ItmoTheme.colorScheme.onSurfaceVariant,
+            style = ItmoTheme.typography.bodyLarge,
+        )
+        listOfNotNull(grant.description, grant.purpose).forEach {
+            Text(it.asString(), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+        }
+        grant.note?.let { Text(it.asString(), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.labelMedium) }
+        grant.warning?.let { Text(it.asString(), color = ItmoTheme.colorScheme.error, style = ItmoTheme.typography.bodyMedium) }
+    }
+    Switch(
+        checked = grant.checked,
+        onCheckedChange = null,
+        enabled = enabled,
+        thumbContent = if (grant.checked) {
+            { Icon(painterResource(Res.drawable.ic_check), null, Modifier.size(SwitchDefaults.IconSize)) }
+        } else {
+            null
+        },
+    )
 }
 
 @Composable
@@ -209,6 +277,7 @@ internal fun PairingResultContent(state: PairingUiState.Result, close: SheetClos
     }
 
 private val ProgressHeight = 160.dp
+private val GrantLineGap = 2.dp
 
 /** Test tags of the pairing sheet. */
 object PairingTestTags {
@@ -219,4 +288,7 @@ object PairingTestTags {
     const val PROCEED = "pairing_proceed"
     const val RESULT = "pairing_result"
     const val SIGN_IN = "pairing_sign_in"
+    const val GRANTS = "pairing_grants"
+
+    fun grant(id: String): String = "pairing_grant:$id"
 }

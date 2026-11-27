@@ -12,6 +12,8 @@ import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientType
+import dev.alllexey.itmowidgets.feature.connections.domain.Grant
+import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingApproval
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingCrypto
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingError
@@ -25,7 +27,8 @@ import kotlin.uuid.Uuid
 /**
  * Pairing through Core 2.0. A client's key never comes from Backend: an opened pairing is shown only when Backend's
  * commitment equals the one of the scanned [PairLink]. Backend's 409 (five live connections of the type) is
- * [PairingError.TooManyDevices]; a kind or client type this version does not know is [PairingError.Unsupported].
+ * [PairingError.TooManyDevices]; a kind or client type this version does not know is [PairingError.Unsupported], and
+ * so is a protocol-2 pairing that requires an ITMO grant this version cannot mint (ADR 0040).
  */
 class PairingRepositoryImpl(
     private val backend: BackendGate,
@@ -46,7 +49,20 @@ class PairingRepositoryImpl(
             WireKind.UNKNOWN -> return PairingResult.Failure(PairingError.Unsupported)
         }
         val client = preview.client.toDomain()
-        if (client == ClientType.OTHER) return PairingResult.Failure(PairingError.Unsupported)
+        val protocol = preview.protocol ?: 1
+        val grants = preview.grants.orEmpty().map {
+            Grant(it.id, it.required, it.title?.trim(), it.description?.trim(), it.purpose?.trim(), it.granted)
+        }
+        when {
+            protocol > PROTOCOL -> return PairingResult.Failure(PairingError.Unsupported)
+            protocol == PROTOCOL -> {
+                if (preview.app == null || grants.isEmpty()) return PairingResult.Failure(PairingError.Unsupported)
+                if (grants.any { it.required && it.itmo && !ItmoGrants.isKnown(it.id) }) {
+                    return PairingResult.Failure(PairingError.Unsupported)
+                }
+            }
+            client == ClientType.OTHER -> return PairingResult.Failure(PairingError.Unsupported)
+        }
         return PairingResult.Success(
             PairingRequest(
                 challengeId = preview.challengeId,
@@ -57,6 +73,10 @@ class PairingRepositoryImpl(
                 platform = preview.platform?.trim()?.ifEmpty { null },
                 scopes = preview.requestedScopes.map { it.toDomain() },
                 connectionId = preview.connectionId,
+                protocol = protocol,
+                clientId = preview.app?.id,
+                appName = preview.app?.name?.trim()?.ifEmpty { null },
+                grants = if (protocol == PROTOCOL) grants else emptyList(),
             ),
         )
     }
@@ -68,6 +88,7 @@ class PairingRepositoryImpl(
                 sealedBundle = approval.sealedBundle,
                 scopes = approval.scopes?.map { it.toWireScope() },
                 itmo = approval.session?.let { ItmoSession(it.sid, it.expiresAt) },
+                granted = approval.granted,
             ),
         ).connectionId
     }
@@ -95,6 +116,9 @@ class PairingRepositoryImpl(
 
     private companion object {
         const val CONFLICT = 409
+
+        /** The newest pairing protocol this version speaks; it opens every code with it. */
+        const val PROTOCOL = 2
         val BASE64 = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT)
     }
 }

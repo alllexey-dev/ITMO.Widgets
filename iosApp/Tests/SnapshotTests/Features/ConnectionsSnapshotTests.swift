@@ -66,9 +66,32 @@ final class ConnectionsSnapshotTests: XCTestCase {
         )
     }
 
+    func testMcpWithFullAccess() {
+        assertPushed(
+            ConnectedClientContent(state: mcp(fullItmoAccess: true)),
+            title: nil,
+            named: "mcp-full-access",
+            appearances: [.light, .dark],
+            height: 1000,
+            header: (AppStrings.string("devices_client_mcp_product", ["0.5"]), "MacBook Air")
+        )
+    }
+
+    func testMcpWithoutItmo() {
+        assertPushed(
+            ConnectedClientContent(state: mcp(fullItmoAccess: false, signedIn: false)),
+            title: nil,
+            named: "mcp-without-itmo",
+            appearances: [.light],
+            height: 1000,
+            header: (AppStrings.string("devices_client_mcp_product", ["0.5"]), "MacBook Air")
+        )
+    }
+
     func testGoneClient() {
         let state = ConnectedClientUiState(
-            loading: false, gone: true, title: dynamic("nas"), subtitle: nil, icon: .agent, signIn: nil, scopes: [],
+            loading: false, gone: true, title: dynamic("nas"), subtitle: nil, icon: .agent, signIn: nil,
+            fullItmoAccess: false, takeBack: false, scopes: [],
             facts: [], revoke: res("connection_revoke"), confirm: nil, renew: nil, busy: false, message: nil,
             closed: false
         )
@@ -105,9 +128,52 @@ final class ConnectionsSnapshotTests: XCTestCase {
             note: res("pair_note_client", ["nas", "nas"]),
             primary: res("pair_continue"),
             renewal: false,
-            busy: false
+            busy: false,
+            grants: [],
+            ask: nil,
+            ready: true
         )
         assertPairing(state, named: "pair-confirm", height: 1000)
+    }
+
+    /// itmo-mcp's protocol-2 card: Widgets grants, the refresh grant with its purpose, `itmo:sso` off with the warning
+    /// and an ITMO grant this version cannot mint.
+    func testPairingGrants() {
+        let state = PairingUiStateConfirm(
+            icon: .mcp,
+            name: dynamic("MacBook Air"),
+            subtitle: res("devices_client_mcp_product", ["0.5"]),
+            caution: true,
+            scopes: [],
+            note: res("pair_note_client", ["MacBook Air", "MacBook Air"]),
+            primary: res("pair_continue"),
+            renewal: false,
+            busy: false,
+            grants: [
+                GrantGroup(title: res("pair_group_widgets"), grants: [
+                    grant("widgets:reviews:read", dynamic("Отзывы о преподавателях"), dynamic("Читает отзывы и их сводки")),
+                    grant("widgets:links:read", dynamic("Ссылки предметов"), dynamic("Читает ссылки и чаты предметов")),
+                ]),
+                GrantGroup(title: res("pair_group_itmo"), grants: [
+                    grant(
+                        "itmo:refresh:student-personal-cabinet", res("grant_refresh_title"), res("grant_refresh_text"),
+                        purpose: res("grant_purpose", ["чтобы ИИ-ассистент видел ваше расписание, зачётку и заявки"])
+                    ),
+                    grant(
+                        "itmo:sso", res("grant_sso_title"), res("grant_sso_text"),
+                        purpose: res("grant_purpose", ["чтобы ИИ-ассистент видел баллы БАРС и входил в другие сервисы ИТМО"]),
+                        warning: res("grant_sso_warning"), checked: false
+                    ),
+                    grant(
+                        "itmo:refresh:dev-stand", res("grant_other_title"), nil,
+                        note: res("grant_unavailable"), checked: false, enabled: false
+                    ),
+                ]),
+            ],
+            ask: nil,
+            ready: true
+        )
+        assertPairing(state, named: "pair-grants", appearances: [.light, .dark, .lightAX1], height: 1700)
     }
 
     func testPairingDone() {
@@ -251,8 +317,11 @@ final class ConnectionsSnapshotTests: XCTestCase {
                 tone: .warning,
                 title: res("connection_sign_in_until", ["26 октября"]),
                 text: UiTextPlural(key: "connection_sign_in_ending", count: 4, arguments: [4, "nas"]),
-                action: res("connection_renew")
+                action: res("connection_renew"),
+                signedIn: true
             ),
+            fullItmoAccess: false,
+            takeBack: true,
             scopes: scopes(),
             facts: [
                 Fact(title: res("connection_fact_connected"), value: dynamic("28 июля")),
@@ -260,6 +329,67 @@ final class ConnectionsSnapshotTests: XCTestCase {
                 Fact(title: res("connection_fact_label"), value: dynamic("Chrome 141, Linux")),
                 Fact(title: res("devices_fact_ip"), value: dynamic("192.0.2.17")),
             ],
+            revoke: res("connection_revoke"),
+            confirm: nil,
+            renew: nil,
+            busy: false,
+            message: nil,
+            closed: false
+        )
+    }
+
+    /// itmo-mcp «MacBook Air»: signed in until 20 January (with `itmo:sso` when [fullItmoAccess]), or without an ITMO
+    /// sign-in when not [signedIn]; its Widgets scopes and facts.
+    private func mcp(fullItmoAccess: Bool, signedIn: Bool = true) -> ConnectedClientUiState {
+        let signIn = signedIn
+            ? SignInStatus(
+                tone: .ok, title: res("connection_sign_in_until", ["20 января"]), text: nil, action: nil, signedIn: true
+            )
+            : SignInStatus(
+                tone: .ok,
+                title: res("connection_sign_in_none"),
+                text: res("connection_sign_in_none_text", ["MacBook Air"]),
+                action: res("connection_sign_in_give"),
+                signedIn: false
+            )
+        var facts = [
+            Fact(title: res("connection_fact_connected"), value: dynamic("22 октября")),
+            Fact(title: res("devices_fact_activity"), value: res("devices_activity_minutes", [2])),
+        ]
+        if signedIn {
+            facts.append(Fact(title: res("connection_fact_label"), value: dynamic("Chrome 141, macOS")))
+            facts.append(Fact(title: res("devices_fact_ip"), value: dynamic("192.0.2.40")))
+        }
+        return ConnectedClientUiState(
+            loading: false,
+            gone: false,
+            title: dynamic("MacBook Air"),
+            subtitle: res("devices_client_mcp_product", ["0.5"]),
+            icon: .mcp,
+            signIn: signIn,
+            fullItmoAccess: fullItmoAccess,
+            takeBack: signedIn,
+            scopes: [
+                ScopeSwitch(
+                    id: "reviews:read",
+                    title: dynamic("Отзывы о преподавателях"),
+                    subtitle: dynamic("Читает отзывы и их сводки"),
+                    checked: true
+                ),
+                ScopeSwitch(
+                    id: "links:read",
+                    title: dynamic("Ссылки предметов"),
+                    subtitle: dynamic("Читает ссылки и чаты предметов"),
+                    checked: true
+                ),
+                ScopeSwitch(
+                    id: "sport:queue",
+                    title: dynamic("Очереди на физкультуру"),
+                    subtitle: dynamic("Может вставать в очереди и выходить из них"),
+                    checked: false
+                ),
+            ],
+            facts: facts,
             revoke: res("connection_revoke"),
             confirm: nil,
             renew: nil,
@@ -288,6 +418,22 @@ final class ConnectionsSnapshotTests: XCTestCase {
                 checked: true
             ),
         ]
+    }
+
+    private func grant(
+        _ id: String,
+        _ title: UiText,
+        _ description: UiText?,
+        purpose: UiText? = nil,
+        warning: UiText? = nil,
+        note: UiText? = nil,
+        checked: Bool = true,
+        enabled: Bool = true
+    ) -> GrantSwitch {
+        GrantSwitch(
+            id: id, title: title, description: description, purpose: purpose, warning: warning, note: note,
+            checked: checked, enabled: enabled
+        )
     }
 
     private func res(_ key: String, _ arguments: [Any] = []) -> UiText {

@@ -39,6 +39,31 @@ internal object PairingVectors {
         """"expiresAt":"2026-12-30T09:00:00Z","refreshToken":"test-refresh-token",""" +
         """"refreshExpiresAt":"2026-11-11T09:00:00Z"},"v":1}"""
 
+    /** A protocol-2 bundle of itmo-mcp with both ITMO items, in request order. */
+    val BUNDLE_V2 = PairingBundleV2(
+        challengeId = CHALLENGE_ID,
+        kind = PairingKind.CONNECT,
+        clientId = "itmo-mcp",
+        isu = 100001,
+        issuedAt = Instant.parse("2026-11-27T12:00:00Z"),
+        itmo = BundleItmo(
+            sid = "8d1f0c2e-1b6a-4c55-9a43-0f2d7e6b1a01",
+            expiresAt = Instant.parse("2027-02-25T12:00:00Z"),
+            items = listOf(
+                BundleItem(ItmoGrants.REFRESH, "test-refresh-token", Instant.parse("2026-12-27T12:00:00Z")),
+                BundleItem(ItmoGrants.SSO, "test-identity-cookie", Instant.parse("2027-02-25T12:00:00Z")),
+            ),
+        ),
+    )
+
+    /** [BUNDLE_V2] as the sealer encodes it: the wire spec's names and order. */
+    const val BUNDLE_V2_JSON = """{"v":2,"challengeId":"0190f1a2-3b4c-7d5e-8f60-718293a4b5c6","kind":"CONNECT",""" +
+        """"clientId":"itmo-mcp","isu":100001,"issuedAt":"2026-11-27T12:00:00Z",""" +
+        """"itmo":{"sid":"8d1f0c2e-1b6a-4c55-9a43-0f2d7e6b1a01","expiresAt":"2027-02-25T12:00:00Z",""" +
+        """"items":[{"grant":"itmo:refresh:student-personal-cabinet","value":"test-refresh-token",""" +
+        """"expiresAt":"2026-12-27T12:00:00Z"},{"grant":"itmo:sso","value":"test-identity-cookie",""" +
+        """"expiresAt":"2027-02-25T12:00:00Z"}]}}"""
+
     /**
      * Suite interop, independent of the bundle's shape: [INTEROP_PLAINTEXT] sealed by CryptoKit `HPKE.Sender` to
      * [PUBLIC_KEY_HEX] with [INTEROP_INFO_HEX], base64url. `PairingTests.swift` opens Tink's counterpart.
