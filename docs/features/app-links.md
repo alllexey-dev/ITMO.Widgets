@@ -72,22 +72,40 @@ production host, debug: dev host); `core/ui/ShareText` opens the Sharesheet.
 
 ## iOS
 
-The iOS app ([iOS app](../ios.md#shell-and-routes)) parses links with the same
-`AppLinks` and `EntryRouteParser` (`RouteURL` -> `IosRoutes.linkRoute`). Only the
-app's own scheme `itmowidgets://route/<id>` reaches it today; `https` links open
-the site, because Universal Links need a signed build with associated domains
-([degradations](../ios.md#degradations)). Sharing uses
-`PlatformActions.shareText`.
+The iOS app ([iOS app](../ios.md#shell-and-routes)) opens the same links as
+Universal Links and parses them with the same `AppLinks` and `EntryRouteParser`.
+
+- `ITMOWidgets.signed.entitlements` has `com.apple.developer.associated-domains`
+  with `applinks:` for both hosts, in every signed build, as the Android filter.
+  The unsigned entitlements have none: simulator, CI and sideloaded builds open
+  the links in Safari ([degradations](../ios.md#degradations)).
+- SwiftUI hands a Universal Link to `.onOpenURL` as the `https` URL itself
+  (`ITMOWidgetsApp`), as it does `itmowidgets://route/<id>`: `AppRouter.open(url:)`
+  -> `RouteURL.entryRoute(url:)` -> `IosRoutes.linkRoute`, then the router queue
+  (sign-in and first run first). The fragment of `/pair` reaches the app.
+  `RouterTests.testUniversalLinksParse` covers both hosts and every kind.
+- Each host's `/.well-known/apple-app-site-association` names the app ID
+  `<team ID>.dev.alllexey.itmowidgets` with the components `/u/*`, `/sport/*`
+  and `/pair` (see the site below). iOS reads it through Apple's CDN when the
+  app is installed or updated, so a change of the file reaches phones only after
+  the CDN refreshes (up to a day) and the app is reinstalled or updated.
+- Sharing uses `PlatformActions.shareText`.
 
 ## Verification and the site
 
-- `itmo-widgets-web` serves `site/.well-known/assetlinks.json` on both hosts: one statement for
+- `itmo-widgets-web` serves `web/public/.well-known/assetlinks.json` on both hosts: one statement for
   `dev.alllexey.itmowidgets` with the release and the debug (`~/.android/debug.keystore`)
   fingerprints, JSON without redirects.
+- It also serves `web/public/.well-known/apple-app-site-association` (no extension) on both hosts, JSON
+  without redirects: `applinks.details` for `<team ID>.dev.alllexey.itmowidgets`, components `/u/*`,
+  `/sport/*`, `/pair`. The team ID is the one in the owner's `Signing.local.xcconfig`; a build signed
+  by another team (a sideload) is not in the file. Check what Apple's CDN holds with
+  `curl https://app-site-association.cdn-apple.com/a/v1/widgets.alllexey.dev`.
 - Android 12+ verifies each host separately (a debug-signed build only on dev); Android 8-11 verify
   all hosts together, so a debug-signed build is verified on none. A local debug build uses the
   release key when `keystore.properties` is present, so only CI debug builds are debug-signed. Check
   with `pm get-app-links dev.alllexey.itmowidgets`.
-- Without the app, the site answers `/u/*` and `/sport/*` with `site/link/profile.html` and
-  `site/link/sport.html` (200, `noindex`, `no-referrer`): no API request, the ISU or lesson id is never
-  printed; on Android the open button is an `intent://` URL falling back to the releases page.
+- Without the app, the site answers `/u/*` and `/sport/*` with its link pages (200, `noindex`,
+  `no-referrer`): no API request, the ISU or lesson id is never printed, App Store, Google Play and APK
+  buttons; on Android the open button is an `intent://` URL falling back to the releases page, on
+  other systems it is hidden (iOS never opens a Universal Link from a page of the same site).

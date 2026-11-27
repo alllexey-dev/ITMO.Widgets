@@ -6,6 +6,9 @@ publication or deployment.
 
 ## Unreleased
 
+- iOS: shared links `https://widgets.alllexey.dev/u/<isu>`, `/sport/<id>`, `/sport/p/<id>` and `/pair` (and the dev
+  host) open the app as Universal Links, as on Android: the signed entitlements get associated domains for both hosts.
+  Needs the Associated Domains capability on the App ID, a new profile and the site's `apple-app-site-association`.
 - Connections: pairing no longer asks to compare a six-digit code. A new connection's card says instead to approve
   only a QR or link opened on the user's own device (`pair_caution_title`, `pair_caution_text`); renewals have no
   caution, as only the owner's live connection can be renewed. The code checked only a QR other than the one on a

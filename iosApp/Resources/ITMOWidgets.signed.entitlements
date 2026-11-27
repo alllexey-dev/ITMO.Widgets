@@ -6,6 +6,13 @@
 	<!-- Xcode's export for App Store Connect switches it to production. -->
 	<key>aps-environment</key>
 	<string>development</string>
+	<!-- Universal Links: https://<host>/u/*, /sport/*, /pair open the app (docs/features/app-links.md). Each host serves
+	     /.well-known/apple-app-site-association for this app ID; both hosts in every signed build, as on Android. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:widgets.alllexey.dev</string>
+		<string>applinks:dev.widgets.alllexey.dev</string>
+	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>$(APP_GROUP_ID)</string>
