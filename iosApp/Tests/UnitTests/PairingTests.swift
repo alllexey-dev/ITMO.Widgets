@@ -97,17 +97,6 @@ final class PairingTests: XCTestCase {
         let base64 = text.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
         return Data(base64Encoded: base64 + String(repeating: "=", count: (4 - base64.count % 4) % 4))
     }
-}
-
-private func hex(_ text: String) -> Data {
-    var data = Data()
-    var index = text.startIndex
-    while index < text.endIndex {
-        let next = text.index(index, offsetBy: 2)
-        data.append(UInt8(text[index..<next], radix: 16)!)
-        index = next
-    }
-    return data
 
     func testTheIdentityCookieIsTheRealmsOwnByItsExactName() {
         func cookie(_ name: String, _ domain: String, _ value: String) -> HTTPCookie {
@@ -124,4 +113,15 @@ private func hex(_ text: String) -> Data {
         XCTAssertEqual(ItmoIdentityCookie.value(in: cookies), "test-identity-cookie")
         XCTAssertNil(ItmoIdentityCookie.value(in: Array(cookies.prefix(2))))
     }
+}
+
+private func hex(_ text: String) -> Data {
+    var data = Data()
+    var index = text.startIndex
+    while index < text.endIndex {
+        let next = text.index(index, offsetBy: 2)
+        data.append(UInt8(text[index..<next], radix: 16)!)
+        index = next
+    }
+    return data
 }
