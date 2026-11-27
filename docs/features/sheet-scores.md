@@ -131,9 +131,8 @@ one screen that saves and two pages (`TotalPage`):
   one, else a rule Backend already has; nothing chosen shows `Итог не найден` with `В таблице нет столбца «Итог»` or
   `В вашей строке пока нет баллов`.
 - Right under it, for a shared sheet whose rule is not known yet, the AI's action card (`ActionCard`, iOS
-  `ItmoActionCard`, `auto_awesome`): `ИИ найдёт, как считается итог`, what it does and never sees (`ИИ разберёт, как
-  устроена таблица: листы, заголовки и формулы. Имена и ИСУ он не видит, а баллы по найденной формуле считает
-  телефон.`) and the tonal `Посчитать с ИИ`. While Backend answers the button shows its progress and the line says
+  `ItmoActionCard`, `auto_awesome`): `ИИ найдёт, как считается итог`, what it does (`ИИ разберёт, как устроена
+  таблица: листы, заголовки и формулы.`) and the tonal `Посчитать с ИИ`. While Backend answers the button shows its progress and the line says
   `Разбираем таблицу, обычно до минуты`; a failure takes the line (`ИИ не понял, как считаются баллы`) and the button
   asks again. The card is gone once a rule is known (it is a variant then) and while an AI total is on top.
 - `Другой итог` (`Как найти итог` while nothing is chosen): the other ready totals (`variants`), never the one on

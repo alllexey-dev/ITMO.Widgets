@@ -105,7 +105,7 @@
     <string name="sheet_total_pick_column">Выбрать столбец</string>
     <string name="sheet_total_done">Готово</string>
     <string name="sheet_ai_offer_title">ИИ найдёт, как считается итог</string>
-    <string name="sheet_ai_offer_note">ИИ разберёт, как устроена таблица: листы, заголовки и формулы. Имена и ИСУ он не видит, а баллы по найденной формуле считает телефон.</string>
+    <string name="sheet_ai_offer_note">ИИ разберёт, как устроена таблица: листы, заголовки и формулы.</string>
     <string name="sheet_formula_sum">Сумма: %1$s</string>
     <string name="sheet_formula_min">мин(%1$s)</string>
     <string name="sheet_formula_max">макс(%1$s)</string>

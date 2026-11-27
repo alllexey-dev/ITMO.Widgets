@@ -10,7 +10,7 @@ publication or deployment.
   reads the rule Backend already keeps for the sheet (`GET`, never an analysis) and shows it as a variant at once;
   only `Посчитать с ИИ` or the new `Пересчитать с ИИ` under an AI total ask for one (`POST`), and a stale rule is
   waited for while Backend checks it. The connected AI rule read again is that total, not a second variant.
-- Sheet scores: `Посчитать с ИИ` is an action card right under `Ваш итог` that says what the AI reads and never sees,
+- Sheet scores: `Посчитать с ИИ` is an action card right under `Ваш итог` that says what the AI reads,
   with its progress in the button, instead of a plain row at the bottom of the ways.
 - Subject page: `Мои баллы из таблицы` stands right under the hero of `Баллы`, whose number the sheet would become,
   instead of at the end of the page beside the BARS offer.

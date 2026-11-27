@@ -316,7 +316,7 @@ class SheetScoresSheetTest {
 
         onNodeWithTag(SheetScoresSheetTestTags.LIST).performScrollToNode(hasTestTag(SheetScoresSheetTestTags.AI))
         assertShown("ИИ найдёт, как считается итог")
-        assertTrue(onAllNodesWithText("Имена и ИСУ он не видит", substring = true).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(onAllNodesWithText("листы, заголовки и формулы", substring = true).fetchSemanticsNodes().isNotEmpty())
         scrollTo("Посчитать с ИИ")
         onNodeWithText("Посчитать с ИИ", useUnmergedTree = true).performClick()
         assertEquals(listOf<Any>("analyze"), calls)
