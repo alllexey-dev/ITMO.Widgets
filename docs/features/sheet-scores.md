@@ -111,8 +111,8 @@ with a flow or everybody asks Backend for a rule, never with sheet data
 
 ## On the subject page
 
-The connected sheet sits in the hero of `Баллы` with its menu (open, `Изменить итог`, disconnect); its
-total is the hero's number (`таблица, в 16:30`) by the
+The connected sheet sits in the hero of `Баллы` with its menu (open, `Изменить итог`, disconnect); a tap anywhere
+on the hero is `Изменить итог` too (TalkBack and VoiceOver name it so). Its total is the hero's number (`таблица, в 16:30`) by the
 [recordbook's rule](recordbook.md#which-number-is-shown). The caption is the same source line as the sheet's:
 `Столбец «ЛР › Итог», лист «…»`, or for a computed total `Сумма: ДЗ 1 + ДЗ 2 + … + Экзамен, лист «…»`; an AI rule
 with the teacher's total adds `Итог преподавателя: 0`. The stored value shows
@@ -123,7 +123,7 @@ the subject's sheet links (several ask which); the BARS offer stays at the end o
 
 ## The total
 
-`Изменить итог`, `Проверьте итог` and a row without a total header open the total (`SheetScoresUiState.PickTotal`),
+`Изменить итог` (the menu or a tap on the hero), `Проверьте итог` and a row without a total header open the total (`SheetScoresUiState.PickTotal`),
 one screen that saves and two pages (`TotalPage`):
 
 - On top (`hero`): `Ваш итог`, the chosen value as the sheet shows it (a sum or a rule as the app writes numbers),

@@ -65,7 +65,8 @@ struct SubjectScoresTab: View {
     }
 }
 
-/// "63.5 of 100", the grade pill over its source, the scale, the next step; the connected sheet with its menu.
+/// "63.5 of 100", the grade pill over its source, the scale, the next step; the connected sheet with its menu. With a
+/// sheet a tap anywhere on the card changes the total, like the menu's `sheet_scores_change_total`.
 private struct SubjectHeroCard: View {
     let hero: SubjectHero
     let sheet: SubjectSheetLine?
@@ -127,6 +128,11 @@ private struct SubjectHeroCard: View {
                     .accessibilityLabel(Text(verbatim: AppStrings.string("sheet_scores_actions")))
                 }
             }
+        }
+        .contentShape(.rect(cornerRadius: ItmoKit.cardCorner))
+        .onTapGesture { if let sheet { actions.sheetScores(sheet.changeTotal) } }
+        .accessibilityAction(named: Text(verbatim: AppStrings.string("sheet_scores_change_total"))) {
+            if let sheet { actions.sheetScores(sheet.changeTotal) }
         }
         .accessibilityIdentifier("subject.hero")
     }
