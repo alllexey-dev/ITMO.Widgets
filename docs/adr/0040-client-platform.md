@@ -1,6 +1,7 @@
 # 0040 Connections become a platform: registered clients, grants chosen on the phone
 
-**Status.** Accepted (2026-11-27); step 1 is being built. Amends [connections](../features/connections.md)
+**Status.** Accepted (2026-11-27); step 1 is built, step 2 is built in the app (2026-11-28) with Backend in
+parallel. Amends [connections](../features/connections.md)
 and Backend's `docs/contracts/connections.md`.
 
 ## Context
@@ -101,9 +102,11 @@ A renewal asks for nothing new and has no card; a renewal that requests new gran
 ```
 CreateChallengeRequest {kind, clientId, keyCommitment, name, version?, platform?,
                         grants?: [{id, required?}], clientAssertion?}
-PairingPreview += {app: ClientAppInfo, grants: PairingGrant[], verified: boolean}
+PairingPreview += {protocol, app: ClientAppInfo {id, name, homepage, iconUrl, deployment, verified, returnUrl},
+                   grants: PairingGrant[]}
 ApprovePairingRequest {sealedBundle?, granted: string[], itmo?: {sid, expiresAt}}
 PairingClaimResponse += {identity?: string}
+ConnectionInfo += {clientId, app: ClientAppInfo, itmoGrants: string[], identity: boolean}
 ```
 
 The sealed bundle, protocol 2 (HPKE, `info` and the 16 KiB limit unchanged):
@@ -121,7 +124,9 @@ still never sees an ITMO credential: the ciphertext is relayed once and deleted 
 ### 5. Same-device sign-in
 
 A mobile client opens the pairing link itself; the App Link opens ITMO.Widgets, the user approves, the phone opens the
-client's `returnUrl` from the registry (never from the link), and the client claims as usual. No new mechanism.
+client's `returnUrl` from the registry (never from the link), and the client claims as usual. No new mechanism. The
+app opens it once on its own (only an https page, only for a link that came as an App Link; a scanned or pasted one
+never) and the result offers «Вернуться в {app name}» for a second try.
 
 ### 6. Revocation
 
@@ -151,8 +156,12 @@ business; first-party ones keep them in a 0600 state file and wipe them after lo
 
 1. Backend registry tables seeded with the three types, admin routes, grants, protocol 2; app card with grant switches, the three texts and
    `itmo:sso`; itmo-mcp asks for `itmo:sso` with `--itmo-cookie` and gets BARS.
-2. `identity` (needs a Backend signing key on the server), confidential clients, same-device return; the first hosted
-   service (itmo-instapick) as an entry.
+2. `identity` (needs a Backend signing key on the server; without it a request for it is 409
+   `identity_unavailable`), confidential clients, same-device return, ITMO refresh grants for more than one ITMO OIDC
+   client, `app` clients without Widgets scopes. The app: «Проверено ITMO.Widgets» on the card and the client screen,
+   `identity` as a Widgets-group switch and a row «Имя и номер ИСУ» in «Доступ», `itmo:refresh:student-personal-
+   cabinet-dev` minted by a silent authorize in the same isolated page after the sign-in for the first granted client,
+   `returnUrl` after an App Link. Registry entries for hosted services (itmo-instapick) come later.
 
 ## Rejected
 
