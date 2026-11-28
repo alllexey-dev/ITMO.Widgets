@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
 import dev.alllexey.itmowidgets.feature.connections.domain.DevicesRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.Grant
+import dev.alllexey.itmowidgets.feature.connections.domain.IDENTITY_GRANT
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoSessionRef
@@ -50,6 +51,11 @@ import kotlinx.coroutines.launch
  * sign-in runs only when an ITMO grant is chosen, and the v2 bundle seals exactly the chosen ITMO items: with only
  * `itmo:sso` the refresh token is dropped unused (never logged out: that would end the session). A renewal shows a
  * card only for requested ITMO grants the connection does not hold yet.
+ *
+ * Step 2 (ADR 0040): a confidential client's card says «Проверено ITMO.Widgets»; `identity` is a Backend grant like
+ * `widgets:*`. Refresh grants of several ITMO OIDC clients are minted from one sign-in for the first of them and a
+ * silent authorize per further client in the same page, which stays open (busy) between the steps. After approving a
+ * link that came as an App Link, the registry's https `returnUrl` opens once and the result offers it again.
  */
 class PairingViewModel(
     private val handle: SavedStateHandle,
@@ -69,8 +75,14 @@ class PairingViewModel(
     private var chosen: List<ScopeSwitch> = emptyList()
     private var attempt: ClientSignInAttempt? = null
 
-    /** Protocol 2: the switch of every grant on the card; grants without one follow [included]. */
+    /** Protocol 2: the switch of every grant on the card; grants without one follow [granted]. */
     private var choice: Map<String, Boolean> = emptyMap()
+
+    /** A step's code is being exchanged; a callback meanwhile is a repeat of the same one. */
+    private var exchanging = false
+
+    /** The link came as an App Link: the client opened it on this phone, so its `returnUrl` may open after. */
+    private var fromAppLink = false
 
     fun onTextChanged(text: String) {
         if (_uiState.value !is PairingUiState.Input) return
@@ -84,7 +96,15 @@ class PairingViewModel(
     }
 
     /** A QR or text that is no pairing link leaves the field with a hint. */
-    fun onScanned(raw: String) {
+    fun onScanned(raw: String) = read(raw, appLink = false)
+
+    /**
+     * A pairing App Link (or Universal Link): a client opened it on this phone, so after an approval the registry's
+     * `returnUrl` brings the user back to it. Scanned and pasted links never do.
+     */
+    fun onAppLink(raw: String) = read(raw, appLink = true)
+
+    private fun read(raw: String, appLink: Boolean) {
         val current = _uiState.value as? PairingUiState.Input ?: return
         val parsed = PairLink.parse(raw)
         if (parsed == null) {
@@ -92,6 +112,7 @@ class PairingViewModel(
             return
         }
         handle[KEY_TEXT] = ""
+        fromAppLink = appLink
         open(parsed)
     }
 
@@ -119,7 +140,7 @@ class PairingViewModel(
             _uiState.value = current.copy(
                 ask = ConfirmAsk(
                     title = UiText.Res(AccountStrings.grant_sso_confirm_title),
-                    text = UiText.Res(AccountStrings.grant_sso_confirm_text, listOf(opened.name)),
+                    text = UiText.Res(AccountStrings.grant_sso_confirm_text, listOf(opened.displayName)),
                     confirm = UiText.Res(AccountStrings.grant_sso_confirm_action),
                 ),
             )
@@ -172,21 +193,51 @@ class PairingViewModel(
 
     /**
      * The callback the host caught, with the isolated store's `KEYCLOAK_IDENTITY` (null when not asked or absent): the
-     * code is exchanged here. The cookie is held in memory only until it is sealed.
+     * code is exchanged here. The cookie is held in memory only until it is sealed. Before the last step the page
+     * stays, busy, and loads the next step's URL in the same store.
      */
     fun onSignInCallback(url: String, identityCookie: String?) {
         val signing = attempt ?: return
-        if (!isSignInCallback(url)) return
-        attempt = null
-        _uiState.value = PairingUiState.Sending
+        val page = _uiState.value as? PairingUiState.SigningIn ?: return
+        if (exchanging || !signing.isCallback(url)) return
         val cookie = identityCookie.takeIf { signing.withIdentity }
-        job = viewModelScope.launch { finish(signing.finish(url, cookie)) }
+        if (signing.lastStep) {
+            attempt = null
+            _uiState.value = PairingUiState.Sending
+            job = viewModelScope.launch { finish(signing.finish(url, cookie)) }
+            return
+        }
+        exchanging = true
+        _uiState.value = page.copy(busy = true)
+        job = viewModelScope.launch {
+            val result = signing.finish(url, cookie)
+            exchanging = false
+            when (result) {
+                is ClientSignInResult.Next -> if (attempt === signing) {
+                    _uiState.value = page.copy(url = result.url, busy = true)
+                }
+                else -> if (attempt === signing) {
+                    attempt = null
+                    _uiState.value = PairingUiState.Sending
+                    finish(result)
+                }
+            }
+        }
     }
 
-    /** The sign-in page was closed: nothing was sent, the challenge runs out. */
+    /**
+     * The sign-in page was closed: nothing was sent, the challenge runs out. Between the steps of a sign-in for
+     * several ITMO clients, the sessions minted so far are ended.
+     */
     fun onSignInCancelled() {
-        if (_uiState.value !is PairingUiState.SigningIn) return
+        val page = _uiState.value as? PairingUiState.SigningIn ?: return
+        val signing = attempt
         attempt = null
+        if (page.busy && signing != null) {
+            job?.cancel()
+            exchanging = false
+            viewModelScope.launch { signing.abandon() }
+        }
         _uiState.value = failure(UiText.Res(AccountStrings.pair_cancelled), ResultAction.SIGN_IN_AGAIN)
     }
 
@@ -196,7 +247,7 @@ class PairingViewModel(
         _uiState.value = failure(UiText.Res(AccountStrings.pair_webview_outdated))
     }
 
-    /** The result's button other than closing. */
+    /** The result's button other than closing; the host opens [PairingUiState.Result.returnUrl] itself. */
     fun onResultAction() {
         val current = _uiState.value as? PairingUiState.Result ?: return
         when (current.next) {
@@ -204,8 +255,14 @@ class PairingViewModel(
                 job = viewModelScope.launch { beginSignIn() }
             }
             ResultAction.SCAN_AGAIN -> reset()
-            ResultAction.CLOSE -> Unit
+            ResultAction.CLOSE, ResultAction.RETURN_TO_CLIENT -> Unit
         }
+    }
+
+    /** The host opened the result's `returnUrl` on its own ([PairingUiState.Result.openReturn]): only once. */
+    fun onReturnOpened() {
+        val current = _uiState.value as? PairingUiState.Result ?: return
+        if (current.openReturn) _uiState.value = current.copy(openReturn = false)
     }
 
     private fun reset() {
@@ -213,7 +270,9 @@ class PairingViewModel(
         link = null
         request = null
         attempt = null
+        exchanging = false
         choice = emptyMap()
+        fromAppLink = false
         _uiState.value = PairingUiState.Input()
     }
 
@@ -264,12 +323,14 @@ class PairingViewModel(
         choice = shown.associate { it.id to it.initiallyOn }
         val confirm = PairingUiState.Confirm(
             icon = opened.client.icon(),
-            name = UiText.Dynamic(opened.name),
+            name = UiText.Dynamic(opened.displayName),
             subtitle = when {
+                opened.verified -> UiText.Res(AccountStrings.pair_verified)
                 web -> UiText.Res(AccountStrings.pair_web_subtitle)
-                opened.client == ClientType.OTHER && opened.appName != null -> UiText.Dynamic(opened.appName)
+                opened.client == ClientType.OTHER && opened.name != opened.displayName -> UiText.Dynamic(opened.name)
                 else -> clientSubtitle(opened.client, opened.version, opened.platform)
             },
+            verified = opened.verified,
             caution = connect,
             scopes = emptyList(),
             note = UiText.Dynamic(""),
@@ -300,33 +361,39 @@ class PairingViewModel(
             note = when {
                 signs -> UiText.Res(
                     if (ItmoGrants.SSO in granted) AccountStrings.pair_note_client_full else AccountStrings.pair_note_client,
-                    listOf(opened.name, opened.name),
+                    listOf(opened.displayName, opened.displayName),
                 )
                 web -> UiText.Res(AccountStrings.pair_note_web)
-                else -> UiText.Res(AccountStrings.pair_note_widgets, listOf(opened.name))
+                else -> UiText.Res(AccountStrings.pair_note_widgets, listOf(opened.displayName))
             },
             primary = UiText.Res(if (signs) AccountStrings.pair_continue else AccountStrings.pair_connect),
             ready = ready,
         )
     }
 
-    /** The grants on the card: all of a new connection's; on a renewal only the ITMO grants not held yet. */
+    /**
+     * The grants on the card: all of a new connection's; on a renewal only the ITMO grants and `identity` not held yet
+     * (Backend's preview says `granted` for both).
+     */
     private fun shownGrants(opened: PairingRequest): List<Grant> = when (opened.kind) {
         PairingKind.CONNECT -> opened.grants
-        PairingKind.RENEW -> opened.grants.filter { it.itmo && it.held == false }
+        PairingKind.RENEW -> opened.grants.filter { it.renewable && it.held == false }
     }
 
     /**
      * What the approval sends, in request order: every required grant, the switches that are on and, on a renewal,
-     * the ITMO grants the connection already holds; never an ITMO grant this version cannot mint.
+     * the ITMO grants and `identity` the connection already holds; never an ITMO grant this version cannot mint.
      */
     private fun granted(opened: PairingRequest): List<String> = opened.grants.filter { grant ->
         grant.mintable && when {
             grant.id in choice -> choice[grant.id] == true
             grant.required -> true
-            else -> opened.kind == PairingKind.RENEW && grant.itmo && grant.held == true
+            else -> opened.kind == PairingKind.RENEW && grant.renewable && grant.held == true
         }
     }.map { it.id }
+
+    /** What a renewal may request: ITMO grants and `identity`. */
+    private val Grant.renewable: Boolean get() = itmo || id == IDENTITY_GRANT
 
     /** Protocol 1 signs in for every agent and MCP server; protocol 2 only when an ITMO grant is chosen. */
     private fun signsIn(opened: PairingRequest): Boolean =
@@ -339,6 +406,8 @@ class PairingViewModel(
     private fun Grant.toSwitch(checked: Boolean): GrantSwitch {
         val (title, description) = when (id) {
             ItmoGrants.REFRESH -> UiText.Res(AccountStrings.grant_refresh_title) to UiText.Res(AccountStrings.grant_refresh_text)
+            ItmoGrants.REFRESH_DEV ->
+                UiText.Res(AccountStrings.grant_refresh_dev_title) to UiText.Res(AccountStrings.grant_refresh_dev_text)
             ItmoGrants.SSO -> UiText.Res(AccountStrings.grant_sso_title) to UiText.Res(AccountStrings.grant_sso_text)
             else -> if (itmo) {
                 // An ITMO grant this version does not know: its id means nothing to a student.
@@ -365,13 +434,16 @@ class PairingViewModel(
 
     private suspend fun beginSignIn() {
         val opened = request ?: return
-        val withIdentity = opened.protocol >= 2 && ItmoGrants.SSO in granted(opened)
-        val started = signIn.begin(opened, withIdentity)
+        val granted = if (opened.protocol >= 2) granted(opened) else emptyList()
+        val withIdentity = ItmoGrants.SSO in granted
+        // The first granted refresh grant's client signs in; `itmo:sso` alone comes with MyITMO's, as in step 1.
+        val clients = granted.mapNotNull(ItmoGrants::oidcClient).ifEmpty { listOf(ItmoGrants.MY_ITMO) }
+        val started = signIn.begin(opened, clients, withIdentity)
         attempt = started
         _uiState.value = PairingUiState.SigningIn(
             url = started.url,
             userAgent = started.userAgent,
-            title = UiText.Res(AccountStrings.pair_sign_in_title, listOf(opened.name)),
+            title = UiText.Res(AccountStrings.pair_sign_in_title, listOf(opened.displayName)),
             readIdentity = started.withIdentity,
         )
     }
@@ -389,7 +461,13 @@ class PairingViewModel(
                 UiText.Res(AccountStrings.pair_identity_missing),
                 ResultAction.SIGN_IN_AGAIN,
             )
+            ClientSignInResult.SessionMismatch -> failure(
+                UiText.Res(AccountStrings.pair_session_mismatch),
+                ResultAction.SIGN_IN_AGAIN,
+            )
             is ClientSignInResult.Failed -> failure(result.error.toUiText(), ResultAction.SIGN_IN_AGAIN)
+            // Only an attempt's step before the last answers Next, and that never reaches here.
+            is ClientSignInResult.Next -> failure(AppError.Unknown(IllegalStateException("Unfinished sign-in")).toUiText())
             is ClientSignInResult.Success -> approveClient(opened, parsed, result.session)
         }
     }
@@ -437,9 +515,11 @@ class PairingViewModel(
     /** Exactly the granted ITMO items, in request order; a grant without its credential cannot be sealed. */
     private fun bundleV2(opened: PairingRequest, session: ClientItmoSession, granted: List<String>): PairingBundleV2 {
         val items = granted.filter(ItmoGrants::isItmo).map { grant ->
-            when (grant) {
-                ItmoGrants.REFRESH -> BundleItem(grant, session.refreshToken, session.refreshExpiresAt)
-                ItmoGrants.SSO -> checkNotNull(session.identity) { "No identity to seal" }
+            val client = ItmoGrants.oidcClient(grant)
+            when {
+                grant == ItmoGrants.SSO -> checkNotNull(session.identity) { "No identity to seal" }
+                    .let { BundleItem(grant, it.value, it.expiresAt) }
+                client != null -> checkNotNull(session.refreshFor(client)) { "No refresh token to seal" }
                     .let { BundleItem(grant, it.value, it.expiresAt) }
                 else -> error("Cannot seal $grant")
             }
@@ -481,14 +561,28 @@ class PairingViewModel(
                 renew -> AccountStrings.pair_done_renew
                 else -> AccountStrings.pair_done
             },
-            listOf(opened.name),
+            listOf(opened.displayName),
         )
         val text = when {
             session != null -> UiText.Res(AccountStrings.pair_done_text, listOf(dayMonth(session.expiresAt, time.timeZone)))
             opened.client == ClientType.WEB -> UiText.Res(AccountStrings.pair_done_web_text)
             else -> UiText.Res(AccountStrings.pair_done_widgets_text)
         }
-        return PairingUiState.Result(true, title, text, UiText.Res(AccountStrings.pair_done_action), ResultAction.CLOSE)
+        // Only a link the client opened on this phone returns to it; the registry's page, never one from the link.
+        val back = opened.returnUrl.takeIf { fromAppLink }
+        return PairingUiState.Result(
+            success = true,
+            title = title,
+            text = text,
+            action = if (back == null) {
+                UiText.Res(AccountStrings.pair_done_action)
+            } else {
+                UiText.Res(AccountStrings.pair_return, listOf(opened.appName ?: opened.displayName))
+            },
+            next = if (back == null) ResultAction.CLOSE else ResultAction.RETURN_TO_CLIENT,
+            returnUrl = back,
+            openReturn = back != null,
+        )
     }
 
     private fun pairingFailure(error: PairingError): PairingUiState.Result = when (error) {
@@ -517,7 +611,7 @@ class PairingViewModel(
         text = text,
         action = UiText.Res(
             when (next) {
-                ResultAction.CLOSE -> AccountStrings.pair_close
+                ResultAction.CLOSE, ResultAction.RETURN_TO_CLIENT -> AccountStrings.pair_close
                 ResultAction.SIGN_IN_AGAIN -> AccountStrings.pair_sign_in_again
                 ResultAction.SCAN_AGAIN -> AccountStrings.pair_scan_again
             },

@@ -14,7 +14,7 @@ struct DevicesScreen: View {
         DevicesContent(
             state: model.state,
             actions: DevicesActions(
-                connect: { router.open(AppRoutes.Pairing(link: nil)) },
+                connect: { router.open(AppRoutes.Pairing(link: nil, appLink: false)) },
                 enableServer: { router.open(AppRoutes.Settings(page: SettingsPage.services.name)) },
                 openClient: { router.open(AppRoutes.Connection(id: $0)) },
                 open: { model.viewModel.open(key: $0) },

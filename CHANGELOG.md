@@ -9,6 +9,15 @@ publication or deployment.
 - iOS tests: `scripts/ios/test.sh` builds a `custom` build whatever `Signing.local.xcconfig` sets, so the about page's
   version row (`2.3.3 (1) · своя сборка`) is the same in a worktree, in CI and in the owner's checkout. Its snapshot
   was recorded as an official build since 2.3.1 and failed everywhere else, on `master` too.
+- Connections: client platform step 2 (ADR 0040, needs the Backend change; its new fields are pending in the
+  contract). A confidential client's card and screen say «Проверено ITMO.Widgets»; Backend's `identity` grant («Имя и
+  номер ИСУ») is a switch in «ITMO.Widgets» and alone makes a connection; a client holding it has the row «Имя и номер
+  ИСУ» in «Доступ», and «Доступ» is hidden for a client without scopes or identity. `itmo:refresh:student-personal-
+  cabinet-dev` («Вход в тестовый My ITMO») is minted from the same sign-in: the first granted ITMO client signs in,
+  each further one is a silent authorize (`prompt=none`) in the same isolated page, whose tokens must carry the same
+  session and ISU, else every minted token is logged out and the pairing fails. After approving a pairing that came as
+  an App Link, the registry's https `returnUrl` opens once and the result offers «Вернуться в {app name}». An `app`
+  client is named by its registry entry; any ITMO refresh grant counts as an ITMO sign-in on the client screen.
 - Connections: pairing protocol 2 (ADR 0040, needs the Backend change). The app opens every code with `?protocol=2`; a
   client that asks for grants gets a card of switches grouped «ITMO.Widgets» and «ИТМО»: required grants on and locked
   («Нужно для работы»), `itmo:sso` («Полный доступ к ITMO.ID») off every time with its warning and a confirmation,

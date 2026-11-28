@@ -98,7 +98,8 @@ enum class DeviceUnlockResult {
 /**
  * A client's pairing the phone opened; [scopes] are the requested ones, [connectionId] the renewed connection. A
  * protocol-2 pairing also has its registry entry [clientId] and [appName] and the requested [grants] in registry
- * order; [scopes] then only mirror the `widgets:*` part.
+ * order; [scopes] then only mirror the `widgets:*` part. [verified] is a confidential client that proved itself to
+ * Backend («Проверено»); [returnUrl] is the registry's https page to open after approving an App Link on this phone.
  */
 data class PairingRequest(
     val challengeId: Uuid,
@@ -113,7 +114,12 @@ data class PairingRequest(
     val clientId: String? = null,
     val appName: String? = null,
     val grants: List<Grant> = emptyList(),
-)
+    val verified: Boolean = false,
+    val returnUrl: String? = null,
+) {
+    /** How the phone names the client: an `app` client by its registry name, the others by their own. */
+    val displayName: String get() = if (client == ClientType.OTHER) appName ?: name else name
+}
 
 /**
  * One grant of a protocol-2 pairing: a `widgets:*` one with Backend's [title] and [description], or an `itmo:*` one
@@ -133,21 +139,45 @@ data class Grant(
 
 /**
  * The ITMO grants this version can mint (ADR 0040). Any other `itmo:*` id is unknown to it: shown as unavailable, and
- * a pairing that requires one is refused.
+ * a pairing that requires one is refused. `itmo:refresh:<oidcClient>` is the refresh token of the client's own ITMO.ID
+ * session for one ITMO OIDC client; this version knows [MY_ITMO] and [MY_ITMO_DEV].
  */
 object ItmoGrants {
-    /** The refresh token of the client's own ITMO.ID session for MyITMO's client. */
-    const val REFRESH = "itmo:refresh:student-personal-cabinet"
+    /** MyITMO's ITMO OIDC client. */
+    const val MY_ITMO = "student-personal-cabinet"
+
+    /** The ITMO OIDC client of MyITMO's development stand, dev.my.itmo.su. */
+    const val MY_ITMO_DEV = "student-personal-cabinet-dev"
+
+    private const val REFRESH_PREFIX = "itmo:refresh:"
+
+    /** The refresh token for MyITMO's client. */
+    const val REFRESH = REFRESH_PREFIX + MY_ITMO
+
+    /** The refresh token for the development stand's client. */
+    const val REFRESH_DEV = REFRESH_PREFIX + MY_ITMO_DEV
 
     /** That session's `KEYCLOAK_IDENTITY`: every ITMO service as the user. */
     const val SSO = "itmo:sso"
 
-    val known: Set<String> = setOf(REFRESH, SSO)
+    /** The ITMO OIDC clients this version can sign in to, in the order it prefers for the first sign-in. */
+    val oidcClients: List<String> = listOf(MY_ITMO, MY_ITMO_DEV)
+
+    val known: Set<String> = oidcClients.map { REFRESH_PREFIX + it }.toSet() + SSO
 
     fun isItmo(id: String): Boolean = id.startsWith("itmo:")
 
     fun isKnown(id: String): Boolean = id in known
+
+    /** The OIDC client of an `itmo:refresh:*` grant, any client, known or not; null for every other grant. */
+    fun oidcClient(id: String): String? = id.takeIf { it.startsWith(REFRESH_PREFIX) }?.removePrefix(REFRESH_PREFIX)
+
+    /** A grant that gives a client an ITMO sign-in: any `itmo:refresh:*` or [SSO]. */
+    fun signsIn(id: String): Boolean = id == SSO || oidcClient(id) != null
 }
+
+/** Backend's `identity` grant: the user's name and ISU number, signed by Backend, once at the claim. */
+const val IDENTITY_GRANT = "identity"
 
 sealed interface PairingError {
     data class Failed(val error: AppError) : PairingError
@@ -198,24 +228,47 @@ interface PairingRepository {
  * [isCallback], and the callback URL to [finish], which checks the account and returns the session. [withIdentity]
  * asks for the session's `KEYCLOAK_IDENTITY` too: the host reads it from the isolated store when it catches the
  * callback, before the store goes, and passes it to [finish].
+ *
+ * With more than one ITMO OIDC client the sign-in has steps: the first is the user's sign-in for the first client,
+ * each further one a silent authorize (`prompt=none`) for the next client in the same store. [finish] then answers
+ * [ClientSignInResult.Next] with the URL the same page loads; [lastStep] says whether the present step's callback ends
+ * the sign-in, so the host keeps the page (and its store) until then. [abandon] ends every session minted so far, when
+ * the user leaves between the steps.
  */
 interface ClientSignInAttempt {
     val url: String
     val userAgent: String
     val withIdentity: Boolean
+    val lastStep: Boolean get() = true
 
     fun isCallback(url: String): Boolean
 
     suspend fun finish(callbackUrl: String, identityCookie: String?): ClientSignInResult
+
+    suspend fun abandon() {}
 }
 
-/** Starts sign-ins for clients; each [begin] is a new PKCE attempt, [withIdentity] for an `itmo:sso` grant. */
+/**
+ * Starts sign-ins for clients; each [begin] is a new PKCE attempt for [oidcClients] (the ITMO OIDC clients whose
+ * refresh tokens are granted, in request order, at least one), [withIdentity] for an `itmo:sso` grant.
+ */
 fun interface ClientSignIn {
-    suspend fun begin(request: PairingRequest, withIdentity: Boolean): ClientSignInAttempt
+    suspend fun begin(request: PairingRequest, oidcClients: List<String>, withIdentity: Boolean): ClientSignInAttempt
 }
 
 sealed interface ClientSignInResult {
     class Success(val session: ClientItmoSession) : ClientSignInResult
+
+    /** The next step: the same page loads [url], a silent authorize for the next ITMO OIDC client. */
+    class Next(val url: String) : ClientSignInResult {
+        override fun toString(): String = "Next(redacted)"
+    }
+
+    /**
+     * A silent authorize for a further ITMO OIDC client brought another session or account, or ITMO.ID asked to sign
+     * in again (`login_required`); every session minted for this attempt is already ended.
+     */
+    data object SessionMismatch : ClientSignInResult
 
     /** The tokens belong to another ISU; that session is already ended. */
     data object OtherAccount : ClientSignInResult
@@ -230,8 +283,9 @@ sealed interface ClientSignInResult {
 }
 
 /**
- * A client's fresh ITMO.ID session, held only until it is sealed; [toString] is redacted. [identity] is its
- * `KEYCLOAK_IDENTITY` when the attempt asked for it.
+ * A client's fresh ITMO.ID session, held only until it is sealed; [toString] is redacted. [refreshToken] is the one of
+ * the sign-in for [oidcClient], [others] those of the silent authorizes for further ITMO OIDC clients, all of the same
+ * session. [identity] is its `KEYCLOAK_IDENTITY` when the attempt asked for it.
  */
 class ClientItmoSession(
     val isu: Int,
@@ -240,8 +294,22 @@ class ClientItmoSession(
     val refreshToken: String,
     val refreshExpiresAt: Instant,
     val identity: ItmoIdentity? = null,
+    val oidcClient: String = ItmoGrants.MY_ITMO,
+    val others: List<ClientRefreshToken> = emptyList(),
 ) {
+    /** The refresh token of [client], or null when this session was not authorized for it. */
+    fun refreshFor(client: String): ClientRefreshToken? = if (client == oidcClient) {
+        ClientRefreshToken(oidcClient, refreshToken, refreshExpiresAt)
+    } else {
+        others.firstOrNull { it.oidcClient == client }
+    }
+
     override fun toString(): String = "ClientItmoSession(redacted)"
+}
+
+/** A refresh token of a client's session for one ITMO OIDC client; [toString] is redacted. */
+class ClientRefreshToken(val oidcClient: String, val value: String, val expiresAt: Instant) {
+    override fun toString(): String = "ClientRefreshToken(oidcClient=$oidcClient, redacted)"
 }
 
 /**

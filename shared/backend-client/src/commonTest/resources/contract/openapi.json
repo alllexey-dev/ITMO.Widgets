@@ -2447,6 +2447,26 @@
         ]
       }
     },
+    "/api/pair/jwks": {
+      "get": {
+        "operationId": "pairing_jwks",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Jwks"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "connections"
+        ]
+      }
+    },
     "/api/reviews/{id}/report": {
       "post": {
         "operationId": "teacherReview_report",
@@ -9557,6 +9577,12 @@
         "properties": {
           "claimSecret": {
             "type": "string"
+          },
+          "clientAssertion": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -9591,6 +9617,12 @@
           "name": {
             "type": "string"
           },
+          "returnUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "verified": {
             "type": "boolean"
           }
@@ -9601,6 +9633,7 @@
           "iconUrl",
           "id",
           "name",
+          "returnUrl",
           "verified"
         ]
       },
@@ -9743,6 +9776,12 @@
           "id": {
             "type": "string"
           },
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConnectionClientKeyAdmin"
+            }
+          },
           "kind": {
             "type": "string",
             "enum": [
@@ -9762,6 +9801,12 @@
           "name": {
             "type": "string"
           },
+          "returnUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -9777,9 +9822,11 @@
           "homepage",
           "iconUrl",
           "id",
+          "keys",
           "kind",
           "maxPerUser",
           "name",
+          "returnUrl",
           "status"
         ]
       },
@@ -9807,6 +9854,21 @@
           "purpose",
           "requestedByDefault",
           "required"
+        ]
+      },
+      "ConnectionClientKeyAdmin": {
+        "type": "object",
+        "properties": {
+          "kid": {
+            "type": "string"
+          },
+          "publicKey": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kid",
+          "publicKey"
         ]
       },
       "ConnectionInfo": {
@@ -9838,6 +9900,9 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "identity": {
+            "type": "boolean"
           },
           "itmo": {
             "oneOf": [
@@ -9909,6 +9974,7 @@
           "clientId",
           "createdAt",
           "id",
+          "identity",
           "itmo",
           "itmoGrants",
           "itmoStatus",
@@ -9946,6 +10012,12 @@
               "mcp",
               "web",
               "app"
+            ]
+          },
+          "clientAssertion": {
+            "type": [
+              "string",
+              "null"
             ]
           },
           "clientId": {
@@ -10075,6 +10147,7 @@
               "validation_error",
               "unauthorized",
               "reauth_required",
+              "invalid_client",
               "permission_denied",
               "access_denied",
               "restricted",
@@ -10086,6 +10159,7 @@
               "business_rule_violation",
               "conflict",
               "update_required",
+              "identity_unavailable",
               "rate_limited",
               "internal_server_error"
             ]
@@ -10292,6 +10366,51 @@
         "required": [
           "expiresAt",
           "sid"
+        ]
+      },
+      "Jwk": {
+        "type": "object",
+        "properties": {
+          "alg": {
+            "type": "string"
+          },
+          "crv": {
+            "type": "string"
+          },
+          "kid": {
+            "type": "string"
+          },
+          "kty": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string"
+          },
+          "x": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "alg",
+          "crv",
+          "kid",
+          "kty",
+          "use",
+          "x"
+        ]
+      },
+      "Jwks": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Jwk"
+            }
+          }
+        },
+        "required": [
+          "keys"
         ]
       },
       "LessonDto": {
@@ -11099,6 +11218,12 @@
               }
             ]
           },
+          "identity": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "sealedBundle": {
             "type": [
               "string",
@@ -11122,6 +11247,7 @@
         },
         "required": [
           "connection",
+          "identity",
           "sealedBundle",
           "status",
           "token"
@@ -11326,6 +11452,12 @@
       "RenewChallengeRequest": {
         "type": "object",
         "properties": {
+          "clientAssertion": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "grants": {
             "type": [
               "array",

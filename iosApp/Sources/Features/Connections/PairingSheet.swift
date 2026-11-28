@@ -6,9 +6,12 @@ import SwiftUI
 /// access, the screen lock (`DeviceUnlock` from Koin), then for an agent or MCP server the ITMO.ID page full screen
 /// (`ClientSignInPage`), and the result. A `link` (an App Link, a renewal's scan) is read once as a scan; a renewal
 /// skips the card and asks for the screen lock at once. A protocol-2 request shows its grants as switches grouped
-/// `pair_group_widgets` and `pair_group_itmo`; turning `itmo:sso` on asks first (ADR 0040).
+/// `pair_group_widgets` and `pair_group_itmo`; turning `itmo:sso` on asks first (ADR 0040). A link that came as a
+/// Universal Link (`appLink`) is the client's own on this phone: a result with its `returnUrl` opens that page once
+/// (`UIApplication.open`), and its button opens it again and closes the sheet.
 struct PairingSheet: View {
     let link: String?
+    var appLink = false
     @State private var model = ObservableViewModel<PairingViewModel, any PairingUiState>(state: \.uiState) { store in
         let parameters = ConnectionsIosParameters.shared.pairing()
         guard let model = store.resolve(type: PairingViewModel.self, parameters: parameters) as? PairingViewModel else {
@@ -69,7 +72,17 @@ struct PairingSheet: View {
         .task {
             guard let link, !linkRead else { return }
             linkRead = true
-            model.viewModel.onScanned(raw: link)
+            if appLink {
+                model.viewModel.onAppLink(raw: link)
+            } else {
+                model.viewModel.onScanned(raw: link)
+            }
+        }
+        // The client's page after approving its own link on this phone: once, on its own.
+        .onChange(of: returnToOpen, initial: true) { _, url in
+            guard let url else { return }
+            openReturn(url)
+            model.viewModel.onReturnOpened()
         }
         .onChange(of: text) { _, typed in
             if (model.state as? PairingUiStateInput)?.text != typed { model.viewModel.onTextChanged(text: typed) }
@@ -110,9 +123,26 @@ struct PairingSheet: View {
         }
     }
 
+    private var returnToOpen: String? {
+        guard let result = model.state as? PairingUiStateResult, result.openReturn else { return nil }
+        return result.returnUrl
+    }
+
+    private func openReturn(_ url: String) {
+        if let target = URL(string: url) { UIApplication.shared.open(target) }
+    }
+
     private func result() {
         guard let result = model.state as? PairingUiStateResult else { return }
-        if result.next == .close { dismiss() } else { model.viewModel.onResultAction() }
+        switch result.next {
+        case .close:
+            dismiss()
+        case .returnToClient:
+            result.returnUrl.map(openReturn)
+            dismiss()
+        default:
+            model.viewModel.onResultAction()
+        }
     }
 }
 
@@ -233,9 +263,13 @@ private struct PairingConfirm: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: confirm.name.resolved)
                         .font(.itmo(.titleMedium, emphasized: true))
-                    Text(verbatim: confirm.subtitle.resolved)
-                        .font(.itmo(.bodyMedium))
-                        .foregroundStyle(.secondary)
+                    if confirm.verified {
+                        PairingVerifiedLine(text: confirm.subtitle.resolved)
+                    } else {
+                        Text(verbatim: confirm.subtitle.resolved)
+                            .font(.itmo(.bodyMedium))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
         }
@@ -317,6 +351,22 @@ private struct PairingGrantRow: View {
         .padding(.vertical, 11)
         .frame(minHeight: 52)
         .accessibilityIdentifier("pairing.grant.\(grant.id)")
+    }
+}
+
+/// `pair_verified` with a check mark in the tint: a confidential client proved itself to Backend.
+struct PairingVerifiedLine: View {
+    let text: String
+
+    var body: some View {
+        Label {
+            Text(verbatim: text).font(.itmo(.bodyMedium))
+        } icon: {
+            AppSymbol.checkCircle.image.font(.itmo(.bodyMedium))
+        }
+        .labelStyle(.titleAndIcon)
+        .foregroundStyle(ItmoColor.primary)
+        .accessibilityIdentifier("pairing.verified")
     }
 }
 

@@ -64,6 +64,9 @@ internal fun ConnectionInfo.toDomain() = Connection(
     },
     revokedAt = revokedAt,
     itmoGrants = itmoGrants.orEmpty(),
+    appName = app?.name?.trim()?.ifEmpty { null },
+    verified = app?.verified == true,
+    identity = identity == true,
 )
 
 internal fun InstallInfo.toDomain() = AppInstall(

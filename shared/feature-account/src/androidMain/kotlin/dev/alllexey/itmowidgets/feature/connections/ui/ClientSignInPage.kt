@@ -11,6 +11,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.viewinterop.AndroidView
@@ -33,6 +35,8 @@ import androidx.webkit.WebViewFeature
 import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBar
 import dev.alllexey.itmowidgets.designsystem.components.bars.AppTopBarAction
+import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicator
+import dev.alllexey.itmowidgets.designsystem.components.controls.ItmoActivityIndicatorSize
 import dev.alllexey.itmowidgets.designsystem.theme.ItmoTheme
 import dev.alllexey.itmowidgets.feature.connections.domain.KeycloakIdentityCookie
 import dev.alllexey.itmowidgets.shared.core.CoreStrings
@@ -47,6 +51,8 @@ import org.jetbrains.compose.resources.painterResource
  * sign-in nor the client's reach the app (plan 5.4). Every main-frame navigation goes to [isCallback]; the callback
  * is never loaded but goes to [onCallback], with the profile's `KEYCLOAK_IDENTITY` read at that moment when
  * [readIdentity] (the profile is deleted right after). Without `MULTI_PROFILE` there is no fallback: [onUnsupported].
+ * A new [url] loads in the same page and profile: the silent authorize for a further ITMO OIDC client; [busy] covers
+ * the page with a progress indicator between those steps.
  */
 @Composable
 internal fun ClientSignInPage(
@@ -54,6 +60,7 @@ internal fun ClientSignInPage(
     userAgent: String,
     title: String,
     readIdentity: Boolean,
+    busy: Boolean = false,
     isCallback: (String) -> Boolean,
     onCallback: (String, String?) -> Unit,
     onClose: () -> Unit,
@@ -78,11 +85,22 @@ internal fun ClientSignInPage(
                 navigation = { AppTopBarAction(painterResource(Res.drawable.ic_close), text(CoreStrings.common_close), onClose) },
                 subtitle = text(AccountStrings.pair_sign_in_host),
             )
-            AndroidView(
-                factory = { context -> isolatedWebView(context, userAgent) { navigation(it) }.also { it.loadUrl(url) } },
-                modifier = Modifier.fillMaxWidth().weight(1f).navigationBarsPadding(),
-                onRelease = ::release,
-            )
+            Box(Modifier.fillMaxWidth().weight(1f).navigationBarsPadding()) {
+                AndroidView(
+                    factory = { context ->
+                        isolatedWebView(context, userAgent) { navigation(it) }.also { it.tag = url; it.loadUrl(url) }
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                    // The next step of the same sign-in: its silent authorize runs in the same profile.
+                    update = { page -> if (page.tag != url) page.apply { tag = url }.loadUrl(url) },
+                    onRelease = ::release,
+                )
+                if (busy) {
+                    Box(Modifier.fillMaxSize().background(ItmoTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
+                        ItmoActivityIndicator(size = ItmoActivityIndicatorSize.Large)
+                    }
+                }
+            }
         }
     }
 }

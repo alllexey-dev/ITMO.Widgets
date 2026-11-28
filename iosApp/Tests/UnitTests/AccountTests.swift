@@ -28,12 +28,12 @@ final class AccountTests: XCTestCase {
     }
 
     func testPairingIsASheetPerLinkAndDevicesAndClientsArePushed() {
-        XCTAssertEqual(target(AppRoutes.Pairing(link: nil)), .swiftUISheet)
+        XCTAssertEqual(target(AppRoutes.Pairing(link: nil, appLink: false)), .swiftUISheet)
         XCTAssertEqual(target(AppRoutes.Devices.shared), .swiftUI)
         XCTAssertEqual(target(AppRoutes.Connection(id: "0190f1a2-3b4c-7d5e-8f60-718293a4b5c6")), .swiftUI)
-        let sheet = ShellSheet.route(ShellDestination(AppRoutes.Pairing(link: "https://example.com/pair#a")))
-        XCTAssertEqual(sheet.id, .route(ShellDestination(AppRoutes.Pairing(link: "https://example.com/pair#a"))))
-        XCTAssertNotEqual(sheet.id, ShellSheet.route(ShellDestination(AppRoutes.Pairing(link: nil))).id)
+        let sheet = ShellSheet.route(ShellDestination(AppRoutes.Pairing(link: "https://example.com/pair#a", appLink: false)))
+        XCTAssertEqual(sheet.id, .route(ShellDestination(AppRoutes.Pairing(link: "https://example.com/pair#a", appLink: false))))
+        XCTAssertNotEqual(sheet.id, ShellSheet.route(ShellDestination(AppRoutes.Pairing(link: nil, appLink: false))).id)
     }
 
     // MARK: My ITMO web

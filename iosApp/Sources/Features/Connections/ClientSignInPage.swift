@@ -7,7 +7,9 @@ import WebKit
 /// `WKWebsiteDataStore.nonPersistent()`, so the client's sign-in never touches the app's cookies and leaves nothing
 /// behind, with the User-Agent the ViewModel chose. Every main-frame navigation goes to `isCallback` first: the
 /// callback is the ViewModel's and never loads, it goes to `callback` with the store's `KEYCLOAK_IDENTITY` when the
-/// state asks for it (`readIdentity`, an `itmo:sso` grant); anything else loads only over https.
+/// state asks for it (`readIdentity`, an `itmo:sso` grant); anything else loads only over https. A new `url` of the
+/// state loads in the same page and store: the silent authorize for a further ITMO OIDC client; `busy` covers the page
+/// with a spinner between those steps.
 struct ClientSignInPage: View {
     let state: PairingUiStateSigningIn
     let isCallback: (String) -> Bool
@@ -25,6 +27,14 @@ struct ClientSignInPage: View {
                     callback: callback
                 )
                     .ignoresSafeArea(edges: .bottom)
+                    .overlay {
+                        if state.busy {
+                            ItmoLoadingView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .background(Color(.systemBackground))
+                                .accessibilityIdentifier("pairing.signIn.progress")
+                        }
+                    }
             }
             .navigationTitle(Text(verbatim: state.title.resolved))
             .navigationSubtitle(Text(verbatim: AppStrings.string("pair_sign_in_host")))
@@ -42,7 +52,7 @@ struct ClientSignInPage: View {
     }
 }
 
-/// The isolated page in SwiftUI: made once, loaded once, emptied when it leaves.
+/// The isolated page in SwiftUI: made once, loaded once per step's URL, emptied when it leaves.
 private struct ClientSignInWebView: UIViewRepresentable {
     let url: String
     let userAgent: String
@@ -62,9 +72,7 @@ private struct ClientSignInWebView: UIViewRepresentable {
         page.customUserAgent = userAgent
         page.navigationDelegate = context.coordinator
         page.accessibilityIdentifier = "pairing.signIn.web"
-        if HttpsNavigationPolicy.shared.isNavigable(url: url), let target = URL(string: url) {
-            page.load(URLRequest(url: target, cachePolicy: .reloadIgnoringLocalCacheData))
-        }
+        load(url, in: page, coordinator: context.coordinator)
         return page
     }
 
@@ -72,6 +80,15 @@ private struct ClientSignInWebView: UIViewRepresentable {
         context.coordinator.readIdentity = readIdentity
         context.coordinator.isCallback = isCallback
         context.coordinator.callback = callback
+        // The next step of the same sign-in: its silent authorize runs in the same store.
+        if context.coordinator.loaded != url { load(url, in: page, coordinator: context.coordinator) }
+    }
+
+    private func load(_ url: String, in page: WKWebView, coordinator: Coordinator) {
+        coordinator.loaded = url
+        if HttpsNavigationPolicy.shared.isNavigable(url: url), let target = URL(string: url) {
+            page.load(URLRequest(url: target, cachePolicy: .reloadIgnoringLocalCacheData))
+        }
     }
 
     static func dismantleUIView(_ page: WKWebView, coordinator: Coordinator) {
@@ -81,6 +98,7 @@ private struct ClientSignInWebView: UIViewRepresentable {
 
     @MainActor
     final class Coordinator: NSObject, WKNavigationDelegate {
+        var loaded: String?
         var readIdentity: Bool
         var isCallback: (String) -> Bool
         var callback: (String, String?) -> Void

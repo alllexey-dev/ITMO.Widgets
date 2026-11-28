@@ -7,6 +7,7 @@ import dev.alllexey.itmowidgets.feature.connections.data.ClientSignInImpl
 import dev.alllexey.itmowidgets.feature.connections.data.DevicesOverviewImpl
 import dev.alllexey.itmowidgets.feature.connections.data.DevicesRepositoryImpl
 import dev.alllexey.itmowidgets.feature.connections.data.ItmoLoginsRepositoryImpl
+import dev.alllexey.itmowidgets.feature.connections.data.ItmoOidcClients
 import dev.alllexey.itmowidgets.feature.connections.data.PairingRepositoryImpl
 import dev.alllexey.itmowidgets.feature.connections.data.bell.ConnectionsBellSource
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientSignIn
@@ -29,12 +30,14 @@ val connectionsQualifier: Qualifier = named("connections")
 
 /**
  * «Устройства» and pairing over Core 2.0's connections area and MyItmoApi's ITMO.ID sessions; the gate, the demo
- * switch, the dispatchers, the clock, the engine, the phone's ITMO.ID cookies (`ItmoIdCookies`), the label switch
+ * switch, the dispatchers, the clock, the engine, `MyItmoClient` (with the engine, the ITMO OIDC clients of refresh
+ * grants, `ItmoOidcClients`), the phone's ITMO.ID cookies (`ItmoIdCookies`), the label switch
  * (`SignInLabelPreferences`) and the notifier come from the platform, as does `HpkeSender` (Tink on Android,
  * CryptoKit on iOS).
  */
 val connectionsDataModule = module {
     single { ItmoIdSessions(get(), get()) }
+    singleOf(::ItmoOidcClients)
     singleOf(::DevicesRepositoryImpl) { bind<DevicesRepository>() }
     singleOf(::PairingRepositoryImpl) { bind<PairingRepository>() }
     singleOf(::ItmoLoginsRepositoryImpl) { bind<ItmoLoginsRepository>() }

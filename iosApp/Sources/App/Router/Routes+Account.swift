@@ -12,7 +12,7 @@ extension Routes {
         case let web as AppRoutes.MyItmoWeb:
             return .swiftUI { AnyView(MyItmoWebScreen(path: web.path)) }
         case let pairing as AppRoutes.Pairing:
-            return .swiftUISheet { AnyView(PairingSheet(link: pairing.link)) }
+            return .swiftUISheet { AnyView(PairingSheet(link: pairing.link, appLink: pairing.appLink)) }
         case is AppRoutes.Devices:
             return .swiftUI { AnyView(DevicesScreen()) }
         case let connection as AppRoutes.Connection:

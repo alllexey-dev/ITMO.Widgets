@@ -24,7 +24,8 @@
       "homepage": null,
       "iconUrl": null,
       "deployment": "self_hosted",
-      "verified": false
+      "verified": false,
+      "returnUrl": null
     },
     "grants": [
       {

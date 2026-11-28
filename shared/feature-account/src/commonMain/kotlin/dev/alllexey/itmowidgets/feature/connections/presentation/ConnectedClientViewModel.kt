@@ -34,7 +34,8 @@ import kotlinx.coroutines.launch
  * the facts and «Отключить», which ends Backend access and then the client's ITMO session with the phone's own cookie
  * (plan 6.2). A client holding `itmo:sso` has «Забрать»: the phone ends its ITMO session the same way and reports
  * `itmo-closed`; the connection stays without ITMO grants (ADR 0040). The client comes from [DevicesRepository]'s last
- * answer, refreshed on open.
+ * answer, refreshed on open. A client granted no Widgets scope (an `app` client with only `identity` or ITMO grants)
+ * has no scope switches: Backend refuses to narrow nothing; `identity` is a row without a switch.
  */
 class ConnectedClientViewModel(
     private val id: String,
@@ -120,7 +121,7 @@ class ConnectedClientViewModel(
                 confirm = ConfirmAsk(
                     title = UiText.Res(
                         if (web) AccountStrings.connection_sign_out_web_title else AccountStrings.connection_revoke_title,
-                        listOf(connection.name),
+                        listOf(connection.displayName),
                     ),
                     text = UiText.Res(
                         when {
@@ -152,7 +153,7 @@ class ConnectedClientViewModel(
                             connection.client == ClientType.AGENT -> AccountStrings.connection_take_back_agent_text
                             else -> AccountStrings.connection_take_back_text
                         },
-                        listOf(connection.name),
+                        listOf(connection.displayName),
                     ),
                     confirm = UiText.Res(AccountStrings.connection_take_back),
                 ),
@@ -241,13 +242,19 @@ class ConnectedClientViewModel(
             state.copy(
                 loading = false,
                 gone = false,
-                title = UiText.Dynamic(connection.name),
-                subtitle = clientSubtitle(connection.client, connection.version, connection.platform),
+                title = UiText.Dynamic(connection.displayName),
+                subtitle = if (connection.verified) {
+                    UiText.Res(AccountStrings.pair_verified)
+                } else {
+                    clientSubtitle(connection.client, connection.version, connection.platform)
+                },
+                verified = connection.verified,
                 icon = connection.client.icon(),
                 signIn = if (connection.holdsItmo) signIn(connection) else null,
                 fullItmoAccess = ItmoGrants.SSO in connection.itmoGrants,
                 takeBack = connection.hasItmoSignIn && connection.signInAlert(now) != SignInAlert.Closed,
-                scopes = if (web) {
+                identity = connection.identity,
+                scopes = if (web || connection.scopes.none { it.granted }) {
                     emptyList()
                 } else {
                     connection.scopes.map {
@@ -275,7 +282,7 @@ class ConnectedClientViewModel(
             return SignInStatus(
                 tone = SignInTone.OK,
                 title = UiText.Res(AccountStrings.connection_sign_in_none),
-                text = UiText.Res(AccountStrings.connection_sign_in_none_text, listOf(connection.name)),
+                text = UiText.Res(AccountStrings.connection_sign_in_none_text, listOf(connection.displayName)),
                 action = UiText.Res(AccountStrings.connection_sign_in_give),
                 signedIn = false,
             )
@@ -284,14 +291,14 @@ class ConnectedClientViewModel(
             SignInAlert.Closed -> SignInStatus(
                 tone = SignInTone.ERROR,
                 title = UiText.Res(AccountStrings.connection_sign_in_closed),
-                text = UiText.Res(AccountStrings.connection_sign_in_closed_text, listOf(connection.name)),
+                text = UiText.Res(AccountStrings.connection_sign_in_closed_text, listOf(connection.displayName)),
                 action = UiText.Res(AccountStrings.connection_sign_in_again),
             )
             is SignInAlert.Ending -> SignInStatus(
                 tone = SignInTone.WARNING,
                 title = UiText.Res(AccountStrings.connection_sign_in_until, listOf(dayMonth(alert.at, time.timeZone))),
                 text = (alert.at - now).inWholeDays.toInt().coerceAtLeast(1).let { days ->
-                    UiText.Plural(AccountPlurals.connection_sign_in_ending, days, listOf(days, connection.name))
+                    UiText.Plural(AccountPlurals.connection_sign_in_ending, days, listOf(days, connection.displayName))
                 },
                 action = UiText.Res(AccountStrings.connection_renew),
             )

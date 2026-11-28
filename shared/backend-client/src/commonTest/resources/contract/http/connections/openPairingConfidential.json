@@ -1,0 +1,44 @@
+{
+  "success": true,
+  "data": {
+    "challengeId": "00000000-0000-4000-8000-000000000501",
+    "kind": "CONNECT",
+    "client": "app",
+    "name": "Synthetic service",
+    "version": null,
+    "platform": null,
+    "requestedScopes": [],
+    "keyCommitment": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+    "connectionId": null,
+    "expiresAt": "2026-10-05T09:10:00Z",
+    "protocol": 2,
+    "app": {
+      "id": "synthetic-service",
+      "name": "Synthetic service",
+      "homepage": "https://example.com",
+      "iconUrl": null,
+      "deployment": "hosted",
+      "verified": true,
+      "returnUrl": "https://example.com/connected"
+    },
+    "grants": [
+      {
+        "id": "identity",
+        "required": true,
+        "title": "Имя и номер ИСУ",
+        "description": "Ваши ФИО и номер ИСУ, один раз при подключении",
+        "purpose": "чтобы узнать вас без пароля",
+        "granted": null
+      },
+      {
+        "id": "itmo:refresh:student-personal-cabinet-dev",
+        "required": false,
+        "title": null,
+        "description": null,
+        "purpose": "чтобы показывать расписание из тестового My ITMO",
+        "granted": null
+      }
+    ]
+  },
+  "error": null
+}

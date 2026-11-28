@@ -402,7 +402,7 @@ final class RouterTests: XCTestCase {
 
         router.sessionChanged(ShellSessionState.demo.sessionState, onboarding: .passed)
         XCTAssertEqual(router.open(AppRoutes.MyItmoWeb(path: "/")), .refusedInDemo)
-        XCTAssertEqual(router.open(AppRoutes.Pairing(link: nil)), .refusedInDemo)
+        XCTAssertEqual(router.open(AppRoutes.Pairing(link: nil, appLink: false)), .refusedInDemo)
         XCTAssertEqual(router.open(AppRoutes.Devices.shared), .refusedInDemo)
         XCTAssertEqual(router.open(AppRoutes.Connection(id: "0190f1a2-3b4c-7d5e-8f60-718293a4b5c6")), .refusedInDemo)
 
@@ -503,7 +503,7 @@ final class RouterTests: XCTestCase {
             ("https://widgets.alllexey.dev/sport/42/extra", linkUnavailableEntry),
             ("https://widgets.alllexey.dev/pair", linkUnavailableEntry),
             (pairLink, EntryRoute(
-                tab: .me, overlay: AppRoutes.Pairing(link: pairLink), request: nil, activity: nil, alert: nil,
+                tab: .me, overlay: AppRoutes.Pairing(link: pairLink, appLink: true), request: nil, activity: nil, alert: nil,
                 shortcutId: nil
             )),
             ("https://widgets.alllexey.dev/", nil),
@@ -662,7 +662,7 @@ final class RouterTests: XCTestCase {
             (AppRoutes.FriendSelector(selectedIsu: 0), .swiftUISheet),
             (AppRoutes.ScheduleMonth(date: "2026-10-06", userIsu: -1), .swiftUISheet),
             (AppRoutes.SheetScores(args: scores), .swiftUISheet),
-            (AppRoutes.Pairing(link: nil), .swiftUISheet),
+            (AppRoutes.Pairing(link: nil, appLink: false), .swiftUISheet),
             (AppRoutes.Devices.shared, .swiftUI),
             (AppRoutes.Connection(id: "0190f1a2-3b4c-7d5e-8f60-718293a4b5c6"), .swiftUI),
             (AppRoutes.ReviewEditor(args: teacher), .swiftUISheet),

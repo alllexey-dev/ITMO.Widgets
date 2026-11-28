@@ -35,8 +35,10 @@ data class PairingPreview(
 )
 
 /**
- * A client app of Backend's registry as the phone shows it. [verified] is false for every client of step 1 (public
- * clients cannot prove who they are).
+ * A client app of Backend's registry as the phone shows it. [verified] is true for a confidential client, which
+ * proved itself with its key at creation (ADR 0040, «Проверено»); a public client cannot. [returnUrl] is the
+ * registry's https page the phone opens after approving a pairing that came to it as an App Link on the same phone;
+ * never taken from the link or the client's request. Nullable so an older Backend still decodes.
  */
 @Serializable
 data class ClientAppInfo(
@@ -46,6 +48,7 @@ data class ClientAppInfo(
     val iconUrl: String? = null,
     val deployment: ClientDeployment,
     val verified: Boolean = false,
+    val returnUrl: String? = null,
 )
 
 /**
@@ -108,7 +111,9 @@ data class ScopeGrant(val scope: ScopeInfo, val granted: Boolean)
  * [itmoStatus] is the client's own report. [revokedAt] is set on a revoked connection whose ITMO session the phone
  * has not ended yet: the app hides such rows and ends their sessions. [clientId] and [app] name its registry entry,
  * [itmoGrants] the `itmo:*` grants the phone sealed to it (a label Backend cannot verify); all three are nullable so
- * an older Backend still decodes.
+ * an older Backend still decodes. [identity] is whether the connection was granted `identity` (a Backend-signed name
+ * and ISU at the claim); null from a Backend before client platform step 2. A connection granted no `widgets:*` grant
+ * has every scope off.
  */
 @Serializable
 data class ConnectionInfo(
@@ -128,6 +133,7 @@ data class ConnectionInfo(
     val clientId: String? = null,
     val app: ClientAppInfo? = null,
     val itmoGrants: List<String>? = null,
+    val identity: Boolean? = null,
 )
 
 /**
@@ -166,8 +172,8 @@ data class UpdateScopesRequest(val scopes: List<ConnectionScope>)
 enum class PairingKind { CONNECT, RENEW, UNKNOWN }
 
 /**
- * The client kind of a connection; wire values are lower case. [APP] is a registry client of kind `app`, which step 1
- * of ADR 0040 does not pair yet. Display: a newer kind is [UNKNOWN].
+ * The client kind of a connection; wire values are lower case. [APP] is a registry client of kind `app` (a hosted
+ * service of ADR 0040), which may hold no Widgets scope. Display: a newer kind is [UNKNOWN].
  */
 @Serializable(with = ConnectionClientSerializer::class)
 enum class ConnectionClient(internal val wire: String) {

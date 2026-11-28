@@ -265,7 +265,7 @@ class DevicesViewModel(
         return DeviceRow(
             key = CLIENT + id,
             icon = client.icon(),
-            title = UiText.Dynamic(name),
+            title = UiText.Dynamic(displayName),
             subtitle = activity?.let {
                 UiText.Res(AccountStrings.devices_client_line, listOf(client.typeName(), it))
             } ?: client.typeName(),

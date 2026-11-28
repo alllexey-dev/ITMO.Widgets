@@ -4,8 +4,10 @@ Backend contract: `../itmo-widgets-backend/docs/contracts/connections.md`. Code:
 `:shared:feature-account` (domain, data, ViewModels, Compose screens), `iosApp/Sources/Features/Connections/`
 (SwiftUI over the same ViewModels).
 
-A connection is a client the phone approved: an agent (`itmo-widgets-agent`), an MCP server (`itmo-mcp`) or the web
-version, each an entry of Backend's client registry ([ADR 0040](../adr/0040-client-platform.md)). Agents and MCP
+A connection is a client the phone approved: an agent (`itmo-widgets-agent`), an MCP server (`itmo-mcp`), the web
+version or a registry client of kind `app` (a hosted service), each an entry of Backend's client registry
+([ADR 0040](../adr/0040-client-platform.md)). An `app` client is named by its registry entry (`app.name`) and has the
+generic computer icon. Agents and MCP
 servers can get their own ITMO.ID session, signed in on the phone; the web gets none. The phone never hands out its
 own session or its own ITMO.ID cookie; what a client gets of its own session is the user's choice of grants.
 
@@ -17,7 +19,9 @@ own session or its own ITMO.ID cookie; what a client gets of its own session is 
   session refuses all three (`ShellGate`).
 - The push `DEVICE_CONNECTED_PAYLOAD` opens «Устройства»; the reminder notification opens the client
   (`NotificationDestination.Connection`, `ACTION_OPEN_CONNECTION` with `EXTRA_CONNECTION`).
-- App Links `https://<host>/pair#1.<CODE>.<pk>.<s>` (the alpha's `#v1.` is read too) open the pairing sheet.
+- App Links `https://<host>/pair#1.<CODE>.<pk>.<s>` (the alpha's `#v1.` is read too) open the pairing sheet
+  (`AppRoutes.Pairing(link, appLink = true)`, read by `PairingViewModel.onAppLink`): the client opened the link on
+  this phone, so its `returnUrl` may open after the approval. A renewal's scan opens the sheet with `appLink = false`.
 - Settings has no row: «Сервер ITMO.Widgets» lost its «Устройства» page.
 
 ## «Устройства» (`DevicesViewModel`)
@@ -66,7 +70,12 @@ Two sources, joined by `sid`:
   `POST /api/users/me/connections/{id}/itmo-closed` and a reload. Taking the cookie alone back is impossible: every
   ITMO item shares the session. Without the phone's cookie the end fails, the error shows and nothing is reported.
 - «Доступ»: Backend's `ScopeGrant`s as switches. Off applies at once; on asks for the screen lock first; the last
-  scope stays on. The web has no switches.
+  scope stays on. The web has no switches, and neither has a client granted no `widgets:*` grant (Backend refuses to
+  narrow nothing). A client granted `identity` (`ConnectionInfo.identity`) has the row «Имя и номер ИСУ» / «Переданы
+  при подключении» without a switch; with neither scopes nor identity «Доступ» is hidden.
+- A confidential client (`app.verified`) says «Проверено ITMO.Widgets» under its name instead of its product line.
+- «Вход в ИТМО» shows for an agent, an MCP server and any client whose `itmoGrants` hold an `itmo:refresh:*` or
+  `itmo:sso` grant (`Connection.holdsItmo`).
 - «Отключить»: `revoke`, then the phone ends the client's `sid` and reports `itmo-ended`; a failure is left to the
   reconciliation. Without a cookie the dialog says the sign-in ends when the device next calls.
 
@@ -85,9 +94,12 @@ requires an ITMO grant this version cannot mint, is «Обновите прил�
    requested scopes as switches (narrowing only). A `RENEW` opens only for the owner's own live connection, so it has
    no caution, and a `RENEW` of an agent or MCP has no card at all. There is no code to compare ([why](#why-no-code)).
 
-   Protocol 2: the grants as switches in registry order, grouped «ITMO.Widgets» (`widgets:*`) and «ИТМО» (`itmo:*`), see
-   [Grants](#grants). Approving needs a Widgets grant on a new connection. A `RENEW` shows a card only when a requested
-   ITMO grant is not held yet (`granted: false`), with only those; the held ones go along without a switch.
+   Protocol 2: the grants as switches in registry order, grouped «ITMO.Widgets» (`widgets:*` and `identity`) and «ИТМО»
+   (`itmo:*`), see [Grants](#grants). Approving needs a Widgets grant or `identity` on a new connection. A confidential
+   client (`app.verified`) shows «Проверено ITMO.Widgets» with a check mark under its name instead of its product
+   line; an `app` client is named by its registry entry. A `RENEW` shows a card only when a requested
+   ITMO grant or `identity` is not held yet (`granted: false`), with only those; the held ones go along without a
+   switch.
 3. Screen lock (`DeviceUnlock`: `BiometricPrompt`, LocalAuthentication). iOS answers once the app is active again: a
    WKWebView that comes up while the Face ID UI still holds the app inactive never loads or takes a touch. The page
    focuses its e-mail field at once; the pairing sheet stays under it, so its `.content` height must not count the
@@ -107,10 +119,20 @@ requires an ITMO grant this version cannot mint, is «Обновите прил�
    JWT payload without checking the signature (`IdTokenClaims`): its `sid` (`session_state` of older tokens) must be
    the token response's session, its `exp` is when it ends. A missing or foreign cookie ends the new session and says
    `pair_identity_missing`: the user granted it, so pairing without it would be wrong.
+
+   Several ITMO OIDC clients (`ItmoOidcClients`: `student-personal-cabinet` through the app's `MyItmoClient`,
+   `student-personal-cabinet-dev` through a stateless MyItmoApi `ItmoIdClient` with `MyItmoConfiguration.DEV`): the
+   user signs in for the first granted refresh grant's client (MyITMO's when only `itmo:sso` is granted), the cookie
+   comes from that store, then every further granted client is a silent authorize (`prompt=none`, PKCE; MyItmoApi
+   builds the URL, the app appends `prompt=none`) that the same page loads (`SigningIn.url` changes, `busy` covers the
+   page) and whose callback is caught the same way. Each token must carry the first one's session (`sid`, else
+   `session_state`) and the phone's ISU; otherwise, or on `login_required`, every token minted so far is logged out
+   with its own client and the pairing fails with `pair_session_mismatch` (`ClientSignInResult.SessionMismatch`).
+   Closing the page between the steps logs them out too (`ClientSignInAttempt.abandon`).
 5. Protocol 1: the bundle `{v, challengeId, kind, isu, issuedAt, itmo: {sid, expiresAt, refreshToken,
    refreshExpiresAt}}` (`PairingBundle`). Protocol 2: `{v: 2, challengeId, kind, clientId, isu, issuedAt, itmo: {sid,
    expiresAt, items: [{grant, value, expiresAt}]}}` (`PairingBundleV2`), `items` exactly the granted ITMO grants in
-   request order: the refresh token with its expiry, the cookie with its `exp`. With only `itmo:sso` the refresh token
+   request order: each refresh token (of its OIDC client) with its expiry, the cookie with its `exp`. With only `itmo:sso` the refresh token
    of the exchange is dropped unused, never logged out (that would end the session the cookie belongs to). Either is
    sealed with HPKE (X25519, HKDF-SHA256, ChaCha20-Poly1305; Tink, CryptoKit) to `pk` with
    `info = "itmo-widgets pair v1" || 0 || challengeId || kind || 0 || s`, as the agent and itmo-mcp open it
@@ -118,13 +140,19 @@ requires an ITMO grant this version cannot mint, is «Обновите прил�
    scopes (protocol 1, `CONNECT` only) or `granted` (protocol 2, every required grant included). A failed approval
    ends the new session; a renewal ends the old `sid` after.
 6. The web, and a protocol-2 client with every ITMO grant off, are approved without a sign-in and without a bundle.
+7. After a successful approval of a link that came as an App Link, when the registry entry has an https `returnUrl`
+   (`ClientAppInfo.returnUrl`, never from the link), the phone opens it once on its own (Android `ACTION_VIEW`, iOS
+   `UIApplication.open`) and the result's button is «Вернуться в {app name}», which opens it again and closes the
+   sheet. A scanned or pasted link never opens it.
 
 ### Grants
 
 | Grant | Switch | Texts |
 |---|---|---|
 | `widgets:<scope>` | on; on and locked when required | Backend's `title` and `description` |
+| `identity` | on; on and locked when required | Backend's `title` and `description` («Имя и номер ИСУ») |
 | `itmo:refresh:student-personal-cabinet` | on; on and locked when required | «Вход в My ITMO» (`grant_refresh_*`) |
+| `itmo:refresh:student-personal-cabinet-dev` | on; on and locked when required | «Вход в тестовый My ITMO» (`grant_refresh_dev_*`) |
 | `itmo:sso` | off every time; turning it on asks «Дать полный доступ к ITMO.ID?» | «Полный доступ к ITMO.ID», the warning in the error colour (`grant_sso_*`) |
 | another `itmo:*` | off and locked, «Недоступно в этой версии»; required: the pairing is refused | its id |
 
@@ -176,14 +204,19 @@ texts included, is in `strings_connections.xml`.
 - Core 2: `ConnectionsRequestTest`, `ConnectionsContractTest`, `ConnectionsVendoredFixturesTest`,
   `AcceptLanguageHeaderTest`, conformance.
 - Shared: `PairingViewModelTest` (grant card, `itmo:sso` confirmation, bundle v2 items, no sign-in without ITMO
-  grants, renewal cards), `DevicesViewModelTest`, `ConnectedClientViewModelTest` («Забрать»),
-  `PairingRepositoryImplTest`, `ClientSignInImplTest` (the identity cookie against the token response's `sid`),
+  grants, renewal cards, the verified header, `identity`, the dev refresh grant with a second step, a session
+  mismatch, the return page only after an App Link), `DevicesViewModelTest`, `ConnectedClientViewModelTest`
+  («Забрать», the identity row, no «Доступ» without scopes), `PairingRepositoryImplTest` (`verified`, an https
+  `returnUrl` only), `ClientSignInImplTest` (the identity cookie against the token response's `sid`; the silent
+  authorize, a foreign session or `login_required` logging out every minted token),
   `IdTokenClaimsTest`, `ConnectionsReminderTest`, `PairingCryptoTest`, `PairingSealerTest` (v1 unchanged, v2),
   `TinkHpkeSenderTest` (CryptoKit interop).
-- JVM screenshots `DevicesScreen_*`, `ConnectionScreen_*`, `PairingSheet_*` from `ConnectionsPreviews.kt`; iOS
-  `ConnectionsSnapshotTests` (`pair-grants`, `mcp-full-access`), `PairingTests` (the identity cookie among a
-  store's cookies).
+- JVM screenshots `DevicesScreen_*`, `ConnectionScreen_*` (`app-identity`), `PairingSheet_*` (`confirm-verified`,
+  `done-return`) from `ConnectionsPreviews.kt`; iOS `ConnectionsSnapshotTests` (`pair-grants`, `pair-verified`,
+  `pair-done-return`, `mcp-full-access`, `app-identity`), `PairingTests` (the identity cookie among a store's
+  cookies).
 - Not covered by automated tests: the isolated WebView sign-in against the real id.itmo.ru (checks C1, C6, C7 of the
   plan run on devices); whether `KEYCLOAK_IDENTITY` is in the isolated store when the callback is caught (Android
   profile cookie manager, iOS `nonPersistent()`) and its `sid` equals the token response's; the client opening a v2
-  bundle and using the cookie (itmo-mcp); «Забрать» ending the session on the real ITMO.ID.
+  bundle and using the cookie (itmo-mcp); the silent authorize for `student-personal-cabinet-dev` in the isolated page
+  against the real id.itmo.ru; «Забрать» ending the session on the real ITMO.ID.

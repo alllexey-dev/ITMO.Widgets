@@ -12,6 +12,7 @@ import dev.alllexey.itmowidgets.feature.connections.domain.Connection
 import dev.alllexey.itmowidgets.feature.connections.domain.Devices
 import dev.alllexey.itmowidgets.feature.connections.domain.DevicesRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.Grant
+import dev.alllexey.itmowidgets.feature.connections.domain.IDENTITY_GRANT
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoHealth
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLogin
@@ -101,33 +102,48 @@ internal class FakePairingRepository(var opened: PairingResult<PairingRequest>) 
 }
 
 /**
- * Sign-ins whose callback is [CALLBACK]; each finishes with [result]. [identities] records whether each attempt asked
- * for the identity cookie, [cookies] what each finish got.
+ * Sign-ins whose callback is [CALLBACK] (or [DEV_CALLBACK]); each step before the last answers
+ * [ClientSignInResult.Next] with [NEXT] and the last finishes with [result]. [identities] records whether each attempt
+ * asked for the identity cookie, [clients] its ITMO OIDC clients, [cookies] what each finish got, [abandoned] the
+ * attempts left between steps.
  */
 internal class FakeClientSignIn(var result: ClientSignInResult) : ClientSignIn {
     var begun = 0
+    var abandoned = 0
     val identities = mutableListOf<Boolean>()
+    val clients = mutableListOf<List<String>>()
     val cookies = mutableListOf<String?>()
 
-    override suspend fun begin(request: PairingRequest, withIdentity: Boolean): ClientSignInAttempt {
+    override suspend fun begin(request: PairingRequest, oidcClients: List<String>, withIdentity: Boolean): ClientSignInAttempt {
         begun++
         identities += withIdentity
+        clients += oidcClients
         return object : ClientSignInAttempt {
+            private var step = 0
             override val url = "https://id.itmo.ru/auth?attempt=$begun"
             override val userAgent = "UA ${request.name}"
             override val withIdentity = withIdentity
+            override val lastStep get() = step == oidcClients.lastIndex
 
-            override fun isCallback(url: String) = url.startsWith(CALLBACK)
+            override fun isCallback(url: String) = url.startsWith(CALLBACK) || url.startsWith(DEV_CALLBACK)
 
             override suspend fun finish(callbackUrl: String, identityCookie: String?): ClientSignInResult {
                 cookies += identityCookie
-                return result
+                if (lastStep) return result
+                step++
+                return ClientSignInResult.Next("$NEXT$step")
+            }
+
+            override suspend fun abandon() {
+                abandoned++
             }
         }
     }
 
     companion object {
         const val CALLBACK = "https://my.itmo.ru/login/callback"
+        const val DEV_CALLBACK = "https://dev.my.itmo.su/login/callback"
+        const val NEXT = "https://id.itmo.ru/auth?prompt=none&step="
     }
 }
 
@@ -255,5 +271,33 @@ internal object Samples {
         clientId = "itmo-mcp",
         appName = "ITMO MCP",
         grants = grants,
+    )
+
+    /**
+     * A confidential hosted `app` client of step 2: `identity` with Backend's texts, the refresh grants of My ITMO and
+     * of its development stand, and the registry's return page.
+     */
+    fun appRequest(
+        grants: List<Grant> = listOf(
+            Grant(IDENTITY_GRANT, false, "Имя и номер ИСУ", "Ваши ФИО и номер ИСУ, один раз при подключении", null, null),
+            grant(ItmoGrants.REFRESH),
+            grant(ItmoGrants.REFRESH_DEV),
+        ),
+        verified: Boolean = true,
+    ) = PairingRequest(
+        challengeId = PairingVectors.CHALLENGE_ID,
+        kind = PairingKind.CONNECT,
+        client = ClientType.OTHER,
+        name = "instapick",
+        version = null,
+        platform = null,
+        scopes = emptyList(),
+        connectionId = null,
+        protocol = 2,
+        clientId = "itmo-instapick",
+        appName = "ITMO Instapick",
+        grants = grants,
+        verified = verified,
+        returnUrl = "https://instapick.example/paired",
     )
 }

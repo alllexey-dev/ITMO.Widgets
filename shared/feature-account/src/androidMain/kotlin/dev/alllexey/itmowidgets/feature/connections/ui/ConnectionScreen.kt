@@ -55,6 +55,7 @@ import dev.alllexey.itmowidgets.shared.designsystem.ic_key
 import dev.alllexey.itmowidgets.shared.designsystem.ic_login
 import dev.alllexey.itmowidgets.shared.designsystem.ic_remove
 import dev.alllexey.itmowidgets.shared.designsystem.ic_logout
+import dev.alllexey.itmowidgets.shared.designsystem.ic_person
 import dev.alllexey.itmowidgets.shared.designsystem.ic_qr_code_scanner
 import dev.alllexey.itmowidgets.shared.designsystem.ic_refresh
 import dev.alllexey.itmowidgets.shared.feature.account.AccountStrings
@@ -146,9 +147,20 @@ private fun ConnectionContent(state: ConnectedClientUiState, actions: Connection
         SectionHeader(text(AccountStrings.connection_section_sign_in))
         SignIn(signIn, state, actions)
     }
-    if (state.scopes.isNotEmpty()) {
+    if (state.showsAccess) {
         SectionHeader(text(AccountStrings.connection_section_access))
         ListGroup(Modifier.testTag(ConnectionTestTags.SCOPES)) {
+            if (state.identity) {
+                item {
+                    ListRow(
+                        text(AccountStrings.connection_identity_title),
+                        Modifier.testTag(ConnectionTestTags.IDENTITY),
+                        subtitle = text(AccountStrings.connection_identity_text),
+                        icon = painterResource(Res.drawable.ic_person),
+                        iconTone = Tone.Neutral,
+                    )
+                }
+            }
             state.scopes.forEach { scope ->
                 item {
                     SwitchListRow(
@@ -283,6 +295,7 @@ object ConnectionTestTags {
     const val REVOKE = "connection_revoke"
     const val FULL_ACCESS = "connection_full_access"
     const val TAKE_BACK = "connection_take_back"
+    const val IDENTITY = "connection_identity"
 
     fun scope(id: String): String = "connection_scope:$id"
 }

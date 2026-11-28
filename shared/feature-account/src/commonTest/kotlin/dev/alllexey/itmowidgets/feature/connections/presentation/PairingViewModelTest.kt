@@ -6,12 +6,15 @@ import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.testing.FixedAcademicTime
 import dev.alllexey.itmowidgets.core.text.UiText
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientItmoSession
+import dev.alllexey.itmowidgets.feature.connections.domain.ClientRefreshToken
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientSignInResult
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientType
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
+import dev.alllexey.itmowidgets.feature.connections.domain.Grant
 import dev.alllexey.itmowidgets.feature.connections.domain.Devices
 import dev.alllexey.itmowidgets.feature.connections.domain.HpkeSender
+import dev.alllexey.itmowidgets.feature.connections.domain.IDENTITY_GRANT
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoIdentity
 import dev.alllexey.itmowidgets.feature.connections.domain.PairingError
@@ -466,6 +469,35 @@ class PairingViewModelTest {
     }
 
     @Test
+    fun aRenewalThatAsksForIdentityShowsItAndKeepsAHeldOne() = runTest(main.dispatcher) {
+        val identity = Grant(IDENTITY_GRANT, false, "Имя и номер ИСУ", "Ваши ФИО и номер ИСУ", null, false)
+        val model = openGrants(
+            Samples.mcpRequest(
+                kind = PairingKind.RENEW,
+                connectionId = Samples.agentId,
+                grants = listOf(identity, Samples.grant(ItmoGrants.REFRESH, held = true)),
+            ),
+        )
+        val confirm = assertIs<PairingUiState.Confirm>(model.uiState.value)
+        assertFalse(confirm.renewal)
+        assertEquals(listOf(listOf(IDENTITY_GRANT)), confirm.grants.map { group -> group.grants.map { it.id } })
+        model.proceed(UNLOCKED)
+        advanceUntilIdle()
+        model.onSignInCallback(FakeClientSignIn.CALLBACK, null)
+        advanceUntilIdle()
+        assertEquals(listOf(IDENTITY_GRANT, ItmoGrants.REFRESH), pairing.approvals.single().granted)
+
+        val held = openGrants(
+            Samples.mcpRequest(
+                kind = PairingKind.RENEW,
+                connectionId = Samples.agentId,
+                grants = listOf(identity.copy(held = true), Samples.grant(ItmoGrants.REFRESH, held = true)),
+            ),
+        )
+        assertTrue(assertIs<PairingUiState.Confirm>(held.uiState.value).renewal)
+    }
+
+    @Test
     fun aRenewalOfHeldGrantsHasNoCard() = runTest(main.dispatcher) {
         val request = Samples.mcpRequest(
             kind = PairingKind.RENEW,
@@ -497,6 +529,177 @@ class PairingViewModelTest {
         assertEquals(ResultAction.SIGN_IN_AGAIN, result.next)
         assertTrue(pairing.approvals.isEmpty())
     }
+
+    @Test
+    fun aVerifiedClientIsNamedByItsRegistryEntryWithTheVerifiedLine() = runTest(main.dispatcher) {
+        val model = openGrants(Samples.appRequest())
+
+        val confirm = assertIs<PairingUiState.Confirm>(model.uiState.value)
+        assertTrue(confirm.verified)
+        assertEquals(UiText.Dynamic("ITMO Instapick"), confirm.name)
+        assertEquals(UiText.Res(AccountStrings.pair_verified), confirm.subtitle)
+        assertEquals(DeviceIcon.COMPUTER, confirm.icon)
+
+        val public = assertIs<PairingUiState.Confirm>(openGrants(Samples.appRequest(verified = false)).uiState.value)
+        assertFalse(public.verified)
+        assertEquals(UiText.Dynamic("instapick"), public.subtitle)
+    }
+
+    @Test
+    fun identityIsAWidgetsGroupSwitchThatAloneMakesAConnection() = runTest(main.dispatcher) {
+        val model = openGrants(Samples.appRequest())
+        val confirm = assertIs<PairingUiState.Confirm>(model.uiState.value)
+        assertEquals(
+            listOf(listOf(IDENTITY_GRANT), listOf(ItmoGrants.REFRESH, ItmoGrants.REFRESH_DEV)),
+            confirm.grants.map { group -> group.grants.map { it.id } },
+        )
+        val identity = confirm.switch(IDENTITY_GRANT)
+        assertTrue(identity.checked && identity.enabled)
+        assertEquals(UiText.Dynamic("Имя и номер ИСУ"), identity.title)
+        val dev = confirm.switch(ItmoGrants.REFRESH_DEV)
+        assertTrue(dev.checked && dev.enabled)
+        assertEquals(UiText.Res(AccountStrings.grant_refresh_dev_title), dev.title)
+        assertEquals(UiText.Res(AccountStrings.grant_refresh_dev_text), dev.description)
+
+        model.onGrantChanged(IDENTITY_GRANT, false)
+        assertFalse(assertIs<PairingUiState.Confirm>(model.uiState.value).canProceed)
+        model.onGrantChanged(IDENTITY_GRANT, true)
+        model.onGrantChanged(ItmoGrants.REFRESH, false)
+        model.onGrantChanged(ItmoGrants.REFRESH_DEV, false)
+        assertTrue(assertIs<PairingUiState.Confirm>(model.uiState.value).canProceed)
+        model.proceed(UNLOCKED)
+        advanceUntilIdle()
+
+        assertEquals(0, signIn.begun)
+        assertEquals(listOf(IDENTITY_GRANT), pairing.approvals.single().granted)
+        assertNull(pairing.approvals.single().sealedBundle)
+    }
+
+    @Test
+    fun theDevRefreshGrantIsMintedWithASecondSilentAuthorizeInTheSamePage() = runTest(main.dispatcher) {
+        signIn.result = ClientSignInResult.Success(sessionWithDev)
+        val model = openGrants(Samples.appRequest())
+        model.proceed(UNLOCKED)
+        advanceUntilIdle()
+        val first = assertIs<PairingUiState.SigningIn>(model.uiState.value)
+        assertFalse(first.busy)
+        assertEquals(listOf(listOf(ItmoGrants.MY_ITMO, ItmoGrants.MY_ITMO_DEV)), signIn.clients)
+
+        model.onSignInCallback(FakeClientSignIn.CALLBACK + "?code=c&state=s", null)
+        advanceUntilIdle()
+        val silent = assertIs<PairingUiState.SigningIn>(model.uiState.value)
+        assertTrue(silent.busy)
+        assertEquals(FakeClientSignIn.NEXT + "1", silent.url)
+        assertTrue(model.isSignInCallback(FakeClientSignIn.DEV_CALLBACK + "?code=d&state=t"))
+        model.onSignInCallback(FakeClientSignIn.DEV_CALLBACK + "?code=d&state=t", null)
+        advanceUntilIdle()
+
+        assertTrue(assertIs<PairingUiState.Result>(model.uiState.value).success)
+        val approval = pairing.approvals.single()
+        assertEquals(listOf(IDENTITY_GRANT, ItmoGrants.REFRESH, ItmoGrants.REFRESH_DEV), approval.granted)
+        val items = Json.parseToJsonElement(sealed.single().decodeToString()).jsonObject
+            .getValue("itmo").jsonObject.getValue("items").jsonArray.map { it.jsonObject }
+        assertEquals(listOf(ItmoGrants.REFRESH, ItmoGrants.REFRESH_DEV), items.map { it.getValue("grant").jsonPrimitive.content })
+        assertEquals(listOf("test-refresh-token", "test-dev-refresh-token"), items.map { it.getValue("value").jsonPrimitive.content })
+    }
+
+    @Test
+    fun onlyTheDevGrantSignsInWithTheDevClient() = runTest(main.dispatcher) {
+        val model = openGrants(Samples.appRequest())
+        model.onGrantChanged(ItmoGrants.REFRESH, false)
+        model.proceed(UNLOCKED)
+        advanceUntilIdle()
+
+        assertEquals(listOf(listOf(ItmoGrants.MY_ITMO_DEV)), signIn.clients)
+    }
+
+    @Test
+    fun anotherSessionInTheSilentAuthorizeFailsTheApproval() = runTest(main.dispatcher) {
+        signIn.result = ClientSignInResult.SessionMismatch
+        val model = openGrants(Samples.appRequest())
+        model.proceed(UNLOCKED)
+        advanceUntilIdle()
+        model.onSignInCallback(FakeClientSignIn.CALLBACK, null)
+        advanceUntilIdle()
+        model.onSignInCallback(FakeClientSignIn.DEV_CALLBACK, null)
+        advanceUntilIdle()
+
+        val result = assertIs<PairingUiState.Result>(model.uiState.value)
+        assertFalse(result.success)
+        assertEquals(UiText.Res(AccountStrings.pair_session_mismatch), result.text)
+        assertEquals(ResultAction.SIGN_IN_AGAIN, result.next)
+        assertTrue(pairing.approvals.isEmpty())
+        assertTrue(sealed.isEmpty())
+    }
+
+    @Test
+    fun closingThePageBetweenTheStepsAbandonsTheMintedSessions() = runTest(main.dispatcher) {
+        val model = openGrants(Samples.appRequest())
+        model.proceed(UNLOCKED)
+        advanceUntilIdle()
+        model.onSignInCallback(FakeClientSignIn.CALLBACK, null)
+        advanceUntilIdle()
+
+        model.onSignInCancelled()
+        advanceUntilIdle()
+
+        assertEquals(1, signIn.abandoned)
+        assertEquals(ResultAction.SIGN_IN_AGAIN, assertIs<PairingUiState.Result>(model.uiState.value).next)
+        assertTrue(pairing.approvals.isEmpty())
+    }
+
+    @Test
+    fun anAppLinkReturnsToTheClientOnceAfterTheApproval() = runTest(main.dispatcher) {
+        signIn.result = ClientSignInResult.Success(sessionWithDev)
+        pairing.opened = PairingResult.Success(Samples.appRequest())
+        val model = viewModel()
+        model.onAppLink(PairingVectors.LINK)
+        advanceUntilIdle()
+        model.proceed(UNLOCKED)
+        advanceUntilIdle()
+        model.onSignInCallback(FakeClientSignIn.CALLBACK, null)
+        advanceUntilIdle()
+        model.onSignInCallback(FakeClientSignIn.DEV_CALLBACK, null)
+        advanceUntilIdle()
+
+        val result = assertIs<PairingUiState.Result>(model.uiState.value)
+        assertTrue(result.success)
+        assertEquals("https://instapick.example/paired", result.returnUrl)
+        assertTrue(result.openReturn)
+        assertEquals(ResultAction.RETURN_TO_CLIENT, result.next)
+        assertEquals(UiText.Res(AccountStrings.pair_return, listOf("ITMO Instapick")), result.action)
+        model.onReturnOpened()
+        val opened = assertIs<PairingUiState.Result>(model.uiState.value)
+        assertFalse(opened.openReturn)
+        assertEquals("https://instapick.example/paired", opened.returnUrl)
+    }
+
+    @Test
+    fun aScannedOrPastedLinkNeverReturnsToTheClient() = runTest(main.dispatcher) {
+        signIn.result = ClientSignInResult.Success(sessionWithDev)
+        val model = openGrants(Samples.appRequest())
+        model.proceed(UNLOCKED)
+        advanceUntilIdle()
+        model.onSignInCallback(FakeClientSignIn.CALLBACK, null)
+        advanceUntilIdle()
+        model.onSignInCallback(FakeClientSignIn.DEV_CALLBACK, null)
+        advanceUntilIdle()
+
+        val result = assertIs<PairingUiState.Result>(model.uiState.value)
+        assertTrue(result.success)
+        assertNull(result.returnUrl)
+        assertFalse(result.openReturn)
+        assertEquals(ResultAction.CLOSE, result.next)
+    }
+
+    private val sessionWithDev = ClientItmoSession(
+        isu = 100001,
+        sid = "sid-new",
+        expiresAt = Instant.parse("2027-01-20T09:00:00Z"),
+        refreshToken = "test-refresh-token",
+        refreshExpiresAt = Instant.parse("2026-11-06T09:00:00Z"),
+        others = listOf(ClientRefreshToken(ItmoGrants.MY_ITMO_DEV, "test-dev-refresh-token", Instant.parse("2026-11-06T09:00:00Z"))),
+    )
 
     private companion object {
         val UNLOCKED = DeviceUnlock { DeviceUnlockResult.UNLOCKED }

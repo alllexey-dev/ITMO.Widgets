@@ -13,6 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -161,6 +162,35 @@ class ConnectionsContractTest {
         assertEquals("itmo-mcp", connection.clientId)
         assertEquals("ITMO MCP", connection.app?.name)
         assertEquals(listOf("itmo:refresh:student-personal-cabinet", "itmo:sso"), connection.itmoGrants)
+    }
+
+    @Test
+    fun aConfidentialClientIsVerifiedAndNamesItsReturnPage() {
+        val app = BackendJson.decodeFromString(
+            ClientAppInfo.serializer(),
+            """{"id":"itmo-instapick","name":"ITMO Instapick","homepage":"https://instapick.example",
+                "iconUrl":null,"deployment":"hosted","verified":true,"returnUrl":"https://instapick.example/paired"}""",
+        )
+
+        assertTrue(app.verified)
+        assertEquals("https://instapick.example/paired", app.returnUrl)
+        assertNull(
+            BackendJson.decodeFromString(
+                ClientAppInfo.serializer(),
+                """{"id":"x","name":"X","deployment":"hosted","verified":false}""",
+            ).returnUrl,
+        )
+    }
+
+    @Test
+    fun aConnectionSaysWhetherItHoldsIdentity() {
+        val wire = """{"id":"00000000-0000-4000-8000-000000000601","client":"app","name":"ITMO Instapick",
+            "version":null,"platform":null,"scopes":[],"createdAt":"2026-10-01T09:00:00Z",
+            "approvedAt":"2026-10-01T09:00:00Z","lastUsedAt":null,"live":true,"itmo":null,"itmoStatus":"none",
+            "revokedAt":null,"clientId":"itmo-instapick","itmoGrants":[]"""
+
+        assertEquals(true, BackendJson.decodeFromString(ConnectionInfo.serializer(), "$wire,\"identity\":true}").identity)
+        assertNull(BackendJson.decodeFromString(ConnectionInfo.serializer(), "$wire}").identity)
     }
 
     @Test

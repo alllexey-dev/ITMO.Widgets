@@ -42,7 +42,9 @@
           "requestedByDefault": false,
           "purpose": "чтобы ИИ-ассистент видел баллы БАРС и входил в другие сервисы ИТМО"
         }
-      ]
+      ],
+      "returnUrl": null,
+      "keys": []
     },
     {
       "id": "synthetic-service",
@@ -56,10 +58,29 @@
       "maxPerUser": 2,
       "grants": [
         {
-          "id": "widgets:user",
+          "id": "widgets:links:read",
+          "required": false,
+          "requestedByDefault": false,
+          "purpose": null
+        },
+        {
+          "id": "identity",
           "required": true,
           "requestedByDefault": true,
-          "purpose": null
+          "purpose": "чтобы узнать вас без пароля"
+        },
+        {
+          "id": "itmo:refresh:student-personal-cabinet-dev",
+          "required": false,
+          "requestedByDefault": true,
+          "purpose": "чтобы показывать расписание из тестового My ITMO"
+        }
+      ],
+      "returnUrl": "https://example.com/connected",
+      "keys": [
+        {
+          "kid": "2026-11",
+          "publicKey": "ebVWLo_mVPlAeLES6KmLp5AfhTrmlb7X4OORC60ElmQ"
         }
       ]
     }

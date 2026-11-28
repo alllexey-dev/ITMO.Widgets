@@ -25,7 +25,8 @@ data class ItmoSessionRef(val sid: String, val expiresAt: Instant) {
 
 /**
  * A connected client. [revokedAt] is set on a revoked one whose ITMO session the phone has not ended yet;
- * [itmoGrants] are the `itmo:*` grants the phone sealed to it (Backend's label).
+ * [itmoGrants] are the `itmo:*` grants the phone sealed to it (Backend's label). [appName] is its registry entry's
+ * name, [verified] a confidential client that proves itself to Backend, [identity] whether it was granted `identity`.
  */
 data class Connection(
     val id: Uuid,
@@ -41,7 +42,13 @@ data class Connection(
     val health: ItmoHealth,
     val revokedAt: Instant?,
     val itmoGrants: List<String> = emptyList(),
-)
+    val appName: String? = null,
+    val verified: Boolean = false,
+    val identity: Boolean = false,
+) {
+    /** How the phone names the client: an `app` client by its registry name, the others by their own. */
+    val displayName: String get() = if (client == ClientType.OTHER) appName ?: name else name
+}
 
 /** One app install of the user; [os] is the Android API level or the iOS major version. */
 data class AppInstall(
@@ -141,11 +148,15 @@ sealed interface SignInAlert {
 /** The reminder comes 7 days before a client's ITMO sign-in ends (UX spec U2). */
 val SIGN_IN_REMINDER: Duration = 7.days
 
-/** An agent or MCP server: a client that may hold its own ITMO session. */
-val Connection.holdsItmo: Boolean get() = client == ClientType.AGENT || client == ClientType.MCP
+/**
+ * A client that may hold its own ITMO session: an agent or MCP server, or any client the phone sealed an ITMO sign-in
+ * to (an `itmo:refresh:*` or `itmo:sso` grant).
+ */
+val Connection.holdsItmo: Boolean
+    get() = client == ClientType.AGENT || client == ClientType.MCP || itmoGrants.any(ItmoGrants::signsIn)
 
 /**
- * An agent or MCP server that has an ITMO session now. A live one has none when it was paired without ITMO grants or
+ * A client of [holdsItmo] that has an ITMO session now. A live one has none when it was paired without ITMO grants or
  * the phone took them back («Забрать доступ к ИТМО»): Backend forgets a live connection's `sid` only then.
  */
 val Connection.hasItmoSignIn: Boolean get() = holdsItmo && itmo != null

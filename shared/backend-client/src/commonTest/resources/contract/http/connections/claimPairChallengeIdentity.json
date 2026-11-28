@@ -1,0 +1,46 @@
+{
+  "success": true,
+  "data": {
+    "status": "CLAIMED",
+    "token": "iwc_BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    "connection": {
+      "id": "00000000-0000-4000-8000-000000000604",
+      "client": "app",
+      "name": "Synthetic service",
+      "version": null,
+      "platform": null,
+      "scopes": [
+        {
+          "scope": {
+            "id": "links:read",
+            "title": "Ссылки предметов",
+            "description": "Читает ссылки и чаты предметов"
+          },
+          "granted": false
+        }
+      ],
+      "createdAt": "2026-10-05T09:00:00Z",
+      "approvedAt": "2026-10-05T09:00:00Z",
+      "lastUsedAt": null,
+      "live": false,
+      "itmo": null,
+      "itmoStatus": "none",
+      "revokedAt": null,
+      "clientId": "synthetic-service",
+      "app": {
+        "id": "synthetic-service",
+        "name": "Synthetic service",
+        "homepage": "https://example.com",
+        "iconUrl": null,
+        "deployment": "hosted",
+        "verified": true,
+        "returnUrl": "https://example.com/connected"
+      },
+      "itmoGrants": [],
+      "identity": true
+    },
+    "sealedBundle": null,
+    "identity": "eyJhbGciOiJFZERTQSIsImtpZCI6ImlkZW50aXR5LTEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3dpZGdldHMuYWxsbGV4ZXkuZGV2IiwiYXVkIjoic3ludGhldGljLXNlcnZpY2UiLCJzdWIiOiIxMDAwMDEiLCJpc3UiOjEwMDAwMSwibmFtZSI6ItCh0YLRg9C00LXQvdGCINCi0LXRgdGC0L7QstGL0LkiLCJjaWQiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDA2MDQiLCJqdGkiOiIwMDAwMDAwMC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDA4MDEiLCJpYXQiOjE3OTExOTA4MDAsImV4cCI6MTc5MTE5MTEwMH0.P-E2tzz8Wb7BvJmxluRm_5rRZq224jbK0V95GXVxThiHA9xLtTSstd-y-f9pKlDXk9CVdiCV5k-tM8EC__dCAg"
+  },
+  "error": null
+}
