@@ -2,6 +2,7 @@ package dev.alllexey.itmowidgets.feature.connections.data
 
 import dev.alllexey.itmoapi.itmoid.CallbackUrl
 import dev.alllexey.itmoapi.itmoid.ItmoIdClient
+import dev.alllexey.itmoapi.itmoid.ItmoIdConfiguration
 import dev.alllexey.itmoapi.itmoid.ItmoSessionLabel
 import dev.alllexey.itmoapi.itmoid.Pkce
 import dev.alllexey.itmoapi.itmoid.TokenSet
@@ -53,7 +54,8 @@ class ClientSignInImpl(
 
     override suspend fun begin(request: PairingRequest, oidcClients: List<String>, withIdentity: Boolean): ClientSignInAttempt {
         require(oidcClients.isNotEmpty()) { "No ITMO client to sign in to" }
-        val clients = oidcClients.map { id -> id to requireNotNull(oidc.client(id)) { "Unknown ITMO client" } }
+        // The demo session never gets here: Backend's open is refused in it first.
+        val clients = oidcClients.map { id -> id to checkNotNull(oidc.client(id)) { "No ITMO client to sign in to" } }
         val userAgent = if (label.isBrowserLike()) {
             ItmoSessionLabel.browserUserAgent(request.platform)
         } else {
@@ -62,25 +64,29 @@ class ClientSignInImpl(
         return Attempt(userAgent, withIdentity, clients)
     }
 
-    /** One authorize: the PKCE secrets and the callback of [client]. Holds secrets, so [toString] is redacted. */
-    private class Step(val oidcClient: String, val client: ItmoIdClient, silent: Boolean) {
-        private val verifier = Pkce.newVerifier()
-        private val state = Pkce.newState()
-        private val callback = client.configuration.let { CallbackUrl(it.redirectUri, it.issuer) }
-        val url: String = client.loginUrl(Pkce.challenge(verifier), state).let { if (silent) "$it&$SILENT" else it }
+    /**
+     * One authorize for [oidcClient]: its PKCE secrets, its [url] and the callback of [configuration]. Holds secrets,
+     * so [toString] is redacted.
+     */
+    private class Step(
+        val oidcClient: String,
+        configuration: ItmoIdConfiguration,
+        val url: String,
+        val verifier: String,
+        private val state: String,
+    ) {
+        private val callback = CallbackUrl(configuration.redirectUri, configuration.issuer)
 
         fun isCallback(url: String): Boolean = callback.isCallback(url)
 
         /** The code, or null for an error callback (`login_required` among them) or a wrong state. */
         fun code(url: String): String? = callback.extractCode(url, state)
 
-        suspend fun exchange(code: String): TokenSet = client.exchange(code, verifier)
-
         override fun toString(): String = "Step(redacted)"
     }
 
     /** A token minted for [oidcClient], kept to be sealed or logged out. */
-    private class Minted(val oidcClient: String, val client: ItmoIdClient, val tokens: TokenSet) {
+    private class Minted(val oidcClient: String, val tokens: TokenSet) {
         override fun toString(): String = "Minted(redacted)"
     }
 
@@ -90,7 +96,7 @@ class ClientSignInImpl(
         private val clients: List<Pair<String, ItmoIdClient>>,
     ) : ClientSignInAttempt {
         private var index = 0
-        private var step = clients.first().let { (id, client) -> Step(id, client, silent = false) }
+        private var step = step(0)
         private val minted = mutableListOf<Minted>()
         private var first: ClientItmoSession? = null
 
@@ -107,8 +113,26 @@ class ClientSignInImpl(
             if (lastStep) return result
             first = session
             index++
-            step = clients[index].let { (id, client) -> Step(id, client, silent = true) }
+            step = step(index)
             return ClientSignInResult.Next(step.url)
+        }
+
+        /** The authorize of the [at]-th client: the user's sign-in for the first, a silent one for the others. */
+        private fun step(at: Int): Step {
+            val (id, client) = clients[at]
+            val verifier = Pkce.newVerifier()
+            val state = Pkce.newState()
+            val url = client.loginUrl(Pkce.challenge(verifier), state).let { if (at > 0) "$it&$SILENT" else it }
+            return Step(id, client.configuration, url, verifier, state)
+        }
+
+        private fun client(oidcClient: String): ItmoIdClient = clients.first { it.first == oidcClient }.second
+
+        private suspend fun exchange(code: String): AppResult<TokenSet> =
+            io { client(step.oidcClient).exchange(code, step.verifier) }
+
+        private suspend fun logout(oidcClient: String, tokens: TokenSet) {
+            io { client(oidcClient).logout(tokens.refreshToken) }
         }
 
         override suspend fun abandon() {
@@ -118,26 +142,26 @@ class ClientSignInImpl(
         /** The user's sign-in for the first client. */
         private suspend fun signedIn(callbackUrl: String, identityCookie: String?): ClientSignInResult {
             val code = step.code(callbackUrl) ?: return ClientSignInResult.Failed(AppError.Unauthorized)
-            val tokens = when (val exchanged = io { step.exchange(code) }) {
+            val tokens = when (val exchanged = exchange(code)) {
                 is AppResult.Success -> exchanged.value
                 is AppResult.Failure -> return ClientSignInResult.Failed(exchanged.error)
             }
             val isu = IdTokenClaims.isu(tokens.idToken)
             if (isu == null || isu != users.getCurrentUser()?.isu) {
-                io { step.client.logout(tokens.refreshToken) }
+                logout(step.oidcClient, tokens)
                 return ClientSignInResult.OtherAccount
             }
             val sid = tokens.sessionId ?: return ClientSignInResult.Failed(AppError.Unauthorized)
             val identity = if (withIdentity) {
                 identity(identityCookie, sid) ?: run {
                     // The user granted the cookie: a pairing without it is not what they approved.
-                    io { step.client.logout(tokens.refreshToken) }
+                    logout(step.oidcClient, tokens)
                     return ClientSignInResult.IdentityMissing
                 }
             } else {
                 null
             }
-            minted += Minted(step.oidcClient, step.client, tokens)
+            minted += Minted(step.oidcClient, tokens)
             val listed = (logins.list() as? AppResult.Success)?.value as? ItmoLogins.Listed
             val expiresAt = listed?.sessions?.firstOrNull { it.sid == sid }?.expires ?: (clock.now() + SESSION_LIFETIME)
             return ClientSignInResult.Success(
@@ -157,14 +181,14 @@ class ClientSignInImpl(
         private suspend fun authorized(callbackUrl: String): ClientSignInResult {
             val session = checkNotNull(first) { "No first sign-in" }
             val code = step.code(callbackUrl) ?: return mismatch()
-            val tokens = when (val exchanged = io { step.exchange(code) }) {
+            val tokens = when (val exchanged = exchange(code)) {
                 is AppResult.Success -> exchanged.value
                 is AppResult.Failure -> {
                     logOutMinted()
                     return ClientSignInResult.Failed(exchanged.error)
                 }
             }
-            minted += Minted(step.oidcClient, step.client, tokens)
+            minted += Minted(step.oidcClient, tokens)
             val sid = tokens.sessionId ?: IdTokenClaims.sessionId(tokens.idToken)
             if (sid != session.sid || IdTokenClaims.isu(tokens.idToken) != session.isu) return mismatch()
             return ClientSignInResult.Success(
@@ -190,7 +214,7 @@ class ClientSignInImpl(
         private suspend fun logOutMinted() {
             val all = minted.toList()
             minted.clear()
-            all.forEach { io { it.client.logout(it.tokens.refreshToken) } }
+            all.forEach { logout(it.oidcClient, it.tokens) }
         }
 
         /** The cookie when its payload names [sid] and carries `exp`; null otherwise. */

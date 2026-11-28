@@ -70,6 +70,7 @@ class ClientSignInImplTest {
             MyItmoClient(configuration, storage = InMemoryTokenStorage(), engine = engine, clock = Clock.System),
             engine,
             Clock.System,
+            FakeDemoMode(),
         ),
         logins = FakeItmoLogins(),
         users = object : CurrentUserProvider {

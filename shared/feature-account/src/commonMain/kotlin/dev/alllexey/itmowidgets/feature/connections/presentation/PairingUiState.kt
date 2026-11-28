@@ -54,8 +54,8 @@ sealed interface PairingUiState {
 
     /**
      * The outcome. [returnUrl] is the client's https page after approving an App Link on this phone: [action] is then
-     * «Вернуться в …» ([ResultAction.RETURN_TO_CLIENT]), and while [openReturn] the host opens it once on its own and
-     * reports [PairingViewModel.onReturnOpened].
+     * «Вернуться в {app name}» ([ResultAction.RETURN_TO_CLIENT]), and while [openReturn] the host opens it once on its
+     * own and reports [PairingViewModel.onReturnOpened].
      */
     data class Result(
         val success: Boolean,
