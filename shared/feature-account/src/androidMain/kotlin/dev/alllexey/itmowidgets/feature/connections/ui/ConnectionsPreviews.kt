@@ -74,6 +74,12 @@ internal class ConnectionScreenMcpWithoutItmoPreview {
     fun ConnectionScreen() = Client(ConnectionsSamples.mcpWithoutItmo)
 }
 
+internal class ConnectionScreenAppIdentityPreview {
+    @Preview(name = "app-identity", heightDp = 1100)
+    @Composable
+    fun ConnectionScreen() = Client(ConnectionsSamples.appIdentity)
+}
+
 internal class ConnectionScreenWebPreview {
     @Preview(name = "web")
     @Composable
@@ -110,6 +116,12 @@ internal class PairingSheetConfirmRequiredPreview {
     fun PairingSheet() = ItmoPreview { PairingConfirm(ConnectionsSamples.pairConfirmRequired, close, {}, { _, _ -> }, {}) }
 }
 
+internal class PairingSheetConfirmVerifiedPreview {
+    @Preview(name = "confirm-verified", heightDp = 1300)
+    @Composable
+    fun PairingSheet() = ItmoPreview { PairingConfirm(ConnectionsSamples.pairConfirmVerified, close, {}, { _, _ -> }, {}) }
+}
+
 internal class PairingSheetConfirmWebPreview {
     @Preview(name = "confirm-web")
     @Composable
@@ -121,6 +133,14 @@ internal class PairingSheetDonePreview {
     @Composable
     fun PairingSheet() = ItmoPreview {
         Box(Modifier.padding(bottom = ItmoTheme.spacing.section)) { PairingResultContent(ConnectionsSamples.pairDone, close) {} }
+    }
+}
+
+internal class PairingSheetDoneReturnPreview {
+    @Preview(name = "done-return")
+    @Composable
+    fun PairingSheet() = ItmoPreview {
+        Box(Modifier.padding(bottom = ItmoTheme.spacing.section)) { PairingResultContent(ConnectionsSamples.pairDoneReturn, close) {} }
     }
 }
 

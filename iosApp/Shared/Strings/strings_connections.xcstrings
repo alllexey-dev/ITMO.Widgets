@@ -73,6 +73,30 @@
         }
       }
     },
+    "connection_identity_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переданы при подключении"
+          }
+        }
+      }
+    },
+    "connection_identity_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Имя и номер ИСУ"
+          }
+        }
+      }
+    },
     "connection_reminder_closed" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -1333,6 +1357,30 @@
         }
       }
     },
+    "grant_refresh_dev_text" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Расписание, зачётка и заявки на dev.my.itmo.su от вашего имени"
+          }
+        }
+      }
+    },
+    "grant_refresh_dev_title" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в тестовый My ITMO"
+          }
+        }
+      }
+    },
     "grant_refresh_text" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -1837,6 +1885,18 @@
         }
       }
     },
+    "pair_return" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуться в %1$@"
+          }
+        }
+      }
+    },
     "pair_scan" : {
       "comment" : "Generated from strings_connections.xml",
       "extractionState" : "manual",
@@ -1881,6 +1941,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нужно подключение к серверу ITMO.Widgets"
+          }
+        }
+      }
+    },
+    "pair_session_mismatch" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось получить все входы в ИТМО для устройства. Войдите заново"
           }
         }
       }
@@ -1965,6 +2037,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обновите приложение, чтобы подключить это устройство"
+          }
+        }
+      }
+    },
+    "pair_verified" : {
+      "comment" : "Generated from strings_connections.xml",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверено ITMO.Widgets"
           }
         }
       }

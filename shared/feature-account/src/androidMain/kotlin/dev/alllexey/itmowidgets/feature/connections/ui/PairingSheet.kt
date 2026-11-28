@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.connections.ui
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,9 +22,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.alllexey.itmowidgets.core.text.asString
 import dev.alllexey.itmowidgets.designsystem.components.buttons.ProgressButton
@@ -58,18 +61,34 @@ import org.jetbrains.compose.resources.painterResource
 
 /**
  * «Подключить устройство» (UX spec section 5): [onScan] starts the platform scanner, [unlock] is the screen lock,
- * [onClose] closes the sheet. The ITMO.ID page of an agent's or MCP server's sign-in covers the screen.
+ * [onClose] closes the sheet. The ITMO.ID page of an agent's or MCP server's sign-in covers the screen. A result with
+ * the client's `returnUrl` opens it once with `ACTION_VIEW` (the default browser or the client's app), and its button
+ * opens it again and closes the sheet.
  */
 @Composable
 fun PairingSheetRoute(viewModel: PairingViewModel, unlock: DeviceUnlock, onScan: () -> Unit, onClose: () -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val close = SheetClose(text(CoreStrings.common_close), onClose)
+    val openReturn: (String) -> Unit = { url ->
+        val view = Intent(Intent.ACTION_VIEW, url.toUri()).addCategory(Intent.CATEGORY_BROWSABLE)
+        runCatching { context.startActivity(view) }
+    }
+    (state as? PairingUiState.Result)?.let { result ->
+        LaunchedEffect(result.openReturn) {
+            if (result.openReturn) {
+                result.returnUrl?.let(openReturn)
+                viewModel.onReturnOpened()
+            }
+        }
+    }
     when (val current = state) {
         is PairingUiState.SigningIn -> ClientSignInPage(
             url = current.url,
             userAgent = current.userAgent,
             title = current.title.asString(),
             readIdentity = current.readIdentity,
+            busy = current.busy,
             isCallback = viewModel::isSignInCallback,
             onCallback = viewModel::onSignInCallback,
             onClose = viewModel::onSignInCancelled,
@@ -96,7 +115,14 @@ fun PairingSheetRoute(viewModel: PairingViewModel, unlock: DeviceUnlock, onScan:
         is PairingUiState.Input -> PairingInput(current, close, viewModel::onTextChanged, viewModel::submit, onScan)
         PairingUiState.Opening, PairingUiState.Sending -> Progress(close)
         is PairingUiState.Result -> PairingResultContent(current, close) {
-            if (current.next == ResultAction.CLOSE) onClose() else viewModel.onResultAction()
+            when (current.next) {
+                ResultAction.CLOSE -> onClose()
+                ResultAction.RETURN_TO_CLIENT -> {
+                    current.returnUrl?.let(openReturn)
+                    onClose()
+                }
+                else -> viewModel.onResultAction()
+            }
         }
         is PairingUiState.SigningIn -> Progress(close)
         is PairingUiState.Confirm -> Unit
@@ -179,7 +205,11 @@ internal fun PairingConfirm(
                 IconTile(state.icon.painter(), state.icon.tone())
                 Column(Modifier.weight(1f)) {
                     Text(state.name.asString(), color = ItmoTheme.colorScheme.onSurface, style = ItmoTheme.typography.titleMedium)
-                    Text(state.subtitle.asString(), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+                    if (state.verified) {
+                        Verified(state.subtitle.asString())
+                    } else {
+                        Text(state.subtitle.asString(), color = ItmoTheme.colorScheme.onSurfaceVariant, style = ItmoTheme.typography.bodyMedium)
+                    }
                 }
             }
         }
@@ -214,6 +244,22 @@ internal fun PairingConfirm(
         ListGroupNote(state.note.asString())
     }
     state.ask?.let { ConfirmAskDialog(it, onConfirmGrant, onDismissGrant) }
+}
+
+/** «Проверено ITMO.Widgets» with a check mark, in the primary colour: a confidential client proved itself. */
+@Composable
+internal fun Verified(text: String, modifier: Modifier = Modifier) = Row(
+    modifier.testTag(PairingTestTags.VERIFIED),
+    horizontalArrangement = Arrangement.spacedBy(VerifiedGap),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    Icon(
+        painterResource(Res.drawable.ic_check_circle),
+        contentDescription = null,
+        modifier = Modifier.size(VerifiedIcon),
+        tint = ItmoTheme.colorScheme.primary,
+    )
+    Text(text, color = ItmoTheme.colorScheme.primary, style = ItmoTheme.typography.bodyMedium)
 }
 
 /**
@@ -278,6 +324,8 @@ internal fun PairingResultContent(state: PairingUiState.Result, close: SheetClos
 
 private val ProgressHeight = 160.dp
 private val GrantLineGap = 2.dp
+private val VerifiedGap = 4.dp
+private val VerifiedIcon = 16.dp
 
 /** Test tags of the pairing sheet. */
 object PairingTestTags {
@@ -289,6 +337,7 @@ object PairingTestTags {
     const val RESULT = "pairing_result"
     const val SIGN_IN = "pairing_sign_in"
     const val GRANTS = "pairing_grants"
+    const val VERIFIED = "pairing_verified"
 
     fun grant(id: String): String = "pairing_grant:$id"
 }

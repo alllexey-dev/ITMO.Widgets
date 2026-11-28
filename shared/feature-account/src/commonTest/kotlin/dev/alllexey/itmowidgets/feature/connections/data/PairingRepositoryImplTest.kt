@@ -31,6 +31,7 @@ import dev.alllexey.itmowidgets.feature.connections.domain.PairingVectors
 import kotlin.io.encoding.Base64
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -160,6 +161,33 @@ class PairingRepositoryImplTest {
         val sent = api.approvals.single()
         assertEquals(listOf("widgets:reviews:read", ItmoGrants.REFRESH), sent.granted)
         assertNull(sent.scopes)
+    }
+
+    @Test
+    fun aConfidentialClientIsVerifiedAndKeepsOnlyAnHttpsReturnPage() = runTest(dispatcher) {
+        val app = ClientAppInfo("itmo-instapick", "ITMO Instapick", null, null, ClientDeployment.HOSTED, true, "https://instapick.example/paired")
+        api.preview = protocol2(REFRESH).copy(client = ConnectionClient.APP, app = app)
+
+        val opened = assertIs<PairingResult.Success<PairingRequest>>(repository().open(link)).value
+        assertTrue(opened.verified)
+        assertEquals("https://instapick.example/paired", opened.returnUrl)
+        assertEquals("ITMO Instapick", opened.displayName)
+
+        for (returnUrl in listOf("http://instapick.example/paired", "instapick://paired", " ")) {
+            api.preview = protocol2(REFRESH).copy(app = app.copy(verified = false, returnUrl = returnUrl))
+            val public = assertIs<PairingResult.Success<PairingRequest>>(repository().open(link)).value
+            assertFalse(public.verified)
+            assertNull(public.returnUrl, returnUrl)
+        }
+    }
+
+    @Test
+    fun theDevStandsRefreshGrantIsKnownEvenWhenRequired() = runTest(dispatcher) {
+        api.preview = protocol2(PairingGrant(ItmoGrants.REFRESH_DEV, true, null, null, null, null))
+
+        val opened = assertIs<PairingResult.Success<PairingRequest>>(repository().open(link)).value
+
+        assertEquals(listOf(ItmoGrants.REFRESH_DEV), opened.grants.map { it.id })
     }
 
     private fun protocol2(vararg grants: PairingGrant) = preview(commitment).copy(

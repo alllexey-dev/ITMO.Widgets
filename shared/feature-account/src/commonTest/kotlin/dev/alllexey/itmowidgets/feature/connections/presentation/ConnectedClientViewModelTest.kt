@@ -241,4 +241,57 @@ class ConnectedClientViewModelTest {
         assertTrue("revoke ${Samples.agentId}" in devices.calls)
         assertTrue(model.uiState.value.closed)
     }
+
+    @Test
+    fun aVerifiedAppClientWithIdentityAndNoScopesShowsOnlyTheIdentityRow() = runTest(main.dispatcher) {
+        val app = Samples.agent(itmoGrants = listOf(ItmoGrants.REFRESH_DEV)).copy(
+            client = ClientType.OTHER,
+            name = "instapick",
+            scopes = Samples.agent().scopes.map { it.copy(granted = false) },
+            appName = "ITMO Instapick",
+            verified = true,
+            identity = true,
+        )
+        devices.next = Devices(listOf(app), emptyList())
+
+        val state = viewModel().also { advanceUntilIdle() }.uiState.value
+
+        assertEquals(UiText.Dynamic("ITMO Instapick"), state.title)
+        assertTrue(state.verified)
+        assertEquals(UiText.Res(AccountStrings.pair_verified), state.subtitle)
+        assertTrue(state.identity)
+        assertTrue(state.scopes.isEmpty())
+        assertTrue(state.showsAccess)
+        // Any ITMO refresh grant is an ITMO sign-in of its own.
+        assertNotNull(state.signIn)
+        assertTrue(state.takeBack)
+    }
+
+    @Test
+    fun noScopesAndNoIdentityHideAccess() = runTest(main.dispatcher) {
+        devices.next = Devices(
+            listOf(Samples.agent().let { it.copy(scopes = it.scopes.map { scope -> scope.copy(granted = false) }) }),
+            emptyList(),
+        )
+
+        val state = viewModel().also { advanceUntilIdle() }.uiState.value
+
+        assertFalse(state.identity)
+        assertTrue(state.scopes.isEmpty())
+        assertFalse(state.showsAccess)
+        assertFalse(state.verified)
+    }
+
+    @Test
+    fun anAppClientWithoutItmoGrantsHasNoItmoSignIn() = runTest(main.dispatcher) {
+        devices.next = Devices(
+            listOf(Samples.agent(itmoGrants = emptyList(), signedIn = false).copy(client = ClientType.OTHER, identity = true)),
+            emptyList(),
+        )
+
+        val state = viewModel().also { advanceUntilIdle() }.uiState.value
+
+        assertNull(state.signIn)
+        assertTrue(state.showsAccess)
+    }
 }

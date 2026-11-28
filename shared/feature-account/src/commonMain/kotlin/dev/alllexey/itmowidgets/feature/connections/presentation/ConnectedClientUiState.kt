@@ -7,7 +7,8 @@ import dev.alllexey.itmowidgets.core.text.UiText
  * says so; [closed] is set once this screen revoked it and the host leaves. [signIn] and [scopes] are an agent's
  * or an MCP server's; the web has neither. [fullItmoAccess] shows «Полный доступ к ITMO.ID» for a client holding
  * `itmo:sso`; [takeBack] shows «Забрать доступ к ИТМО» for a client with an open ITMO sign-in. [confirm] is answered
- * with [ConnectedClientViewModel.confirm].
+ * with [ConnectedClientViewModel.confirm]. [verified] is a confidential client: [subtitle] is then «Проверено
+ * ITMO.Widgets». [identity] adds the row «Имя и номер ИСУ» to «Доступ», which shows while it or [scopes] has a row.
  */
 data class ConnectedClientUiState(
     val loading: Boolean = true,
@@ -19,6 +20,8 @@ data class ConnectedClientUiState(
     val fullItmoAccess: Boolean = false,
     val takeBack: Boolean = false,
     val scopes: List<ScopeSwitch> = emptyList(),
+    val identity: Boolean = false,
+    val verified: Boolean = false,
     val facts: List<Fact> = emptyList(),
     val revoke: UiText = UiText.Dynamic(""),
     val confirm: ConfirmAsk? = null,
@@ -26,7 +29,10 @@ data class ConnectedClientUiState(
     val busy: Boolean = false,
     val message: UiText? = null,
     val closed: Boolean = false,
-)
+) {
+    /** «Доступ»: the scope switches and the identity row; hidden for a client with neither. */
+    val showsAccess: Boolean get() = scopes.isNotEmpty() || identity
+}
 
 /**
  * «Вход в ИТМО»: the status row in [tone] and the action row, absent while renewal is not due. [signedIn] is false for

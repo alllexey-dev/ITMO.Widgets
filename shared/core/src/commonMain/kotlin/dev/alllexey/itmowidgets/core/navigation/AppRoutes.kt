@@ -153,14 +153,15 @@ object AppRoutes {
     /**
      * «Подключить устройство»: pairs an agent, an MCP server or a browser; refused in the demo session. [link] is what
      * the sheet reads as a scan (a pairing App Link, `PairLink`), whose fragment holds the client's key, so [toString]
-     * hides it.
+     * hides it. [appLink] is a link that came as an App Link (the client opened it on this phone), not a scan: after
+     * the approval the client's registry `returnUrl` opens (ADR 0040).
      */
     @Serializable
-    data class Pairing(val link: String? = null) : AppRoute {
+    data class Pairing(val link: String? = null, val appLink: Boolean = false) : AppRoute {
         override val kind get() = RouteKind.SHEET
         override val sheetPolicy get() = SheetPolicy(textInput = true)
 
-        override fun toString(): String = "Pairing(link=${if (link == null) "null" else "redacted"})"
+        override fun toString(): String = "Pairing(link=${if (link == null) "null" else "redacted"}, appLink=$appLink)"
     }
 
     /** «Устройства»: app installs, connected clients and other ITMO.ID sessions; refused in the demo session. */

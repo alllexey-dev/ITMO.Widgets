@@ -65,8 +65,8 @@ object EntryRouteParser {
         is AppLink.SportLesson -> EntryRoute(AppTab.SPORT, request = TabRequest.SportLesson(link.lessonId))
         is AppLink.PredictedSportLesson ->
             EntryRoute(AppTab.SPORT, request = TabRequest.SportLesson(link.prototypeLessonId, predicted = true))
-        // The pairing sheet reads the link as a scan.
-        is AppLink.Pair -> EntryRoute(AppTab.ME, overlay = AppRoutes.Pairing(link = link.link.toUrl()))
+        // The pairing sheet reads the link as one the client opened on this phone.
+        is AppLink.Pair -> EntryRoute(AppTab.ME, overlay = AppRoutes.Pairing(link = link.link.toUrl(), appLink = true))
         AppLink.Malformed -> EntryRoute(AppTab.HOME, alert = AppRoutes.LinkUnavailable)
         null -> null
     }

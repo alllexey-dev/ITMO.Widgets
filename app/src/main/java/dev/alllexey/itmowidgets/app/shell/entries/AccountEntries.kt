@@ -101,7 +101,7 @@ import org.koin.core.parameter.parametersOf
 internal fun EntryRegistry.Builder.accountEntries(debugTools: Boolean) {
     entry<AppRoutes.Auth> { _, _ -> AuthEntry() }
     entry<AppRoutes.Onboarding> { _, _ -> OnboardingEntry() }
-    entry<AppRoutes.Pairing> { key, navigator -> PairingEntry(key.link, onClose = { navigator.close(key) }) }
+    entry<AppRoutes.Pairing> { key, navigator -> PairingEntry(key.link, key.appLink, onClose = { navigator.close(key) }) }
     entry<AppRoutes.Devices> { key, navigator ->
         val viewModel: DevicesViewModel = entryViewModel()
         DevicesRoute(
@@ -225,10 +225,10 @@ private fun OnboardingEntry() {
 
 /**
  * «Подключить устройство»: Google's code scanner runs in Play services, the screen lock is `BiometricPrompt` on this
- * activity. A [link] from an App Link or a client's renewal is read once as a scan, not again after recreation.
+ * activity. A [link] from an App Link ([appLink]) or a client's renewal scan is read once, not again after recreation.
  */
 @Composable
-private fun PairingEntry(link: String?, onClose: () -> Unit) {
+private fun PairingEntry(link: String?, appLink: Boolean, onClose: () -> Unit) {
     val context = LocalContext.current
     val unlock = rememberDeviceUnlock()
     val viewModel: PairingViewModel = entryViewModel()
@@ -236,7 +236,7 @@ private fun PairingEntry(link: String?, onClose: () -> Unit) {
     LaunchedEffect(link) {
         if (link != null && !linkRead) {
             linkRead = true
-            viewModel.onScanned(link)
+            if (appLink) viewModel.onAppLink(link) else viewModel.onScanned(link)
         }
     }
     PairingSheetRoute(

@@ -154,15 +154,18 @@ class EntryRouteParserTest {
         val link = "https://dev.widgets.alllexey.dev/pair#1.ABCD2345." +
             "QxDul9iMwfCIpVdsd6sM9cOseX89lROcbIS1QpxZZio.AAECAwQFBgcICQoLDA0ODw"
 
-        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.Pairing(link = link)), view(link))
+        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.Pairing(link = link, appLink = true)), view(link))
         // The alpha's `v1.` link opens the sheet with the canonical link.
-        assertEquals(EntryRoute(AppTab.ME, overlay = AppRoutes.Pairing(link = link)), view(link.replace("#1.", "#v1.")))
+        assertEquals(
+            EntryRoute(AppTab.ME, overlay = AppRoutes.Pairing(link = link, appLink = true)),
+            view(link.replace("#1.", "#v1.")),
+        )
         assertEquals(
             EntryRoute(AppTab.HOME, alert = AppRoutes.LinkUnavailable),
             view("https://dev.widgets.alllexey.dev/pair#1.ABCD2345")
         )
         // The route may reach a crash report; the client's key must not.
-        assertEquals("Pairing(link=redacted)", AppRoutes.Pairing(link = link).toString())
+        assertEquals("Pairing(link=redacted, appLink=false)", AppRoutes.Pairing(link = link).toString())
     }
 
     @Test

@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.core.demo.DemoMode
 import dev.alllexey.itmowidgets.core.result.AppError
 import dev.alllexey.itmowidgets.core.result.AppResult
 import dev.alllexey.itmowidgets.core.services.BackendGate
+import dev.alllexey.itmowidgets.core.url.HttpsNavigationPolicy
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientType
 import dev.alllexey.itmowidgets.feature.connections.domain.Grant
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
@@ -28,7 +29,8 @@ import kotlin.uuid.Uuid
  * Pairing through Core 2.0. A client's key never comes from Backend: an opened pairing is shown only when Backend's
  * commitment equals the one of the scanned [PairLink]. Backend's 409 (five live connections of the type) is
  * [PairingError.TooManyDevices]; a kind or client type this version does not know is [PairingError.Unsupported], and
- * so is a protocol-2 pairing that requires an ITMO grant this version cannot mint (ADR 0040).
+ * so is a protocol-2 pairing that requires an ITMO grant this version cannot mint (ADR 0040). The registry's
+ * `returnUrl` is kept only when it is https.
  */
 class PairingRepositoryImpl(
     private val backend: BackendGate,
@@ -77,6 +79,8 @@ class PairingRepositoryImpl(
                 clientId = preview.app?.id,
                 appName = preview.app?.name?.trim()?.ifEmpty { null },
                 grants = if (protocol == PROTOCOL) grants else emptyList(),
+                verified = preview.app?.verified == true,
+                returnUrl = preview.app?.returnUrl?.trim()?.takeIf(HttpsNavigationPolicy::isNavigable),
             ),
         )
     }

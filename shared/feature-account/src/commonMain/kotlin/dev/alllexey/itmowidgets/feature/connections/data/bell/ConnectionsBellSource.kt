@@ -84,10 +84,10 @@ class ConnectionsBellSource(
     )
 
     private fun title(connection: Connection, alert: SignInAlert): UiText = when (alert) {
-        SignInAlert.Closed -> UiText.Res(AccountStrings.connection_reminder_closed, listOf(connection.name))
+        SignInAlert.Closed -> UiText.Res(AccountStrings.connection_reminder_closed, listOf(connection.displayName))
         is SignInAlert.Ending -> UiText.Res(
             AccountStrings.connection_reminder_title,
-            listOf(connection.name, alert.at.toLocalDateTime(time.timeZone).date.format(DateTexts.DAY_MONTH)),
+            listOf(connection.displayName, alert.at.toLocalDateTime(time.timeZone).date.format(DateTexts.DAY_MONTH)),
         )
     }
 

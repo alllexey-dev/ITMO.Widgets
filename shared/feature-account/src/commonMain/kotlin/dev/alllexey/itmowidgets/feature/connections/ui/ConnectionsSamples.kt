@@ -137,6 +137,25 @@ object ConnectionsSamples {
         facts = mcpFullAccess.facts.take(2),
     )
 
+    /**
+     * A confidential `app` client granted `identity` and ITMO sign-ins but no Widgets scope: «Проверено ITMO.Widgets»,
+     * the identity row alone in «Доступ».
+     */
+    val appIdentity = agent.copy(
+        title = t("ITMO Instapick"),
+        subtitle = res(AccountStrings.pair_verified),
+        verified = true,
+        icon = DeviceIcon.COMPUTER,
+        signIn = SignInStatus(SignInTone.OK, t("До 20 января"), null, null),
+        takeBack = true,
+        scopes = emptyList(),
+        identity = true,
+        facts = listOf(
+            Fact(res(AccountStrings.connection_fact_connected), t("22 октября")),
+            Fact(res(AccountStrings.devices_fact_activity), t("2 мин назад")),
+        ),
+    )
+
     val web = agent.copy(
         title = t("Chrome, macOS"),
         subtitle = res(AccountStrings.devices_client_web),
@@ -249,6 +268,63 @@ object ConnectionsSamples {
         ),
     )
 
+    /**
+     * A protocol-2 card of a confidential hosted client: «Проверено ITMO.Widgets», Backend's `identity` among the
+     * Widgets grants, the refresh grants of My ITMO and of its development stand.
+     */
+    val pairConfirmVerified = PairingUiState.Confirm(
+        icon = DeviceIcon.COMPUTER,
+        name = t("ITMO Instapick"),
+        subtitle = res(AccountStrings.pair_verified),
+        verified = true,
+        caution = true,
+        scopes = emptyList(),
+        note = res(AccountStrings.pair_note_client, "ITMO Instapick", "ITMO Instapick"),
+        primary = res(AccountStrings.pair_continue),
+        grants = listOf(
+            GrantGroup(
+                res(AccountStrings.pair_group_widgets),
+                listOf(
+                    GrantSwitch(
+                        "identity",
+                        t("Имя и номер ИСУ"),
+                        t("Ваши ФИО и номер ИСУ, один раз при подключении"),
+                        res(AccountStrings.grant_purpose, "чтобы подписать ваш профиль"),
+                        null,
+                        null,
+                        true,
+                        true,
+                    ),
+                ),
+            ),
+            GrantGroup(
+                res(AccountStrings.pair_group_itmo),
+                listOf(
+                    GrantSwitch(
+                        "itmo:refresh:student-personal-cabinet",
+                        res(AccountStrings.grant_refresh_title),
+                        res(AccountStrings.grant_refresh_text),
+                        res(AccountStrings.grant_purpose, "чтобы подбирать курсы по вашему учебному плану"),
+                        null,
+                        res(AccountStrings.grant_required),
+                        true,
+                        false,
+                    ),
+                    GrantSwitch(
+                        "itmo:refresh:student-personal-cabinet-dev",
+                        res(AccountStrings.grant_refresh_dev_title),
+                        res(AccountStrings.grant_refresh_dev_text),
+                        res(AccountStrings.grant_purpose, "чтобы проверять подбор на тестовом My ITMO"),
+                        null,
+                        null,
+                        true,
+                        true,
+                    ),
+                ),
+            ),
+        ),
+    )
+
     val pairConfirmWeb = PairingUiState.Confirm(
         icon = DeviceIcon.WEB,
         name = t("Chrome, macOS"),
@@ -265,6 +341,16 @@ object ConnectionsSamples {
         text = res(AccountStrings.pair_done_text, "20 января"),
         action = res(AccountStrings.pair_done_action),
         next = ResultAction.CLOSE,
+    )
+
+    /** Done after approving the client's own App Link: back to it. */
+    val pairDoneReturn = PairingUiState.Result(
+        success = true,
+        title = res(AccountStrings.pair_done, "ITMO Instapick"),
+        text = res(AccountStrings.pair_done_text, "20 января"),
+        action = res(AccountStrings.pair_return, "ITMO Instapick"),
+        next = ResultAction.RETURN_TO_CLIENT,
+        returnUrl = "https://instapick.example/paired",
     )
 
     val pairOtherAccount = PairingUiState.Result(
