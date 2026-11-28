@@ -131,10 +131,19 @@ internal fun LazyListScope.scoresTab(scores: SubjectScores, actions: RecordbookS
     }
 }
 
-/** The points over `из 100`, the grade pill and its source, the scale, the next step; the connected sheet under them. */
+/**
+ * The points over `из 100`, the grade pill and its source, the scale, the next step; the connected sheet under them.
+ * With a sheet a tap anywhere on the card changes the total, like its menu's `Изменить итог`.
+ */
 @Composable
 private fun Hero(hero: SubjectHero, sheet: SubjectSheetLine?, actions: RecordbookSubjectActions) {
-    ItmoCard(Modifier.testTag(SubjectTestTags.HERO), tone = Tone.Primary, hero = true) {
+    ItmoCard(
+        Modifier.testTag(SubjectTestTags.HERO),
+        tone = Tone.Primary,
+        hero = true,
+        onClick = sheet?.let { { actions.onOpenSheetScores(it.changeTotal) } },
+        onClickLabel = sheet?.let { stringResource(Res.string.sheet_scores_change_total) },
+    ) {
         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(ItmoTheme.spacing.compact)) {
             Text(
                 hero.points ?: stringResource(Res.string.recordbook_score_pending),
