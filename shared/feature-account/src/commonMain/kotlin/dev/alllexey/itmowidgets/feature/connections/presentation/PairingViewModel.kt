@@ -20,6 +20,7 @@ import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
 import dev.alllexey.itmowidgets.feature.connections.domain.DevicesRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.Grant
+import dev.alllexey.itmowidgets.feature.connections.domain.IDENTITY_GRANT
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoGrants
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoLoginsRepository
 import dev.alllexey.itmowidgets.feature.connections.domain.ItmoSessionRef
@@ -370,23 +371,29 @@ class PairingViewModel(
         )
     }
 
-    /** The grants on the card: all of a new connection's; on a renewal only the ITMO grants not held yet. */
+    /**
+     * The grants on the card: all of a new connection's; on a renewal only the ITMO grants and `identity` not held yet
+     * (Backend's preview says `granted` for both).
+     */
     private fun shownGrants(opened: PairingRequest): List<Grant> = when (opened.kind) {
         PairingKind.CONNECT -> opened.grants
-        PairingKind.RENEW -> opened.grants.filter { it.itmo && it.held == false }
+        PairingKind.RENEW -> opened.grants.filter { it.renewable && it.held == false }
     }
 
     /**
      * What the approval sends, in request order: every required grant, the switches that are on and, on a renewal,
-     * the ITMO grants the connection already holds; never an ITMO grant this version cannot mint.
+     * the ITMO grants and `identity` the connection already holds; never an ITMO grant this version cannot mint.
      */
     private fun granted(opened: PairingRequest): List<String> = opened.grants.filter { grant ->
         grant.mintable && when {
             grant.id in choice -> choice[grant.id] == true
             grant.required -> true
-            else -> opened.kind == PairingKind.RENEW && grant.itmo && grant.held == true
+            else -> opened.kind == PairingKind.RENEW && grant.renewable && grant.held == true
         }
     }.map { it.id }
+
+    /** What a renewal may request: ITMO grants and `identity`. */
+    private val Grant.renewable: Boolean get() = itmo || id == IDENTITY_GRANT
 
     /** Protocol 1 signs in for every agent and MCP server; protocol 2 only when an ITMO grant is chosen. */
     private fun signsIn(opened: PairingRequest): Boolean =

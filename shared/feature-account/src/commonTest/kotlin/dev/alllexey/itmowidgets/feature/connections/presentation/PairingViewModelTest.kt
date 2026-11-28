@@ -11,6 +11,7 @@ import dev.alllexey.itmowidgets.feature.connections.domain.ClientSignInResult
 import dev.alllexey.itmowidgets.feature.connections.domain.ClientType
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlock
 import dev.alllexey.itmowidgets.feature.connections.domain.DeviceUnlockResult
+import dev.alllexey.itmowidgets.feature.connections.domain.Grant
 import dev.alllexey.itmowidgets.feature.connections.domain.Devices
 import dev.alllexey.itmowidgets.feature.connections.domain.HpkeSender
 import dev.alllexey.itmowidgets.feature.connections.domain.IDENTITY_GRANT
@@ -465,6 +466,35 @@ class PairingViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(ItmoGrants.REFRESH), pairing.approvals.single().granted)
+    }
+
+    @Test
+    fun aRenewalThatAsksForIdentityShowsItAndKeepsAHeldOne() = runTest(main.dispatcher) {
+        val identity = Grant(IDENTITY_GRANT, false, "Имя и номер ИСУ", "Ваши ФИО и номер ИСУ", null, false)
+        val model = openGrants(
+            Samples.mcpRequest(
+                kind = PairingKind.RENEW,
+                connectionId = Samples.agentId,
+                grants = listOf(identity, Samples.grant(ItmoGrants.REFRESH, held = true)),
+            ),
+        )
+        val confirm = assertIs<PairingUiState.Confirm>(model.uiState.value)
+        assertFalse(confirm.renewal)
+        assertEquals(listOf(listOf(IDENTITY_GRANT)), confirm.grants.map { group -> group.grants.map { it.id } })
+        model.proceed(UNLOCKED)
+        advanceUntilIdle()
+        model.onSignInCallback(FakeClientSignIn.CALLBACK, null)
+        advanceUntilIdle()
+        assertEquals(listOf(IDENTITY_GRANT, ItmoGrants.REFRESH), pairing.approvals.single().granted)
+
+        val held = openGrants(
+            Samples.mcpRequest(
+                kind = PairingKind.RENEW,
+                connectionId = Samples.agentId,
+                grants = listOf(identity.copy(held = true), Samples.grant(ItmoGrants.REFRESH, held = true)),
+            ),
+        )
+        assertTrue(assertIs<PairingUiState.Confirm>(held.uiState.value).renewal)
     }
 
     @Test

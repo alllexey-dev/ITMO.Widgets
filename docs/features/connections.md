@@ -98,7 +98,8 @@ requires an ITMO grant this version cannot mint, is «Обновите прил�
    (`itmo:*`), see [Grants](#grants). Approving needs a Widgets grant or `identity` on a new connection. A confidential
    client (`app.verified`) shows «Проверено ITMO.Widgets» with a check mark under its name instead of its product
    line; an `app` client is named by its registry entry. A `RENEW` shows a card only when a requested
-   ITMO grant is not held yet (`granted: false`), with only those; the held ones go along without a switch.
+   ITMO grant or `identity` is not held yet (`granted: false`), with only those; the held ones go along without a
+   switch.
 3. Screen lock (`DeviceUnlock`: `BiometricPrompt`, LocalAuthentication). iOS answers once the app is active again: a
    WKWebView that comes up while the Face ID UI still holds the app inactive never loads or takes a touch. The page
    focuses its e-mail field at once; the pairing sheet stays under it, so its `.content` height must not count the
