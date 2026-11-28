@@ -5,7 +5,8 @@ import UIKit
 /// A connected client (UX spec section 4) over the shared `ConnectedClientViewModel`, pushed from the devices screen and
 /// from its reminder (`AppRoutes.Connection`): its ITMO sign-in with renewal, access as switches (widening asks for the
 /// screen lock), the facts and the danger row, which asks first and leaves the screen once revoked. A client holding
-/// `itmo:sso` has the `grant_sso_title` row; an open sign-in has `connection_take_back_row`, which asks first too.
+/// `itmo:sso` has the `grant_sso_title` row; an open sign-in has `connection_take_back_row`, which asks first too. A
+/// client granted `identity` has the `connection_identity_title` row in access, which shows only while it has a row.
 /// Renewal shows the command for the client, then scans the client's QR and continues in the pairing sheet
 /// (`AppRoutes.Pairing`).
 struct ConnectedClientScreen: View {
@@ -86,14 +87,14 @@ struct ConnectedClientScreen: View {
         guard scanAfterRenew else { return }
         scanAfterRenew = false
         PairingScanner.requestAccess { granted in
-            if granted { scanning = true } else { router.open(AppRoutes.Pairing(link: nil)) }
+            if granted { scanning = true } else { router.open(AppRoutes.Pairing(link: nil, appLink: false)) }
         }
     }
 
     private func openScanned() {
         guard let link = scanned else { return }
         scanned = nil
-        router.open(AppRoutes.Pairing(link: link.isEmpty ? nil : link))
+        router.open(AppRoutes.Pairing(link: link.isEmpty ? nil : link, appLink: false))
     }
 }
 
@@ -132,9 +133,18 @@ struct ConnectedClientContent: View {
                     ItmoSectionHeader(title: AppStrings.string("connection_section_sign_in"))
                     signInGroup(signIn)
                 }
-                if !state.scopes.isEmpty {
+                if state.showsAccess {
                     ItmoSectionHeader(title: AppStrings.string("connection_section_access"))
                     ItmoListGroup(inset: ItmoKit.padding) {
+                        if state.identity {
+                            ItmoRow(
+                                title: AppStrings.string("connection_identity_title"),
+                                subtitle: AppStrings.string("connection_identity_text"),
+                                symbol: .person,
+                                tone: .neutral
+                            )
+                            .accessibilityIdentifier("client.identity")
+                        }
                         ForEach(Array(state.scopes.enumerated()), id: \.offset) { _, scope in
                             ItmoSwitchRow(
                                 title: scope.title.resolved,

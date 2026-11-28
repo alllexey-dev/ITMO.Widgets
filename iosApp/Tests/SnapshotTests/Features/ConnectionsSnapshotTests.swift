@@ -88,10 +88,47 @@ final class ConnectionsSnapshotTests: XCTestCase {
         )
     }
 
+    /// A confidential `app` client granted `identity` and ITMO sign-ins but no Widgets scope: the identity row alone.
+    func testAppWithIdentity() {
+        let state = ConnectedClientUiState(
+            loading: false,
+            gone: false,
+            title: dynamic("ITMO Instapick"),
+            subtitle: res("pair_verified"),
+            icon: .computer,
+            signIn: SignInStatus(
+                tone: .ok, title: res("connection_sign_in_until", ["20 января"]), text: nil, action: nil, signedIn: true
+            ),
+            fullItmoAccess: false,
+            takeBack: true,
+            scopes: [],
+            identity: true,
+            verified: true,
+            facts: [
+                Fact(title: res("connection_fact_connected"), value: dynamic("22 октября")),
+                Fact(title: res("devices_fact_activity"), value: res("devices_activity_minutes", [2])),
+            ],
+            revoke: res("connection_revoke"),
+            confirm: nil,
+            renew: nil,
+            busy: false,
+            message: nil,
+            closed: false
+        )
+        assertPushed(
+            ConnectedClientContent(state: state),
+            title: nil,
+            named: "app-identity",
+            appearances: [.light, .dark],
+            height: 1000,
+            header: (AppStrings.string("pair_verified"), "ITMO Instapick")
+        )
+    }
+
     func testGoneClient() {
         let state = ConnectedClientUiState(
             loading: false, gone: true, title: dynamic("nas"), subtitle: nil, icon: .agent, signIn: nil,
-            fullItmoAccess: false, takeBack: false, scopes: [],
+            fullItmoAccess: false, takeBack: false, scopes: [], identity: false, verified: false,
             facts: [], revoke: res("connection_revoke"), confirm: nil, renew: nil, busy: false, message: nil,
             closed: false
         )
@@ -131,7 +168,8 @@ final class ConnectionsSnapshotTests: XCTestCase {
             busy: false,
             grants: [],
             ask: nil,
-            ready: true
+            ready: true,
+            verified: false
         )
         assertPairing(state, named: "pair-confirm", height: 1000)
     }
@@ -171,9 +209,64 @@ final class ConnectionsSnapshotTests: XCTestCase {
                 ]),
             ],
             ask: nil,
-            ready: true
+            ready: true,
+            verified: false
         )
         assertPairing(state, named: "pair-grants", appearances: [.light, .dark, .lightAX1], height: 1700)
+    }
+
+    /// A confidential hosted client's card: the verified line, Backend's `identity`, the refresh grants of My ITMO and
+    /// of its development stand.
+    func testPairingVerified() {
+        let state = PairingUiStateConfirm(
+            icon: .computer,
+            name: dynamic("ITMO Instapick"),
+            subtitle: res("pair_verified"),
+            caution: true,
+            scopes: [],
+            note: res("pair_note_client", ["ITMO Instapick", "ITMO Instapick"]),
+            primary: res("pair_continue"),
+            renewal: false,
+            busy: false,
+            grants: [
+                GrantGroup(title: res("pair_group_widgets"), grants: [
+                    grant(
+                        "identity", dynamic("Имя и номер ИСУ"), dynamic("Ваши ФИО и номер ИСУ, один раз при подключении"),
+                        purpose: res("grant_purpose", ["чтобы подписать ваш профиль"])
+                    ),
+                ]),
+                GrantGroup(title: res("pair_group_itmo"), grants: [
+                    grant(
+                        "itmo:refresh:student-personal-cabinet", res("grant_refresh_title"), res("grant_refresh_text"),
+                        purpose: res("grant_purpose", ["чтобы подбирать курсы по вашему учебному плану"]),
+                        note: res("grant_required"), enabled: false
+                    ),
+                    grant(
+                        "itmo:refresh:student-personal-cabinet-dev", res("grant_refresh_dev_title"),
+                        res("grant_refresh_dev_text"),
+                        purpose: res("grant_purpose", ["чтобы проверять подбор на тестовом My ITMO"])
+                    ),
+                ]),
+            ],
+            ask: nil,
+            ready: true,
+            verified: true
+        )
+        assertPairing(state, named: "pair-verified", appearances: [.light, .dark], height: 1500)
+    }
+
+    /// Done after approving the client's own Universal Link: back to it.
+    func testPairingDoneReturn() {
+        let state = PairingUiStateResult(
+            success: true,
+            title: res("pair_done", ["ITMO Instapick"]),
+            text: res("pair_done_text", ["20 января"]),
+            action: res("pair_return", ["ITMO Instapick"]),
+            next: .returnToClient,
+            returnUrl: "https://instapick.example/paired",
+            openReturn: false
+        )
+        assertPairing(state, named: "pair-done-return", appearances: [.light])
     }
 
     func testPairingDone() {
@@ -182,7 +275,9 @@ final class ConnectionsSnapshotTests: XCTestCase {
             title: res("pair_done", ["nas"]),
             text: res("pair_done_text", ["20 января"]),
             action: res("pair_done_action"),
-            next: .close
+            next: .close,
+            returnUrl: nil,
+            openReturn: false
         )
         assertPairing(state, named: "pair-done", appearances: [.light, .dark])
     }
@@ -323,6 +418,8 @@ final class ConnectionsSnapshotTests: XCTestCase {
             fullItmoAccess: false,
             takeBack: true,
             scopes: scopes(),
+            identity: false,
+            verified: false,
             facts: [
                 Fact(title: res("connection_fact_connected"), value: dynamic("28 июля")),
                 Fact(title: res("devices_fact_activity"), value: res("devices_activity_minutes", [5])),
@@ -389,6 +486,8 @@ final class ConnectionsSnapshotTests: XCTestCase {
                     checked: false
                 ),
             ],
+            identity: false,
+            verified: false,
             facts: facts,
             revoke: res("connection_revoke"),
             confirm: nil,
