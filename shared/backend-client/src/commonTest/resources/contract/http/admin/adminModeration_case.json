@@ -20,7 +20,8 @@
         "status": "PENDING",
         "submittedAt": "2026-10-02T07:00:00Z",
         "decidedAt": null,
-        "note": null
+        "note": null,
+        "flowOptions": null
       },
       "link": {
         "id": "00000000-0000-4000-8000-000000000101",

@@ -1,8 +1,10 @@
 # The connections fixtures ConnectionsVendoredFixturesTest checks (scripts/sync-backend-contract.sh vendors them).
 # Not here: createPairChallenge and claimPairChallenge (/api/pair/**) are NotMirrored, as is http/client/.
 http/connections/approvePairing.json
+http/connections/connectionItmoClosed.json
 http/connections/connectionItmoEnded.json
 http/connections/openPairing.json
+http/connections/openPairingProtocol2.json
 http/connections/revokeConnection.json
 http/connections/signOutInstall.json
 http/connections/updateConnectionScopes.json

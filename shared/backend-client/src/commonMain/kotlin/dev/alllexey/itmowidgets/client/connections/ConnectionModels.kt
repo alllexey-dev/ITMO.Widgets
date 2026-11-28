@@ -31,7 +31,7 @@ data class PairingPreview(
     @Serializable(with = WireInstantSerializer::class) val expiresAt: Instant,
     val protocol: Int? = null,
     val app: ClientAppInfo? = null,
-    val grants: List<GrantRequest>? = null,
+    val grants: List<PairingGrant>? = null,
 )
 
 /**
@@ -54,7 +54,7 @@ data class ClientAppInfo(
  * renewal: whether the connection already holds that ITMO grant.
  */
 @Serializable
-data class GrantRequest(
+data class PairingGrant(
     val id: String,
     val required: Boolean,
     val title: String? = null,
@@ -165,12 +165,16 @@ data class UpdateScopesRequest(val scopes: List<ConnectionScope>)
 @Serializable(with = PairingKindSerializer::class)
 enum class PairingKind { CONNECT, RENEW, UNKNOWN }
 
-/** The client type of a connection; wire values are lower case. Display: a newer type is [UNKNOWN]. */
+/**
+ * The client kind of a connection; wire values are lower case. [APP] is a registry client of kind `app`, which step 1
+ * of ADR 0040 does not pair yet. Display: a newer kind is [UNKNOWN].
+ */
 @Serializable(with = ConnectionClientSerializer::class)
 enum class ConnectionClient(internal val wire: String) {
     AGENT("agent"),
     MCP("mcp"),
     WEB("web"),
+    APP("app"),
     UNKNOWN("UNKNOWN"),
 }
 

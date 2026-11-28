@@ -24,7 +24,17 @@
       "live": false,
       "itmo": null,
       "itmoStatus": "none",
-      "revokedAt": null
+      "revokedAt": null,
+      "clientId": "web",
+      "app": {
+        "id": "web",
+        "name": "ITMO.Widgets в браузере",
+        "homepage": null,
+        "iconUrl": null,
+        "deployment": "hosted",
+        "verified": false
+      },
+      "itmoGrants": []
     }
   },
   "error": null

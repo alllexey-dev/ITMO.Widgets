@@ -94,7 +94,8 @@
                 "AI_SUMMARY_SHOWN",
                 "AI_SUMMARY_REGENERATION_REQUESTED",
                 "AGENT_ACCESS_GRANTED",
-                "AGENT_ACCESS_REVOKED"
+                "AGENT_ACCESS_REVOKED",
+                "CONNECTION_CLIENT_CHANGED"
               ]
             }
           },
@@ -159,6 +160,66 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiResponseAdminPageAdminAuditEntry"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/connection-clients": {
+      "get": {
+        "operationId": "adminConnectionClients_list",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseListConnectionClientAdmin"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/connection-clients/{id}": {
+      "put": {
+        "operationId": "adminConnectionClients_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectionClientAdmin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseConnectionClientAdmin"
                 }
               }
             },
@@ -3563,6 +3624,37 @@
         ]
       }
     },
+    "/api/users/me/connections/{id}/itmo-closed": {
+      "post": {
+        "operationId": "connections_itmoClosed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUnit"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "connections"
+        ]
+      }
+    },
     "/api/users/me/connections/{id}/itmo-ended": {
       "post": {
         "operationId": "connections_itmoEnded",
@@ -3868,6 +3960,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "protocol",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -5683,7 +5784,8 @@
             "enum": [
               "agent",
               "mcp",
-              "web"
+              "web",
+              "app"
             ]
           },
           "created": {
@@ -8044,6 +8146,39 @@
           "success"
         ]
       },
+      "ApiResponseConnectionClientAdmin": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ConnectionClientAdmin"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
       "ApiResponseConnectionInfo": {
         "type": "object",
         "properties": {
@@ -8153,6 +8288,38 @@
             ],
             "items": {
               "$ref": "#/components/schemas/AdminServiceCredential"
+            }
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetails"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data",
+          "error",
+          "success"
+        ]
+      },
+      "ApiResponseListConnectionClientAdmin": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ConnectionClientAdmin"
             }
           },
           "error": {
@@ -9323,6 +9490,15 @@
       "ApprovePairingRequest": {
         "type": "object",
         "properties": {
+          "granted": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
           "itmo": {
             "oneOf": [
               {
@@ -9385,6 +9561,47 @@
         },
         "required": [
           "claimSecret"
+        ]
+      },
+      "ClientAppInfo": {
+        "type": "object",
+        "properties": {
+          "deployment": {
+            "type": "string",
+            "enum": [
+              "self_hosted",
+              "hosted"
+            ]
+          },
+          "homepage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "iconUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deployment",
+          "homepage",
+          "iconUrl",
+          "id",
+          "name",
+          "verified"
         ]
       },
       "ClientEvent": {
@@ -9488,9 +9705,116 @@
           "itmo"
         ]
       },
+      "ConnectionClientAdmin": {
+        "type": "object",
+        "properties": {
+          "auth": {
+            "type": "string",
+            "enum": [
+              "public",
+              "confidential"
+            ]
+          },
+          "deployment": {
+            "type": "string",
+            "enum": [
+              "self_hosted",
+              "hosted"
+            ]
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConnectionClientGrantAdmin"
+            }
+          },
+          "homepage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "iconUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "mcp",
+              "web",
+              "app"
+            ]
+          },
+          "maxPerUser": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended"
+            ]
+          }
+        },
+        "required": [
+          "auth",
+          "deployment",
+          "grants",
+          "homepage",
+          "iconUrl",
+          "id",
+          "kind",
+          "maxPerUser",
+          "name",
+          "status"
+        ]
+      },
+      "ConnectionClientGrantAdmin": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requestedByDefault": {
+            "type": "boolean"
+          },
+          "required": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "purpose",
+          "requestedByDefault",
+          "required"
+        ]
+      },
       "ConnectionInfo": {
         "type": "object",
         "properties": {
+          "app": {
+            "$ref": "#/components/schemas/ClientAppInfo"
+          },
           "approvedAt": {
             "type": "string",
             "format": "date-time"
@@ -9500,8 +9824,12 @@
             "enum": [
               "agent",
               "mcp",
-              "web"
+              "web",
+              "app"
             ]
+          },
+          "clientId": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
@@ -9520,6 +9848,12 @@
                 "type": "null"
               }
             ]
+          },
+          "itmoGrants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "itmoStatus": {
             "type": "string",
@@ -9569,11 +9903,14 @@
           }
         },
         "required": [
+          "app",
           "approvedAt",
           "client",
+          "clientId",
           "createdAt",
           "id",
           "itmo",
+          "itmoGrants",
           "itmoStatus",
           "lastUsedAt",
           "live",
@@ -9600,12 +9937,31 @@
         "type": "object",
         "properties": {
           "client": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "enum": [
               "agent",
               "mcp",
-              "web"
+              "web",
+              "app"
             ]
+          },
+          "clientId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "grants": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/GrantRequest"
+            }
           },
           "keyCommitment": {
             "type": "string"
@@ -9652,7 +10008,6 @@
           }
         },
         "required": [
-          "client",
           "keyCommitment",
           "kind",
           "name"
@@ -9730,6 +10085,7 @@
               "not_found",
               "business_rule_violation",
               "conflict",
+              "update_required",
               "rate_limited",
               "internal_server_error"
             ]
@@ -9801,6 +10157,23 @@
         },
         "required": [
           "bookings"
+        ]
+      },
+      "GrantRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "required": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id"
         ]
       },
       "GroupData": {
@@ -10288,6 +10661,13 @@
             "type": "string",
             "format": "date-time"
           },
+          "flowId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -10334,6 +10714,7 @@
           "action",
           "actor",
           "createdAt",
+          "flowId",
           "id",
           "moderatorId",
           "note",
@@ -10356,6 +10737,13 @@
               "RESTRICT_USER",
               "HIDE_ALL_BY_USER"
             ]
+          },
+          "flowId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
           },
           "note": {
             "type": [
@@ -10739,9 +11127,62 @@
           "token"
         ]
       },
+      "PairingGrant": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "granted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "description",
+          "granted",
+          "id",
+          "purpose",
+          "required",
+          "title"
+        ]
+      },
       "PairingPreview": {
         "type": "object",
         "properties": {
+          "app": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ClientAppInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "challengeId": {
             "type": "string",
             "format": "uuid"
@@ -10751,7 +11192,8 @@
             "enum": [
               "agent",
               "mcp",
-              "web"
+              "web",
+              "app"
             ]
           },
           "connectionId": {
@@ -10764,6 +11206,15 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "grants": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PairingGrant"
+            }
           },
           "keyCommitment": {
             "type": "string"
@@ -10783,6 +11234,13 @@
               "string",
               "null"
             ]
+          },
+          "protocol": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
           },
           "requestedScopes": {
             "type": "array",
@@ -10868,6 +11326,15 @@
       "RenewChallengeRequest": {
         "type": "object",
         "properties": {
+          "grants": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/GrantRequest"
+            }
+          },
           "keyCommitment": {
             "type": "string"
           }
@@ -10936,6 +11403,15 @@
               "null"
             ],
             "format": "int64"
+          },
+          "flowOptions": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LinkAudience"
+            }
           },
           "periodKey": {
             "type": "string"
@@ -11835,6 +12311,15 @@
             ],
             "format": "int64"
           },
+          "flowOptions": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LinkAudience"
+            }
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -11888,6 +12373,7 @@
           "category",
           "decidedAt",
           "flowId",
+          "flowOptions",
           "id",
           "linkId",
           "note",

@@ -1,0 +1,57 @@
+{
+  "success": true,
+  "data": {
+    "challengeId": "00000000-0000-4000-8000-000000000501",
+    "kind": "CONNECT",
+    "client": "mcp",
+    "name": "MacBook Air",
+    "version": "0.5.0",
+    "platform": "macos",
+    "requestedScopes": [
+      {
+        "id": "reviews:read",
+        "title": "Отзывы о преподавателях",
+        "description": "Читает отзывы и их сводки"
+      }
+    ],
+    "keyCommitment": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+    "connectionId": null,
+    "expiresAt": "2026-10-05T09:10:00Z",
+    "protocol": 2,
+    "app": {
+      "id": "itmo-mcp",
+      "name": "ITMO MCP",
+      "homepage": null,
+      "iconUrl": null,
+      "deployment": "self_hosted",
+      "verified": false
+    },
+    "grants": [
+      {
+        "id": "widgets:reviews:read",
+        "required": true,
+        "title": "Отзывы о преподавателях",
+        "description": "Читает отзывы и их сводки",
+        "purpose": null,
+        "granted": null
+      },
+      {
+        "id": "itmo:refresh:student-personal-cabinet",
+        "required": false,
+        "title": null,
+        "description": null,
+        "purpose": "чтобы ИИ-ассистент видел ваше расписание, зачётку и заявки",
+        "granted": false
+      },
+      {
+        "id": "itmo:sso",
+        "required": false,
+        "title": null,
+        "description": null,
+        "purpose": "чтобы ИИ-ассистент видел баллы БАРС и входил в другие сервисы ИТМО",
+        "granted": true
+      }
+    ]
+  },
+  "error": null
+}

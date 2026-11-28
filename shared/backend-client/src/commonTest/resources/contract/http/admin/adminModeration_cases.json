@@ -21,7 +21,21 @@
           "status": "PENDING",
           "submittedAt": "2026-10-02T07:00:00Z",
           "decidedAt": null,
-          "note": null
+          "note": null,
+          "flowOptions": [
+            {
+              "flowId": 7001,
+              "label": "МАТ АН 3",
+              "typeId": 1,
+              "depth": 1
+            },
+            {
+              "flowId": 7002,
+              "label": "МАТ АН 3.2",
+              "typeId": 2,
+              "depth": 2
+            }
+          ]
         },
         "link": {
           "id": "00000000-0000-4000-8000-000000000101",

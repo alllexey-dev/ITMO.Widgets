@@ -101,7 +101,7 @@ A renewal asks for nothing new and has no card; a renewal that requests new gran
 ```
 CreateChallengeRequest {kind, clientId, keyCommitment, name, version?, platform?,
                         grants?: [{id, required?}], clientAssertion?}
-PairingPreview += {app: ClientAppInfo, grants: GrantRequest[], verified: boolean}
+PairingPreview += {app: ClientAppInfo, grants: PairingGrant[], verified: boolean}
 ApprovePairingRequest {sealedBundle?, granted: string[], itmo?: {sid, expiresAt}}
 PairingClaimResponse += {identity?: string}
 ```

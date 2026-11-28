@@ -41,7 +41,19 @@
       "expiresAt": "2026-12-30T09:00:00Z"
     },
     "itmoStatus": "ok",
-    "revokedAt": null
+    "revokedAt": null,
+    "clientId": "itmo-widgets-agent",
+    "app": {
+      "id": "itmo-widgets-agent",
+      "name": "ITMO.Widgets agent",
+      "homepage": null,
+      "iconUrl": null,
+      "deployment": "self_hosted",
+      "verified": false
+    },
+    "itmoGrants": [
+      "itmo:refresh:student-personal-cabinet"
+    ]
   },
   "error": null
 }

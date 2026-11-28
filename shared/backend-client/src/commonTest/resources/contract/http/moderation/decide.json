@@ -20,7 +20,8 @@
         "status": "APPROVED",
         "submittedAt": "2026-10-02T07:00:00Z",
         "decidedAt": "2026-10-02T08:00:00Z",
-        "note": "Одобрено"
+        "note": "Одобрено",
+        "flowOptions": null
       },
       "link": {
         "id": "00000000-0000-4000-8000-000000000101",
@@ -114,7 +115,8 @@
         "createdAt": "2026-10-03T16:00:00Z",
         "actor": "MODERATOR",
         "revertedAt": null,
-        "revertibleUntil": null
+        "revertibleUntil": null,
+        "flowId": null
       },
       {
         "id": "00000000-0000-4000-8000-000000000317",
@@ -125,7 +127,8 @@
         "createdAt": "2026-10-04T17:00:00Z",
         "actor": "MODERATOR",
         "revertedAt": null,
-        "revertibleUntil": null
+        "revertibleUntil": null,
+        "flowId": null
       },
       {
         "id": "00000000-0000-4000-8000-000000000318",
@@ -136,7 +139,8 @@
         "createdAt": "2026-10-01T18:00:00Z",
         "actor": "MODERATOR",
         "revertedAt": null,
-        "revertibleUntil": null
+        "revertibleUntil": null,
+        "flowId": null
       },
       {
         "id": "00000000-0000-4000-8000-000000000319",
@@ -150,7 +154,8 @@
         "createdAt": "2026-10-02T19:00:00Z",
         "actor": "MODERATOR",
         "revertedAt": null,
-        "revertibleUntil": null
+        "revertibleUntil": null,
+        "flowId": null
       }
     ]
   },

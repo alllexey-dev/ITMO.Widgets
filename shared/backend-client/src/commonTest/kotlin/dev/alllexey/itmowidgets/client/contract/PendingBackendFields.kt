@@ -31,36 +31,17 @@ class PendingBackendQuery(val method: HttpMethod, val path: String, val name: St
     override fun toString(): String = "${method.value} $path ?$name ($reason)"
 }
 
-private const val PROTOCOL_2 = "client platform step 1, protocol 2 (ADR 0040), built in parallel with Backend"
-
-/**
- * Every [PendingBackendField]: the link flow options and the protocol-2 fields of the connections area. The types of
- * the latter ([ClientAppInfo], [GrantRequest], [ClientDeployment] of the connections package) join [WireModels] in
- * the re-sync that brings the schemas.
- */
+/** Every [PendingBackendField]. */
 object PendingBackendFields {
-    val all: List<PendingBackendField> = listOf(
-        PendingBackendField("SaveSubjectLinkRequest", "flowOptions", "link flow options, Backend feat/link-flow-options"),
-        PendingBackendField("PairingPreview", "protocol", PROTOCOL_2),
-        PendingBackendField("PairingPreview", "app", PROTOCOL_2),
-        PendingBackendField("PairingPreview", "grants", PROTOCOL_2),
-        PendingBackendField("ApprovePairingRequest", "granted", PROTOCOL_2),
-        PendingBackendField("ConnectionInfo", "clientId", PROTOCOL_2),
-        PendingBackendField("ConnectionInfo", "app", PROTOCOL_2),
-        PendingBackendField("ConnectionInfo", "itmoGrants", PROTOCOL_2),
-    )
+    val all: List<PendingBackendField> = emptyList()
 }
 
 /** Every [PendingBackendRoute]. */
 object PendingBackendRoutes {
-    val all: List<PendingBackendRoute> = listOf(
-        PendingBackendRoute(HttpMethod.Post, "/api/users/me/connections/{id}/itmo-closed", PROTOCOL_2),
-    )
+    val all: List<PendingBackendRoute> = emptyList()
 }
 
 /** Every [PendingBackendQuery]. */
 object PendingBackendQueries {
-    val all: List<PendingBackendQuery> = listOf(
-        PendingBackendQuery(HttpMethod.Post, "/api/users/me/pair/{code}/open", "protocol", PROTOCOL_2),
-    )
+    val all: List<PendingBackendQuery> = emptyList()
 }

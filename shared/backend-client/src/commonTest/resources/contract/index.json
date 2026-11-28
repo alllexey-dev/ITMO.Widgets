@@ -216,6 +216,22 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "adminConnectionClients_list",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/admin/connection-clients",
+    "file": "http/admin/adminConnectionClients_list.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "adminConnectionClients_update",
+    "kind": "http",
+    "method": "PUT",
+    "path": "/api/admin/connection-clients/{id}",
+    "file": "http/admin/adminConnectionClients_update.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "adminDashboard_dashboard",
     "kind": "http",
     "method": "GET",
@@ -608,6 +624,14 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "connectionItmoClosed",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/users/me/connections/{id}/itmo-closed",
+    "file": "http/connections/connectionItmoClosed.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "connectionItmoEnded",
     "kind": "http",
     "method": "POST",
@@ -877,6 +901,14 @@
     "method": "POST",
     "path": "/api/users/me/pair/{code}/open",
     "file": "http/connections/openPairing.json",
+    "minCore": "1.8.0"
+  },
+  {
+    "id": "openPairingProtocol2",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/users/me/pair/{code}/open",
+    "file": "http/connections/openPairingProtocol2.json",
     "minCore": "1.8.0"
   },
   {
