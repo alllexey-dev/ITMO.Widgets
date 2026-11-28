@@ -14,7 +14,8 @@ publication or deployment.
   with its progress in the button, instead of a plain row at the bottom of the ways.
 - Subject page: `Мои баллы из таблицы` stands right under the hero of `Баллы`, whose number the sheet would become,
   instead of at the end of the page beside the BARS offer.
-- Kit: `ActionCard` (iOS `ItmoActionCard`) can show its button's progress.
+- Subject page: a tap on the hero of `Баллы` with a connected sheet opens `Изменить итог`, which was only in its menu.
+- Kit: `ActionCard` (iOS `ItmoActionCard`) can show its button's progress; `ItmoCard` takes an `onClickLabel`.
 - iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
   reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
   content reports, around the countdown, the progress and the widgets' `GeometryReader`s.

@@ -32,7 +32,8 @@ import dev.alllexey.itmowidgets.designsystem.components.buttons.TonalButton
 
 /**
  * A card with one topic (`Card.Content`, 20 dp, no stroke): [cardSurface] by default, a [tone]'s container to stand
- * out. [hero] is the one hero of a screen (`Card.Hero`, 28 dp, 20 dp padding); at most one per screen.
+ * out. [hero] is the one hero of a screen (`Card.Hero`, 28 dp, 20 dp padding); at most one per screen. [onClickLabel]
+ * names what a tap does for TalkBack.
  */
 @Composable
 fun ItmoCard(
@@ -40,6 +41,7 @@ fun ItmoCard(
     tone: Tone? = null,
     hero: Boolean = false,
     onClick: (() -> Unit)? = null,
+    onClickLabel: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val shape = if (hero) ItmoTheme.shapes.cardHero else ItmoTheme.shapes.cardContent
@@ -47,7 +49,7 @@ fun ItmoCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+            .then(if (onClick != null) Modifier.clickable(onClickLabel = onClickLabel, onClick = onClick) else Modifier),
         shape = shape,
         color = tone?.container() ?: cardSurface(),
         contentColor = if (tone == null || tone == Tone.Neutral) ItmoTheme.colorScheme.onSurface else tone.onContainer(),
