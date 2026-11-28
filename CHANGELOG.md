@@ -16,6 +16,25 @@ publication or deployment.
   instead of at the end of the page beside the BARS offer.
 - Subject page: a tap on the hero of `Баллы` with a connected sheet opens `Изменить итог`, which was only in its menu.
 - Kit: `ActionCard` (iOS `ItmoActionCard`) can show its button's progress; `ItmoCard` takes an `onClickLabel`.
+- Links: a `FLOW` or `ALL` link save sends Backend the flows the editor offered (`flowOptions` in
+  `SaveSubjectLinkRequest`, at most 32), so that a moderator can move a `FLOW` link to another of the author's flows;
+  a `PRIVATE` save sends none, and a Backend without the field ignores it.
+- Recordbook: a Google Drive link to an uploaded spreadsheet (`drive.google.com/file/d/<id>`, an `.xlsx`) under
+  `Баллы` now offers `Мои баллы`; the file is read by its id at the Sheets address. `Посчитать с ИИ` takes such a
+  link too, Backend normalizes it to the sheet of its id (itmo-widgets-backend#76).
+- iOS: shared links `https://widgets.alllexey.dev/u/<isu>`, `/sport/<id>`, `/sport/p/<id>` and `/pair` (and the dev
+  host) open the app as Universal Links, as on Android: the signed entitlements get associated domains for both hosts.
+  Needs the Associated Domains capability on the App ID, a new profile and the site's `apple-app-site-association`.
+- Connections: pairing no longer asks to compare a six-digit code. A new connection's card says instead to approve
+  only a QR or link opened on the user's own device (`pair_caution_title`, `pair_caution_text`); renewals have no
+  caution, as only the owner's live connection can be renewed. The code checked only a QR other than the one on a
+  genuine screen and never stopped phishing; the key commitment, the screen lock and the push after a new connection
+  stay. `PairingCrypto.verificationCode`, `Confirm.code` and `SigningIn.code` are gone; the wire is unchanged.
+- First run: the `Друзья и очередь` step connects with one tap. The step itself says what the server keeps (the
+  short names of `ServicesStoredData`) and that `Подключить` agrees to it, so the button turns the connection on
+  directly instead of opening the consent sheet for a second `Подключить`; `Подробнее` still opens the full sheet.
+  The step fits a 360 x 640 dp phone and an iPhone SE without scrolling (Android and iOS). Backend's consent
+  recording is unchanged.
 - iOS: the cards and day widgets no longer crash on a Mac when a lesson is on. The Mac's archived live countdown
   reports an infinite width, which the cards' progress took; `FiniteProposal` now also caps an infinite size its
   content reports, around the countdown, the progress and the widgets' `GeometryReader`s.

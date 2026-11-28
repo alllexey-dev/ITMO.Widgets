@@ -30,6 +30,13 @@ moderation model: decision
   (configurable on Backend), otherwise a moderator decides. Moderation has no app UI;
   operators use the Backend moderation API
   (`../itmo-widgets-backend/docs/ops/moderation.md`).
+- A `FLOW` or `ALL` save also sends the flows the editor offered (the
+  snapshot's `audiences`) as `SaveSubjectLinkRequest.flowOptions`: unique, at
+  most 32, a `FLOW` link's own flow always among them. Backend keeps them with
+  the moderation revision, so a moderator can move a `FLOW` link to another of
+  the author's flows. A `PRIVATE` save, a save without offered flows and the
+  device-only links (always `PRIVATE`) send none; a Backend without the field
+  skips it.
 - Others always see published content; the owner also sees review states and
   the moderator's reason. `С прошлых лет` holds approved `ALL` links of
   `MATERIALS`, `TASKS`, `RECORDINGS`, `NOTES` and `EXAM` from earlier periods.
@@ -73,7 +80,8 @@ sheet, a screen or the report closes itself first.
   picks one. Audiences are ordered widest to narrowest: `ALL`, the viewer's flows
   broad to nested, `PRIVATE`; while premoderation is on `ALL` and every flow
   carry the review hint; a chosen flow no longer offered falls back to
-  `PRIVATE`; without the connection only `PRIVATE`. The new link's UUID survives
+  `PRIVATE`; without the connection only `PRIVATE`. A save passes the picker's
+  flows to `SubjectLinksRepository.save` as `flowOptions`. The new link's UUID survives
   process death, so a retried save reaches the same link.
 - `LinkActionsSheetRoute` (long press): open, author profile (ISU above 0,
   `navigator.openUserProfile`), copy, `Мои баллы` for a Google Sheet of any

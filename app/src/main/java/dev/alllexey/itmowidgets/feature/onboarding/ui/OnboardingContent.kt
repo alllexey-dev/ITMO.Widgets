@@ -47,7 +47,10 @@ fun OnboardingContent(
     )
 }
 
-/** The flow's actions over [viewModel]; the consent sheet and the calendar permission are the host's. */
+/**
+ * The flow's actions over [viewModel]; the consent sheet (opened to read the details) and the calendar permission are
+ * the host's. The step's `Подключить` and the sheet's both connect.
+ */
 fun onboardingActions(
     viewModel: OnboardingViewModel,
     onShowConsent: (Boolean) -> Unit,
@@ -60,7 +63,7 @@ fun onboardingActions(
     onDetails = { onShowConsent(true) },
     onConsent = {
         onShowConsent(false)
-        viewModel.onConsent()
+        viewModel.connect()
     },
     onDismissConsent = { onShowConsent(false) },
 )
@@ -69,14 +72,13 @@ fun onboardingActions(
 val OnboardingUiState.canStepBack: Boolean get() = stepIndex > 0 && !finished
 
 /**
- * What only Android does for one event: the notification permission or the settings page, the calendar permission,
- * the consent sheet and the snackbars. The Compose shell's onboarding entry calls it.
+ * What only Android does for one event: the notification permission or the settings page, the calendar permission
+ * and the snackbars. The Compose shell's onboarding entry calls it.
  */
 fun Context.handleOnboardingEvent(
     event: OnboardingEvent,
     notificationPermission: ActivityResultLauncher<Unit>,
     askCalendar: () -> Unit,
-    showConsent: () -> Unit,
     showSnackbar: (message: Int) -> Unit,
 ) {
     when (event) {
@@ -85,7 +87,6 @@ fun Context.handleOnboardingEvent(
             else openAppNotificationSettings()
         OnboardingEvent.OpenNotificationSettings -> openAppNotificationSettings()
         OnboardingEvent.RequestCalendarAccess -> askCalendar()
-        OnboardingEvent.ShowConsent -> showConsent()
         is OnboardingEvent.ShowError -> showSnackbar(event.error.messageRes())
     }
 }

@@ -26,8 +26,8 @@ import kotlinx.coroutines.launch
 
 /**
  * The first-run flow (owner, 2026-10-19): two steps, no `Включить всё`. The first shows who signed in and asks each
- * permission with its own button, and `Далее` works without any; the second connects to ITMO.Widgets through the
- * consent sheet or leaves it with `Не сейчас`. Every choice is written through its own repository the moment it is
+ * permission with its own button, and `Далее` works without any; the second connects to ITMO.Widgets with one button
+ * that is the consent, or leaves it with `Не сейчас`. Every choice is written through its own repository the moment it is
  * made, so leaving at any step leaves a consistent app. The step lives in the saved state: process death returns to the same page.
  */
 class OnboardingViewModel(
@@ -109,14 +109,18 @@ class OnboardingViewModel(
         }
     }
 
-    /** `Подключить` of the last step: the consent sheet first; already connected, the flow ends. */
+    /**
+     * `Подключить` of the last step, which is the consent itself (owner, 2026-11-27): the step shows what the server
+     * keeps and says the button agrees to it, so the opt-in turns on and the flow ends. The consent sheet, opened to
+     * read the details, connects through the same call. Already connected (a replay), the flow only ends.
+     */
     fun connect() {
-        if (mutableState.value.servicesEnabled) complete() else send(OnboardingEvent.ShowConsent)
-    }
-
-    /** The consent sheet's `Подключить`: the opt-in turns on and the flow ends. */
-    fun onConsent() {
-        if (mutableState.value.servicesBusy) return
+        val current = mutableState.value
+        if (current.servicesEnabled) {
+            complete()
+            return
+        }
+        if (current.servicesBusy) return
         mutableState.update { it.copy(servicesBusy = true) }
         viewModelScope.launch {
             try {

@@ -100,7 +100,7 @@ final class ConnectionsSnapshotTests: XCTestCase {
             icon: .agent,
             name: dynamic("nas"),
             subtitle: res("devices_client_agent_product", ["1.2"]),
-            code: "482 913",
+            caution: true,
             scopes: scopes(),
             note: res("pair_note_client", ["nas", "nas"]),
             primary: res("pair_continue"),

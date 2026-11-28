@@ -483,6 +483,49 @@ final class RouterTests: XCTestCase {
         }
     }
 
+    /// Universal Links reach `onOpenURL` as the `https` URL itself: both hosts, the shared `AppLinks` rules.
+    func testUniversalLinksParse() throws {
+        let profile = EntryRoute(
+            tab: .me, overlay: AppRoutes.UserProfile(isu: 100_002), request: nil, activity: nil, alert: nil,
+            shortcutId: nil
+        )
+        // A device's pairing link: key and secret in the fragment, which a Universal Link keeps.
+        let pairLink = "https://widgets.alllexey.dev/pair#1.K7MW3QXP.\(String(repeating: "A", count: 43))."
+            + String(repeating: "A", count: 22)
+        let cases: [(String, EntryRoute?)] = [
+            ("https://widgets.alllexey.dev/u/100002", profile),
+            ("https://dev.widgets.alllexey.dev/u/100002/", profile),
+            ("HTTPS://WIDGETS.ALLLEXEY.DEV/u/100002?from=share#top", profile),
+            ("https://widgets.alllexey.dev/sport/42", sportEntry(42, predicted: false)),
+            ("https://dev.widgets.alllexey.dev/sport/p/42", sportEntry(42, predicted: true)),
+            ("https://widgets.alllexey.dev/u/0", linkUnavailableEntry),
+            ("https://widgets.alllexey.dev/u/abc", linkUnavailableEntry),
+            ("https://widgets.alllexey.dev/sport/42/extra", linkUnavailableEntry),
+            ("https://widgets.alllexey.dev/pair", linkUnavailableEntry),
+            (pairLink, EntryRoute(
+                tab: .me, overlay: AppRoutes.Pairing(link: pairLink), request: nil, activity: nil, alert: nil,
+                shortcutId: nil
+            )),
+            ("https://widgets.alllexey.dev/", nil),
+            ("https://widgets.alllexey.dev/app/u/100002", nil),
+            ("https://example.com/u/100002", nil),
+            ("http://widgets.alllexey.dev/u/100002", nil),
+        ]
+        for (string, expected) in cases {
+            XCTAssertEqual(RouteURL.entryRoute(url: try XCTUnwrap(URL(string: string))), expected, string)
+        }
+    }
+
+    func testAUniversalLinkOpensTheProfileOnTheMeTab() throws {
+        let router = readyRouter()
+
+        XCTAssertTrue(router.open(url: try XCTUnwrap(URL(string: "https://widgets.alllexey.dev/u/100002"))))
+
+        XCTAssertEqual(router.selectedTab, .profile)
+        XCTAssertEqual(router.path(of: .profile), [ShellDestination(AppRoutes.UserProfile(isu: 100_002))])
+        XCTAssertFalse(router.open(url: try XCTUnwrap(URL(string: "https://widgets.alllexey.dev/privacy.html"))))
+    }
+
     /// A widget's lesson row carries the lesson's `LessonDetailsArgs` JSON: the sheet opens over the schedule.
     func testAWidgetsLessonUrlOpensItsSheet() throws {
         let args = LessonDetailsArgs(

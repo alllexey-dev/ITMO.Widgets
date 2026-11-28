@@ -113,8 +113,8 @@
     <string name="pair_link_unknown">Это не ссылка для подключения</string>
     <string name="pair_scanner_unavailable">Сканер недоступен, вставьте ссылку</string>
     <string name="pair_web_subtitle">Браузер, ITMO.Widgets на сайте</string>
-    <string name="pair_code_title">Код на экране устройства</string>
-    <string name="pair_code_hint">Подключайте, только если код совпадает</string>
+    <string name="pair_caution_title">Этот QR-код на вашем экране?</string>
+    <string name="pair_caution_text">Подключайте, только если сами открыли этот QR-код или ссылку на своём устройстве. Если их прислал кто-то другой, нажмите «Отмена».</string>
     <string name="pair_access">Получит доступ</string>
     <string name="pair_note_client">Дальше войдите в ИТМО за %1$s. Пароль останется на телефоне: %2$s получит только свой вход, который можно отключить отсюда.</string>
     <string name="pair_note_web">Браузер увидит то же, что и приложение, кроме входа в ИТМО. Отключить его можно отсюда.</string>

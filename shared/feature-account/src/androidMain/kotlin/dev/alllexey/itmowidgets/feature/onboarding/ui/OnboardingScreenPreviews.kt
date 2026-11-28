@@ -36,13 +36,20 @@ internal class OnboardingScreenConnectionPreview {
     fun OnboardingScreen() = OnboardingPreview("connection")
 }
 
+/** The last step on a 360 x 640 dp phone inside its system bars: it fits without scrolling. */
+internal class OnboardingScreenConnectionSmallPreview {
+    @Preview(name = "connection-small", widthDp = 360, heightDp = 568)
+    @Composable
+    fun OnboardingScreen() = OnboardingPreview("connection")
+}
+
 internal class OnboardingScreenConnectedPreview {
     @Preview(name = "connected")
     @Composable
     fun OnboardingScreen() = OnboardingPreview("connected")
 }
 
-/** The consent sheet the last step opens, on the sheet's colour. */
+/** The consent sheet the last step's `Подробнее` opens, on the sheet's colour. */
 internal class OnboardingScreenConsentPreview {
     @Preview(name = "consent", heightDp = 900)
     @Composable

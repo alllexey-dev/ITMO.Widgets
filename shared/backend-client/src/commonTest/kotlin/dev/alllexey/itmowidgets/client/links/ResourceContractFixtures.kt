@@ -87,6 +87,8 @@ object ResourceContractFixtures {
         flowId = FLOW_ID,
     )
     val privateSave = save.copy(visibility = LinkVisibility.PRIVATE, flowId = null)
+    /** A FLOW save with the flows the editor offered. */
+    val flowSave = save.copy(flowOptions = links.audiences)
     val restriction = UserRestriction(
         id = id,
         capability = RestrictionCapability.VOTE,

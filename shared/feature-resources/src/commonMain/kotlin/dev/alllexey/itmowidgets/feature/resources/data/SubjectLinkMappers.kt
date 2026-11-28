@@ -70,9 +70,13 @@ private fun WireStatus.toModel(): SubjectLinkStatus = when (this) {
 
 internal fun WireAudience.toStored() = StoredAudience(flowId, label.trim(), typeId, depth)
 
-internal fun StoredLinkRequest.toWire() = SaveSubjectLinkRequest(
+/** [flowOptions] go only with a save made online: a device-only link is PRIVATE and has none. */
+internal fun StoredLinkRequest.toWire(flowOptions: List<LinkAudience>? = null) = SaveSubjectLinkRequest(
     subjectId, subjectName, periodKey, WireCategory.valueOf(category.name), url, title, WireVisibility.valueOf(visibility.name), flowId,
+    flowOptions?.map { it.toWire() },
 )
+
+private fun LinkAudience.toWire() = WireAudience(flowId, label, typeId, depth)
 
 internal fun ResourceReportReason.toWire() = ReportReason.valueOf(name)
 

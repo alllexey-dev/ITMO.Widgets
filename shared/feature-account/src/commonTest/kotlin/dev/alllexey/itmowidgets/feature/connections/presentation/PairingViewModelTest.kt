@@ -68,14 +68,14 @@ class PairingViewModelTest {
     }
 
     @Test
-    fun anAgentIsConfirmedWithTheCodeAndItsRequestedScopes() = runTest(main.dispatcher) {
+    fun aNewAgentIsConfirmedWithTheCautionAndItsRequestedScopes() = runTest(main.dispatcher) {
         val model = viewModel()
 
         model.onScanned(PairingVectors.LINK)
         advanceUntilIdle()
 
         val confirm = assertIs<PairingUiState.Confirm>(model.uiState.value)
-        assertEquals("765 323", confirm.code)
+        assertTrue(confirm.caution)
         assertEquals(listOf("SPORT", "FRIENDS_READ"), confirm.scopes.map { it.id })
         assertTrue(confirm.scopes.all { it.checked })
         assertFalse(confirm.renewal)
@@ -92,7 +92,6 @@ class PairingViewModelTest {
         advanceUntilIdle()
         val page = assertIs<PairingUiState.SigningIn>(model.uiState.value)
         assertEquals("UA nas", page.userAgent)
-        assertNull(page.code)
         assertFalse(model.onSignInNavigation("https://id.itmo.ru/auth/login"))
         assertTrue(model.onSignInNavigation(FakeClientSignIn.CALLBACK + "?code=c&state=s"))
         advanceUntilIdle()
@@ -133,7 +132,9 @@ class PairingViewModelTest {
         val model = viewModel()
         model.onScanned(PairingVectors.LINK)
         advanceUntilIdle()
-        assertTrue(assertIs<PairingUiState.Confirm>(model.uiState.value).scopes.isEmpty())
+        val confirm = assertIs<PairingUiState.Confirm>(model.uiState.value)
+        assertTrue(confirm.scopes.isEmpty())
+        assertTrue(confirm.caution)
 
         model.proceed(UNLOCKED)
         advanceUntilIdle()
@@ -147,17 +148,34 @@ class PairingViewModelTest {
     }
 
     @Test
+    fun aWebRenewalHasACardWithoutTheCaution() = runTest(main.dispatcher) {
+        pairing.opened = PairingResult.Success(
+            Samples.request(client = ClientType.WEB, kind = PairingKind.RENEW, connectionId = Samples.agentId),
+        )
+        val model = viewModel()
+        model.onScanned(PairingVectors.LINK)
+        advanceUntilIdle()
+
+        val confirm = assertIs<PairingUiState.Confirm>(model.uiState.value)
+        assertFalse(confirm.renewal)
+        assertFalse(confirm.caution)
+    }
+
+    @Test
     fun aRenewalGoesStraightToTheLockAndEndsTheOldSession() = runTest(main.dispatcher) {
         pairing.opened = PairingResult.Success(Samples.request(kind = PairingKind.RENEW, connectionId = Samples.agentId))
         devices.state.value = Devices(listOf(Samples.agent(sid = "sid-old")), emptyList())
         val model = viewModel()
         model.onScanned(PairingVectors.LINK)
         advanceUntilIdle()
-        assertTrue(assertIs<PairingUiState.Confirm>(model.uiState.value).renewal)
+        val confirm = assertIs<PairingUiState.Confirm>(model.uiState.value)
+        assertTrue(confirm.renewal)
+        // A renewal opens only for the owner's own live connection: nothing to warn about.
+        assertFalse(confirm.caution)
 
         model.proceed(UNLOCKED)
         advanceUntilIdle()
-        assertEquals("765 323", assertIs<PairingUiState.SigningIn>(model.uiState.value).code)
+        assertIs<PairingUiState.SigningIn>(model.uiState.value)
         model.onSignInNavigation(FakeClientSignIn.CALLBACK)
         advanceUntilIdle()
 

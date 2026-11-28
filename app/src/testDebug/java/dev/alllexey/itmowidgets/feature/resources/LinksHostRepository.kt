@@ -1,5 +1,6 @@
 package dev.alllexey.itmowidgets.feature.resources
 
+import dev.alllexey.itmowidgets.core.resources.LinkAudience
 import dev.alllexey.itmowidgets.core.resources.LinkCategory
 import dev.alllexey.itmowidgets.core.resources.LinkVisibility
 import dev.alllexey.itmowidgets.core.resources.ResourceReportReason
@@ -51,6 +52,7 @@ internal class LinksHostRepository : SubjectLinksRepository {
         title: String?,
         visibility: LinkVisibility,
         flowId: Long?,
+        flowOptions: List<LinkAudience>,
     ): AppResult<SubjectLink> {
         if (!servicesEnabled && visibility != LinkVisibility.PRIVATE) return AppResult.Failure(AppError.CustomServicesDisabled)
         val label = peek(scope).audiences.firstOrNull { it.flowId == flowId }?.label

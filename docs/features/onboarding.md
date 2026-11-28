@@ -31,17 +31,21 @@ last step. The screen sits on a `Surface`, so text without a colour of its own i
    `RequestPermission`, iOS `requestAuthorization`); after a refusal the button opens the system page. The calendar
    (where `PlatformCapabilities.calendarExport`) asks for access and then turns on the calendar sync
    (`CalendarSync.enable`, [calendar](calendar.md)).
-2. `Друзья и очередь` (`CONNECTION`): one line on what the server gives, `Что хранит сервер` to read the consent
-   sheet, then `Подключить` and `Не сейчас`. `Подключить` opens the consent sheet (`ServicesConsentSheet`, the one of
-   «Сервер ITMO.Widgets», [settings](../settings.md)); only its own `Подключить` turns the opt-in on, and the flow
-   ends. Already connected (a replay), the step says it is connected and the button is `Готово`.
+2. `Друзья и очередь` (`CONNECTION`), the consent in short (owner, 2026-11-27), sized to fit a 360 x 640 dp phone
+   and an iPhone SE without scrolling: one line on what the server gives; a group with `Сервер будет хранить` over
+   the short names of `ServicesStoredData` in one line and `Подробнее`, which opens the full consent sheet
+   (`ServicesConsentSheet`, the one of «Сервер ITMO.Widgets», [settings](../settings.md)) to read; then, in the
+   footer, the line that `Подключить` agrees to keeping this data, `Подключить` and `Не сейчас`. `Подключить` is the
+   consent: one tap turns the opt-in on (`OnboardingViewModel.connect`, which records the consent on Backend as any
+   enable does) and ends the flow; the sheet's own `Подключить` does the same. Already connected (a replay), the step
+   says it is connected, without the consent line, and the button is `Готово`.
 
 - The entry (`AccountEntries.kt`, `OnboardingContent` in `:app`) does what only Android can: the notification and
-  calendar permissions and the consent sheet kept in its saved state. Its events are one queue with one collector.
+  calendar permissions and the details sheet kept in its saved state. Its events are one queue with one collector.
 - **The stored-data list must match the Backend schema.** `ServicesStoredData` (`core/services`) mirrors the tables
   `users`, `user_groups`, `lessons`, `user_sport_lessons`, `sport_*_sign_entries`, the private links and `devices`; a
-  new table with user data adds a line and its `services_stored_*` string. The connection page, the consent sheet and
-  this step read the same list.
+  new table with user data adds a line with its `services_stored_*` string and the short `services_stored_*_short`
+  one. The connection page, the consent sheet and this step read the same list.
 
 ## Replay
 
@@ -53,7 +57,8 @@ lives in the flow entry's store, so a replay starts on the first step with nothi
 - `OnboardingScreen` (SwiftUI, `iosApp/Sources/Features/Onboarding/`) runs the shared `OnboardingViewModel` with a
   fresh `SavedStateHandle` (`OnboardingIosParameters`) per launch; the shell's session gate reads the flag ([iOS
   app](../ios.md#data-sharing)).
-- The same two steps; the calendar asks through `CalendarAccess`, the consent is the SwiftUI `ServicesConsentSheet`.
+- The same two steps; the calendar asks through `CalendarAccess`, `Подробнее` opens the SwiftUI
+  `ServicesConsentSheet`.
 - Notifications ask via `UNUserNotificationCenter`, re-read on foreground.
 - Debug: `-itmoOnboarding` shows the flow over the demo session.
 - After the flow, the first real session's tabs show the iPhone beta notice once (`BetaNoticeSheet`, [iOS
