@@ -600,6 +600,14 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "claimPairChallengeIdentity",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/pair/challenges/{challengeId}/claim",
+    "file": "http/connections/claimPairChallengeIdentity.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "clientEvents",
     "kind": "http",
     "method": "GET",
@@ -904,6 +912,14 @@
     "minCore": "1.8.0"
   },
   {
+    "id": "openPairingConfidential",
+    "kind": "http",
+    "method": "POST",
+    "path": "/api/users/me/pair/{code}/open",
+    "file": "http/connections/openPairingConfidential.json",
+    "minCore": "1.8.0"
+  },
+  {
     "id": "openPairingProtocol2",
     "kind": "http",
     "method": "POST",
@@ -918,6 +934,14 @@
     "path": "/api/friends/requests/outgoing",
     "file": "http/friends/outgoingFriendRequests.json",
     "minCore": "1.2.0"
+  },
+  {
+    "id": "pairJwks",
+    "kind": "http",
+    "method": "GET",
+    "path": "/api/pair/jwks",
+    "file": "http/connections/pairJwks.json",
+    "minCore": "1.8.0"
   },
   {
     "id": "pinSubjectLink",

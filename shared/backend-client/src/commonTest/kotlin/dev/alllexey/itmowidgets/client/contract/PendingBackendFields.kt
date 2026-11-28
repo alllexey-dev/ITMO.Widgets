@@ -31,17 +31,9 @@ class PendingBackendQuery(val method: HttpMethod, val path: String, val name: St
     override fun toString(): String = "${method.value} $path ?$name ($reason)"
 }
 
-private const val STEP_2 = "client platform step 2 (ADR 0040), built in parallel with Backend"
-
-/**
- * Every [PendingBackendField]: client platform step 2's registry `returnUrl` of a client app and whether a connection
- * holds `identity`.
- */
+/** Every [PendingBackendField]. */
 object PendingBackendFields {
-    val all: List<PendingBackendField> = listOf(
-        PendingBackendField("ClientAppInfo", "returnUrl", STEP_2),
-        PendingBackendField("ConnectionInfo", "identity", STEP_2),
-    )
+    val all: List<PendingBackendField> = emptyList()
 }
 
 /** Every [PendingBackendRoute]. */

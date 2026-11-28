@@ -49,11 +49,13 @@
       "homepage": null,
       "iconUrl": null,
       "deployment": "self_hosted",
-      "verified": false
+      "verified": false,
+      "returnUrl": null
     },
     "itmoGrants": [
       "itmo:refresh:student-personal-cabinet"
-    ]
+    ],
+    "identity": false
   },
   "error": null
 }

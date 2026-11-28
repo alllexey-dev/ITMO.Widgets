@@ -20,6 +20,9 @@ class ConnectionsVendoredFixturesTest {
         ResponseClaim("http/connections/openPairingProtocol2.json", PairingPreview.serializer()) {
             connections.openPairing("K7Q2M9AB")
         },
+        ResponseClaim("http/connections/openPairingConfidential.json", PairingPreview.serializer()) {
+            connections.openPairing("K7Q2M9AB")
+        },
         ResponseClaim("http/connections/approvePairing.json", ApprovedPairing.serializer()) {
             connections.approvePairing(cases.challengeId, cases.approval)
         },

@@ -56,8 +56,13 @@ object NotMirrored {
         NotMirroredRoute(
             method = null,
             path = "/api/pair/**",
-            reason = "the client's side of pairing (create and claim); the apps open and approve under /api/users",
-            fixtures = listOf("http/connections/createPairChallenge.json", "http/connections/claimPairChallenge.json"),
+            reason = "the client's side of pairing (create, claim, the identity JWKS); the apps open and approve under /api/users",
+            fixtures = listOf(
+                "http/connections/createPairChallenge.json",
+                "http/connections/claimPairChallenge.json",
+                "http/connections/claimPairChallengeIdentity.json",
+                "http/connections/pairJwks.json",
+            ),
         ),
         NotMirroredRoute(
             method = null,

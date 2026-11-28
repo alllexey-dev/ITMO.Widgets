@@ -41,7 +41,9 @@
         "requestedByDefault": false,
         "purpose": "чтобы ИИ-ассистент видел баллы БАРС и входил в другие сервисы ИТМО"
       }
-    ]
+    ],
+    "returnUrl": null,
+    "keys": []
   },
   "error": null
 }
